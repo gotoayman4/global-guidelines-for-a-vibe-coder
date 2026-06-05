@@ -13,6 +13,8 @@ description: Activate when user wants to deploy, ship, publish, or release to pr
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: deploy-production activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/deploy-production.skill.md`
+
 ## Trigger
 
 Activate when:

@@ -13,6 +13,8 @@ description: Activate when the user cannot read code and needs help debugging vi
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: debug-without-code activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/debug-without-code.skill.md`
+
 ## Trigger
 
 Activate when:

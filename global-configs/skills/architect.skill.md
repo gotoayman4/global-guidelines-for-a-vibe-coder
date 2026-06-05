@@ -14,6 +14,8 @@ description: Activate when user needs architecture design, system design review,
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: architect activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/architect.skill.md`
+
 ## Trigger
 
 Activate when:

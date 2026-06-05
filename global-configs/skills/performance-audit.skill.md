@@ -13,6 +13,8 @@ description: Activate when user wants performance optimization, profiling, or sp
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: performance-audit activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/performance-audit.skill.md`
+
 ## Trigger
 
 Activate when:

@@ -13,6 +13,8 @@ description: Activate when user needs to reset or customize TipTap editor styles
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: tiptap-tailwind-reset activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/tiptap-tailwind-reset.skill.md`
+
 ## Trigger
 
 Activate when:

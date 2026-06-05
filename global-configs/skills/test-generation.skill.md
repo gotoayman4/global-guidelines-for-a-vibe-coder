@@ -13,6 +13,8 @@ description: Activate when user asks to write tests, generate test cases, or set
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: test-generation activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/test-generation.skill.md`
+
 ## Trigger
 
 Activate when:

@@ -13,6 +13,8 @@ description: Activate when user needs to set up RTL/Arabic support with shadcn/u
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: rtl-shadcn-setup activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/rtl-shadcn-setup.skill.md`
+
 ## Trigger
 
 Activate when:

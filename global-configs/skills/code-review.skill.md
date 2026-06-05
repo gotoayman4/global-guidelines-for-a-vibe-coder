@@ -13,6 +13,8 @@ description: Activate when user provides code for review, asks for PR review, or
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: code-review activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/code-review.skill.md`
+
 ## Trigger
 
 Activate when:

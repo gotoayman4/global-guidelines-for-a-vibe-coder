@@ -13,6 +13,8 @@ description: Activate when user wants to create or extend a shared MUI design sy
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: mui-design-system activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/mui-design-system.skill.md`
+
 ## Trigger
 
 Activate when:

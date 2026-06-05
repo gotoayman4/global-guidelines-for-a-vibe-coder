@@ -13,6 +13,8 @@ description: Activate when user needs unsaved changes protection, dirty state ha
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: unsaved-changes-protection activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/unsaved-changes-protection.skill.md`
+
 ## Trigger
 
 Activate when:

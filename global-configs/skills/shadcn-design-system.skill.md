@@ -13,6 +13,8 @@ description: Activate when user wants to create or extend a shared shadcn/ui des
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: shadcn-design-system activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/shadcn-design-system.skill.md`
+
 ## Trigger
 
 Activate when:

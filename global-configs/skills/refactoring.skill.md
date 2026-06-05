@@ -13,6 +13,8 @@ description: Activate when user wants to refactor, restructure, clean up, or imp
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: refactoring activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/refactoring.skill.md`
+
 ## Trigger
 
 Activate when:

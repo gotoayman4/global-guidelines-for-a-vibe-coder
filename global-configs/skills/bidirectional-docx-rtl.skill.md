@@ -14,6 +14,8 @@ description: Activate when user needs bidirectional or RTL support in DOCX docum
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: bidirectional-docx-rtl activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/bidirectional-docx-rtl.skill.md`
+
 ## Trigger
 
 Activate when:

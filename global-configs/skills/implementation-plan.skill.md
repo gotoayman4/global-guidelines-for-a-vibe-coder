@@ -13,6 +13,8 @@ description: Activate when user needs a structured implementation plan with chec
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: implementation-plan activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/implementation-plan.skill.md`
+
 ## Trigger
 
 Activate when:

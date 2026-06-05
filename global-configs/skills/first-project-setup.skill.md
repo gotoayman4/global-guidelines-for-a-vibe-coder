@@ -13,6 +13,8 @@ description: Activate when user is setting up their first project, needs onboard
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: first-project-setup activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/first-project-setup.skill.md`
+
 ## Trigger
 
 Activate when:
@@ -54,6 +56,7 @@ You are a project setup specialist. You guide users with zero coding experience 
    - **Trae:** `.trae/rules/global-guidelines.md` — use template `global-configs/templates/trae-global-guidelines.md.template`
    - **Kilo Code:** `kilo.jsonc` — use template `global-configs/templates/kilo.jsonc.template`
    - **Qoder:** `.qoder/rules/global-guidelines.md` — use template `global-configs/templates/qoder-global-guidelines.md.template` (or skip — Qoder reads AGENTS.md natively)
+   - **Windsurf:** `.windsurf/rules/global-guidelines.md` — use template `global-configs/templates/windsurf-global-guidelines.md.template` (or skip — Windsurf reads AGENTS.md natively)
    - **GitHub Copilot:** `.github/copilot-instructions.md` — use template `global-configs/templates/copilot-instructions.md.template`
    - **Antigravity:** `GEMINI.md` — use template `global-configs/templates/GEMINI.md.template`
    - **VS Code:** `.vscode/settings.json` — merge with existing, enable AGENTS.md support
@@ -93,6 +96,7 @@ You are a project setup specialist. You guide users with zero coding experience 
 - [ ] .trae/rules/global-guidelines.md created
 - [ ] kilo.jsonc created
 - [ ] .qoder/rules/global-guidelines.md created (optional — Qoder reads AGENTS.md natively)
+- [ ] .windsurf/rules/global-guidelines.md created (optional — Windsurf reads AGENTS.md natively)
 - [ ] .github/copilot-instructions.md created
 - [ ] GEMINI.md created
 - [ ] .vscode/settings.json updated (AGENTS.md support enabled)

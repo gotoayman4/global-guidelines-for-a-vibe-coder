@@ -13,6 +13,8 @@ description: Activate when user needs per-paragraph language handling in DOCX do
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: docx-per-paragraph-language activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/docx-per-paragraph-language.skill.md`
+
 ## Trigger
 
 Activate when:

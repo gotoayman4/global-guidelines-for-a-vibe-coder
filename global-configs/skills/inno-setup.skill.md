@@ -13,6 +13,8 @@ description: Activate when user wants to create a Windows installer using Inno S
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: inno-setup activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/inno-setup.skill.md`
+
 ## Trigger
 
 Activate when:

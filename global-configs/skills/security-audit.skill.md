@@ -13,6 +13,8 @@ description: Activate when user asks for security review, vulnerability assessme
 
 ---
 
+**Activation announcement:** When this skill activates, output in chat: `Skill: security-audit activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/security-audit.skill.md`
+
 ## Trigger
 
 Activate when:
