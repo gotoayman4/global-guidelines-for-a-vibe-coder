@@ -1,0 +1,12 @@
+---
+description: Global development guidelines reference for all tasks
+alwaysApply: true
+---
+
+This project references shared guidelines at:
+`D:\WebApps\global-guidelines-for-a-vibe-coder`
+
+CRITICAL: Before every task, read `_index/MASTER_INDEX.md` from that path
+to discover relevant guidelines. Then load only the files needed for
+the current task. Use absolute base path `D:\WebApps\global-guidelines-for-a-vibe-coder/`
+when loading files.
