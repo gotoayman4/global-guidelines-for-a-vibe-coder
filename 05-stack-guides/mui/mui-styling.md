@@ -123,6 +123,7 @@ This avoids magic numbers scattered across components.
 | Hardcoded `#RRGGBB` values | Breaks dark mode, hard to maintain | `theme.palette.*` tokens |
 | Manual `createTheme()` per component | Fragments the theme | Single theme with `ThemeProvider` |
 | Raw hex colors for icon backgrounds | Doesn't respect palette | Semantic color tokens |
+| TextField with both `label` and `placeholder` without `inputLabel: { shrink: true }` | Label overlaps placeholder text visually | Add `slotProps={{ inputLabel: { shrink: true } }}`. For native selects: `slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}`. For Autocomplete: add to renderInput TextField. |
 
 ---
 
@@ -175,6 +176,7 @@ Use consistent typography variants across the app:
 4. **Dark mode from day one** — it's harder to retrofit.
 5. **Logical CSS for RTL safety** — avoid directional physical properties.
 6. **Modular imports** — keep bundle size small.
+7. **Label + Placeholder overlap** — always add `slotProps={{ inputLabel: { shrink: true } }}` when a TextField has both `label` and `placeholder` to prevent visual overlap.
 
 ---
 

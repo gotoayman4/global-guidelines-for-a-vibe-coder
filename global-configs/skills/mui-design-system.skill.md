@@ -1,8 +1,3 @@
----
-name: mui-design-system
-description: Activate when user wants to create or extend a shared MUI design system
----
-
 # Skill: MUI Design System
 
 **Status:** Advisory
@@ -12,8 +7,6 @@ description: Activate when user wants to create or extend a shared MUI design sy
 **Last Updated:** 2026-05-26
 
 ---
-
-**Activation announcement:** When this skill activates, output in chat: `Skill: mui-design-system activated -- Source: D:\WebApps\global-guidelines-for-a-vibe-coder/global-configs/skills/mui-design-system.skill.md`
 
 ## Trigger
 
@@ -37,7 +30,7 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 
 If the project has path-specific instructions (e.g., `.github/instructions/react.instructions.md`), load those as well.
 
-**Guideline base path:** `D:\WebApps\global-guidelines-for-a-vibe-coder/`
+**Guideline base path:** `[PATH_TO_GLOBAL_GUIDELINES]/`
 
 ---
 
@@ -85,6 +78,7 @@ When generating or modifying UI code:
 - Do NOT use CSS modules, Tailwind, or inline `style={{}}` alongside MUI in a MUI-based project
 - Do NOT forget `disableRestoreFocus` + focus restoration on Dialog components
 - Do NOT use MUI `<Select>` outside Dialog/Drawer without considering portal/aria-hidden implications
+- Do NOT create TextField with both `label` and `placeholder` without `slotProps={{ inputLabel: { shrink: true } }}` — the label will overlap the placeholder. For native selects combine both: `slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}`
 
 ---
 

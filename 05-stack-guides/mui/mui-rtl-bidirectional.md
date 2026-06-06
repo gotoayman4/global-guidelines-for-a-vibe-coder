@@ -198,6 +198,7 @@ Directional SVG icons are not auto-mirrored. Options:
 | CSS `left`/`right` positioning | Doesn't mirror in RTL | Use `insetInlineStart`/`insetInlineEnd` |
 | `text-align: left` hardcoded | Doesn't flip | Use `textAlign` from MUI theme or omit (inherits from direction) |
 | Forgetting Emotion RTL cache | Styles don't mirror | Always use `stylis-plugin-rtl` in RTL cache |
+| TextField with both `label` and `placeholder` without `inputLabel: { shrink: true }` | Label overlaps placeholder visually in both RTL and LTR | Add `slotProps={{ inputLabel: { shrink: true } }}`. For native selects combine: `slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}` |
 
 ---
 
