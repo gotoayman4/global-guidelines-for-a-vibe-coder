@@ -253,6 +253,43 @@ FEATURE IMPLEMENTED → WRITE/UPDATE TESTS → RUN TESTS → TESTS PASS? →
 
 ---
 
+---
+
+## Known Pitfall: TypeScript 6 + `jest-mock` `mockResolvedValue` Type Compatibility
+
+**Symptom:** `jest.fn().mockResolvedValue({...})` produces `TS2345: Argument of type '{...}' is not assignable to parameter of type 'never'`.
+
+**Root cause:** TypeScript 6 changed `any` in conditional types — `any extends PromiseLike<infer U>` no longer distributes to both branches. This broke `jest-mock`'s `ResolveType<T>`:
+
+```ts
+// jest-mock (v29.x):
+declare type ResolveType<T extends FunctionLike> =
+  ReturnType<T> extends PromiseLike<infer U> ? U : never;
+  //                              ^ TS6: when ReturnType<T> = any,
+  //                              this no longer distributes, resolves to never
+```
+
+When `import { jest } from '@jest/globals'` is used, `jest.fn()` returns `Mock<UnknownFunction>` with `mockResolvedValue(value: ResolveType<UnknownFunction>)` = `mockResolvedValue(value: never)`.
+
+**Fix:** Use global `jest` types (from `@types/jest`) instead of importing from `@jest/globals`. The `@types/jest` `ResolvedValue<T>` includes a `| T` fallback:
+
+```ts
+// @types/jest:
+type ResolvedValue<T> = T extends PromiseLike<infer U> ? U | T : never;
+//                                                     ^^^^
+//                                                     fallback keeps mockResolvedValue accepting any
+```
+
+This means:
+- **Do NOT** `import { jest } from '@jest/globals'` in test files — rely on the global `jest` declaration from `@types/jest`
+- Import `describe`, `it`, `expect`, `beforeEach` etc. from `@jest/globals` as needed (these are unaffected)
+- Declare mock variables with `jest.fn()` (no type params) — the global type provides `Mock<any, any[], any>` where `mockResolvedValue(value: any)` accepts everything
+- For typed builder objects, use `as unknown as MockQueryBuilder` pattern to bypass strict inference
+
+**Detection:** Breaking change between TS 5.x and TS 6.0. Always test `jest.fn().mockResolvedValue(...)` compilation after upgrading TypeScript.
+
+---
+
 ## Key Takeaways
 
 1. Contract tests for every API. AI breaks response shapes constantly.
