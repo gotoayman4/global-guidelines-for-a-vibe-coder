@@ -173,6 +173,65 @@ For every new project or new developer:
 
 ---
 
+## AI Tool Artifact Hygiene
+
+AI coding tools may create their own directories, configuration files, and node_modules in your project root. These artifacts must be managed to avoid accidental commits, CI pollution, and confusion.
+
+### Common AI Tool Directories
+
+| Directory | Tool | Contains |
+|---|---|---|
+| `.cursor/` | Cursor IDE | Workspace config, AI rules (safe to commit) |
+| `.windsurf/` | Windsurf IDE | AI rules (auto-generated) |
+| `.qoder/` | Qoder AI | Project context, rules, skills (auto-generated) |
+| `.qodo/` | Qodo AI | Agent config, workflow definitions (auto-generated) |
+| `.trae/` | Trae AI | Rules, skills (auto-generated) |
+| `.kilocode/` | KiloCode AI | Project context, config, node_modules |
+
+### .gitignore Rules
+
+Add the following to your `.gitignore` to prevent AI tool artifacts from being accidentally committed:
+
+```gitignore
+# AI tool artifact directories (not committed)
+.kilocode/
+.qoder/
+.qodo/
+.trae/
+.windsurf/
+
+# Generated test artifacts
+playwright-report/
+test-results/
+
+# Runtime uploads
+.uploads/
+```
+
+**Rule:** Tool directories that contain auto-generated content or node_modules MUST be gitignored. Only commit tool configs that are explicitly shared team settings (e.g., `.vscode/extensions.json`).
+
+### CI Clean Working Tree Check
+
+Add a CI step after build to verify no AI tool artifacts or build outputs have polluted the working tree:
+
+```yaml
+- name: Check clean working tree (no generated artifacts)
+  run: |
+    if [ -n "$(git status --porcelain)" ]; then
+      echo "FAIL: Working tree has uncommitted changes after build:"
+      git status --porcelain
+      exit 1
+    fi
+    echo "Working tree is clean."
+```
+
+This catches:
+- Build outputs generated in the wrong location
+- AI tools creating files during the CI run
+- Accidental modifications to source files by tooling
+
+---
+
 ## Anti-Patterns
 
 | Anti-Pattern | Consequence | Fix |
@@ -183,6 +242,7 @@ For every new project or new developer:
 | **Production config in AI prompts** | Secrets leak to AI training data | Never paste production secrets into prompts |
 | **Different DB engines per environment** | Environment-specific SQL bugs | Same database engine across all environments |
 | **No .cursorignore** | Agents read and potentially expose secrets | Block .env files from agent access |
+| **Committed AI tool artifacts** | Auto-generated configs, node_modules, and logs from AI tools pollute git history and CI | Add AI tool directories to .gitignore; add clean-tree check to CI |
 
 ---
 
@@ -202,3 +262,5 @@ For every new project or new developer:
 - **Depends on:** `ai-security-governance.md` — secrets management and agent access control
 - **Applied by:** `ci-cd-philosophy.md` — CI/CD pipeline needs environment configuration
 - **Applied by:** `git-workflow-strategy.md` — `.gitignore` rules for environment files
+- **Related:** `ci-cd-philosophy.md` — clean working tree CI gate
+- **Referenced by:** `global-configs/templates/DEVTOOLS.starter.md` — AI tool directory inventory template

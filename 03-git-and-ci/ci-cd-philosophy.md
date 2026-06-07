@@ -32,7 +32,7 @@ AI generates code at high velocity with inconsistent quality. Without automated 
 Every project must have these gates, in order:
 
 ```
-PUSH → LINT → TYPE CHECK → TEST → BUILD → SECURITY SCAN → DEPLOY PREVIEW
+PUSH → LINT → TYPE CHECK → TEST → BUILD → SECURITY SCAN → CLEAN TREE CHECK → DEPLOY PREVIEW
 ```
 
 ### Gate 1: Lint and Format
@@ -104,6 +104,18 @@ preview:
 ```
 
 **Why for AI:** Some AI-generated issues only surface when the app is actually running. Preview environments enable visual verification before merge.
+
+### Gate 7: Clean Working Tree Check
+**Purpose:** Verify that build and tooling artifacts have not polluted the working tree.
+
+```yaml
+clean-tree:
+  script:
+    - git status --porcelain
+    - if [ -n "$(git status --porcelain)" ]; then echo "FAIL: Working tree has uncommitted changes after build"; exit 1; fi
+```
+
+**Why for AI:** AI tools may generate files mid-pipeline (logs, temp files, auto-generated configs), and build processes may produce artifacts outside the designated output directory. This gate catches accidental pollution that could lead to committed build artifacts or silent CI failures.
 
 ---
 
@@ -197,7 +209,7 @@ Every deployment must be reversible. AI-generated changes have a higher probabil
 ## Key Takeaways
 
 1. CI/CD is the automated quality gate. Every AI-generated change passes through it.
-2. Minimum pipeline: Lint → Type Check → Test → Build → Security Scan.
+2. Minimum pipeline: Lint → Type Check → Test → Build → Security Scan → Clean Tree Check.
 3. Same pipeline for AI and human code. No shortcuts.
 4. Fail fast. Block merge on failure. No exceptions.
 5. Never auto-deploy AI-generated code to production. Manual approval required.
@@ -210,3 +222,4 @@ Every deployment must be reversible. AI-generated changes have a higher probabil
 - **Depends on:** `git-workflow-strategy.md` — branch strategy that CI enforces
 - **Depends on:** `testing-philosophy.md` — tests as the core CI gate
 - **Applied by:** `environment-management.md` — environment-specific CI configuration
+- **Related:** `environment-management.md` — AI tool artifact hygiene and clean tree CI check
