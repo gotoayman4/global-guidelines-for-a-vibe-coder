@@ -10,9 +10,9 @@
 ## Repo Identity
 
 This is **not** an application project. It is a centralized development guidelines repository that:
-- Houses ~80 guideline files organized into domain directories (`00-*` through `08-*`)
+- Houses ~80 guideline files organized into domain directories (`guidelines/00-*` through `guidelines/08-*`)
 - Provides templates for steering files (AGENTS.starter.md, WORLD.starter.md, etc.)
-- Ships 18 `.skill.md` files for specialized AI coding workflows
+- Ships 20 `.skill.md` files for specialized AI coding workflows
 - Includes sync tooling (`sync-manager.ps1`, `setup-global-references.ps1`) to distribute guidelines to downstream projects
 - Is consumed by projects via a `_guidelines/` mirror and inline rule extraction
 
@@ -21,24 +21,24 @@ This is **not** an application project. It is a centralized development guidelin
 ## Structure & Conventions (Always Active)
 
 ### Directory Naming
-- Domain directories: `00-` through `08-` prefix for ordering
-- `_index/` — entry points (MASTER_INDEX.md, RETRIEVAL_RULES.md, GLOSSARY.md)
-- `global-configs/` — templates, scripts, skills
-- Every guideline file MUST be registered in `_index/MASTER_INDEX.md`
+- All content lives under `guidelines/` — domain directories `guidelines/00-*` through `guidelines/08-*`
+- `guidelines/_index/` — entry points (MASTER_INDEX.md, RETRIEVAL_RULES.md, GLOSSARY.md, AGENT_BOOT_PROTOCOL.md)
+- `guidelines/global-configs/` — templates, scripts, skills
+- Every guideline file MUST be registered in `guidelines/_index/MASTER_INDEX.md`
 - Every guideline file MUST have a `→ See also:` cross-reference section at the bottom
 
 ### Index Maintenance
-- `_index/MASTER_INDEX.md` MUST be updated when a new guideline file is added
-- `_index/RETRIEVAL_RULES.md` MUST be updated when loading strategies change
-- `_index/GLOSSARY.md` MUST be updated when new terminology is introduced
+- `guidelines/_index/MASTER_INDEX.md` MUST be updated when a new guideline file is added
+- `guidelines/_index/RETRIEVAL_RULES.md` MUST be updated when loading strategies change
+- `guidelines/_index/GLOSSARY.md` MUST be updated when new terminology is introduced
 
 ### Template Updates
-- When a guideline changes, the corresponding starter template in `global-configs/templates/` MUST be updated
+- When a guideline changes, the corresponding starter template in `guidelines/global-configs/templates/` MUST be updated
 - Starter templates use `[FILL]` placeholders for project-specific values
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
 
 ### Skill File Standards
-- Each `.skill.md` file in `global-configs/skills/` MUST have a matching entry in `_index/MASTER_INDEX.md`
+- Each `.skill.md` file in `guidelines/global-configs/skills/` MUST have a matching entry in `guidelines/_index/MASTER_INDEX.md`
 - Skills must include: name, description, trigger conditions, and full instructions
 
 ---
@@ -129,7 +129,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - No hardcoded absolute paths in templates — use relative paths or `[FILL]` markers
 - No breaking changes to templates without updating the `sync-manager.ps1` manifest fallback
 - No `console.log` in production scripts
-- No unregistered files — every guideline file MUST be in MASTER_INDEX.md
+- No unregistered files — every guideline file MUST be in `guidelines/_index/MASTER_INDEX.md`
 - No `// TODO` or `// FIXME` without explicit permission
 
 ---
@@ -137,7 +137,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 ## Session Bootstrap
 
 1. Read this AGENTS.md — always
-2. Understand the repo structure: `_index/` → domain directories → `global-configs/`
+2. Understand the repo structure: `guidelines/_index/` → `guidelines/0*-` domain directories → `guidelines/global-configs/`
 3. Before editing: identify which category the change falls under (guideline content, template, script, skill)
 4. After editing: run `npm run validate` to verify integrity
 5. Commit with conventional commit format
@@ -154,7 +154,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 ---
 
 **Cross-References:**
-- Index & retrieval: `_index/MASTER_INDEX.md`, `_index/RETRIEVAL_RULES.md`
+- Index & retrieval: `guidelines/_index/MASTER_INDEX.md`, `guidelines/_index/RETRIEVAL_RULES.md`
 - Templates: `guidelines/global-configs/templates/`
 - Skills: `guidelines/global-configs/skills/`
 - Sync tooling: `sync-manager.ps1`
