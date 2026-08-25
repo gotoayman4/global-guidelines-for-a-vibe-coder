@@ -1,0 +1,176 @@
+{
+  "_comment": "Sync manifest — drives both sync-manager.ps1 (GUI) and sync-guidelines.ps1 (CLI). Both must produce identical project outputs.",
+  "version": "1.0",
+
+  "mirror": {
+    "destination": "_guidelines",
+    "include": [
+      "_index",
+      "00-ai-fundamentals",
+      "01-workflow-methodology",
+      "02-engineering-practices",
+      "03-git-and-ci",
+      "04-architecture",
+      "05-stack-guides",
+      "06-frontend-patterns",
+      "07-documentation",
+      "08-governance",
+      "global-configs/templates",
+      "global-configs/skills",
+      "README.md"
+    ],
+    "exclude": [
+      ".git",
+      ".github",
+      ".zed",
+      ".vscode",
+      "sync-projects.json",
+      "sync-manager.ps1",
+      "sync-manager.cmd",
+      "%USERPROFILE%",
+      "node_modules",
+      "REPO_AUDIT_REPORT_*.md",
+      "*.log",
+      "*.tmp"
+    ],
+    "gitignoreEntry": "_guidelines/"
+  },
+
+  "starters": [
+    {
+      "template": "global-configs/templates/AGENTS.starter.md",
+      "target": "AGENTS.md",
+      "mode": "create-if-missing",
+      "required": true,
+      "description": "Project constitution — primary AI agent rules, all inline. Created once; never overwritten on re-sync (user owns this file)."
+    },
+    {
+      "template": "global-configs/templates/CLAUDE.starter.md",
+      "target": "CLAUDE.md",
+      "mode": "create-if-missing",
+      "required": false,
+      "description": "Claude Code project rules. Created once; never overwritten on re-sync."
+    },
+    {
+      "template": "global-configs/templates/WORLD.starter.md",
+      "target": "WORLD.md",
+      "mode": "create-if-missing",
+      "required": true,
+      "description": "Product scope and AI guardrails"
+    },
+    {
+      "template": "global-configs/templates/ARCHITECTURE_INDEX.starter.md",
+      "target": "ARCHITECTURE_INDEX.md",
+      "mode": "create-if-missing",
+      "required": false,
+      "description": "Architecture document navigation index"
+    },
+    {
+      "template": "global-configs/templates/DEVTOOLS.starter.md",
+      "target": "DEVTOOLS.md",
+      "mode": "create-if-missing",
+      "required": false,
+      "description": "Dev commands and tool configuration"
+    },
+    {
+      "template": "global-configs/templates/WORLD.example.md",
+      "target": "WORLD.example.md",
+      "mode": "always-overwrite",
+      "required": false,
+      "description": "Filled WORLD.md example for reference"
+    },
+    {
+      "template": "global-configs/templates/copilot-instructions.starter.md",
+      "target": ".github/copilot-instructions.md",
+      "mode": "create-if-missing",
+      "required": false,
+      "description": "GitHub Copilot chat instructions. Created once; never overwritten on re-sync."
+    }
+  ],
+
+  "toolConfigs": [
+    {
+      "template": "global-configs/templates/opencode.json.template",
+      "target": "opencode.json",
+      "detect": null,
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "opencode project config"
+    },
+    {
+      "template": "global-configs/templates/kilo.jsonc.template",
+      "target": "kilo.jsonc",
+      "detect": ".vscode",
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "Kilo (VS Code AI extension) config"
+    },
+    {
+      "template": "global-configs/templates/GEMINI.md.template",
+      "target": "GEMINI.md",
+      "detect": ".gemini",
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "Gemini CLI project rules"
+    },
+    {
+      "template": "global-configs/templates/cursor-global-guidelines.mdc.template",
+      "target": ".cursor/rules/global-guidelines.mdc",
+      "detect": ".cursor",
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "Cursor project rules"
+    },
+    {
+      "template": "global-configs/templates/trae-global-guidelines.md.template",
+      "target": ".trae/rules/global-guidelines.md",
+      "detect": ".trae",
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "Trae project rules"
+    },
+    {
+      "template": "global-configs/templates/windsurf-global-guidelines.md.template",
+      "target": ".windsurf/rules/global-guidelines.md",
+      "detect": ".windsurf",
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "Windsurf project rules"
+    },
+    {
+      "template": "global-configs/templates/qoder-global-guidelines.md.template",
+      "target": "qoder-global-guidelines.md",
+      "detect": null,
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "Qoder project rules"
+    },
+    {
+      "template": "global-configs/templates/copilot-instructions.md.template",
+      "target": ".github/copilot-instructions-brief.md",
+      "detect": null,
+      "mode": "create-if-missing",
+      "pathSubstitution": true,
+      "description": "Brief Copilot pointer (for VS Code settings.json file reference)"
+    }
+  ],
+
+  "skills": {
+    "source": "global-configs/skills/*.skill.md",
+    "target": "_skills",
+    "gitignoreEntry": "_skills/",
+    "agentsMdSectionHeader": "## Skills",
+    "agentsMdSectionBody": "Skill files live at `_skills/<name>.skill.md`. Load a skill when its trigger phrase matches the current task."
+  },
+
+  "vscodeCopilotInstructions": {
+    "preferredInstructionFile": "AGENTS.md",
+    "comment": "Always prefer the project-local AGENTS.md — it is self-contained and always present after sync.",
+    "settings": [
+      "github.copilot.chat.codeGeneration.instructions",
+      "github.copilot.chat.testGeneration.instructions",
+      "github.copilot.chat.commitMessageGeneration.instructions",
+      "github.copilot.chat.reviewSelection.instructions"
+    ]
+  }
+}

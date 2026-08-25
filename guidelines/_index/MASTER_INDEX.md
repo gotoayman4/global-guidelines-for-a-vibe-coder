@@ -205,6 +205,8 @@ flowchart TD
 | [tiptap-tailwind-reset.skill.md](../global-configs/skills/tiptap-tailwind-reset.skill.md) | Skill | Global | ~700 | `#skill` `#tiptap` `#tailwind` `#rich-text` `#css` |
 | [bidirectional-docx-rtl.skill.md](../global-configs/skills/bidirectional-docx-rtl.skill.md) | Skill | Global | ~900 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
 | [docx-per-paragraph-language.skill.md](../global-configs/skills/docx-per-paragraph-language.skill.md) | Skill | Global | ~1,000 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
+| [firestore-cost-optimization.skill.md](../global-configs/skills/firestore-cost-optimization.skill.md) | Skill | Global | ~900 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
+| [firebase-firestore-practices.skill.md](../global-configs/skills/firebase-firestore-practices.skill.md) | Skill | Global | ~900 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [audit-rules.js](../global-configs/scripts/audit-rules.js) | Script | Global | ~300 | `#script` `#automation` `#drift-detection` |
 | [sync-guidelines.ps1](../global-configs/scripts/sync-guidelines.ps1) | Script | Global | ~1,800 | `#script` `#sync` `#project-setup` |
 | [setup-global-references.ps1](../global-configs/scripts/setup-global-references.ps1) | Script | Global | ~1,200 | `#script` `#setup` `#global-config` |
@@ -256,6 +258,8 @@ flowchart TD
 | **Performance optimization** | performance-optimization, react-performance | testing-patterns |
 | **Form-heavy UI** | form-patterns, react-architecture, ux-design-principles | notification-patterns, dialog-patterns |
 | **Security audit** | security-engineering, ai-security-governance | error-handling-philosophy |
+| **Firestore cost optimization** | firestore-cost-optimization.skill.md, cost-optimization-strategy | performance-optimization (conflict: cost wins) |
+| **Firebase/Firestore development** | firebase-firestore-practices.skill.md, security-engineering | firestore-cost-optimization.skill.md, testing-philosophy |
 | **AI governance setup** | ai-governance-framework, classification-system, skill-design-patterns | rule-extraction-methodology |
 | **New project bootstrap** | planning-and-scoping, frontend-architecture, backend-architecture, git-workflow-strategy, bidirectional-design-principles, design-system-governance | monorepo-strategy, environment-management |
 | **Rules file setup** | AGENTS.starter.md, CLAUDE.starter.md, ai-governance-framework | rule-extraction-methodology |

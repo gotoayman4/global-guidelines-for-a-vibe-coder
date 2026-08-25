@@ -3,14 +3,14 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Full (~1,600 tokens)
-**Last Updated:** 2026-05-24
+**Last Updated:** 2026-08-01
 **Cross-References:** `development-workflow.md`, `ai-agent-orchestration.md`
 
 ---
 
 ## Purpose
 
-Define the Git workflow optimized for AI-assisted development. AI generates code rapidly and can destabilize a codebase quickly. Granular commits, isolated branches, and disciplined rollback are not optional — they are the safety net that makes AI collaboration viable.
+Define the Git workflow optimized for AI-assisted development. AI generates code rapidly and can destabilize a codebase quickly. Granular commits and disciplined rollback are not optional — they are the safety net that makes AI collaboration viable. Branches are a team-workflow choice, not an AI mandate.
 
 ---
 
@@ -22,11 +22,13 @@ AI changes are often broad, partially correct, and difficult to reason about. Co
 
 **Rule:** Never end an AI session without committing working code. If you can't write a single-sentence summary of what this commit changes, the commit is too large.
 
-### 2. One Agent, One Branch
+### 2. One Branch per Parallel Agent (Optional)
 
-Autonomous agents and parallel agents must work on isolated branches. Never let multiple agents share the same branch.
+When running multiple autonomous agents in parallel, each agent SHOULD work on its own branch. Never let multiple parallel agents share the same branch.
 
-**Why:** Two agents modifying the same branch create merge conflicts and corrupt each other's assumptions. Branch isolation means each agent's work is independently reviewable and revertible.
+**Why:** Two parallel agents modifying the same branch create merge conflicts and corrupt each other's assumptions. Branch isolation means each agent's work is independently reviewable and revertible.
+
+**Scope:** This applies to concurrent autonomous agents only. A single agent adding a feature does NOT need a new branch or worktree — working directly on the current branch is the default.
 
 ### 3. Revert Liberally
 
@@ -42,14 +44,16 @@ If an AI agent goes off-track, revert immediately. Don't try to "fix" a broken A
 
 ## Branch Strategy
 
-### Branch-per-Feature
+Branch usage is a team-workflow decision, not an AI mandate. Adding a new feature does NOT require creating a new branch or worktree. Work directly on the current branch unless the team's workflow explicitly requires otherwise.
+
+### Branch-per-Feature (Optional)
 ```
 main ← feature/login
 main ← feature/dashboard
 main ← feature/user-settings
 ```
 
-Each feature gets its own branch. Work is merged to main only after review and testing.
+Teams MAY adopt branch-per-feature: each feature gets its own branch and is merged to main only after review and testing. This is optional and project-specific — the team's existing Git workflow takes precedence.
 
 ### Branch-per-Agent (Parallel Work)
 ```
@@ -60,15 +64,15 @@ main ← agent/test-coverage
 
 For parallel agent work, each agent gets its own branch. Merge is sequential and reviewed: merge Agent 1 → verify → merge Agent 2 → verify → merge Agent 3.
 
-### Git Worktrees for Parallel Agents
+### Git Worktrees for Parallel Agents (Optional)
 
-When agents need to work on the same repository simultaneously, use Git worktrees:
+When multiple agents must work on the same repository simultaneously, Git worktrees are an optional mechanism:
 ```bash
 git worktree add ../project-agent1 agent/frontend-refactor
 git worktree add ../project-agent2 agent/test-coverage
 ```
 
-Each worktree is a separate directory with its own files. No file lock conflicts. Each agent works independently.
+Each worktree is a separate directory with its own files. No file lock conflicts. Each agent works independently. Not required for single-agent feature work.
 
 ---
 
@@ -216,7 +220,7 @@ Every project MUST have pre-commit hooks configured to prevent common AI-introdu
 | Anti-Pattern | Consequence | Fix |
 |---|---|---|
 | **One massive commit per session** | Can't isolate which change broke what | Commit after every working increment |
-| **Multiple agents on same branch** | Merge conflicts; corrupted assumptions | Branch-per-agent |
+| **Multiple parallel agents on the same branch** | Merge conflicts; corrupted assumptions | Branch-per-agent for parallel work |
 | **Committing broken code "to save progress"** | Broken state in git history | Stash or use WIP branches; main must always be deployable |
 | **No commit messages** | Can't find when a bug was introduced | Descriptive messages with type and scope |
 | **Letting agents force-push** | main can be corrupted by bad agent output | Branch protection rules |
@@ -228,7 +232,7 @@ Every project MUST have pre-commit hooks configured to prevent common AI-introdu
 ## Key Takeaways
 
 1. Commit after every working increment. Granular commits = cheap rollbacks.
-2. One agent, one branch. No shared branches for parallel work.
+2. One branch per parallel agent. Individual features do NOT require a branch or worktree.
 3. Revert broken AI output immediately. Don't debug-in-place.
 4. Checkpoint before major AI operations. Always have a rollback point.
 5. Protect main with branch rules. Agents should never force-push.

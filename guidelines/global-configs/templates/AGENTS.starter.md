@@ -96,7 +96,11 @@ Do not debug-in-place. Revert broken AI output immediately and regenerate with b
 → Source: `03-git-and-ci/git-workflow-strategy.md`
 
 ### Checkpoint Before Major AI Operations
-Always create a checkpoint (commit or branch) before running major AI operations. Always have a rollback point.
+Always commit a checkpoint before running major AI operations. Always have a rollback point.
+→ Source: `03-git-and-ci/git-workflow-strategy.md`
+
+### No Branch Requirement for New Features
+Adding new features or making changes does NOT require creating a new branch or worktree. Work on the current branch unless the team's workflow explicitly requires otherwise.
 → Source: `03-git-and-ci/git-workflow-strategy.md`
 
 ### Protect Main Branch
