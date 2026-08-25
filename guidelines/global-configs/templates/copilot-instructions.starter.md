@@ -81,6 +81,8 @@ src/
   → Source: `00-ai-fundamentals/ai-security-governance.md`
 - Security headers (CSP, HSTS, X-Frame-Options) MUST be configured. They are mandatory, not optional.
   → Source: `02-engineering-practices/security-engineering.md`
+- ALL file upload endpoints MUST verify MIME type by reading magic bytes from the file buffer, not by trusting client-supplied `Content-Type` headers. Use `file-type` package (CommonJS-compatible version, `file-type@16.5.4` for Node.js). Reject uploads whose detected MIME type does not match the allowed whitelist.
+  → Source: `02-engineering-practices/file-upload-security.md`
 
 ### Testing (Always Active)
 
@@ -96,6 +98,8 @@ src/
   → Source: `02-engineering-practices/testing-philosophy.md`
 - Every line of AI-generated code is unverified until tests pass. "It compiled, so it works" is false.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
+- Every normalization/mapping function (e.g., role code normalization, enum mapping) MUST have exhaustive parameterized tests covering: every valid input, every deprecated alias, empty/whitespace/invalid inputs, and case variations. Use `it.each()` or equivalent for exhaustive coverage.
+  → Source: `02-engineering-practices/testing-patterns.md`
 
 ### Git (Always Active)
 
@@ -110,6 +114,8 @@ src/
 - Adding new features or making changes does NOT require creating a new branch or worktree. Work on the current branch unless the team's workflow explicitly requires otherwise.
   → Source: `03-git-and-ci/git-workflow-strategy.md`
 - Main branch MUST always be deployable. Use branch protection rules. Agents should never force-push to main.
+  → Source: `03-git-and-ci/git-workflow-strategy.md`
+- Every project MUST have pre-commit hooks (husky + lint-staged) running: ESLint, TypeScript type-check, and formatting. Hooks MUST be configured in `package.json` and installed automatically after `npm install`. No commits without passing hooks.
   → Source: `03-git-and-ci/git-workflow-strategy.md`
 
 ### Architecture (Active for New Features)
@@ -128,6 +134,10 @@ src/
   → Source: `04-architecture/api-design-standards.md`
 - Build one complete feature from UI → API → Database before starting the next. Never build by horizontal layers (all models first, then all routes, then all pages). The first increment must be a fully working end-to-end feature, however thin.
   → Source: `01-workflow-methodology/development-workflow.md`
+- ALL data-fetching query keys, mutations, and cache invalidations MUST use a consistent raw tuple format: `['entity', params] as const`. NEVER use stringified JSON keys, path strings, or loose arrays. This enables reliable wildcard cache invalidations. Centralize key constants in a shared file (e.g., `src/constants/swrKeys.ts` or `src/constants/queryKeys.ts`).
+  → Source: `04-architecture/state-management.md`
+- Use the framework's data router API exclusively. For React Router: `createBrowserRouter`, never `<BrowserRouter>`. The data router API is required for native `useBlocker`, `useNavigation`, loaders, and actions. Custom navigation-blocking workarounds are forbidden — use the framework's native blocker instead.
+  → Source: `04-architecture/router-architecture.md`
 
 ### Design & UX (Active for UI Work)
 
@@ -194,6 +204,12 @@ src/
   → Source: `02-engineering-practices/performance-optimization.md`
 - Set and enforce budgets: LCP < 2.5s, bundle < 200KB gzipped, API p95 < 500ms. Reject PRs that increase bundle >10%.
   → Source: `02-engineering-practices/performance-optimization.md`
+- When fetching paginated data across multiple pages concurrently, cap parallelism at 4 simultaneous requests. Never fire unbounded concurrent requests. Extract a shared utility (e.g., `fetchAllPages<T>()`) for reuse.
+  → Source: `02-engineering-practices/performance-optimization.md`
+- ESLint MUST enforce: `import-x/no-duplicates` (no duplicate imports from same package) and `import-x/order` (consistent import ordering). Use inline `type` keyword for type-only imports from the same package: `import { foo, type Bar } from 'module'`. Fix violations immediately.
+  → Source: `02-engineering-practices/file-organization.md`
+- AI MUST proactively detect and flag duplicated logic across files during every session. When the same mapping, validation, or transformation logic appears in 2+ files, extract to a shared utility immediately. Do not wait for a refactoring pass — deduplicate in the same iteration.
+  → Source: `02-engineering-practices/code-duplication-prevention.md`
 
 ---
 

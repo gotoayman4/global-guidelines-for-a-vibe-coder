@@ -33,7 +33,7 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 2. `02-engineering-practices/testing-philosophy.md` — emulator-based behavioral testing
 3. `02-engineering-practices/cost-optimization-strategy.md` — cost cross-cut (every pattern below has a cost impact)
 
-For SDK-level detail, read the official skill references at `.agents/skills/firebase-firestore/` — **progressive disclosure**: read only the needed reference file (e.g. `references/standard/web_sdk_usage.md`) after identifying the database edition.
+For SDK-level detail, consult the official Firebase documentation (https://firebase.google.com/docs/firestore) after identifying the database edition — **progressive disclosure**: read only the needed section.
 
 **Guideline base path:** Use `_guidelines/` if the project mirror exists; otherwise use the central repo path from your machine's global agent config.
 
