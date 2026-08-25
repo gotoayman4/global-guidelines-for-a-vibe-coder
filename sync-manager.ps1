@@ -87,7 +87,6 @@ if ($manifest -and $manifest.starters) {
 } else {
     $STARTERS = @(
         @{ template = "global-configs\templates\AGENTS.starter.md";              target = "AGENTS.md";                        mode = "create-if-missing"; header = "# AGENTS.md";                  body = "**Purpose:**" }
-        @{ template = "global-configs\templates\CLAUDE.starter.md";              target = "CLAUDE.md";                        mode = "create-if-missing"; header = "# CLAUDE.md";                  body = "**Purpose:**" }
         @{ template = "global-configs\templates\ARCHITECTURE_INDEX.starter.md";  target = "ARCHITECTURE_INDEX.md";            mode = "create-if-missing"; header = "# ARCHITECTURE_INDEX.md";      body = "**Purpose:**" }
         @{ template = "global-configs\templates\DEVTOOLS.starter.md";             target = "DEVTOOLS.md";                      mode = "create-if-missing"; header = "# DEVTOOLS.md";                body = "**Purpose:**" }
         @{ template = "global-configs\templates\WORLD.starter.md";               target = "WORLD.md";                         mode = "create-if-missing"; header = "# WORLD.md";                  body = "**Purpose:**" }
@@ -352,7 +351,7 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
 
     # Step 7: Placeholder report
     Append-Log $logBox "Step 6: Placeholder check ..."
-    $steeringFiles = @("AGENTS.md", "WORLD.md", "CLAUDE.md", "DEVTOOLS.md")
+    $steeringFiles = @("AGENTS.md", "WORLD.md", "CLAUDE.md", "DEVTOOLS.md")  # CLAUDE.md/DEVTOOLS.md checked only if present (legacy projects)
     foreach ($sf in $steeringFiles) {
         $sfPath = Join-Path $projectPath $sf
         if (Test-Path $sfPath) {

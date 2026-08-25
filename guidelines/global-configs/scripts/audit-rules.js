@@ -81,7 +81,6 @@ const EXTRACTION_EXCLUSIONS = [
 
 const STARTER_TEMPLATES = [
   'global-configs/templates/AGENTS.starter.md',
-  'global-configs/templates/CLAUDE.starter.md',
   'global-configs/templates/copilot-instructions.starter.md',
   'global-configs/templates/WORLD.starter.md',
 ];
@@ -404,7 +403,7 @@ function audit() {
   }
 
   // 5. Cross-template consistency check
-  // Pointer templates (CLAUDE.starter.md, copilot-instructions.starter.md) intentionally
+  // Pointer templates (copilot-instructions.starter.md) intentionally
   // contain no rules — they redirect to AGENTS.starter.md. Only compare templates that
   // actually extract rules (more than zero).
   console.log('🔍 Checking cross-template consistency...\n');

@@ -41,7 +41,7 @@ flowchart TD
 
     subgraph "08 — Governance"
         E1[ai-governance-framework.md] --> E2[rule-extraction-methodology.md]
-        E2 --> E3[AGENTS.starter.md / CLAUDE.starter.md]
+        E2 --> E3[AGENTS.starter.md]
     end
 
     "00 — AI Fundamentals (Mindset & Setup)" --> "01 — Workflow Methodology"
@@ -181,7 +181,6 @@ flowchart TD
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~700 | `#template` `#rules` `#agents` |
-| [CLAUDE.starter.md](../global-configs/templates/CLAUDE.starter.md) | Starter | Global | ~600 | `#template` `#rules` `#claude` |
 | [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~550 | `#template` `#rules` `#copilot` |
 | [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~500 | `#template` `#product-intent` `#guardrail` |
 | [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~450 | `#template` `#product-intent` `#example` |
@@ -262,7 +261,7 @@ flowchart TD
 | **Firebase/Firestore development** | firebase-firestore-practices.skill.md, security-engineering | firestore-cost-optimization.skill.md, testing-philosophy |
 | **AI governance setup** | ai-governance-framework, classification-system, skill-design-patterns | rule-extraction-methodology |
 | **New project bootstrap** | planning-and-scoping, frontend-architecture, backend-architecture, git-workflow-strategy, bidirectional-design-principles, design-system-governance | monorepo-strategy, environment-management |
-| **Rules file setup** | AGENTS.starter.md, CLAUDE.starter.md, ai-governance-framework | rule-extraction-methodology |
+| **Rules file setup** | AGENTS.starter.md, ai-governance-framework | rule-extraction-methodology |
 | **Skill installation** | code-review.skill.md, test-generation.skill.md, refactoring.skill.md | security-audit.skill.md, performance-audit.skill.md |
 | **Beginner/onboarding** | beginner-vibe-coder-guide, day-one-setup, verification-for-non-coders | ai-collaboration-mindset, plain-language-prompts, escalation-protocol |
 | **Visual debugging** | debugging-with-ai, verification-for-non-coders, plain-language-prompts | escalation-protocol |

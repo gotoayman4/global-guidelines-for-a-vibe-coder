@@ -130,8 +130,7 @@ Copy the appropriate starter template to your project root:
 
 | Template | Copy To | For |
 |---|---|---|
-| `global-configs/templates/AGENTS.starter.md` | `AGENTS.md` | Universal (works with all AI tools) |
-| `global-configs/templates/CLAUDE.starter.md` | `CLAUDE.md` | Claude Code CLI |
+| `global-configs/templates/AGENTS.starter.md` | `AGENTS.md` | Universal (works with all AI tools, including Claude Code) |
 | `global-configs/templates/copilot-instructions.starter.md` | `.github/copilot-instructions.md` | GitHub Copilot |
 | `global-configs/templates/WORLD.starter.md` | `WORLD.md` | Product intent guardrail |
 

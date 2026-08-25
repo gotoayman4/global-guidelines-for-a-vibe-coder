@@ -45,13 +45,6 @@
       "description": "Project constitution — primary AI agent rules, all inline. Created once; never overwritten on re-sync (user owns this file)."
     },
     {
-      "template": "global-configs/templates/CLAUDE.starter.md",
-      "target": "CLAUDE.md",
-      "mode": "create-if-missing",
-      "required": false,
-      "description": "Claude Code pointer file — redirects to AGENTS.md (single source of rules). Created once; never overwritten on re-sync."
-    },
-    {
       "template": "global-configs/templates/WORLD.starter.md",
       "target": "WORLD.md",
       "mode": "create-if-missing",
