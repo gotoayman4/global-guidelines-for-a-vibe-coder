@@ -13,8 +13,8 @@ jobs:
         with:
           node-version: '20'
       - name: Validate rules drift
-        run: node global-configs/scripts/audit-rules.js
+        run: node guidelines/global-configs/scripts/audit-rules.js
       - name: Validate internal links
-        run: node global-configs/scripts/check-links.js
+        run: node guidelines/global-configs/scripts/check-links.js
       - name: Validate index coverage
-        run: node global-configs/scripts/check-index-coverage.js
+        run: node guidelines/global-configs/scripts/check-index-coverage.js
