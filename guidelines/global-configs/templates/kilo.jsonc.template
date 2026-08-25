@@ -1,6 +1,6 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
   "instructions": [
-    "D:\\WebApps\\global-guidelines-for-a-vibe-coder\\_index\\RETRIEVAL_RULES.md"
+    "_guidelines/_index/RETRIEVAL_RULES.md"
   ]
 }

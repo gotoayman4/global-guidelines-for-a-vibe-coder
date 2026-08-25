@@ -12,4 +12,4 @@ If a `_guidelines/` folder exists in the project root (created by `sync-guidelin
 
 Otherwise, use the canonical source:
   - Base path: `D:\WebApps\global-guidelines-for-a-vibe-coder/`
-  - Start with `_index/MASTER_INDEX.md` from that path
+  - Start with `guidelines/_index/MASTER_INDEX.md` from that path
