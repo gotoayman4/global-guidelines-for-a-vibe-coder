@@ -1,0 +1,15 @@
+{
+  "name": "global-guidelines-for-a-vibe-coder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Central repository of AI coding guidelines, templates, and skills",
+  "scripts": {
+    "audit": "node guidelines/global-configs/scripts/audit-rules.js",
+    "check-links": "node guidelines/global-configs/scripts/check-links.js",
+    "check-index": "node guidelines/global-configs/scripts/check-index-coverage.js",
+    "validate": "npm run audit && npm run check-links && npm run check-index"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
