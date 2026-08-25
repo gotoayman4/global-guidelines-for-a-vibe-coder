@@ -49,7 +49,7 @@
       "target": "CLAUDE.md",
       "mode": "create-if-missing",
       "required": false,
-      "description": "Claude Code project rules. Created once; never overwritten on re-sync."
+      "description": "Claude Code pointer file — redirects to AGENTS.md (single source of rules). Created once; never overwritten on re-sync."
     },
     {
       "template": "global-configs/templates/WORLD.starter.md",
@@ -84,7 +84,7 @@
       "target": ".github/copilot-instructions.md",
       "mode": "create-if-missing",
       "required": false,
-      "description": "GitHub Copilot chat instructions. Created once; never overwritten on re-sync."
+      "description": "GitHub Copilot pointer file — redirects to AGENTS.md (single source of rules). Created once; never overwritten on re-sync."
     }
   ],
 

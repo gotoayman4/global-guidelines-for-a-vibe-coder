@@ -17,10 +17,11 @@ guidelines/
   07-documentation/     — writing standards, changelog
   08-governance/        — AI governance, design system governance, classification
   global-configs/
-    templates/   — starter files for AGENTS.md, CLAUDE.md, WORLD.md, etc.
+    templates/   — starter files for AGENTS.md, WORLD.md, tool configs
     scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js
     skills/      — .skill.md files for code-review, refactoring, security-audit, etc.
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
+.github/workflows/       — CI validation (audit + links + index on every push/PR)
 ```
 
 ## Quick Start
@@ -29,7 +30,7 @@ sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
 ```
 powershell -File guidelines\global-configs\scripts\setup-global-references.ps1
 ```
-Sets up global AGENTS.md, VS Code AI settings, and symlinks for tools.
+Sets up global AGENTS.md, VS Code AI settings, and symlinks for tools. Symlinks require an elevated shell (or Windows Developer Mode).
 
 **Per-project (every project):**
 ```
@@ -49,3 +50,30 @@ powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guideline
 Each project gets a self-contained `_guidelines/` mirror and inline starter files with extracted rules — no external file dependencies. Agents read from the project-local copy, avoiding sandbox/permission issues.
 
 For details, see `guidelines/_index/RETRIEVAL_RULES.md` and `guidelines/_index/MASTER_INDEX.md`.
+
+## AI Tool Directories & .gitignore Patterns
+
+If an AI tool creates artifact directories in this repo, gitignore them:
+
+```gitignore
+.kilocode/
+.qoder/
+.qodo/
+.trae/
+.windsurf/
+```
+
+Already ignored: `sync-projects.json`, `opencode.json` (machine-specific), `REPO_AUDIT_REPORT_*.md`, `node_modules/`.
+
+## Validation
+
+```bash
+npm run validate       # audit + check-links + check-index (CI enforces on main)
+```
+
+## How to Change Something Safely
+
+- **Adding a guideline:** create file → register in `guidelines/_index/MASTER_INDEX.md` → add cross-references → update matching starter template if normative
+- **Updating a guideline:** edit file → update matching starter template → run `npm run validate`
+- **Adding a skill:** create `.skill.md` → register in MASTER_INDEX.md → verify sync-manifest skills glob picks it up
+- **Changing templates:** update template → run validation

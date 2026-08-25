@@ -404,6 +404,9 @@ function audit() {
   }
 
   // 5. Cross-template consistency check
+  // Pointer templates (CLAUDE.starter.md, copilot-instructions.starter.md) intentionally
+  // contain no rules — they redirect to AGENTS.starter.md. Only compare templates that
+  // actually extract rules (more than zero).
   console.log('🔍 Checking cross-template consistency...\n');
   const templateRules = {};
   for (const template of STARTER_TEMPLATES) {
@@ -412,6 +415,10 @@ function audit() {
     if (!fs.existsSync(templatePath)) continue;
     const rules = parseTemplateRules(templatePath);
     const templateName = path.basename(template);
+    if (rules.length === 0) {
+      console.log(`   ℹ️  ${templateName}: pointer template (no inline rules) — skipped`);
+      continue;
+    }
     templateRules[templateName] = new Set(rules.map(r => r.text.trim().slice(0, 80)));
   }
   const templateNames = Object.keys(templateRules);
