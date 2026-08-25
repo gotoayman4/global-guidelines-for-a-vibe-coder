@@ -1,0 +1,160 @@
+# AGENTS.md — Project Constitution
+
+**Purpose:** This file defines the rules for AI agents working on the central guidelines repository. The guidelines repo is the source of truth for all development rules, templates, and skills consumed by downstream projects.
+
+**Guideline source (self):** `D:\WebApps\global-guidelines-for-a-vibe-coder`
+**How AI should use this:** Rules in this file apply to changes made TO this repo. The rules this repo exports to other projects live in the `guidelines/` directory — those are served to other repos and ARE NOT defined here.
+
+---
+
+## Repo Identity
+
+This is **not** an application project. It is a centralized development guidelines repository that:
+- Houses ~80 guideline files organized into domain directories (`00-*` through `08-*`)
+- Provides templates for steering files (AGENTS.starter.md, WORLD.starter.md, etc.)
+- Ships 18 `.skill.md` files for specialized AI coding workflows
+- Includes sync tooling (`sync-manager.ps1`, `setup-global-references.ps1`) to distribute guidelines to downstream projects
+- Is consumed by projects via a `_guidelines/` mirror and inline rule extraction
+
+---
+
+## Structure & Conventions (Always Active)
+
+### Directory Naming
+- Domain directories: `00-` through `08-` prefix for ordering
+- `_index/` — entry points (MASTER_INDEX.md, RETRIEVAL_RULES.md, GLOSSARY.md)
+- `global-configs/` — templates, scripts, skills
+- Every guideline file MUST be registered in `_index/MASTER_INDEX.md`
+- Every guideline file MUST have a `→ See also:` cross-reference section at the bottom
+
+### Index Maintenance
+- `_index/MASTER_INDEX.md` MUST be updated when a new guideline file is added
+- `_index/RETRIEVAL_RULES.md` MUST be updated when loading strategies change
+- `_index/GLOSSARY.md` MUST be updated when new terminology is introduced
+
+### Template Updates
+- When a guideline changes, the corresponding starter template in `global-configs/templates/` MUST be updated
+- Starter templates use `[FILL]` placeholders for project-specific values
+- Never remove `[FILL]` placeholders from templates — downstream projects depend on them
+
+### Skill File Standards
+- Each `.skill.md` file in `global-configs/skills/` MUST have a matching entry in `_index/MASTER_INDEX.md`
+- Skills must include: name, description, trigger conditions, and full instructions
+
+---
+
+## Commands (Always Load)
+
+```bash
+npm run audit          # Validate guidelines against known patterns
+npm run check-links    # Check for broken internal links
+npm run check-index    # Verify all files have MASTER_INDEX entries
+npm run validate       # Run audit + check-links + check-index
+```
+
+Before pushing changes to this repo, run `npm run validate` to ensure integrity.
+
+---
+
+## Security (Always Active)
+
+### Secrets Management
+NEVER hardcode secrets, tokens, API keys, or credentials in source files, templates, or examples. Environment variables only. The `WORLD.example.md` and any template MUST use placeholders like `[FILL]` for any credential-like values.
+
+### Dependency Audit
+Dependencies (npm packages) MUST be audited on every PR. Verify package existence, latest stable version, and known vulnerabilities. AI hallucinates package names and suggests stale versions — training data is inherently outdated. Search the web or npm registry for the current latest stable version before installing any package.
+
+### Input Validation (for sync tooling)
+PowerShell scripts that accept user input (project paths, etc.) MUST validate and sanitize inputs. No direct passthrough to `Invoke-Expression`.
+
+---
+
+## Git (Load for All Code Changes)
+
+### Commit After Every Working Increment
+Commit after every working increment. Granular commits = cheap rollbacks. NEVER commit broken code "to save progress" — use stash or WIP branches.
+
+### Descriptive Commit Messages
+Conventional commit format with type and scope (e.g., `feat(templates): add RTL starter for shadcn`).
+
+### Checkpoint Before Major AI Operations
+Always commit a checkpoint before running major AI operations that could modify multiple files. Always have a rollback point.
+
+### No Branch Requirement for New Features
+Adding new features or making changes does NOT require creating a new branch or worktree. Work on the current branch. Branches are a team-workflow choice, not an AI mandate.
+
+### Protect Main Branch
+Main branch MUST always be validatable (`npm run validate` passes). Use branch protection rules. No force-push to main.
+
+---
+
+## Editing Guidelines (Load for Content Changes)
+
+### Front Matter
+Every guideline file in `guidelines/` SHOULD have: title, purpose, and cross-references.
+
+### Cross-References
+Guidelines should reference related files using relative paths from `guidelines/` as root. Example: `→ Source: 02-engineering-practices/testing-patterns.md`
+
+### Language & Tone
+Guidelines are authoritative but not aggressive. Use MUST/SHOULD/MAY per RFC 2119. Keep sections scannable with clear headings and short paragraphs.
+
+### No Breaking Changes Without Migration
+Renaming or restructuring guideline files MUST update all cross-references and the MASTER_INDEX. Prefer additive changes; deprecate rather than remove.
+
+---
+
+## AI Collaboration (Load for Every Session)
+
+### AI Output is Draft, Not Final
+First AI output is ALWAYS a draft. Iterate at least once. Accepting first output without review is an anti-pattern.
+
+### Reference Existing Files
+Always point AI at 2-3 existing guideline files as pattern templates. Without references, AI invents its own inconsistent patterns.
+
+### Fresh Session Per Feature
+Use a fresh AI session per guideline area. 100-message threads produce inconsistent output.
+
+### No Silent TODOs
+NEVER generate TODO, FIXME, HACK, or placeholder comments in production files without explicit permission. State gaps in the AI response instead.
+
+### Web Search Escalation
+If you fail to solve a problem after 2 attempts, STOP guessing. Search the web before making a 3rd attempt.
+
+---
+
+## Forbidden Patterns
+
+- No `[FILL]` placeholders in guideline files — only in starter templates
+- No hardcoded absolute paths in templates — use relative paths or `[FILL]` markers
+- No breaking changes to templates without updating the `sync-manager.ps1` manifest fallback
+- No `console.log` in production scripts
+- No unregistered files — every guideline file MUST be in MASTER_INDEX.md
+- No `// TODO` or `// FIXME` without explicit permission
+
+---
+
+## Session Bootstrap
+
+1. Read this AGENTS.md — always
+2. Understand the repo structure: `_index/` → domain directories → `global-configs/`
+3. Before editing: identify which category the change falls under (guideline content, template, script, skill)
+4. After editing: run `npm run validate` to verify integrity
+5. Commit with conventional commit format
+
+---
+
+## Maintenance
+
+- **Quarterly:** Audit skills and templates against source guidelines
+- **When adding a file:** Register in MASTER_INDEX.md, add cross-references, check RETRIEVAL_RULES.md
+- **When updating a guideline:** Also update the matching starter template
+- **Never let AI modify this file without human approval**
+
+---
+
+**Cross-References:**
+- Index & retrieval: `_index/MASTER_INDEX.md`, `_index/RETRIEVAL_RULES.md`
+- Templates: `guidelines/global-configs/templates/`
+- Skills: `guidelines/global-configs/skills/`
+- Sync tooling: `sync-manager.ps1`

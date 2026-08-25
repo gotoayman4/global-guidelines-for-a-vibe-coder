@@ -1,0 +1,22 @@
+# Machine-specific sync state — never commit this
+sync-projects.json
+
+# Generated per-project tool config (contains machine-specific absolute paths)
+opencode.json
+
+# Generated audit and report files
+REPO_AUDIT_REPORT_*.md
+
+# Accidental literal env-var directory artifacts
+%USERPROFILE%/
+
+# Node
+node_modules/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
