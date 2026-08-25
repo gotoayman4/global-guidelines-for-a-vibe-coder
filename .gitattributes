@@ -1,0 +1,18 @@
+# Normalize line endings — LF in repo, native on checkout
+* text=auto
+
+# Markdown and content files: LF everywhere
+*.md text eol=lf
+*.template text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.yml text eol=lf
+
+# Windows scripts keep CRLF (PowerShell 5.1 parser is strict about it)
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.cmd text eol=crlf
+
+# Binary safety
+*.png binary
+*.jpg binary

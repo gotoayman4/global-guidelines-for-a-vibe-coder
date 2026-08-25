@@ -3,7 +3,7 @@
 **Purpose:** Single source of truth for every guideline document in this knowledge base.
 AI agents and humans use this index to discover, load, and navigate the guideline system.
 
-**Last Updated:** 2026-06-18
+**Last Updated:** 2026-08-26
 
 **Loading note:** Projects that ran `sync-guidelines.ps1` have a `_guidelines/` mirror in their root.
 If you see `_guidelines/` in the project, use `_guidelines/_index/MASTER_INDEX.md` and
@@ -216,7 +216,7 @@ flowchart TD
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
-| [sync-manager.ps1](../sync-manager.ps1) | Script | Global | ~1,200 | `#script` `#sync` `#gui` `#project-setup` |
+| [sync-manager.ps1](../../sync-manager.ps1) | Script | Global | ~1,200 | `#script` `#sync` `#gui` `#project-setup` |
 | [sync-manifest.json](../global-configs/sync-manifest.json) | Config | Global | ~300 | `#config` `#sync` `#manifest` |
 
 ### Tool Config Templates

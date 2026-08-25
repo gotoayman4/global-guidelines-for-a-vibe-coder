@@ -18,7 +18,7 @@ const path = require('path');
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const INDEX_PATH = path.join(REPO_ROOT, '_index', 'MASTER_INDEX.md');
 const SKIP_DIRS = ['.git', 'node_modules'];
-const SKIP_FILES = ['README.md', 'package.json', 'sync-projects.json', 'sync-manager.ps1'];
+const SKIP_FILES = ['README.md', 'package.json', 'sync-projects.json'];
 const SKIP_PATTERNS = [
   /^REPO_AUDIT_REPORT_\d{4}-\d{2}-\d{2}\.md$/,
   /^IMPLEMENTATION_AUDIT_AND_ENHANCEMENT_PLAN_\d{4}-\d{2}-\d{2}\.md$/,

@@ -78,9 +78,9 @@ It is a **content distribution hub** — not an application. Its primary value i
 
 | Metric | Current | 12-Month Projection |
 |---|---|---|
-| Guideline files | ~80 | ~120 |
+| Guideline files | ~80 (68 content + _index) | ~120 |
 | Starter templates | 16 | 25 |
-| Skill files | 18 | 30 |
+| Skill files | 20 | 30 |
 | Downstream projects using sync | — | 5-20 |
 
 ---

@@ -45,7 +45,8 @@
 |---|---|
 | `sync-manager.ps1` | GUI tool for syncing guidelines to projects |
 | `sync-manager.cmd` | Batch launcher for sync-manager.ps1 |
-| `sync-projects.json` | Saved project list (not committed) |
+| `sync-projects.json` | Saved project list (gitignored) |
+| `opencode.json` | Generated per-project tool config (gitignored) |
 
 ## How to Change Something Safely
 
