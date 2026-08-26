@@ -4,6 +4,7 @@
 **Scope:** Stack (NestJS)  
 **Token Tier:** Medium (~2,000 tokens)  
 **Tags:** `#nestjs` `#backend` `#modules` `#controllers` `#services` `#guards`
+**Last Updated:** 2026-08-26  
 
 ---
 

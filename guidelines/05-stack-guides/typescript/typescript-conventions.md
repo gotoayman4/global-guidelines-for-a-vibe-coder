@@ -4,6 +4,7 @@
 **Scope:** Stack (TypeScript)  
 **Token Tier:** Medium (~1,800 tokens)  
 **Tags:** `#typescript` `#types` `#strict` `#dto` `#generics`
+**Last Updated:** 2026-08-26  
 
 ---
 

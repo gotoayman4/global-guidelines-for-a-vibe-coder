@@ -4,6 +4,7 @@
 **Scope:** Stack (Vite)  
 **Token Tier:** Low (~1,200 tokens)  
 **Tags:** `#vite` `#build` `#bundler` `#hmr` `#typescript`
+**Last Updated:** 2026-08-26  
 
 ---
 

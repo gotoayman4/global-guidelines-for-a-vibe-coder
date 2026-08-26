@@ -4,6 +4,7 @@
 **Scope:** Stack (Supabase / PostgreSQL)  
 **Token Tier:** Medium (~2,200 tokens)  
 **Tags:** `#supabase` `#postgresql` `#rls` `#migrations` `#transactions` `#schema` `#grants` `#postgrest`
+**Last Updated:** 2026-08-26  
 
 ---
 

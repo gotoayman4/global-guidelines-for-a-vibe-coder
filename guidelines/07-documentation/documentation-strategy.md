@@ -37,7 +37,7 @@ Every project must have a README that enables a new AI session (or human) to und
 Brief description (1-2 sentences)
 
 ## Tech Stack
-- Frontend: React 19, Vite 6, MUI v7
+- Frontend: React 19, Vite 7, MUI v9
 - Backend: Express 5, PostgreSQL 16, Prisma
 - Testing: Vitest, Playwright
 

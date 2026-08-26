@@ -5,6 +5,7 @@
 **Version:** Covers MUI 7 (legacy projects) and MUI 9 (new projects). Do NOT generate code for MUI v5/v6 patterns. Items marked **v9** apply only to MUI 9+; prefer v9-compatible APIs in v7 code too, so it upgrades cleanly.
 **Token Tier:** Medium (~1,800 tokens)  
 **Tags:** `#mui` `#styling` `#theme` `#sx` `#emotion` `#dark-mode`
+**Last Updated:** 2026-08-26  
 
 ---
 

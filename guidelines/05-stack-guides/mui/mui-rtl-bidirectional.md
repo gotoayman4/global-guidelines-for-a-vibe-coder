@@ -5,6 +5,7 @@
 **Version:** Covers MUI 7 (legacy projects) and MUI 9 (new projects). Do NOT generate code for MUI v5/v6 RTL patterns. Items marked **v9** apply only to MUI 9+; prefer v9-compatible APIs in v7 code too, so it upgrades cleanly.
 **Token Tier:** Medium (~2,200 tokens)  
 **Tags:** `#mui` `#rtl` `#i18n` `#bidirectional` `#arabic` `#emotion`
+**Last Updated:** 2026-08-26  
 
 ---
 

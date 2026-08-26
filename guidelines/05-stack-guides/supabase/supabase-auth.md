@@ -4,6 +4,7 @@
 **Scope:** Stack (Supabase Auth)  
 **Token Tier:** Low (~1,500 tokens)  
 **Tags:** `#supabase` `#auth` `#jwt` `#rls` `#guards` `#grants`
+**Last Updated:** 2026-08-26  
 
 ---
 

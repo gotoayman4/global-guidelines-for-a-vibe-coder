@@ -4,6 +4,7 @@
 **Scope:** Stack (Playwright)  
 **Token Tier:** Medium (~1,800 tokens)  
 **Tags:** `#playwright` `#e2e` `#testing` `#browser` `#a11y`
+**Last Updated:** 2026-08-26  
 
 ---
 
