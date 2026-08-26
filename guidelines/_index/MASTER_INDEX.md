@@ -94,6 +94,7 @@ flowchart TD
 | [bidirectional-design-principles.md](../02-engineering-practices/bidirectional-design-principles.md) | Normative | Global | ~2,200 | `#rtl` `#bidirectional` `#arabic` `#design` |
 | [security-engineering.md](../02-engineering-practices/security-engineering.md) | Normative | Global | ~2,000 | `#security` `#auth` `#xss` `#csp` |
 | [file-upload-security.md](../02-engineering-practices/file-upload-security.md) | Normative | Global | ~700 | `#security` `#file-upload` `#mime` `#magic-byte` |
+| [agent-verification-loop.md](../02-engineering-practices/agent-verification-loop.md) | Normative | Global | ~600 | `#verification` `#agent` `#testing` `#evidence` `#done-criteria` |
 | [cost-optimization-strategy.md](../02-engineering-practices/cost-optimization-strategy.md) | Normative | Global | ~2,000 | `#cost` `#hosting` `#tokens` `#free-tier` |
 | [file-organization.md](../02-engineering-practices/file-organization.md) | Normative | Global | ~1,200 | `#files` `#organization` `#modularity` `#limits` |
 | [code-duplication-prevention.md](../02-engineering-practices/code-duplication-prevention.md) | Normative | Global | ~600 | `#deduplication` `#dry` `#code-smells` `#ai` |
@@ -245,7 +246,8 @@ flowchart TD
 | **Project planning** | planning-and-scoping, development-workflow | frontend-architecture, backend-architecture, bidirectional-design-principles |
 | **Implementation planning** | implementation-plan.skill, planning-and-scoping | development-workflow, ai-governance-framework |
 | **Architecture design & review** | architect.skill, frontend-architecture, backend-architecture | database-architecture, state-management, api-design-standards |
-| **Bug fixing** | debugging-with-ai, error-handling-philosophy | testing-patterns, ai-code-documentation |
+| **Bug fixing** | debugging-with-ai, error-handling-philosophy, agent-verification-loop | testing-patterns, ai-code-documentation |
+| **Any feature completion** | agent-verification-loop | testing-patterns |
 | **Writing or reviewing code comments** | ai-code-documentation | testing-philosophy, documentation-strategy |
 | **File upload implementation** | file-upload-security, security-engineering | error-handling-philosophy, api-design-standards |
 | **Router / navigation setup** | router-architecture, frontend-architecture | react-architecture |
@@ -315,6 +317,7 @@ flowchart TD
 - `bidirectional-design-principles.md` → depends on: `rtl-tech-stack.md`, `accessibility-standards.md`, extended by: `../05-stack-guides/mui/mui-rtl-bidirectional.md`, `../05-stack-guides/shadcn/shadcn-rtl-bidirectional.md`, `visual-design-principles.md`, `ux-design-principles.md`, `frontend-architecture.md`
 - `security-engineering.md` → depends on: `ai-security-governance.md`
 - `file-upload-security.md` → depends on: `security-engineering.md`, `error-handling-philosophy.md`
+- `agent-verification-loop.md` → depends on: `testing-patterns.md`; referenced by: `AGENTS.starter.md`, `verification-for-non-coders.md`
 - `cost-optimization-strategy.md` → depends on: `context-management-strategy.md`, `development-workflow.md`
 - `file-organization.md` → depends on: none; referenced by: `implementation-plan.skill.md`
 

@@ -71,6 +71,10 @@ Tests MUST verify behavior (what the code does), not implementation (how it does
 Every line of AI-generated code is unverified until tests pass. "It compiled, so it works" is false.
 → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 
+### Agent Verification Loop — Evidence Before "Done"
+The agent MUST NOT report a task complete without executing verification itself: UI work → dev server + page load + LTR and RTL check; forms → valid AND invalid submit; APIs → real request against dev server; logic → tests written AND passing; bug fixes → regression test reproducing then passing. Report format: WHAT was verified, HOW (exact command), RESULT — plus anything NOT verified. NEVER claim tests pass without running them; NEVER present predictions ("this will work") as observations.
+→ Source: `02-engineering-practices/agent-verification-loop.md`
+
 ### Normalization Functions Require Exhaustive Tests
 Every normalization/mapping function (e.g., role code normalization, enum mapping) MUST have exhaustive parameterized tests covering: every valid input, every deprecated alias, empty/whitespace/invalid inputs, and case variations. Use `it.each()` or equivalent for exhaustive coverage.
 → Source: `02-engineering-practices/testing-patterns.md`
