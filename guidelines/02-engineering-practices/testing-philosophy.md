@@ -17,7 +17,8 @@
 3. **Tests are the executable specification.** When context is lost, models change, or a new agent joins — tests remain and constrain AI behavior.
 4. **AI-optimized pyramid:** integration ~45% (API contracts, DB, service boundaries) · behavioral unit ~30% · E2E ~15% (login, payments, core workflows) · static ~10% (tsc strict, ESLint). Unit tests de-emphasized — AI-written ones mirror implementation and break on refactor.
 5. **Protect critical flows first:** login/auth · payments · permissions · data persistence · core workflows must NEVER silently break. Then contract shapes, form validation, search. Layout snapshots last.
-6. **Never trust AI-generated tests without review.** They are often tautological or shallow. Verify: assertions check correct behavior (not "function was called") · edge cases covered (null/empty/boundaries) · test fails when behavior is wrong (break the code deliberately) · one behavior per test.
+6. **Verification cost mirrors the pyramid:** automated tests are the DEFAULT evidence for every change; programmatic headless e2e (no screenshots/vision) runs at slice/milestone completions; visual/interactive verification (screen capture + vision analysis) is a scarce resource reserved for milestone sign-off, layout-only defects, or explicit user request. See `agent-verification-loop.md` → Verification Cost Tiering. If behavior is hard to test, add test hooks rather than screen automation.
+7. **Never trust AI-generated tests without review.** They are often tautological or shallow. Verify: assertions check correct behavior (not "function was called") · edge cases covered (null/empty/boundaries) · test fails when behavior is wrong (break the code deliberately) · one behavior per test.
 
 ## Anti-Patterns
 
@@ -29,6 +30,7 @@
 | Coverage-percentage obsession | Protect critical flows instead |
 | Tests written after features | Same iteration at minimum |
 | E2E-only | Integration layer for fast feedback |
+| Screenshot/vision-driven E2E where DOM/state assertions suffice | Headless programmatic e2e; reserve visual checks for layout sign-off (see `agent-verification-loop.md` Cost Tiering) |
 
 ## Cross-References
 

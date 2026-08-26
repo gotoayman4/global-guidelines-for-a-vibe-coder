@@ -71,8 +71,12 @@ Tests MUST verify behavior (what the code does), not implementation (how it does
 Every line of AI-generated code is unverified until tests pass. "It compiled, so it works" is false.
 → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 
-### Agent Verification Loop — Evidence Before "Done"
-The agent MUST NOT report a task complete without executing verification itself: UI work → dev server + page load + LTR and RTL check; forms → valid AND invalid submit; APIs → real request against dev server; logic → tests written AND passing; bug fixes → regression test reproducing then passing. Report format: WHAT was verified, HOW (exact command), RESULT — plus anything NOT verified. NEVER claim tests pass without running them; NEVER present predictions ("this will work") as observations.
+### Agent Verification Loop — Evidence Before "Done" (Cost-Tiered)
+The agent MUST NOT report a task complete without executing verification itself. Verification is RATIONED BY COST — LLM-driven screen capture/vision/GUI automation is the most expensive instrument and is NOT routine:
+- **Tier 1 (default, every change):** automated tests — unit + integration against real temp data, type-check, lint, contract/i18n parity. Primary evidence.
+- **Tier 2 (slice/milestone completions):** programmatic headless E2E (e.g., Playwright `_electron`) asserting DOM/data/DB — no screenshots, no vision.
+- **Tier 3 (rare exception only):** visual/interactive verification via screen capture + vision analysis or GUI automation — reserved for milestone exit/RTL-LTR layout sign-off of NEW screens, defects tests cannot observe, or explicit user request. Never per-change; never loop captures.
+Selection rule: before any Tier-3 check ask "can a test or DB query assert this?" If yes, write the test instead. Change-type minimums still apply: UI work → dev server + page load + RTL and LTR check; forms → valid AND invalid submit; APIs → real request; logic → tests written AND passing; bug fixes → regression test reproducing then passing. Report format: WHAT was verified, HOW (exact command), RESULT — plus anything NOT verified. NEVER claim tests pass without running them; NEVER present predictions as observations.
 → Source: `02-engineering-practices/agent-verification-loop.md`
 
 ### Normalization Functions Require Exhaustive Tests

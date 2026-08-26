@@ -87,7 +87,7 @@ flowchart TD
 | [bidirectional-design-principles.md](../02-engineering-practices/bidirectional-design-principles.md) | Normative | Global | ~2,200 | `#rtl` `#bidirectional` `#arabic` `#design` |
 | [security-engineering.md](../02-engineering-practices/security-engineering.md) | Normative | Global | ~2,000 | `#security` `#auth` `#xss` `#csp` |
 | [file-upload-security.md](../02-engineering-practices/file-upload-security.md) | Normative | Global | ~700 | `#security` `#file-upload` `#mime` `#magic-byte` |
-| [agent-verification-loop.md](../02-engineering-practices/agent-verification-loop.md) | Normative | Global | ~600 | `#verification` `#agent` `#testing` `#evidence` `#done-criteria` |
+| [agent-verification-loop.md](../02-engineering-practices/agent-verification-loop.md) | Normative | Global | ~900 | `#verification` `#agent` `#testing` `#evidence` `#done-criteria` `#cost-control` |
 | [cost-optimization-strategy.md](../02-engineering-practices/cost-optimization-strategy.md) | Normative | Global | ~2,000 | `#cost` `#hosting` `#tokens` `#free-tier` |
 | [file-organization.md](../02-engineering-practices/file-organization.md) | Normative | Global | ~1,200 | `#files` `#organization` `#modularity` `#limits` |
 | [code-duplication-prevention.md](../02-engineering-practices/code-duplication-prevention.md) | Normative | Global | ~600 | `#deduplication` `#dry` `#code-smells` `#ai` |
