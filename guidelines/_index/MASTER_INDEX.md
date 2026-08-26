@@ -13,8 +13,7 @@ guaranteed to be readable.
 ```mermaid
 flowchart TD
     subgraph "00 — AI Fundamentals (Mindset & Setup)"
-        A1[ai-collaboration-mindset.md] --> A2[day-one-setup.md]
-        A2 --> A3[beginner-vibe-coder-guide.md]
+        A1[ai-collaboration-mindset.md] --> A3[multi-tool-workflows.md]
         A3 --> A4[multi-tool-workflows.md]
     end
 
@@ -40,8 +39,7 @@ flowchart TD
     end
 
     subgraph "08 — Governance"
-        E1[ai-governance-framework.md] --> E2[rule-extraction-methodology.md]
-        E2 --> E3[AGENTS.starter.md]
+        E1[ai-governance-framework.md] --> E3[AGENTS.starter.md]
     end
 
     "00 — AI Fundamentals (Mindset & Setup)" --> "01 — Workflow Methodology"
@@ -63,12 +61,7 @@ flowchart TD
 | [context-management-strategy.md](../00-ai-fundamentals/context-management-strategy.md) | Normative | Global | ~1,800 | `#context` `#tokens` `#efficiency` |
 | [ai-agent-orchestration.md](../00-ai-fundamentals/ai-agent-orchestration.md) | Normative | Global | ~2,200 | `#agents` `#orchestration` `#parallel` |
 | [ai-security-governance.md](../00-ai-fundamentals/ai-security-governance.md) | Normative | Global | ~2,000 | `#security` `#governance` `#owasp` |
-| [beginner-vibe-coder-guide.md](../00-ai-fundamentals/beginner-vibe-coder-guide.md) | Normative | Global | ~1,400 | `#beginner` `#noncoder` `#simplified` |
 | [multi-tool-workflows.md](../00-ai-fundamentals/multi-tool-workflows.md) | Normative | Global | ~1,800 | `#multi-tool` `#cursor` `#copilot` `#claude` |
-| [day-one-setup.md](../00-ai-fundamentals/day-one-setup.md) | Normative | Global | ~1,200 | `#setup` `#beginner` `#onboarding` `#day1` |
-| [verification-for-non-coders.md](../00-ai-fundamentals/verification-for-non-coders.md) | Normative | Global | ~1,100 | `#verification` `#noncoder` `#visual` `#testing` |
-| [plain-language-prompts.md](../00-ai-fundamentals/plain-language-prompts.md) | Normative | Global | ~1,400 | `#prompting` `#noncoder` `#templates` `#plain-language` |
-| [escalation-protocol.md](../00-ai-fundamentals/escalation-protocol.md) | Normative | Global | ~900 | `#escalation` `#debugging` `#failure` `#support` |
 
 ### 01 — Workflow Methodology
 
@@ -155,7 +148,6 @@ flowchart TD
 | File | Status | Scope | Tokens (Full) | Tags |
 |---|---|---|---|---|
 | [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Advisory | Global | ~1,500 | `#documentation` `#strategy` `#maintenance` |
-| [guideline-authoring-standards.md](../07-documentation/guideline-authoring-standards.md) | Normative | Global | ~1,200 | `#guidelines` `#authoring` `#ai` |
 | [adr-template.md](../07-documentation/adr-template.md) | Advisory | Global | ~800 | `#adr` `#decisions` `#template` |
 
 ### 08 — Governance
@@ -163,10 +155,7 @@ flowchart TD
 | File | Status | Scope | Tokens (Full) | Tags |
 |---|---|---|---|---|
 | [ai-governance-framework.md](../08-governance/ai-governance-framework.md) | Normative | Global | ~2,000 | `#governance` `#hierarchy` `#authority` |
-| [rule-extraction-methodology.md](../08-governance/rule-extraction-methodology.md) | Normative | Global | ~1,500 | `#rules` `#extraction` `#compact` |
-| [skill-design-patterns.md](../08-governance/skill-design-patterns.md) | Advisory | Global | ~1,800 | `#skills` `#design` `#composability` |
 | [design-system-governance.md](../08-governance/design-system-governance.md) | Normative | Global | ~1,600 | `#design-system` `#tokens` `#components` `#consistency` |
-| [classification-system.md](../08-governance/classification-system.md) | Normative | Global | ~1,200 | `#classification` `#normative` `#advisory` |
 
 ### _index — Repository Navigation
 
@@ -261,18 +250,16 @@ flowchart TD
 | **Security audit** | security-engineering, ai-security-governance | error-handling-philosophy |
 | **Firestore cost optimization** | firestore-cost-optimization.skill.md, cost-optimization-strategy | performance-optimization (conflict: cost wins) |
 | **Firebase/Firestore development** | firebase-firestore-practices.skill.md, security-engineering | firestore-cost-optimization.skill.md, testing-philosophy |
-| **AI governance setup** | ai-governance-framework, classification-system, skill-design-patterns | rule-extraction-methodology |
+| **AI governance setup** | ai-governance-framework | design-system-governance |
 | **New project bootstrap** | planning-and-scoping, frontend-architecture, backend-architecture, git-workflow-strategy, bidirectional-design-principles, design-system-governance | monorepo-strategy, environment-management |
-| **Rules file setup** | AGENTS.starter.md, ai-governance-framework | rule-extraction-methodology |
+| **Rules file setup** | AGENTS.starter.md, ai-governance-framework | — |
 | **Skill installation** | code-review.skill.md, test-generation.skill.md, refactoring.skill.md | security-audit.skill.md, performance-audit.skill.md |
-| **Beginner/onboarding** | beginner-vibe-coder-guide, day-one-setup, verification-for-non-coders | ai-collaboration-mindset, plain-language-prompts, escalation-protocol |
-| **Visual debugging** | debugging-with-ai, verification-for-non-coders, plain-language-prompts | escalation-protocol |
 | **Windows installer** | inno-setup.skill | security-engineering, cost-optimization-strategy |
 | **Production deployment** | deploy-production.skill, git-workflow-strategy | ci-cd-philosophy, environment-management |
-| **First project setup** | first-project-setup.skill, day-one-setup, beginner-vibe-coder-guide | planning-and-scoping, git-workflow-strategy, design-system-governance |
+| **First project setup** | first-project-setup.skill | planning-and-scoping, git-workflow-strategy, design-system-governance |
 | **Cost optimization** | cost-optimization-strategy, context-management-strategy | — |
 | **RTL/Arabic setup** | rtl-tech-stack, bidirectional-design-principles, accessibility-standards | mui-rtl-bidirectional only when MUI is selected; shadcn-rtl-bidirectional only when shadcn/ui is selected |
-| **Multi-tool setup** | multi-tool-workflows, ai-agent-orchestration | skill-design-patterns |
+| **Multi-tool setup** | multi-tool-workflows, ai-agent-orchestration | — |
 | **UI/UX design review** | ux-design-principles, visual-design-principles, icon-usage | accessibility-standards, bidirectional-design-principles, design-system-governance |
 | **Design system setup** | design-system-governance, visual-design-principles, icon-usage | frontend-architecture, bidirectional-design-principles |
 
@@ -297,7 +284,6 @@ flowchart TD
 - `context-management-strategy.md` → depends on: `ai-collaboration-mindset.md`
 - `ai-agent-orchestration.md` → depends on: `context-management-strategy.md`
 - `ai-security-governance.md` → depends on: `ai-collaboration-mindset.md`, referenced by: `security-engineering.md`
-- `beginner-vibe-coder-guide.md` → depends on: `ai-collaboration-mindset.md`, `development-workflow.md`
 - `multi-tool-workflows.md` → depends on: `ai-agent-orchestration.md`, `ai-collaboration-mindset.md`
 
 ### 01-workflow-methodology
@@ -317,7 +303,7 @@ flowchart TD
 - `bidirectional-design-principles.md` → depends on: `rtl-tech-stack.md`, `accessibility-standards.md`, extended by: `../05-stack-guides/mui/mui-rtl-bidirectional.md`, `../05-stack-guides/shadcn/shadcn-rtl-bidirectional.md`, `visual-design-principles.md`, `ux-design-principles.md`, `frontend-architecture.md`
 - `security-engineering.md` → depends on: `ai-security-governance.md`
 - `file-upload-security.md` → depends on: `security-engineering.md`, `error-handling-philosophy.md`
-- `agent-verification-loop.md` → depends on: `testing-patterns.md`; referenced by: `AGENTS.starter.md`, `verification-for-non-coders.md`
+- `agent-verification-loop.md` → depends on: `testing-patterns.md`; referenced by: `AGENTS.starter.md`
 - `cost-optimization-strategy.md` → depends on: `context-management-strategy.md`, `development-workflow.md`
 - `file-organization.md` → depends on: none; referenced by: `implementation-plan.skill.md`
 
@@ -355,20 +341,16 @@ flowchart TD
 
 ### 07-documentation
 - `documentation-strategy.md` → depends on: none
-- `guideline-authoring-standards.md` → depends on: `classification-system.md`
 - `adr-template.md` → depends on: `documentation-strategy.md`
 
 ### 08-governance
-- `ai-governance-framework.md` → depends on: `classification-system.md`
-- `rule-extraction-methodology.md` → depends on: `ai-governance-framework.md`, `guideline-authoring-standards.md`
-- `skill-design-patterns.md` → depends on: `ai-governance-framework.md`
+- `ai-governance-framework.md` → depends on: none
 - `design-system-governance.md` → depends on: `frontend-architecture.md`, `bidirectional-design-principles.md`, `ux-design-principles.md`, `visual-design-principles.md`
-- `classification-system.md` → depends on: none
 
 ### global-configs
 - All starter templates → extracted from: `00-08` guideline categories
-- All skill files → depend on: `skill-design-patterns.md`
-- `audit-rules.js` → depends on: `rule-extraction-methodology.md`
+- All skill files → depend on: the skill's own Load Guidelines section
+- `audit-rules.js` → implements the extraction methodology (see docs/repo-meta/)
 - `sync-guidelines.ps1` → depends on: `GuidelineSync.psm1`
 - `setup-global-references.ps1` → depends on: `opencode.json.template`
 - `GuidelineSync.psm1` → depends on: `sync-manifest.json`

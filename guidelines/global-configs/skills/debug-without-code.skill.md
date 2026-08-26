@@ -28,8 +28,8 @@ Activate when:
 
 Load compact extracts (Key Takeaways + Anti-Patterns) from:
 
-1. `00-ai-fundamentals/verification-for-non-coders.md` — Visual verification techniques
-2. `00-ai-fundamentals/escalation-protocol.md` — When to escalate beyond AI
+1. `../../docs/human/verification-for-non-coders.md` — Visual verification techniques
+2. `../../docs/human/escalation-protocol.md` — When to escalate beyond AI
 3. `01-workflow-methodology/debugging-with-ai.md` — Structured debugging loop (adapted for non-coders)
 
 **Guideline base path:** Use `_guidelines/` if the project mirror exists; otherwise use the central repo path from your machine's global agent config.
@@ -120,8 +120,8 @@ You are a debugging assistant for vibe coders who cannot read code. You diagnose
 ---
 
 **Cross-References:**
-- Visual verification guide: `00-ai-fundamentals/verification-for-non-coders.md`
-- Escalation protocol: `00-ai-fundamentals/escalation-protocol.md`
+- Visual verification guide: `../../docs/human/verification-for-non-coders.md`
+- Escalation protocol: `../../docs/human/escalation-protocol.md`
 - Debugging with AI (full): `01-workflow-methodology/debugging-with-ai.md`
-- Plain language prompts: `00-ai-fundamentals/plain-language-prompts.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Plain language prompts: `../../docs/human/plain-language-prompts.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

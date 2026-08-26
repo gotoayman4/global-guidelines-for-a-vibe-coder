@@ -131,4 +131,4 @@ You are a Windows installer packaging specialist using Inno Setup. You create cl
 **Cross-References:**
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Cost optimization: `02-engineering-practices/cost-optimization-strategy.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

@@ -123,4 +123,4 @@ You are a Firebase cost engineer. **Every read, write, and delete is billed** â€
 - Cost philosophy: `02-engineering-practices/cost-optimization-strategy.md`
 - SDK/query reference (progressive disclosure): `.agents/skills/firebase-firestore/`
 - Conflict resolution: `global-configs/skills/performance-audit.skill.md` (when cost and speed conflict, cost wins unless UX is measurably broken)
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

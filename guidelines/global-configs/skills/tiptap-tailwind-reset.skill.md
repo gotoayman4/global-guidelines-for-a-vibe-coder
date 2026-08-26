@@ -144,4 +144,4 @@ You are a rich text editor specialist for Tiptap v3 + ProseMirror + Tailwind CSS
 - Tiptap v3 docs: https://tiptap.dev/docs/editor/guide/configuration
 - Tailwind CSS v4 preflight: https://tailwindcss.com/docs/preflight
 - Visual design principles: `06-frontend-patterns/visual-design-principles.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

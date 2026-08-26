@@ -129,7 +129,7 @@ When context is tight, use this rule-extraction pattern to derive compact versio
 3. Skip: Purpose, Detailed Guidance, Decision Framework, Examples, Cross-References
 4. Target: 200-500 tokens per file
 
-Full methodology in: `../08-governance/rule-extraction-methodology.md`
+Full methodology in: `../../docs/repo-meta/rule-extraction-methodology.md`
 
 ---
 

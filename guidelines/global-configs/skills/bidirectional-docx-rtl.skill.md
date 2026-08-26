@@ -201,6 +201,6 @@ You are an OOXML/bidirectional text specialist for the `docx` npm library (v9.7.
 - Compiled document interface: `packages/backend/src/modules/export/compile/compiled-document.interface.ts`
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`
 - RTL tech stack: `05-stack-guides/rtl-tech-stack.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`
 - RTL UI setup skill (for frontend RTL): `global-configs/skills/rtl-shadcn-setup.skill.md`
 - Per-paragraph/run language skill (fourth layer): `global-configs/skills/docx-per-paragraph-language.skill.md`

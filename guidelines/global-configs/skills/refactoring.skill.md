@@ -108,4 +108,4 @@ You are a senior engineer specializing in safe, incremental refactoring. You nev
 **Cross-References:**
 - Refactoring strategy: `01-workflow-methodology/refactoring-strategy.md`
 - Behavioral contracts: `02-engineering-practices/testing-philosophy.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

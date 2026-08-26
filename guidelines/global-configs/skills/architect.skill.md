@@ -150,5 +150,5 @@ Saved plans must be concise and actionable. Use this structure:
 - API design standards: `04-architecture/api-design-standards.md`
 - AI governance framework: `08-governance/ai-governance-framework.md`
 - Implementation plan skill (execution phase): `global-configs/skills/implementation-plan.skill.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`
 - File organization rules: `02-engineering-practices/file-organization.md`

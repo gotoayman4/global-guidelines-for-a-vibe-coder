@@ -226,11 +226,11 @@ NEVER generate TODO, FIXME, HACK, or placeholder comments in production code wit
 
 ### Web Search Escalation
 If you fail to solve a problem after 2 attempts, STOP guessing. Search the web or consult up-to-date documentation before making a 3rd attempt. State: "I failed twice. Searching for current documentation before retrying."
-→ Source: `00-ai-fundamentals/escalation-protocol.md`
+→ Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 
 ### Output Efficiency — Minimize Code in Chat
 The developer does not read code. Do NOT echo code blocks in chat responses. Describe WHAT changed in plain language (1-2 sentences) and WHERE (file path + line range). Use file edit tools directly — never paste code back in chat. Only show code when the user explicitly asks "show me the code."
-→ Source: `00-ai-fundamentals/beginner-vibe-coder-guide.md`
+→ Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 
 ---
 
@@ -415,8 +415,6 @@ Since the developer (vibe coder) cannot read code, AI MUST optimize responses fo
 
 **Cross-References (in `_guidelines/` mirror):**
 - Authority hierarchy: `_guidelines/08-governance/ai-governance-framework.md`
-- Extraction methodology: `_guidelines/08-governance/rule-extraction-methodology.md`
-- Classification system: `_guidelines/08-governance/classification-system.md`
 - Loading strategy: `_guidelines/_index/RETRIEVAL_RULES.md`
 - Design principles: `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`
 - Design governance: `_guidelines/08-governance/design-system-governance.md`

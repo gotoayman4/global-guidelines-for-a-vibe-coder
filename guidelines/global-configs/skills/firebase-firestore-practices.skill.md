@@ -99,4 +99,4 @@ For changes touching Firestore, report:
 - Security rules auditing: `.agents/skills/firebase-security-rules-auditor/`
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Emulator testing: `02-engineering-practices/testing-philosophy.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

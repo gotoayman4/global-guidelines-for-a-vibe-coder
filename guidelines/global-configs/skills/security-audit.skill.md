@@ -133,4 +133,4 @@ You are a security engineer performing a focused security audit. You assume all 
 - Security engineering mandates: `02-engineering-practices/security-engineering.md`
 - AI security governance: `00-ai-fundamentals/ai-security-governance.md`
 - Error handling patterns: `02-engineering-practices/error-handling-philosophy.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

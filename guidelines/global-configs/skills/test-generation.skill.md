@@ -111,4 +111,4 @@ You are a senior QA engineer. Generate tests that verify BEHAVIOR, not implement
 **Cross-References:**
 - Test philosophy: `02-engineering-practices/testing-philosophy.md`
 - Test patterns: `02-engineering-practices/testing-patterns.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

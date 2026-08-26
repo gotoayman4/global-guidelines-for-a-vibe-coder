@@ -134,4 +134,4 @@ Standardize terminology across all guideline documents so AI agents and humans s
 ## Cross-References
 
 - **Referenced by:** All guideline documents
-- **See also:** `MASTER_INDEX.md`, `../08-governance/classification-system.md`
+- **See also:** `MASTER_INDEX.md`, `../../docs/repo-meta/classification-system.md`

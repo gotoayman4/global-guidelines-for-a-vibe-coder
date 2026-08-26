@@ -102,4 +102,4 @@ When generating or modifying UI code:
 - Design system governance: `08-governance/design-system-governance.md`
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`
 - Accessibility standards: `02-engineering-practices/accessibility-standards.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

@@ -37,7 +37,7 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 1. `01-workflow-methodology/planning-and-scoping.md` — Planning methodology, vertical slice principle
 2. `01-workflow-methodology/development-workflow.md` — Iteration workflow, validation
 3. `08-governance/ai-governance-framework.md` — Authority hierarchy, rule precedence
-4. `08-governance/classification-system.md` — Normative vs Advisory classification
+4. `../../docs/repo-meta/classification-system.md` — Normative vs Advisory classification
 5. `02-engineering-practices/testing-philosophy.md` — Behavioral contracts, validation
 
 If the project has an `AGENTS.md`, `CLAUDE.md`, `WORLD.md`, or similar steering file, load it and reference its rules in the plan.
@@ -166,7 +166,7 @@ Read this entire plan before starting implementation. Execute tasks in the defin
 - Planning methodology: `01-workflow-methodology/planning-and-scoping.md`
 - Development workflow: `01-workflow-methodology/development-workflow.md`
 - AI governance framework: `08-governance/ai-governance-framework.md`
-- Classification system: `08-governance/classification-system.md`
+- Classification system: `../../docs/repo-meta/classification-system.md`
 - Testing philosophy: `02-engineering-practices/testing-philosophy.md`
 - File organization rules: `02-engineering-practices/file-organization.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

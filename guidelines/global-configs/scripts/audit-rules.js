@@ -84,6 +84,19 @@ const STARTER_TEMPLATES = [
   'global-configs/templates/copilot-instructions.starter.md',
   'global-configs/templates/WORLD.starter.md',
 ];
+
+// Docs relocated to docs/ (outside guidelines/) — valid reference targets, not extractable guidelines
+const EXTRACTION_DOCS = new Set([
+  'beginner-vibe-coder-guide.md',
+  'day-one-setup.md',
+  'verification-for-non-coders.md',
+  'plain-language-prompts.md',
+  'escalation-protocol.md',
+  'rule-extraction-methodology.md',
+  'classification-system.md',
+  'guideline-authoring-standards.md',
+  'skill-design-patterns.md',
+]);
 const SKILL_FILES = [
   'global-configs/skills/architect.skill.md',
   'global-configs/skills/bidirectional-docx-rtl.skill.md',
@@ -334,6 +347,10 @@ function audit() {
           sourceFileCounts[guidelinePath] = (sourceFileCounts[guidelinePath] || 0) + 1;
           break;
         }
+      }
+      // Docs relocated outside the guidelines tree (human guides, repo-meta) are valid targets
+      if (!found && EXTRACTION_DOCS.has(path.basename(ref))) {
+        found = true;
       }
       if (!found) {
         console.log(`   ⚠️  Skill ${relativePath} references unknown guideline: ${ref}`);

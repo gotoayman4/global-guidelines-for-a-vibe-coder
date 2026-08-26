@@ -138,4 +138,4 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 - CI/CD philosophy: `03-git-and-ci/ci-cd-philosophy.md`
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Cost optimization: `02-engineering-practices/cost-optimization-strategy.md`
-- Skill design patterns: `08-governance/skill-design-patterns.md`
+- Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`
