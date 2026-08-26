@@ -2,163 +2,62 @@
 
 **Status:** Advisory
 **Scope:** Global
-**Token Tier:** Full (~1,600 tokens)
-**Last Updated:** 2026-05-24
-**Cross-References:** `development-workflow.md`, `ai-security-governance.md`
+**Token Tier:** Full (~700 tokens)
+**Last Updated:** 2026-08-26
+**Cross-References:** `development-workflow.md`, `ai-security-governance.md`, `security-engineering.md`
 
 ---
 
-## Purpose
-
-Define the code review process for AI-generated code. AI output is a first draft — review is how it becomes production-quality. This workflow applies whether you're reviewing alone, with an AI reviewer, or with human collaborators.
-
----
-
-## The Review Mindset
-
-Review AI-generated code with MORE skepticism than human-written code. AI produces code that:
-- Looks professional (even when wrong)
-- Compiles cleanly (even when logically flawed)
-- Follows patterns you didn't ask for
-- Omits edge case handling silently
-- Introduces vulnerabilities in every fourth prompt
-
-**Rule:** Assume every line of AI-generated code is wrong until you've verified it. This isn't cynicism — it's the correct prior based on empirical evidence.
-
----
+Review AI output with MORE skepticism than human code: it looks professional even when wrong, compiles even when flawed, and omits edge cases silently. Assume every line is wrong until verified.
 
 ## The Two-Phase Review
 
-### Phase 1: AI Self-Review (Quick Filter)
-
-Before you invest time reviewing, ask the AI to review its own work. This catches the obvious mistakes.
-
+**Phase 1 — AI self-review (quick filter):**
 ```
-Review the code you just produced as a strict senior engineer.
-Look for:
-- Bugs and logic errors
-- Security vulnerabilities (OWASP Top 10)
-- Missing edge cases
-- Performance problems
-- Accessibility issues
-- Maintainability concerns
-
-Clearly separate:
-- Confirmed issues (definitely wrong)
-- Possible concerns (might be wrong, needs human judgment)
-
-For each confirmed issue, propose the minimal fix.
+Review the code you just produced as a strict senior engineer:
+bugs, security (OWASP), missing edge cases, performance,
+accessibility, maintainability. Separate confirmed issues from
+possible concerns; propose minimal fixes for confirmed issues.
 ```
+Catches syntax/imports/obvious logic. Misses business logic, domain edges, architectural misfits.
 
-**What AI self-review catches:** syntax errors, missing imports, obvious logic flaws, patterns it knows are deprecated.
-
-**What AI self-review misses:** business logic errors, domain-specific edge cases, architectural misfits, security vulnerabilities it doesn't recognize as vulnerabilities.
-
----
-
-### Phase 2: Human Review (The Real Gate)
-
-Your review. The AI's self-review is a filter, not a replacement.
-
-**Review checklist — apply to every AI-generated change:**
-
-**Correctness:**
-- [ ] Does this actually solve the stated requirement?
-- [ ] Are all acceptance criteria met?
-- [ ] Are edge cases handled? (null, empty, large inputs, concurrent access)
-- [ ] Is error handling present and correct? (not leaking internals)
-
-**Security (see `ai-security-governance.md` for full list):**
-- [ ] Are all database queries parameterized?
-- [ ] Are auth checks present on every protected route?
-- [ ] Are user inputs validated server-side?
-- [ ] Are there any hardcoded secrets, tokens, or keys?
-- [ ] Is CORS restricted to explicit origins?
-
-**Consistency:**
-- [ ] Does the code follow existing project conventions?
-- [ ] Are naming conventions consistent with the rest of the codebase?
-- [ ] Is the pattern correct? (not a new pattern the AI invented)
-
-**Simplicity:**
-- [ ] Is there a simpler solution?
-- [ ] Are there unnecessary abstractions or dependencies?
-- [ ] Would a junior developer understand this code?
-
-**Maintainability:**
-- [ ] Can future AI sessions modify this safely?
-- [ ] Is the code partitioned into appropriately sized files?
-- [ ] Are public APIs stable and documented?
-
-**Testability:**
-- [ ] Can the behavior be verified with automated tests?
-- [ ] Are tests included and do they test behavior (not implementation)?
-
----
-
-## The Multi-Agent Review Pattern
-
-For critical code paths (auth, payments, permissions), use multiple reviewers.
-
-```
-Agent 1 (Security Reviewer): Audit for OWASP Top 10, auth bypass, injection
-Agent 2 (Performance Reviewer): Audit for N+1 queries, memory leaks, render bottlenecks
-Agent 3 (Test Reviewer): Audit test coverage, edge case coverage, assertion quality
-
-Human synthesizes findings → Only merge when all three pass.
-```
-
-Each reviewer gets the same code diff but a different review focus. The specialization catches more than one general reviewer.
-
----
+**Phase 2 — Human review (the real gate), every change:**
+- **Correctness:** solves the requirement · acceptance criteria met · edge cases handled (null/empty/large/concurrent) · errors not leaking internals
+- **Security:** parameterized queries · auth on protected routes · server-side validation · no hardcoded secrets · CORS whitelisted (full list: `security-engineering.md`)
+- **Consistency:** follows project conventions · not a newly-invented pattern
+- **Simplicity:** simpler solution possible? · unnecessary abstractions/deps?
+- **Maintainability:** future AI sessions can modify safely · sized files · documented public APIs
 
 ## Review by Change Size
 
-| Change Size | Review Approach | Merge Criteria |
+| Size | Approach | Merge Criteria |
 |---|---|---|
-| **1 file, <50 lines** | Quick scan + run tests | Tests pass + no obvious issues |
-| **1-3 files, <200 lines** | Full checklist review | All checklist items pass |
-| **3-5 files, <500 lines** | Full review + AI self-review + run all tests | Full checklist + regression suite passes |
-| **5+ files, 500+ lines** | **Reject.** Ask AI to split into smaller changes. | N/A — split first, then review separately |
+| 1 file <50 lines | Quick scan + tests | Tests pass |
+| 1–3 files <200 lines | Full checklist | All items pass |
+| 3–5 files <500 lines | Full review + self-review + suite | Checklist + regressions pass |
+| 5+ files / 500+ lines | **REJECT** — split first | N/A |
 
-**Rule:** If the diff is too large to review thoroughly in 15 minutes, it's too large. Reject and demand smaller increments.
+If the diff can't be reviewed thoroughly in 15 minutes, it's too large.
 
----
+## Multi-Agent Review (critical paths: auth, payments, permissions)
 
-## Review Anti-Patterns
+Security reviewer (OWASP/auth/injection) + performance reviewer (N+1/memory/bottlenecks) + test reviewer (coverage/assertion quality) → human synthesizes; merge only when all pass.
 
-| Anti-Pattern | Consequence | Fix |
-|---|---|---|
-| **Skimming because "the AI is smart"** | Vulnerabilities and logic errors ship to production | Full checklist for every change |
-| **Reviewing only the diff, not the behavior** | Code looks clean but does the wrong thing | Test the actual behavior before approving |
-| **Accepting "it compiled" as verification** | Compilation catches syntax, not logic, not security | Run tests + manual smoke test |
-| **Delegating review entirely to AI** | AI can't assess business logic correctness | Human reviews business logic; AI reviews patterns |
-| **Rubber-stamping small changes** | "Small" doesn't mean "safe" — one line can be catastrophically wrong | Apply checklist regardless of change size |
+## Loop
 
----
+`AI GENERATES → SELF-REVIEW → FIX → HUMAN REVIEW → CHANGES → APPROVE → MERGE`
+Never merge after self-review alone; never without tests; never unread.
 
-## The Review Loop
+## Anti-Patterns
 
-```
-AI GENERATES → AI SELF-REVIEWS → AI FIXES → HUMAN REVIEWS → HUMAN REQUESTS CHANGES → AI FIXES → HUMAN APPROVES → MERGE
-```
-
-Do not merge after AI self-review alone. Do not merge without running tests. Do not merge anything you haven't read.
-
----
-
-## Key Takeaways
-
-1. Two-phase review: AI self-review filters obvious issues; human review is the real gate.
-2. Use the checklist. Every time. No exceptions for "small" changes.
-3. Multi-agent review for critical paths (auth, payments, permissions).
-4. Reject diffs larger than 500 lines. Split into smaller, reviewable increments.
-5. AI self-review catches syntax and patterns; it misses business logic and domain edges.
-
----
+| Anti-Pattern | Fix |
+|---|---|
+| Skimming ("the AI is smart") | Full checklist always |
+| Reviewing diff, not behavior | Test actual behavior |
+| "It compiled" as verification | Tests + smoke test |
+| Delegating review entirely to AI | Human owns business logic |
+| Rubber-stamping small changes | One line can be catastrophic |
 
 ## Cross-References
 
-- **Depends on:** `development-workflow.md` — the Review phase in the standard loop
-- **Depends on:** `ai-security-governance.md` — the security review checklist
-- **Applied by:** `testing-philosophy.md` — tests as the verification mechanism
+`development-workflow.md` · `security-engineering.md` · `testing-philosophy.md`
