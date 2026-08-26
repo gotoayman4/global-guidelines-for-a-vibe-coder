@@ -2,377 +2,65 @@
 
 **Status:** Normative
 **Scope:** Global
-**Token Tier:** Full (~2,800 tokens)
-**Last Updated:** 2026-05-24
-**Cross-References:** `testing-philosophy.md`, `development-workflow.md`
+**Token Tier:** Full (~1,400 tokens)
+**Last Updated:** 2026-08-26
+**Cross-References:** `testing-philosophy.md`, `development-workflow.md`, `agent-verification-loop.md`
 
 ---
 
-## Purpose
+The HOW companion to `testing-philosophy.md`. Workflow: implement → write/update tests → run → pass? → smoke test → commit. Never skip the test step; if tests are infeasible (visual-only/config), document manual verification explicitly.
 
-Define concrete, actionable testing patterns for AI-assisted development. This is the HOW companion to `testing-philosophy.md`'s WHY.
+## Directives
 
----
+1. **Contract tests for every API endpoint** — assert status code, response shape via `toMatchObject`, enum-constrained fields, and that sensitive fields (`passwordHash`, `resetToken`) are `undefined`. AI renames fields and leaks internals constantly; contract tests catch it.
+2. **Behavioral integration tests as the workhorse layer** — complete user scenarios at the service/DB boundary (register → verify in DB → duplicate rejected). One vertical test replaces five unit tests.
+3. **E2E for critical flows only, in priority order:** register/login → primary workflow → protected routes redirect → payment flows → secondary workflows. Use `data-testid` selectors.
+4. **Regression test with EVERY bug fix** — a test that would have caught the bug (including whitespace/empty-input variants). No exceptions; tests are the memory AI lacks.
+5. **AI-generated tests MUST be reviewed:** assertions verify behavior (not "function was called"), edge cases actually executed, each test would fail if behavior were wrong, tests independent (no shared mutable state).
+6. **Test data isolation:** each test creates its own data or runs in a rolled-back transaction (`BEGIN`/`ROLLBACK` in beforeEach/afterEach); never depend on other tests' data; never use production data.
+7. **Normalization/mapping functions get EXHAUSTIVE parameterized tests** (`it.each`): every valid value, every deprecated alias, empty/whitespace/null inputs, case variants, invalid inputs. A silently-nulling role alias is a P0 production bug that ships undetected without this.
+8. **Testing by change type:** new feature → integration (happy + 2 edge) + E2E if critical · bug fix → regression · refactor → existing tests still pass · UI change → E2E of the interaction · API change → updated contract test · perf fix → before/after timing.
+9. **Known pitfall — TS6 + jest-mock:** do NOT `import { jest } from '@jest/globals'`; rely on global `jest` from `@types/jest` (its `ResolvedValue<T>` keeps `mockResolvedValue` accepting values after TS6 broke conditional-type distribution). Verify mock compilation after TS upgrades.
 
-## Pattern 1: Contract-First API Testing
+## Canonical Patterns
 
-API contracts are the most important testing surface in AI-assisted development. AI frequently breaks API response shapes, renames fields, and changes status codes.
+Contract test:
 
-**Pattern:**
 ```typescript
-// Contract test for GET /api/users/:id
-describe('GET /api/users/:id', () => {
-  it('returns user with correct shape', async () => {
-    const response = await request(app).get('/api/users/1');
-    
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({
-      id: expect.any(Number),
-      email: expect.any(String),
-      name: expect.any(String),
-      createdAt: expect.any(String),
-      // Role must be one of these values
-      role: expect.stringMatching(/^(admin|user|viewer)$/),
-    });
-    // Sensitive fields must NEVER be exposed
-    expect(response.body.passwordHash).toBeUndefined();
-    expect(response.body.resetToken).toBeUndefined();
-  });
+const response = await request(app).get('/api/users/1');
+expect(response.status).toBe(200);
+expect(response.body).toMatchObject({
+  id: expect.any(Number),
+  email: expect.any(String),
+  role: expect.stringMatching(/^(admin|user|viewer)$/),
 });
+expect(response.body.passwordHash).toBeUndefined();
 ```
 
-**Why this matters:** AI renames `email` to `emailAddress`, changes `role` from string to object, and "helpfully" includes `passwordHash` in responses. Contract tests catch all of these.
+Exhaustive normalization:
 
----
-
-## Pattern 2: Behavioral Integration Tests
-
-Test complete user scenarios at the service/database boundary. These are the workhorse tests in vibe coding.
-
-**Pattern:**
 ```typescript
-describe('User Registration Flow', () => {
-  it('registers a new user and prevents duplicate emails', async () => {
-    // Register
-    const result = await userService.register({
-      email: 'new@test.com',
-      password: 'ValidP@ss1',
-    });
-    expect(result.success).toBe(true);
-    expect(result.user.email).toBe('new@test.com');
-    
-    // Verify in database
-    const dbUser = await db.query('SELECT * FROM users WHERE email = $1', ['new@test.com']);
-    expect(dbUser.rows).toHaveLength(1);
-    
-    // Duplicate prevention
-    const duplicate = await userService.register({
-      email: 'new@test.com',
-      password: 'Another1!',
-    });
-    expect(duplicate.success).toBe(false);
-    expect(duplicate.error).toContain('already exists');
-  });
+it.each(['dean', 'lecturer', 'guest'])('passes through %s', (role) => {
+  expect(normalizeRoleCode(role)).toBe(role);
+});
+it.each([['DEAN', 'dean'], ['DEANS_DELEGATE', 'assistant_dean_academic_affairs']])(
+  'maps %s → %s', (input, expected) => expect(normalizeRoleCode(input)).toBe(expected));
+it.each(['', '   ', 'NOPE'])('returns null for %j', (bad) => {
+  expect(normalizeRoleCode(bad)).toBeNull();
 });
 ```
 
-**Why this matters:** This tests the full vertical: validation → business logic → database → response. If AI changes any layer, this catches it. It's one test covering what would otherwise need 5 unit tests.
+## Anti-Patterns
 
----
-
-## Pattern 3: Critical Flow E2E Tests
-
-E2E tests protect the user journeys where failure is catastrophic. Prioritize ruthlessly.
-
-**Priority list (implement in order):**
-1. User can register and log in
-2. User can perform the primary workflow (e.g., create order, submit form)
-3. User cannot access protected pages without login
-4. Payment/subscription flows work end-to-end
-5. User can perform secondary workflows
-
-**Pattern (Playwright):**
-```typescript
-test('user can register, login, and access dashboard', async ({ page }) => {
-  // Register
-  await page.goto('/register');
-  await page.fill('[data-testid="email-input"]', 'test@example.com');
-  await page.fill('[data-testid="password-input"]', 'ValidP@ss1!');
-  await page.click('[data-testid="register-button"]');
-  await expect(page).toHaveURL('/dashboard');
-  
-  // Verify dashboard content
-  await expect(page.locator('[data-testid="welcome-message"]'))
-    .toContainText('test@example.com');
-  
-  // Logout
-  await page.click('[data-testid="logout-button"]');
-  
-  // Verify protected route redirects to login
-  await page.goto('/dashboard');
-  await expect(page).toHaveURL('/login');
-});
-```
-
-**Why this matters:** AI-generated changes break routing, auth guards, and UI rendering in ways unit and integration tests can't detect. E2E tests are your last line of defense.
-
----
-
-## Pattern 4: Regression Tests for Fixed Bugs
-
-Every time you fix a bug, add a test that would have caught it. This prevents AI from reintroducing the same bug in a future refactor.
-
-**Pattern:**
-```typescript
-describe('Bug #142: Empty search returns 500', () => {
-  it('empty search returns empty results, not 500', async () => {
-    const response = await request(app).get('/api/search?q=');
-    expect(response.status).toBe(200);
-    expect(response.body.results).toEqual([]);
-  });
-  
-  it('whitespace-only search returns empty results', async () => {
-    const response = await request(app).get('/api/search?q=   ');
-    expect(response.status).toBe(200);
-    expect(response.body.results).toEqual([]);
-  });
-});
-```
-
-**Rule:** Every bug fix commit includes a regression test. No exceptions. AI has no memory of past bugs — tests are the memory.
-
----
-
-## Pattern 5: AI-Assisted Test Generation (With Review)
-
-AI can generate test scaffolding, but you must review and augment.
-
-**Generation prompt:**
-```
-Generate tests for the user registration endpoint.
-
-Cover:
-- Happy path: valid email + strong password → 201 + JWT
-- Missing email → 400
-- Invalid email format → 400
-- Weak password → 400 with validation message
-- Duplicate email → 409
-- SQL injection attempt in email field → 400 (sanitized)
-
-Use behavioral assertions: test inputs → outputs.
-Do NOT test implementation details (don't mock internal functions).
-Use the existing test patterns in /tests/auth/register.test.ts.
-```
-
-**Review checklist for AI-generated tests:**
-- [ ] Do assertions verify correct behavior (not just "function called")?
-- [ ] Are edge cases actually tested (not just listed in comments)?
-- [ ] Would the test fail if the behavior was wrong? (Test the test)
-- [ ] Is each test independent? (No shared mutable state)
-- [ ] Are test descriptions clear about what's being tested?
-
----
-
-## Pattern 6: The 5-Minute Smoke Test
-
-After every AI code generation, run a quick manual smoke test. Automated tests catch regressions; manual tests catch UX and visual issues.
-
-```
-Manual smoke test (5 minutes):
-1. Start the app → no startup errors
-2. Log in → redirected correctly
-3. Navigate to the changed feature → renders without errors
-4. Perform the happy path → works as expected
-5. Check browser console → no red errors
-```
-
-**Rule:** Never commit AI-generated code without running the smoke test. "Tests pass" doesn't mean "the UI renders correctly."
-
----
-
-## Pattern 7: Test Data Isolation
-
-AI often generates tests that depend on specific database state. This creates fragile, order-dependent tests.
-
-**Rules for test data:**
-1. Each test creates its own data (or uses a fresh transaction)
-2. Tests never depend on data created by other tests
-3. Database is reset or transactions are rolled back between tests
-4. Never use production data in tests
-
-**Implementation:**
-```typescript
-beforeEach(async () => {
-  // Start transaction
-  await db.query('BEGIN');
-});
-
-afterEach(async () => {
-  // Rollback — database is clean for next test
-  await db.query('ROLLBACK');
-});
-```
-
----
-
-## Pattern 8: Exhaustive Normalization / Mapping Function Tests
-
-Mapping and normalization functions (e.g., role code normalizers, enum mappers, status converters) are high-risk for silent regressions — a missed alias or case variant produces wrong behavior that may not surface until a specific user logs in with that role. These functions MUST have exhaustive parameterized tests.
-
-**What to cover:**
-1. Every valid input (all known codes/values)
-2. Every deprecated alias (mapped to current value)
-3. Empty string, whitespace-only, and null/undefined inputs
-4. Case variations (UPPER, lower, Mixed) when the function normalizes case
-5. Completely invalid/unexpected inputs (should return null or throw)
-
-**Pattern:**
-```typescript
-describe('normalizeRoleCode', () => {
-  describe('active roles (lowercase pass-through)', () => {
-    it.each([
-      'system_admin',
-      'dean',
-      'hod',
-      'program_coordinator',
-      'course_coordinator',
-      'lecturer',
-      'qa_officer',
-      'stakeholder',
-      'guest',
-      'assistant_dean_academic_affairs',
-      'department_curriculum_committee_head',
-    ])('returns %s unchanged for valid lowercase input', (role) => {
-      expect(normalizeRoleCode(role)).toBe(role);
-    });
-  });
-
-  describe('uppercase backend codes', () => {
-    it.each([
-      ['SYSTEM_ADMIN', 'system_admin'],
-      ['DEAN', 'dean'],
-      ['HOD', 'hod'],
-    ])('normalizes %s → %s', (input, expected) => {
-      expect(normalizeRoleCode(input)).toBe(expected);
-    });
-  });
-
-  describe('deprecated aliases', () => {
-    it.each([
-      ['DEANS_DELEGATE', 'assistant_dean_academic_affairs'],
-      ['CURRICULUM_COMMITTEE_MEMBER', 'department_curriculum_committee_head'],
-      ['READ_ONLY_AUDITOR', 'guest'],
-    ])('maps deprecated %s → %s', (input, expected) => {
-      expect(normalizeRoleCode(input)).toBe(expected);
-    });
-  });
-
-  describe('edge cases', () => {
-    it('returns null for empty string', () => {
-      expect(normalizeRoleCode('')).toBeNull();
-    });
-    it('returns null for whitespace-only', () => {
-      expect(normalizeRoleCode('   ')).toBeNull();
-    });
-    it('returns null for invalid role', () => {
-      expect(normalizeRoleCode('NONEXISTENT_ROLE')).toBeNull();
-    });
-  });
-});
-```
-
-**Why this matters:** A role alias that silently returns null instead of a valid role causes users to appear as "unauthorized" — a production P0 bug that can go undetected for weeks if the deprecated role is rarely used. Exhaustive parameterized tests catch these at code-review time.
-
----
-
-## The Testing Workflow
-
-```
-FEATURE IMPLEMENTED → WRITE/UPDATE TESTS → RUN TESTS → TESTS PASS? → 
-  YES → MANUAL SMOKE TEST → COMMIT
-  NO  → AI FIXES CODE → RUN TESTS → (repeat until pass)
-```
-
-**Critical rule:** Never skip the "WRITE/UPDATE TESTS" step. AI-generated code without tests is unverified code. If tests are infeasible (visual-only changes, configuration), document the manual verification steps explicitly.
-
----
-
-## Testing by Change Type
-
-| Change Type | Minimum Tests | Rationale |
-|---|---|---|
-| **New feature** | Integration test (happy path + 2 edge cases) + E2E if critical flow | Verify behavior end-to-end |
-| **Bug fix** | Regression test that reproduces the bug | Prevent re-emergence |
-| **Refactoring** | Existing tests must still pass | Behavior must be preserved |
-| **UI change** | E2E test for the changed interaction | Visual + behavioral verification |
-| **API change** | Updated contract test | Ensure response shape stability |
-| **Performance fix** | Before/after timing assertions | Prove improvement |
-
----
-
-## Anti-Patterns in Testing Practice
-
-| Anti-Pattern | Consequence | Fix |
-|---|---|---|
-| **Tests after features (or never)** | Tests mirror bugs instead of preventing them | Write tests in the same iteration as the code |
-| **Mocking everything** | Tests pass but real integration fails | Prefer integration tests with real database/API over heavily mocked unit tests |
-| **One massive test file** | Impossible to find relevant tests; merge conflicts | One test file per module/feature |
-| **Commenting out failing tests** | Bugs are silently ignored | Fix the code or the test — never suppress |
-| **Testing implementation details** | Tests break on every refactor | Test behavior: given inputs → expected outputs |
-| **Excessive E2E without integration** | Slow feedback; hard to debug failures | Integration tests for fast feedback; E2E for critical flows only |
-
----
-
----
-
-## Known Pitfall: TypeScript 6 + `jest-mock` `mockResolvedValue` Type Compatibility
-
-**Symptom:** `jest.fn().mockResolvedValue({...})` produces `TS2345: Argument of type '{...}' is not assignable to parameter of type 'never'`.
-
-**Root cause:** TypeScript 6 changed `any` in conditional types — `any extends PromiseLike<infer U>` no longer distributes to both branches. This broke `jest-mock`'s `ResolveType<T>`:
-
-```ts
-// jest-mock (v29.x):
-declare type ResolveType<T extends FunctionLike> =
-  ReturnType<T> extends PromiseLike<infer U> ? U : never;
-  //                              ^ TS6: when ReturnType<T> = any,
-  //                              this no longer distributes, resolves to never
-```
-
-When `import { jest } from '@jest/globals'` is used, `jest.fn()` returns `Mock<UnknownFunction>` with `mockResolvedValue(value: ResolveType<UnknownFunction>)` = `mockResolvedValue(value: never)`.
-
-**Fix:** Use global `jest` types (from `@types/jest`) instead of importing from `@jest/globals`. The `@types/jest` `ResolvedValue<T>` includes a `| T` fallback:
-
-```ts
-// @types/jest:
-type ResolvedValue<T> = T extends PromiseLike<infer U> ? U | T : never;
-//                                                     ^^^^
-//                                                     fallback keeps mockResolvedValue accepting any
-```
-
-This means:
-- **Do NOT** `import { jest } from '@jest/globals'` in test files — rely on the global `jest` declaration from `@types/jest`
-- Import `describe`, `it`, `expect`, `beforeEach` etc. from `@jest/globals` as needed (these are unaffected)
-- Declare mock variables with `jest.fn()` (no type params) — the global type provides `Mock<any, any[], any>` where `mockResolvedValue(value: any)` accepts everything
-- For typed builder objects, use `as unknown as MockQueryBuilder` pattern to bypass strict inference
-
-**Detection:** Breaking change between TS 5.x and TS 6.0. Always test `jest.fn().mockResolvedValue(...)` compilation after upgrading TypeScript.
-
----
-
-## Key Takeaways
-
-1. Contract tests for every API. AI breaks response shapes constantly.
-2. Behavioral integration tests as the primary test layer. Test complete scenarios.
-3. E2E tests for critical flows only. Login, payments, core workflows.
-4. Regression test for every bug fix. AI has no memory of past bugs.
-5. Review AI-generated tests. They look correct but often test the wrong thing.
-6. 5-minute smoke test after every AI generation. Tests pass ≠ UI works.
-
----
+| Anti-Pattern | Fix |
+|---|---|
+| Tests after features (or never) | Same iteration as code |
+| Mocking everything | Real DB/API integration preferred |
+| Commenting out failing tests | Fix code or test — never suppress |
+| Testing implementation details | Behavior: inputs → outputs |
+| Massive single test file | One file per module |
+| E2E everywhere, no integration | Integration for speed; E2E critical only |
 
 ## Cross-References
 
-- **Depends on:** `testing-philosophy.md` — the philosophy these patterns implement
-- **Applied by:** `development-workflow.md` — the Test phase in the standard loop
-- **Applied by:** `playwright-e2e.md` — E2E-specific patterns for Playwright
+`testing-philosophy.md` · `agent-verification-loop.md` · `playwright-e2e.md`
