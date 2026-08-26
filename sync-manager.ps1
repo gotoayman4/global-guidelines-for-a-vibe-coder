@@ -420,7 +420,12 @@ $form.Text = "Global Guidelines Sync Manager"
 $form.Size = New-Object Drawing.Size(900, 700)
 $form.MinimumSize = New-Object Drawing.Size(800, 600)
 $form.StartPosition = "CenterScreen"
-$form.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon("powershell.exe")
+try {
+    $psExe = (Get-Command powershell.exe -ErrorAction Stop).Source
+    $form.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($psExe)
+} catch {
+    # Icon is cosmetic — continue without it if resolution fails
+}
 $form.Font = New-Object Drawing.Font("Segoe UI", 9.5)
 $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable
 
