@@ -106,7 +106,8 @@ function Install-StarterFile {
         [string]$mode,
         [switch]$DryRun,
         [string]$backupDir,
-        [string]$projectPath
+        [string]$projectPath,
+        [string]$guidelinesRoot = ""
     )
 
     if (-not (Test-Path $templatePath)) { return }
@@ -122,6 +123,9 @@ function Install-StarterFile {
     }
 
     $starterContent = Get-Content $templatePath -Raw -Encoding UTF8
+    if ($guidelinesRoot) {
+        $starterContent = $starterContent -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRoot
+    }
 
     if (Test-Path $targetPath) {
         # Backup existing file if backup mode active
@@ -206,10 +210,14 @@ function Install-ToolConfigFile {
     $content = Get-Content $templatePath -Raw -Encoding UTF8
     $escapedRepo = [regex]::Escape($guidelinesRepo)
     $content = $content -replace $escapedRepo, "_guidelines"
+    # {{GUIDELINES_ROOT}} expands to the central repo's guidelines/ dir — expand after the
+    # _guidelines rewrite so fallback references are not clobbered into relative mirror paths.
+    $content = $content -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
 
     if (Test-Path $targetPath) {
         $existing = Get-Content $targetPath -Raw -Encoding UTF8
-        if ($existing -match [regex]::Escape($guidelinesRepo) -or $existing -match "D:\\\\WebApps\\\\global-guidelines") {
+        # Reinstall only when the target is stale: unresolved token or a legacy hardcoded central path.
+        if ($existing -match '\{\{GUIDELINES_ROOT\}\}' -or $existing -match 'D:\\WebApps\\global-guidelines') {
             Set-Content -Path $targetPath -Value $content -NoNewline -Encoding UTF8
             Write-Host "  Updated $targetRelPath (replaced absolute paths)" -ForegroundColor Green
         } else {

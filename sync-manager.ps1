@@ -128,6 +128,9 @@ function Update-StarterFile([string]$projectPath, [string]$templateRelPath, [str
         $null = New-Item -ItemType Directory -Path $parentDir -Force
     }
     $starterContent = Get-Content $templatePath -Raw -Encoding UTF8
+    if ($syncContentDir) {
+        $starterContent = $starterContent -replace '\{\{GUIDELINES_ROOT\}\}', $syncContentDir
+    }
     if (Test-Path $targetPath) {
         $existingContent = Get-Content $targetPath -Raw -Encoding UTF8
         $cleanedContent = $existingContent -replace '(?m)^.*-> Source:.*\n?', ''
@@ -190,10 +193,10 @@ function Install-ToolConfig([string]$projectPath, [string]$templateRelPath, [str
     $content = Get-Content $templatePath -Raw -Encoding UTF8
     $escapedRepo = [regex]::Escape($syncContentDir)
     $content = $content -replace $escapedRepo, "_guidelines"
-    $content = $content -replace [regex]::Escape($syncContentDir.Replace('\','\\'))  , "_guidelines"
+    $content = $content -replace '\{\{GUIDELINES_ROOT\}\}', $syncContentDir
     if (Test-Path $targetPath) {
         $existing = Get-Content $targetPath -Raw -Encoding UTF8
-        if ($existing -match [regex]::Escape($syncContentDir) -or $existing -match "D:\\\\WebApps\\\\global-guidelines") {
+        if ($existing -match '\{\{GUIDELINES_ROOT\}\}' -or $existing -match 'D:\\WebApps\\global-guidelines') {
             Set-Content -Path $targetPath -Value $content -NoNewline -Encoding UTF8
             Append-Log $logBox "  Updated $targetRelPath (replaced absolute paths)"
         } else {
@@ -281,7 +284,7 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
         $targetPath   = Join-Path $projectPath    $starter.target
         if ($moduleImported -and (Get-Command Install-StarterFile -ErrorAction SilentlyContinue)) {
             Install-StarterFile -templatePath $templatePath -targetPath $targetPath `
-                -mode $starter.mode -projectPath $projectPath
+                -mode $starter.mode -projectPath $projectPath -guidelinesRoot $syncContentDir
         } else {
             Update-StarterFile $projectPath $starter.template $starter.target $starter.header $logBox $starter.body
         }

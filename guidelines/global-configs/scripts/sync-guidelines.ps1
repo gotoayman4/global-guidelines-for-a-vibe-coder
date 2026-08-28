@@ -134,7 +134,8 @@ if (-not $GlobalOnly -and $projectRoot -ne $null) {
             $templatePath = Join-Path $guidelinesRepo ($starter.template -replace '/', '\')
             $targetPath = Join-Path $projectRoot ($starter.target -replace '/', '\')
             Install-StarterFile -templatePath $templatePath -targetPath $targetPath `
-                -mode $starter.mode -DryRun:$DryRun -backupDir $backupDir -projectPath $projectRoot
+                -mode $starter.mode -DryRun:$DryRun -backupDir $backupDir -projectPath $projectRoot `
+                -guidelinesRoot $guidelinesRepo
         }
     }
 
