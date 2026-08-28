@@ -3,17 +3,19 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `git-workflow-strategy.md`, `testing-philosophy.md`, `environment-management.md`
+**Last Updated:** 2026-08-28
+**Cross-References:** `git-workflow-strategy.md`, `testing-philosophy.md`, `environment-management.md`, `local-ci-strategy.md`
 
 ---
 
 CI is the first reviewer of every AI-generated change — it catches what human review misses and never gets tired. Every AI-generated PR passes automated gates before merge.
 
+**Execution is local by default.** The pipeline runs on the dev machine — pre-commit hooks for staged files, a mandatory pre-push gate for the full pipeline. No cloud CI provider or paid Actions minutes are required; see `local-ci-strategy.md`.
+
 ## The Minimum Pipeline (in order)
 
 ```
-PUSH → LINT → TYPE CHECK → TEST → BUILD → SECURITY SCAN → CLEAN TREE → DEPLOY PREVIEW
+PUSH (pre-push gate, local) → LINT → TYPE CHECK → TEST → BUILD → SECURITY SCAN → CLEAN TREE → DEPLOY PREVIEW
 ```
 
 | Gate | Command | Catches |
@@ -47,4 +49,4 @@ Rollback readiness is mandatory: reversible migrations (tested down-migrations),
 
 ## Cross-References
 
-`git-workflow-strategy.md` · `environment-management.md` · `testing-philosophy.md`
+`git-workflow-strategy.md` · `environment-management.md` · `testing-philosophy.md` · `local-ci-strategy.md`
