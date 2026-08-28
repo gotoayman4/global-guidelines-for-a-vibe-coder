@@ -31,5 +31,18 @@ entire directory as `_guidelines/` in their project root.
 | `global-configs/skills/` | `.skill.md` files installed to project `_skills/` |
 | `global-configs/scripts/` | Sync tooling and validation scripts |
 
+## For AI Agents in Downstream Projects
+
+- **Your project's `AGENTS.md` is the constitution — read it first.** It is self-contained
+  and user-owned; the sync tool never overwrites it.
+- **Propose, don't hoard.** When you discover a mistake worth never repeating, write it to
+  `<project-root>/guidelines-proposals/YYYY-MM-DD-<slug>.md` (what happened, the rule that
+  would prevent it, which guideline file it belongs under). Do not keep lessons only in the
+  session — this is the path for a project lesson to become a global rule.
+- **Template provenance:** `global-configs/templates/AGENTS.starter.md` is generated in the
+  central repo from `global-configs/fragments/` (fragments are not mirrored downstream). Never
+  hand-edit the template in the central repo; never re-extract rules from it here — your
+  project's own `AGENTS.md` is the local truth.
+
 **Note:** In the central repo, validation runs from the repo root via `npm run validate`
 (scripts resolve paths relative to `guidelines/global-configs/scripts/`).
