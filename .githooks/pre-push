@@ -1,0 +1,12 @@
+#!/bin/sh
+# Local CI pre-push gate — replaces the former .github/workflows/validate-guidelines.yml
+# (no cloud Actions minutes; see guidelines/03-git-and-ci/local-ci-strategy.md)
+# Enable once per clone: git config core.hooksPath .githooks
+echo "[pre-push] Running npm run validate (audit + check-links + check-index)..."
+npm run validate
+status=$?
+if [ $status -ne 0 ]; then
+  echo "[pre-push] Validation FAILED — push aborted. Fix the errors, then push again." >&2
+  echo "[pre-push] Skipping is forbidden per guidelines/03-git-and-ci/local-ci-strategy.md." >&2
+fi
+exit $status
