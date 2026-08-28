@@ -32,8 +32,12 @@ This is **not** an application project. It is a centralized development guidelin
 - `guidelines/_index/RETRIEVAL_RULES.md` MUST be updated when loading strategies change
 - `guidelines/_index/GLOSSARY.md` MUST be updated when new terminology is introduced
 
-### Template Updates
-- When a guideline changes, the corresponding starter template in `guidelines/global-configs/templates/` MUST be updated
+### Template Updates (Single-Source Pipeline)
+- Rule text lives in `guidelines/global-configs/fragments/` — one `##` section per file, order and token budget in `fragments/manifest.json`
+- `guidelines/global-configs/templates/AGENTS.starter.md` is GENERATED output — NEVER hand-edit it (`npm run check-drift` fails validate if it diverges)
+- To change a rule: edit the fragment → `npm run render:starters` → `npm run validate` → commit fragment + template together
+- The constitution has a token budget (~7,000 tokens): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined
+- Other starter templates (WORLD, DEVTOOLS, tool configs) are hand-maintained; when a guideline changes, update the matching one
 - Starter templates use `[FILL]` placeholders for project-specific values
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
 
@@ -46,10 +50,13 @@ This is **not** an application project. It is a centralized development guidelin
 ## Commands (Always Load)
 
 ```bash
-npm run audit          # Validate guidelines against known patterns
-npm run check-links    # Check for broken internal links
-npm run check-index    # Verify all files have MASTER_INDEX entries
-npm run validate       # Run audit + check-links + check-index
+npm run audit           # Validate extracted rules against source guideline files
+npm run check-links     # Check for broken internal links
+npm run check-index     # Verify all files have MASTER_INDEX entries
+npm run check-drift     # Fail if AGENTS.starter.md was hand-edited or exceeds its token budget
+npm run render:starters # Regenerate AGENTS.starter.md from global-configs/fragments/
+npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
+npm run validate        # Run audit + check-links + check-index + check-drift
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.
@@ -126,6 +133,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 ## Forbidden Patterns
 
 - No `[FILL]` placeholders in guideline files — only in starter templates
+- No hand-edits to `guidelines/global-configs/templates/AGENTS.starter.md` — it is generated from `global-configs/fragments/`
 - No hardcoded absolute paths in templates — use relative paths or `[FILL]` markers
 - No breaking changes to templates without updating the `sync-manager.ps1` manifest fallback
 - No `console.log` in production scripts
@@ -148,13 +156,14 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 
 - **Quarterly:** Audit skills and templates against source guidelines
 - **When adding a file:** Register in MASTER_INDEX.md, add cross-references, check RETRIEVAL_RULES.md
-- **When updating a guideline:** Also update the matching starter template
+- **When updating a guideline:** Also update the matching fragment in `global-configs/fragments/`, then `npm run render:starters`
 - **Never let AI modify this file without human approval**
 
 ---
 
 **Cross-References:**
 - Index & retrieval: `guidelines/_index/MASTER_INDEX.md`, `guidelines/_index/RETRIEVAL_RULES.md`
-- Templates: `guidelines/global-configs/templates/`
+- Templates: `guidelines/global-configs/templates/` (AGENTS.starter.md is generated — edit `guidelines/global-configs/fragments/`)
+- Fragments pipeline: `guidelines/global-configs/fragments/README.md`
 - Skills: `guidelines/global-configs/skills/`
 - Sync tooling: `sync-manager.ps1`
