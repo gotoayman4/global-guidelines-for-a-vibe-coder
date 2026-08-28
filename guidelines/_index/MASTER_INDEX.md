@@ -201,6 +201,8 @@ flowchart TD
 | [sync-guidelines.ps1](../global-configs/scripts/sync-guidelines.ps1) | Script | Global | ~1,800 | `#script` `#sync` `#project-setup` |
 | [setup-global-references.ps1](../global-configs/scripts/setup-global-references.ps1) | Script | Global | ~1,200 | `#script` `#setup` `#global-config` |
 | [GuidelineSync.psm1](../global-configs/scripts/GuidelineSync.psm1) | Script | Global | ~1,400 | `#script` `#module` `#sync` `#shared` |
+| [render-agents-starter.js](../global-configs/scripts/render-agents-starter.js) | Script | Global | ~150 | `#script` `#render` `#single-source` `#drift-detection` `#token-budget` |
+| [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 
 ### Scripts & Sync Tools
 
