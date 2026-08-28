@@ -87,6 +87,10 @@ Every normalization/mapping function (e.g., role code normalization, enum mappin
 Every project MUST have pre-commit hooks (husky + lint-staged) running: ESLint, TypeScript type-check, and formatting. Hooks MUST be configured in `package.json` and installed automatically after `npm install`. No commits without passing hooks.
 → Source: `03-git-and-ci/git-workflow-strategy.md`
 
+### Local CI — Pre-Push Gate Mandatory
+CI runs locally; no cloud CI provider or paid Actions minutes are required. Every project MUST have a pre-push hook (husky `pre-push`) running the full pipeline before every push: `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]`, plus `npm audit --audit-level=high` and a `git status --porcelain` clean-tree check. `git push --no-verify` is forbidden. If the gate is slow, optimize the gate — never skip it. Hooks MUST NOT require real secrets.
+→ Source: `03-git-and-ci/local-ci-strategy.md`
+
 ---
 
 ## Git (Load for All Code Changes)

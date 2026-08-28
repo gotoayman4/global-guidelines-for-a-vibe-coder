@@ -17,7 +17,7 @@
 | `.qodo/` | Qodo AI | Agent config, workflow definitions | ⚠️ Optional | Auto-generated |
 | `.trae/` | Trae AI | Rules and skills | ⚠️ Optional | Auto-generated |
 | `.kilocode/` | KiloCode AI | Project context, config, skills | ❌ No | May contain node_modules |
-| `.github/` | GitHub | CI workflows, issue templates, instructions | ✅ Yes | Core project infrastructure |
+| `.github/` | GitHub | Issue templates, instructions; CI workflows optional (local CI via git hooks is the default — see `03-git-and-ci/local-ci-strategy.md`) | ✅ Yes | Core project infrastructure |
 | `.vscode/` | VS Code | Editor settings, snippets, extensions | ✅ Yes | Shared dev settings only |
 | `.agents/` | Agent skills | Custom skill definitions | ✅ Yes | Project-specific AI skills |
 
@@ -25,7 +25,7 @@
 
 1. **Never manually edit** auto-generated tool directories (`.qoder/`, `.qodo/`, `.trae/`, `.windsurf/`) — they are managed by their respective tools.
 2. **Project rules** in AI tool directories should reference your `AGENTS.md` or `CLAUDE.md` as the single source of truth.
-3. **If a tool directory causes CI issues**, add it to `.gitignore`.
+3. **If a tool directory causes CI (pre-push gate) issues**, add it to `.gitignore`.
 4. **New AI tools** should add their config directory to `.gitignore` and document it here.
 5. **Shared editor settings** (`.vscode/settings.json`, `.vscode/extensions.json`) are safe to commit; personal settings go in `.gitignore`.
 
