@@ -90,7 +90,6 @@ if ($manifest -and $manifest.starters) {
         @{ template = "global-configs\templates\ARCHITECTURE_INDEX.starter.md";  target = "ARCHITECTURE_INDEX.md";            mode = "create-if-missing"; header = "# ARCHITECTURE_INDEX.md";      body = "**Purpose:**" }
         @{ template = "global-configs\templates\DEVTOOLS.starter.md";             target = "DEVTOOLS.md";                      mode = "create-if-missing"; header = "# DEVTOOLS.md";                body = "**Purpose:**" }
         @{ template = "global-configs\templates\WORLD.starter.md";               target = "WORLD.md";                         mode = "create-if-missing"; header = "# WORLD.md";                  body = "**Purpose:**" }
-        @{ template = "global-configs\templates\WORLD.example.md";               target = "WORLD.example.md";                 mode = "always-overwrite";  header = $null;                        body = $null }
         @{ template = "global-configs\templates\copilot-instructions.starter.md"; target = ".github\copilot-instructions.md"; mode = "create-if-missing"; header = "# GitHub Copilot Instructions"; body = "**Purpose:**" }
     )
 }

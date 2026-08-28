@@ -67,13 +67,6 @@
       "description": "Dev commands and tool configuration"
     },
     {
-      "template": "global-configs/templates/WORLD.example.md",
-      "target": "WORLD.example.md",
-      "mode": "always-overwrite",
-      "required": false,
-      "description": "Filled WORLD.md example for reference"
-    },
-    {
       "template": "global-configs/templates/copilot-instructions.starter.md",
       "target": ".github/copilot-instructions.md",
       "mode": "create-if-missing",
