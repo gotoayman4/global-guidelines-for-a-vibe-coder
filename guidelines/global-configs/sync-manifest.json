@@ -138,14 +138,6 @@
       "mode": "create-if-missing",
       "pathSubstitution": true,
       "description": "Qoder project rules"
-    },
-    {
-      "template": "global-configs/templates/copilot-instructions.md.template",
-      "target": ".github/copilot-instructions-brief.md",
-      "detect": null,
-      "mode": "create-if-missing",
-      "pathSubstitution": true,
-      "description": "Brief Copilot pointer (for VS Code settings.json file reference)"
     }
   ],
 

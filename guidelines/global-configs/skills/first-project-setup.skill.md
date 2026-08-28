@@ -58,7 +58,7 @@ You are a project setup specialist. You guide users with zero coding experience 
    - **Kilo Code:** `kilo.jsonc` — use template `global-configs/templates/kilo.jsonc.template`
    - **Qoder:** `.qoder/rules/global-guidelines.md` — use template `global-configs/templates/qoder-global-guidelines.md.template` (or skip — Qoder reads AGENTS.md natively)
    - **Windsurf:** `.windsurf/rules/global-guidelines.md` — use template `global-configs/templates/windsurf-global-guidelines.md.template` (or skip — Windsurf reads AGENTS.md natively)
-   - **GitHub Copilot:** `.github/copilot-instructions.md` — use template `global-configs/templates/copilot-instructions.md.template`
+   - **GitHub Copilot:** `.github/copilot-instructions.md` — use template `global-configs/templates/copilot-instructions.starter.md` (pointer to AGENTS.md; VS Code Copilot should read AGENTS.md directly via `vscode-settings.json.template`)
    - **Antigravity:** `GEMINI.md` — use template `global-configs/templates/GEMINI.md.template`
    - **VS Code:** `.vscode/settings.json` — merge with existing, enable AGENTS.md support
 5c. **Create WORLD.md (optional):** If the project needs product intent guardrails, create `WORLD.md` from `global-configs/templates/WORLD.starter.md`

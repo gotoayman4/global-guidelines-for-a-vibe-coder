@@ -172,7 +172,7 @@ flowchart TD
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~700 | `#template` `#rules` `#agents` |
-| [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~550 | `#template` `#rules` `#copilot` |
+| [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~100 | `#template` `#rules` `#copilot` |
 | [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~500 | `#template` `#product-intent` `#guardrail` |
 | [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~450 | `#template` `#product-intent` `#example` |
 | [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~500 | `#template` `#devtools` `#gitignore` |
@@ -217,7 +217,6 @@ flowchart TD
 | [kilo.jsonc.template](../global-configs/templates/kilo.jsonc.template) | Template | Global | ~30 | `#template` `#kilo` `#tool-config` |
 | [GEMINI.md.template](../global-configs/templates/GEMINI.md.template) | Template | Global | ~50 | `#template` `#gemini` `#tool-config` |
 | [vscode-settings.json.template](../global-configs/templates/vscode-settings.json.template) | Template | Global | ~150 | `#template` `#vscode` `#tool-config` |
-| [copilot-instructions.md.template](../global-configs/templates/copilot-instructions.md.template) | Template | Global | ~50 | `#template` `#copilot` `#tool-config` |
 | [cursor-global-guidelines.mdc.template](../global-configs/templates/cursor-global-guidelines.mdc.template) | Template | Global | ~80 | `#template` `#cursor` `#tool-config` |
 | [windsurf-global-guidelines.md.template](../global-configs/templates/windsurf-global-guidelines.md.template) | Template | Global | ~80 | `#template` `#windsurf` `#tool-config` |
 | [trae-global-guidelines.md.template](../global-configs/templates/trae-global-guidelines.md.template) | Template | Global | ~80 | `#template` `#trae` `#tool-config` |
