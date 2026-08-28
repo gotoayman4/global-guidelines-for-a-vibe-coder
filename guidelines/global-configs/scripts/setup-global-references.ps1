@@ -124,8 +124,10 @@ if ($isAdmin) {
         Remove-Item -LiteralPath $cursorRuleFile -Force
     }
     if (Test-Path -LiteralPath $cursorTemplate) {
-        $null = New-Item -ItemType SymbolicLink -Path $cursorRuleFile -Target $cursorTemplate -Force
-        Write-Host "  User rule symlinked: $cursorRuleFile" -ForegroundColor Green
+        # Resolved copy (not a symlink — the raw template carries an unresolved {{GUIDELINES_ROOT}} token)
+        $cursorContent = (Get-Content $cursorTemplate -Raw -Encoding UTF8) -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
+        Set-Content -Path $cursorRuleFile -Value $cursorContent -NoNewline -Encoding UTF8
+        Write-Host "  User rule created: $cursorRuleFile" -ForegroundColor Green
     } else {
         Write-Host "  WARNING: template not found at $cursorTemplate" -ForegroundColor Yellow
     }

@@ -217,10 +217,12 @@ Use absolute base path `$guidelinesRepo/` when loading files.
     if (Test-Path -LiteralPath $cursorGlobalGuidelines) {
         Remove-Item -LiteralPath $cursorGlobalGuidelines -Force
     }
-    # Symlink from Cursor user rules to the central guidelines template
+    # Cursor user rule: template copy with {{GUIDELINES_ROOT}} resolved (not a symlink —
+    # the raw template carries an unresolved token)
     $cursorTemplate = "$guidelinesRepo\global-configs\templates\cursor-global-guidelines.mdc.template"
     if (Test-Path -LiteralPath $cursorTemplate) {
-        $null = New-Item -ItemType SymbolicLink -Path $cursorGlobalGuidelines -Target $cursorTemplate -Force
+        $cursorContent = (Get-Content $cursorTemplate -Raw -Encoding UTF8) -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
+        Set-Content -Path $cursorGlobalGuidelines -Value $cursorContent -NoNewline -Encoding UTF8
     }
     Write-Host "    User rule created" -ForegroundColor Green
 
