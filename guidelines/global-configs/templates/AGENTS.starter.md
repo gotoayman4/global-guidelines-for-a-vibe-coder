@@ -2,7 +2,7 @@
 
 **Purpose:** This file contains ALL extracted rules inline — no external file references.
 The rules are self-contained and work in any AI tool without permission issues.
-For deeper context, a `_guidelines/` mirror is available in this project (run `sync-guidelines.ps1` to create/refresh it).
+For deeper context, a `_guidelines/` mirror is available in this project (refresh it via your project's `npm run sync-guidelines`, or run the central script directly: `pwsh -File <central-repo>\guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .`).
 
 **Guideline source:** `D:\WebApps\global-guidelines-for-a-vibe-coder`
 **How to use:** Search for `[FILL]` and replace with project-specific values.
@@ -301,7 +301,7 @@ Set and enforce budgets: LCP < 2.5s, bundle < 200KB gzipped, API p95 < 500ms. Re
 1. Read this AGENTS.md — always
 2. Read WORLD.md for product intent guardrails
 3. For UI/UX work: also load `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`
-4. Look up task type in `_guidelines/_index/MASTER_INDEX.md` (mirrored by `sync-guidelines.ps1`)
+4. Look up task type in `_guidelines/_index/MASTER_INDEX.md` (mirrored by the guidelines sync script — see "How to Use" step 1)
 5. Load primary guideline files per task-type table
 6. Apply compact extracts when context is tight (<20K tokens)
 
@@ -400,7 +400,7 @@ Since the developer (vibe coder) cannot read code, AI MUST optimize responses fo
 
 ## How to Use This File
 
-1. **Run** `sync-guidelines.ps1` from this repo to mirror guidelines into `_guidelines/` (skip if already done)
+1. **Mirror** the central guidelines into `_guidelines/`: if this is the central repo, run `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .`; if this is a downstream project, run `npm run sync-guidelines` (or the equivalent script your project provides). Skip if `_guidelines/` already exists.
 2. **Create** this file as `AGENTS.md` in your project root (all rules are inline — no external file references needed)
 3. **Search for `[FILL]`** and replace ALL occurrences with project-specific values
 4. **Review** the global rules above — remove any that don't apply to your stack
@@ -413,7 +413,7 @@ Since the developer (vibe coder) cannot read code, AI MUST optimize responses fo
 - **Quarterly:** Audit rules against source guidelines. Re-extract outdated rules.
 - **When guidelines change:** Check if extracted rules need updating.
 - **When stack changes:** Update the Stack table and review all rules.
-- **Source of truth:** Central repo at `D:\WebApps\global-guidelines-for-a-vibe-coder\` — run `sync-guidelines.ps1` to refresh `_guidelines/`
+- **Source of truth:** Central repo at `D:\WebApps\global-guidelines-for-a-vibe-coder\` — refresh `_guidelines/` by running the central sync script (`pwsh -File <central-repo>\guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .`) or your project's `npm run sync-guidelines`.
 
 ---
 
