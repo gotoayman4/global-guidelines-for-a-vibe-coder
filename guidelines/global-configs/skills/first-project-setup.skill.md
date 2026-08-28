@@ -63,6 +63,7 @@ You are a project setup specialist. You guide users with zero coding experience 
    - **VS Code:** `.vscode/settings.json` — merge with existing, enable AGENTS.md support
 5c. **Create WORLD.md (optional):** If the project needs product intent guardrails, create `WORLD.md` from `global-configs/templates/WORLD.starter.md`
 5d. **Configure ESLint:** Add `max-lines` rule to the project's ESLint config: `"max-lines": ["error", { "max": 500, "skipBlankLines": true, "skipComments": true }]`. Run `npm run lint` to verify the config is valid.
+5e. **Configure local CI hooks (mandatory):** CI is local — no cloud CI scaffold. Run `npx husky init`; set `.husky/pre-commit` to lint-staged (ESLint, type-check, format) and `.husky/pre-push` to the full pipeline: `npm run lint && npm run type-check && npm test -- --run && npm run build` (map to the project's actual scripts), plus a `git status --porcelain` clean-tree check. Hooks must not require real secrets. See `03-git-and-ci/local-ci-strategy.md`.
 6. **Run and verify:** Start dev server (`npm run dev`), confirm the app loads in the browser.
 7. **First commit with constitution:** `git add .`, `git commit -m "feat: add project constitution and configuration"`.
 8. **Connect remote:** Help user create a GitHub repository and push.
@@ -106,6 +107,11 @@ You are a project setup specialist. You guide users with zero coding experience 
 ### ESLint Configuration
 - [ ] `max-lines` rule added: `["error", { max: 500, skipBlankLines, skipComments }]`
 - [ ] `npm run lint` passes with the new config
+
+### Local CI Hooks
+- [ ] husky installed; pre-commit hook runs lint-staged
+- [ ] pre-push hook runs full pipeline (lint → type-check → test → build)
+- [ ] No real secrets required by hooks
 
 ### Git Initialized
 - [ ] Initial commit made
@@ -153,5 +159,6 @@ You are a project setup specialist. You guide users with zero coding experience 
 - Day one setup guide: `../../docs/human/day-one-setup.md`
 - Beginner vibe coder guide: `../../docs/human/beginner-vibe-coder-guide.md`
 - Git workflow: `03-git-and-ci/git-workflow-strategy.md`
+- Local CI strategy: `03-git-and-ci/local-ci-strategy.md`
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`
 - File organization rules: `02-engineering-practices/file-organization.md`

@@ -31,8 +31,9 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 
 1. `03-git-and-ci/git-workflow-strategy.md` — Branch protection, commit before deploy
 2. `03-git-and-ci/ci-cd-philosophy.md` — CI pipeline gates
-3. `02-engineering-practices/security-engineering.md` — Pre-deploy security checklist
-4. `02-engineering-practices/cost-optimization-strategy.md` — Free-tier hosting options
+3. `03-git-and-ci/local-ci-strategy.md` — Local pre-push gate (the CI that must be green before deploy)
+4. `02-engineering-practices/security-engineering.md` — Pre-deploy security checklist
+5. `02-engineering-practices/cost-optimization-strategy.md` — Free-tier hosting options
 
 **Guideline base path:** Use `_guidelines/` if the project mirror exists; otherwise use the central repo path from your machine's global agent config.
 
@@ -52,6 +53,7 @@ You are a deployment specialist. You guide vibe coders through the process of ma
    - No hardcoded secrets or API keys
    - No TODO/FIXME comments remaining
    - Build succeeds locally (`npm run build`)
+   - Local CI pre-push gate is green (lint → type check → test → build — see `03-git-and-ci/local-ci-strategy.md`)
    - Environment variables configured for production
    - AGENTS.md and WORLD.md are committed and up to date
 2. **Choose hosting platform:** Default to free-tier options:
@@ -113,6 +115,7 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 ## Anti-Patterns
 
 - Do NOT deploy without running `npm run build` locally first — if the build fails locally, it will fail on the server
+- Do NOT deploy with a red or skipped local CI gate — the pre-push gate must pass before any deploy
 - Do NOT hardcode environment variables — use the hosting platform's environment variable settings
 - Do NOT deploy on a Friday or before a weekend — deploy Monday-Thursday so you're available to fix issues
 - Do NOT skip the smoke test — always verify the live URL after deploying
@@ -136,6 +139,7 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 **Cross-References:**
 - Git workflow: `03-git-and-ci/git-workflow-strategy.md`
 - CI/CD philosophy: `03-git-and-ci/ci-cd-philosophy.md`
+- Local CI strategy: `03-git-and-ci/local-ci-strategy.md`
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Cost optimization: `02-engineering-practices/cost-optimization-strategy.md`
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`
