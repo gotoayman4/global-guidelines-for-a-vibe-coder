@@ -171,11 +171,11 @@ flowchart TD
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
-| [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~700 | `#template` `#rules` `#agents` |
-| [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~100 | `#template` `#rules` `#copilot` |
-| [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~500 | `#template` `#product-intent` `#guardrail` |
-| [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~450 | `#template` `#product-intent` `#example` |
-| [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~500 | `#template` `#devtools` `#gitignore` |
+| [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~6,000 | `#template` `#rules` `#agents` |
+| [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~50 | `#template` `#rules` `#copilot` |
+| [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~1,300 | `#template` `#product-intent` `#guardrail` |
+| [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~1,200 | `#template` `#product-intent` `#example` |
+| [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~600 | `#template` `#devtools` `#gitignore` |
 | [ARCHITECTURE_INDEX.starter.md](../global-configs/templates/ARCHITECTURE_INDEX.starter.md) | Starter | Global | ~400 | `#template` `#architecture` `#navigation` `#index` |
 | [code-review.skill.md](../global-configs/skills/code-review.skill.md) | Skill | Global | ~800 | `#skill` `#review` `#quality` |
 | [test-generation.skill.md](../global-configs/skills/test-generation.skill.md) | Skill | Global | ~750 | `#skill` `#testing` `#generation` |
