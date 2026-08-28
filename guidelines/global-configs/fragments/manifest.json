@@ -1,0 +1,17 @@
+{
+  "$comment": "Render order for AGENTS.starter.md. Each fragment is one full markdown section (## header included). The renderer concatenates in this order and joins sections with a single blank line. Edit rules HERE, never in templates/AGENTS.starter.md — that file is generated output.",
+  "output": "../templates/AGENTS.starter.md",
+  "maxTokens": 7000,
+  "sections": [
+    "00-preamble.md",
+    "10-security.md",
+    "20-testing.md",
+    "30-git.md",
+    "40-architecture.md",
+    "50-design-ux.md",
+    "60-ai-collaboration.md",
+    "70-rtl-arabic.md",
+    "80-performance.md",
+    "90-project-setup.md"
+  ]
+}
