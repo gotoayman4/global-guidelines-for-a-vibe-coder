@@ -98,6 +98,7 @@ flowchart TD
 |---|---|---|---|---|
 | [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~1,500 | `#git` `#branching` `#commits` |
 | [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~1,800 | `#ci-cd` `#pipelines` `#automation` |
+| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~750 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` |
 | [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~1,500 | `#environments` `#secrets` `#config` |
 
 ### 04 — Architecture
@@ -241,7 +242,7 @@ flowchart TD
 | **File upload implementation** | file-upload-security, security-engineering | error-handling-philosophy, api-design-standards |
 | **Router / navigation setup** | router-architecture, frontend-architecture | react-architecture |
 | **Code duplication / deduplication** | code-duplication-prevention, testing-patterns | ai-collaboration-mindset |
-| **CI/CD setup** | ci-cd-philosophy, git-workflow-strategy, environment-management | — |
+| **CI/CD setup** | local-ci-strategy, ci-cd-philosophy, git-workflow-strategy, environment-management | — |
 | **Code review** | code-review-workflow, ai-security-governance | testing-philosophy, ux-design-principles |
 | **Refactoring** | refactoring-strategy, testing-philosophy | performance-optimization, visual-design-principles |
 | **RTL/i18n support** | rtl-tech-stack, bidirectional-design-principles, accessibility-standards | frontend-architecture, mui-rtl-bidirectional only when MUI is selected, shadcn-rtl-bidirectional only when shadcn/ui is selected |
@@ -255,7 +256,7 @@ flowchart TD
 | **Rules file setup** | AGENTS.starter.md, ai-governance-framework | — |
 | **Skill installation** | code-review.skill.md, test-generation.skill.md, refactoring.skill.md | security-audit.skill.md, performance-audit.skill.md |
 | **Windows installer** | inno-setup.skill | security-engineering, cost-optimization-strategy |
-| **Production deployment** | deploy-production.skill, git-workflow-strategy | ci-cd-philosophy, environment-management |
+| **Production deployment** | deploy-production.skill, git-workflow-strategy | ci-cd-philosophy, local-ci-strategy, environment-management |
 | **First project setup** | first-project-setup.skill | planning-and-scoping, git-workflow-strategy, design-system-governance |
 | **Cost optimization** | cost-optimization-strategy, context-management-strategy | — |
 | **RTL/Arabic setup** | rtl-tech-stack, bidirectional-design-principles, accessibility-standards | mui-rtl-bidirectional only when MUI is selected; shadcn-rtl-bidirectional only when shadcn/ui is selected |

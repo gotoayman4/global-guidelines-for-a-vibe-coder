@@ -46,6 +46,7 @@ Extract keywords from the user's request to identify task type:
 | "Write tests", "Add tests", "Test coverage" | Testing | `#testing` |
 | "Plan", "Architecture", "Design the system" | Planning | `#planning` `#architecture` |
 | "Deploy", "CI/CD", "Pipeline" | CI/CD | `#ci-cd` `#git` |
+| "CI quota", "Actions minutes", "run CI locally", "free CI", "pre-push gate", "husky" | Local CI | `#local-ci` `#ci-cd` `#cost` |
 | "Review this code", "Code review" | Code review | `#review` `#security` |
 | "Refactor", "Clean up", "Improve structure" | Refactoring | `#refactoring` `#performance` |
 | "RTL", "Arabic", "Bidirectional", "i18n", "Numerals" | RTL/Arabic/i18n | `#rtl` `#i18n` `#a11y` `#arabic` |

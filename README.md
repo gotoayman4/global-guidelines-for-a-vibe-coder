@@ -21,7 +21,7 @@ guidelines/
     scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js
     skills/      — .skill.md files for code-review, refactoring, security-audit, etc.
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
-.github/workflows/       — CI validation (audit + links + index on every push/PR)
+.github/workflows/       — optional cloud workflows (CI is local by default — see 03-git-and-ci/local-ci-strategy.md)
 ```
 
 ## Quick Start
@@ -29,6 +29,7 @@ sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
 **Per-machine (once):**
 ```
 powershell -File guidelines\global-configs\scripts\setup-global-references.ps1
+git config core.hooksPath .githooks   # enable the local CI pre-push gate (runs npm run validate)
 ```
 Sets up global AGENTS.md, VS Code AI settings, and symlinks for tools. Symlinks require an elevated shell (or Windows Developer Mode).
 
@@ -68,7 +69,7 @@ Already ignored: `sync-projects.json`, `opencode.json` (machine-specific), `REPO
 ## Validation
 
 ```bash
-npm run validate       # audit + check-links + check-index (CI enforces on main)
+npm run validate       # audit + check-links + check-index (enforced by a pre-push hook, not cloud CI)
 ```
 
 ## How to Change Something Safely

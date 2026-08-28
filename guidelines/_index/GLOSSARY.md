@@ -101,6 +101,9 @@ Standardize terminology across all guideline documents so AI agents and humans s
 | **Branch** | A parallel version of your project where you can work on features independently. | Like a side road — you can explore without affecting the main highway. |
 | **Merge** | Combining changes from one branch into another. | Like two streams joining into one river. |
 | **Pull Request (PR)** | A request to merge your branch's changes into the main branch, usually reviewed first. | Like submitting your homework — the teacher reviews it before accepting. |
+| **Local CI** | Running all CI quality gates on your own machine via Git hooks instead of a paid cloud CI service. See `03-git-and-ci/local-ci-strategy.md`. | Like doing your own quality inspection at home before shipping a package, instead of paying a factory to check it. |
+| **Pre-Push Gate** | A Git hook that runs the full quality pipeline (lint, type check, tests, build) before every push; the push is blocked if anything fails. | Like a final walkthrough of your house before handing over the keys — nothing leaves until everything checks out. |
+| **act** | An optional open-source tool that runs GitHub Actions workflow files locally inside Docker, without spending cloud minutes. | Like a flight simulator for your automation scripts — practice on the ground before paying for the flight. |
 | **N+1 Query** | A performance problem where the app makes N+1 database queries instead of 1, causing slowness. | Like calling the pizza place 50 times to order 50 toppings one at a time instead of ordering once. |
 | **Debounce** | Delaying execution until the user stops typing, to avoid processing every keystroke. | Like waiting until someone finishes talking before you start responding. |
 | **Memo** | Caching a computation so it doesn't recalculate unnecessarily. | Like writing down a phone number instead of looking it up every time. |

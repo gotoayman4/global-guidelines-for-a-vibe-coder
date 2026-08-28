@@ -21,7 +21,7 @@ entire directory as `_guidelines/` in their project root.
 | `00-ai-fundamentals/` | AI mindset, setup, prompt engineering |
 | `01-workflow-methodology/` | Planning, debugging, refactoring |
 | `02-engineering-practices/` | UX, accessibility, testing, security, performance |
-| `03-git-and-ci/` | Git workflow, CI/CD, environment management |
+| `03-git-and-ci/` | Git workflow, local CI strategy, CI/CD, environment management |
 | `04-architecture/` | Frontend/backend/database/API/state/router patterns |
 | `05-stack-guides/` | React, TypeScript, MUI, shadcn, NestJS, Supabase, Playwright, Vite, RTL |
 | `06-frontend-patterns/` | Forms, tables, dialogs, notifications, responsive, visual design |
