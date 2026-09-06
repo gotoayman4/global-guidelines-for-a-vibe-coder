@@ -148,7 +148,7 @@ flowchart TD
 
 | File | Status | Scope | Tokens (Full) | Tags |
 |---|---|---|---|---|
-| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Advisory | Global | ~1,500 | `#documentation` `#strategy` `#maintenance` |
+| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~900 | `#documentation` `#strategy` `#maintenance` |
 | [adr-template.md](../07-documentation/adr-template.md) | Advisory | Global | ~800 | `#adr` `#decisions` `#template` |
 
 ### 08 — Governance
@@ -205,6 +205,7 @@ flowchart TD
 | [GuidelineSync.psm1](../global-configs/scripts/GuidelineSync.psm1) | Script | Global | ~1,400 | `#script` `#module` `#sync` `#shared` |
 | [render-agents-starter.js](../global-configs/scripts/render-agents-starter.js) | Script | Global | ~150 | `#script` `#render` `#single-source` `#drift-detection` `#token-budget` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
+| [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |
 
 ### Scripts & Sync Tools
 
@@ -242,6 +243,7 @@ flowchart TD
 | **Bug fixing** | debugging-with-ai, error-handling-philosophy, agent-verification-loop | testing-patterns, ai-code-documentation |
 | **Any feature completion** | agent-verification-loop | testing-patterns |
 | **Writing or reviewing code comments** | ai-code-documentation | testing-philosophy, documentation-strategy |
+| **Docs / steering update** | documentation-strategy, ai-code-documentation | agent-verification-loop, ai-governance-framework |
 | **File upload implementation** | file-upload-security, security-engineering | error-handling-philosophy, api-design-standards |
 | **Router / navigation setup** | router-architecture, frontend-architecture | react-architecture |
 | **Code duplication / deduplication** | code-duplication-prevention, testing-patterns | ai-collaboration-mindset |

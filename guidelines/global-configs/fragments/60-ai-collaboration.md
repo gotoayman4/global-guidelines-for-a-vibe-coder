@@ -16,5 +16,7 @@
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Output Efficiency — Vibe Coder Optimized.** The developer cannot read code. Describe WHAT changed in plain language (1-2 sentences) and WHERE (file path + line range); compare before/after behavior, not code; translate error messages into plain language. Use file edit tools directly — NEVER paste code blocks in chat unless the developer explicitly asks "show me the code".
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Globalize Lessons.** When you discover a mistake worth never repeating, write it as a proposal in `guidelines-proposals/YYYY-MM-DD-<slug>.md` (project root, committed to git) containing: what happened, the rule that would have prevented it, and which central guideline file it belongs under. NEVER store the lesson only in the session or a local note. Proposals are reviewed at sync time and promoted into the central guidelines repo — this is the only path a project lesson has to become a global rule.
+- **Docs-Decision Before "Done".** Every task MUST end with `Docs: updated <files> | N/A (<reason>)`. Trigger-changes (new endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) MUST update steering docs in the same iteration — stale docs mislead the next session worse than missing docs.
+  → Source: `07-documentation/documentation-strategy.md`
+- **Globalize Lessons.** When you discover a mistake worth never repeating, write it as a proposal in `guidelines-proposals/YYYY-MM-DD-<slug>.md` (what happened, the preventing rule, target guideline file). NEVER store the lesson only in the session. Proposals are reviewed at sync time.
   → Source: `01-workflow-methodology/development-workflow.md`

@@ -48,6 +48,7 @@ Extract keywords from the user's request to identify task type:
 | "Deploy", "CI/CD", "Pipeline" | CI/CD | `#ci-cd` `#git` |
 | "CI quota", "Actions minutes", "run CI locally", "free CI", "pre-push gate", "husky" | Local CI | `#local-ci` `#ci-cd` `#cost` |
 | "Review this code", "Code review" | Code review | `#review` `#security` |
+| "Update docs", "Stale docs", "Steering", "AI context" | Docs / steering update | `#documentation` `#strategy` `#maintenance` |
 | "Refactor", "Clean up", "Improve structure" | Refactoring | `#refactoring` `#performance` |
 | "RTL", "Arabic", "Bidirectional", "i18n", "Numerals" | RTL/Arabic/i18n | `#rtl` `#i18n` `#a11y` `#arabic` |
 | "Slow", "Performance", "Optimize" | Performance | `#performance` |

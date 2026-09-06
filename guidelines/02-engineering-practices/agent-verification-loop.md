@@ -54,7 +54,8 @@ Never as routine per-change verification. Never loop captures — one capture, o
 1. **Implement** the requested change.
 2. **Execute** the minimum verification from the table above at the CHEAPEST sufficient tier (see Cost Tiering). Run the commands yourself — do not assume they pass.
 3. **On failure:** fix and re-run. If the same failure persists after 2 fix attempts, STOP and report honestly (see `escalation rules` below).
-4. **Report with evidence:** state WHAT was verified, HOW (exact command or check), and the RESULT. Example: "Ran `npm test` — 14 passed, 0 failed. Loaded `/login` via headless e2e — form submits, error message shows on empty submit."
+3a. **Docs-Decision:** classify the change against the Trigger table in `documentation-strategy.md`. Trigger = update steering docs + freshness headers NOW, same iteration. Non-trigger = prepare the `N/A (<reason>)` justification.
+4. **Report with evidence:** state WHAT was verified, HOW (exact command or check), and the RESULT. Example: "Ran `npm test` — 14 passed, 0 failed. Loaded `/login` via headless e2e — form submits, error message shows on empty submit." Append the Docs line: `Docs: updated <files>` or `Docs: N/A (<reason>)`. A "Done" with no Docs line is an unverifiable claim.
 5. **State what was NOT verified** if any part of the table could not be run (e.g., no dev server available). Never silently omit it.
 
 ## Honesty Rules
@@ -69,6 +70,7 @@ Never as routine per-change verification. Never loop captures — one capture, o
 | Anti-Pattern | Why It's Forbidden |
 |---|---|
 | "Done" with no verification step mentioned | Unverifiable claim — user must trust blindly |
+| "Done" with no Docs-Decision line | Same as unverified claim — next session inherits stale context |
 | "Tests should pass" / "This will work" | Prediction presented as evidence |
 | Running only the happy path | Most bugs live in error/empty states |
 | Skipping RTL check on UI work | RTL regressions are invisible in LTR and are the #1 bilingual-app defect |

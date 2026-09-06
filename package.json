@@ -10,6 +10,7 @@
     "render:starters": "node guidelines/global-configs/scripts/render-agents-starter.js",
     "check-drift": "node guidelines/global-configs/scripts/render-agents-starter.js --check",
     "status:projects": "node guidelines/global-configs/scripts/check-project-freshness.js",
+    "docs:check": "node guidelines/global-configs/scripts/check-docs-freshness.js",
     "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift"
   },
   "engines": {
