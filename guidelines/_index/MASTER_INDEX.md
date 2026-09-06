@@ -177,6 +177,8 @@ flowchart TD
 | [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~1,200 | `#template` `#product-intent` `#example` |
 | [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~600 | `#template` `#devtools` `#gitignore` |
 | [ARCHITECTURE_INDEX.starter.md](../global-configs/templates/ARCHITECTURE_INDEX.starter.md) | Starter | Global | ~400 | `#template` `#architecture` `#navigation` `#index` |
+| [AI_CONTEXT.starter.md](../global-configs/templates/AI_CONTEXT.starter.md) | Starter | Global | ~800 | `#template` `#ai-context` `#onboarding` |
+| [AI_ARCHITECTURE.starter.md](../global-configs/templates/AI_ARCHITECTURE.starter.md) | Starter | Global | ~800 | `#template` `#architecture` `#reference` |
 | [code-review.skill.md](../global-configs/skills/code-review.skill.md) | Skill | Global | ~800 | `#skill` `#review` `#quality` |
 | [test-generation.skill.md](../global-configs/skills/test-generation.skill.md) | Skill | Global | ~750 | `#skill` `#testing` `#generation` |
 | [refactoring.skill.md](../global-configs/skills/refactoring.skill.md) | Skill | Global | ~750 | `#skill` `#refactoring` `#maintenance` |

@@ -60,6 +60,20 @@
       "description": "Architecture document navigation index"
     },
     {
+      "template": "global-configs/templates/AI_CONTEXT.starter.md",
+      "target": "docs/AI_CONTEXT.md",
+      "mode": "create-if-missing",
+      "required": false,
+      "description": "Compressed AI onboarding overview — always loaded at session start"
+    },
+    {
+      "template": "global-configs/templates/AI_ARCHITECTURE.starter.md",
+      "target": "docs/AI_ARCHITECTURE.md",
+      "mode": "create-if-missing",
+      "required": false,
+      "description": "Detailed technical reference for all subsystems — loaded on demand"
+    },
+    {
       "template": "global-configs/templates/DEVTOOLS.starter.md",
       "target": "DEVTOOLS.md",
       "mode": "create-if-missing",
