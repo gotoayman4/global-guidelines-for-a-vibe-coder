@@ -14,7 +14,7 @@ AI codebases accumulate entropy faster than human ones: pattern drift, duplicati
 
 1. **Two refactor types:**
    - *Opportunistic* (during feature work): fix what you're touching — duplicated logic, confusing names, bloated functions. Only code already being modified; behavior preserved; committed separately from feature changes.
-   - *Dedicated sessions* (standalone): after 3–5 features · file >300 lines (plan split) · >500 lines (MUST refactor immediately) · same logic in 3+ places · naming drift confusing AI · before major features touching old code.
+   - *Dedicated sessions* (standalone): after 3–5 features · file >300 lines (plan split) · ≥400 lines (MUST refactor down to <300 immediately) · same logic in 3+ places · naming drift confusing AI · before major features touching old code.
 2. **Safety net first:** all tests passing → commit rollback point → explicit scope (files to touch, files not to touch).
 3. **Specific goals only:** "Extract validation from the 600-line component" ✓ · "Clean up the code" ✗.
 4. **Incremental execution:** one concern at a time, never 20 files in one session. Refactoring prompt includes: scope lists (may/must-not modify) + rules (preserve behavior, no new functionality, no API signature changes, run tests after each change).

@@ -1,6 +1,6 @@
 ## Architecture (Load for New Features)
 
-- **File Size Limit.** Files MUST NOT exceed 500 lines (plan for 300) — refactor before proceeding when exceeded. Enforced by ESLint `max-lines`. Applies to source code only; docs, config, and generated files are excluded.
+- **File Size Limit.** Files MUST NOT exceed 400 lines — plan new files for ~300. When a file reaches 400, refactor it down to under 300 (not merely under 400) before proceeding. Enforced by ESLint `max-lines`. Applies to source code only; docs, config, and generated files are excluded.
   → Source: `02-engineering-practices/file-organization.md`
 - **Layer Separation.** NEVER put business logic in UI components. API calls, data transformations, and state management belong in services/hooks layers.
   → Source: `04-architecture/backend-architecture.md`

@@ -62,7 +62,7 @@ You are a project setup specialist. You guide users with zero coding experience 
    - **Antigravity:** `GEMINI.md` — use template `global-configs/templates/GEMINI.md.template`
    - **VS Code:** `.vscode/settings.json` — merge with existing, enable AGENTS.md support
 5c. **Create WORLD.md (optional):** If the project needs product intent guardrails, create `WORLD.md` from `global-configs/templates/WORLD.starter.md`
-5d. **Configure ESLint:** Add `max-lines` rule to the project's ESLint config: `"max-lines": ["error", { "max": 500, "skipBlankLines": true, "skipComments": true }]`. Run `npm run lint` to verify the config is valid.
+5d. **Configure ESLint:** Add `max-lines` rule to the project's ESLint config: `"max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }]`. Plan new files for ~300 lines; a file reaching 400 MUST be refactored down to under 300. Run `npm run lint` to verify the config is valid.
 5e. **Configure local CI hooks (mandatory):** CI is local — no cloud CI scaffold. Run `npx husky init`; set `.husky/pre-commit` to lint-staged (ESLint, type-check, format) and `.husky/pre-push` to the full pipeline: `npm run lint && npm run type-check && npm test -- --run && npm run build` (map to the project's actual scripts), plus a `git status --porcelain` clean-tree check. Hooks must not require real secrets. See `03-git-and-ci/local-ci-strategy.md`.
 6. **Run and verify:** Start dev server (`npm run dev`), confirm the app loads in the browser.
 7. **First commit with constitution:** `git add .`, `git commit -m "feat: add project constitution and configuration"`.
@@ -105,7 +105,7 @@ You are a project setup specialist. You guide users with zero coding experience 
 - [ ] .vscode/settings.json updated (AGENTS.md support enabled)
 
 ### ESLint Configuration
-- [ ] `max-lines` rule added: `["error", { max: 500, skipBlankLines, skipComments }]`
+- [ ] `max-lines` rule added: `["error", { max: 400, skipBlankLines, skipComments }]` (plan 300, refactor to <300 at 400)
 - [ ] `npm run lint` passes with the new config
 
 ### Local CI Hooks

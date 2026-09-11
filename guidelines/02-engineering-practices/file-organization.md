@@ -14,22 +14,22 @@ AI produces better output in small focused files and degrades in monolithic ones
 
 | Phase | Threshold | Why |
 |---|---|---|
-| Planning | ≤300 lines per file | Forces early decomposition (40% buffer) |
-| Enforcement | ≤500 lines per file | Hard limit via ESLint `max-lines` |
-| Post-implementation | >500 lines → REFACTOR immediately, verify before next task |
+| Planning | ≤300 lines per file | Forces early decomposition (25% buffer) |
+| Enforcement | ≤400 lines per file | Hard limit via ESLint `max-lines` |
+| Post-implementation | >400 lines → REFACTOR down to <300 immediately, verify before next task |
 
 **Source code only** (.ts/.tsx/.js/.jsx/.css/…). Excluded: docs (.md), config (.json/.yaml), generated/code-gen output, declarative data files (routing tables, locale data, seeds), CI configs.
 
 ## Enforcement
 
 ```jsonc
-"max-lines": ["error", { "max": 500, "skipBlankLines": true, "skipComments": true }]
+"max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }]
 ```
 Lint runs with `--max-warnings 0`; violations block CI.
 
 ## Exceptions
 
-A file may exceed 500 lines ONLY with an inline `eslint-disable-next-line max-lines -- reason` comment AND PR approval. Valid: large union types, error-code catalogs, permission matrices. Invalid: "too busy to split", "it's one component", "the AI wrote it this way".
+A file may exceed 400 lines ONLY with an inline `eslint-disable-next-line max-lines -- reason` comment AND PR approval. Valid: large union types, error-code catalogs, permission matrices. Invalid: "too busy to split", "it's one component", "the AI wrote it this way".
 
 ## When to Split
 
