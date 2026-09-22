@@ -1,14 +1,6 @@
 ## Git (Load for All Code Changes)
 
-- **Commit After Every Working Increment.** Granular commits = cheap rollbacks. NEVER commit broken code "to save progress" — use stash or WIP branches.
+- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work, never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope — one sentence or split it. Checkpoint-commit before any major multi-file AI operation. Revert broken AI output immediately — regenerate with better constraints, never debug-in-place.
   → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Descriptive Commit Messages.** Conventional commit format with type and scope. Future you and future AI need the context.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Revert Broken AI Output Immediately.** Do not debug-in-place. Revert broken AI output and regenerate with better constraints.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Checkpoint Before Major AI Operations.** Always commit a checkpoint before running major AI operations that could modify multiple files.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **No Branch Requirement for New Features.** Work on the current branch unless the team's workflow explicitly requires otherwise. Branches are a team-workflow choice, not an AI mandate.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Protect Main Branch.** Main branch MUST always be deployable. Use branch protection rules. Agents never force-push to main.
+- **No Branch Mandate; Protect Main.** Single-agent work stays on the current branch (parallel agents get their own; merge sequentially with review). Main MUST stay deployable: branch protection, no force-push, green local gate before merge. Env files never committed — `.env` gitignored, `.env.example` committed.
   → Source: `03-git-and-ci/git-workflow-strategy.md`

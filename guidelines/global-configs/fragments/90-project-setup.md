@@ -3,11 +3,9 @@
 ### Session Bootstrap
 
 1. Read this AGENTS.md — always
-2. Read WORLD.md for product intent guardrails
-3. For UI/UX work: also load `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`
-4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`
-5. Load primary guideline files per task-type table
-6. Apply compact extracts when context is tight (<20K tokens)
+2. Read WORLD.md — note `mode` (`vibe | standard | guarded`); it scales plan/test/docs/verification depth (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md`)
+3. UI/UX work: also load `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`
+4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load primary files per the table; compact extracts when context <20K tokens
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -56,40 +54,17 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 ### Forbidden Patterns Quick Scan
 
-- No `console.log` in production code
-- No `!important` in CSS
-- No TypeScript `any` casts, `eslint-disable` suppressions, or `@ts-ignore` without a comment explaining why
-- No inline styles when design system tokens exist
-- No hardcoded UI strings — all text MUST use i18n keys (every project is bilingual)
-- No `// TODO`, `// FIXME`, `// HACK` without explicit permission — state gaps in the AI response instead
-- No placeholder or filler content in UI (no "lorem ipsum", no "test test test")
-- No physical CSS direction properties (`ml-*`, `pl-*`, `left-*`, `right-*`, `text-left`) in UI chrome — use logical properties
-- No raw hex colors, pixel values, or font families in components — use design tokens
-- No `letter-spacing` / `tracking-*` on Arabic text — disconnects cursive letters
-- No opacity / `rgba()` transparency on Arabic text blocks — causes jagged rendering in Firefox
-- No portal components (Dialog, Popover, DropdownMenu) without explicit `dir` prop
-- No custom navigation-blocking workarounds — use the framework's native blocker
-- No stringified JSON or path strings as data-fetching cache keys — use raw tuples
-- No trusting client-supplied `Content-Type` for file uploads — verify MIME via magic-byte inspection
-- No multi-thousand-character prose line in a document — wrap at ≤400 chars; a table row is never wrapped, the prose leaves the cell instead
+- No `console.log` in production · no `!important` · no TS `any`/`eslint-disable`/`@ts-ignore` without a why-comment · no inline styles when tokens exist · no hardcoded UI strings (all i18n keys — bilingual by default) · no `// TODO`/`FIXME`/`HACK` without permission · no lorem/placeholder UI · no physical direction CSS in UI chrome — logical only · no raw hex/pixel/font-family in components — tokens only · no `letter-spacing` or text opacity on Arabic · no portal without explicit `dir` · no custom navigation-blocking workarounds · no non-tuple cache keys · no trusting client `Content-Type` for uploads (magic-byte) · no prose line >400 chars (table rows never wrap — prose leaves the cell).
 
 ### How to Use This File
 
-1. **Mirror** the central guidelines into `_guidelines/`: downstream projects run `npm run sync-guidelines`; from the central repo itself run `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .`. Skip if `_guidelines/` already exists.
-2. **Create** this file as `AGENTS.md` in your project root (all rules are inline — no external file references needed)
-3. **Search for `[FILL]`** and replace ALL occurrences with project-specific values
-4. **Review** the global rules above — remove any that don't apply to your stack
-5. **Add** any project-specific rules in the designated section
-6. **Commit** to Git. Treat this file as code — changes go through review.
-7. **Never let AI modify this file without human approval.**
+1. **Mirror** guidelines into `_guidelines/` — downstream: `npm run sync-guidelines`; central repo: `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` Skip if mirror exists.
+2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** Never let AI modify this file without human approval.
 
 ### Maintenance
 
-- **Quarterly:** Audit rules against source guidelines; re-extract outdated rules.
-- **Quarterly:** Measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — any always-read file over its budget or carrying more than 25% dated history gets history relocated to archives, not trimmed by hand. Read every row: a per-entry `**Change …:**` ledger is a change log even when no line starts with a date.
-    The report is non-failing by default; use `--strict` only with an authoritative `--files` list, where missing files fail and an entirely missing corpus is a data error.
-- **When guidelines change:** Check if extracted rules need updating.
-- **When stack changes:** Update the Stack table and review all rules.
-- **Source of truth:** Central repo (see Guideline source at top) — refresh `_guidelines/` via the sync script.
+- **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list).
+- **When guidelines or stack change:** refresh extracted rules + Stack table; source of truth is the central repo — re-sync `_guidelines/`.
 
-**Cross-References (in `_guidelines/` mirror):** Authority hierarchy: `_guidelines/08-governance/ai-governance-framework.md` · Loading strategy: `_guidelines/_index/RETRIEVAL_RULES.md` · Design principles: `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md` · Design governance: `_guidelines/08-governance/design-system-governance.md`
+**Cross-References (in `_guidelines/` mirror):** Authority hierarchy: `_guidelines/08-governance/ai-governance-framework.md` · Loading strategy: `_guidelines/_index/RETRIEVAL_RULES.md` · Speed modes: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md` · Design principles: `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md` · Design governance: `_guidelines/08-governance/design-system-governance.md`

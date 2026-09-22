@@ -1,8 +1,6 @@
 ## Performance (Load for Performance-Sensitive Features)
 
-- **Profile Before Optimizing.** NEVER optimize without measurement. Optimize only measured bottlenecks.
+- **Profile Before Optimizing.** NEVER optimize without measurement — only measured bottlenecks. Work → Clean → Fast; never premature.
   → Source: `02-engineering-practices/performance-optimization.md`
-- **Make It Work → Make It Clean → Make It Fast.** Optimize only after correctness and cleanliness are established. Never optimize prematurely.
-  → Source: `02-engineering-practices/performance-optimization.md`
-- **Performance Budgets.** Enforce budgets: LCP < 2.5s, bundle < 200KB gzipped, API p95 < 500ms. Reject PRs that increase bundle >10%.
+- **Budgets at Review Time.** Enforce at PR/milestone (not every edit): LCP < 2.5s, bundle < 200KB gz, API p95 < 500ms; reject PRs growing bundle >10%.
   → Source: `02-engineering-practices/performance-optimization.md`

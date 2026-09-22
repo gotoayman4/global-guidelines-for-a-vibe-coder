@@ -6,6 +6,11 @@
 **How to use:** Search for `[FILL]` and replace with project-specific values.
 **Rule precedence:** Security rules override all others. When two rules conflict, the more restrictive one wins. When a rule is ambiguous for your situation, ask the user — never guess.
 
+## Speed Mode (Declared in WORLD.md)
+
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (default `vibe` until first ship). vibe = 3-bullet intent, no plan gate, smoke + regression-on-second-bite, one-line reports, Docs line on triggers only. standard/guarded = full depth. Absolute everywhere: security rules, no fake evidence, revert-broken-output, critical-flow checks LTR+RTL before any ship, full pre-push gate. Record intent → first running slice each iteration; escalate mode when the same bug bites twice. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+  → Source: `01-workflow-methodology/speed-tiered-workflow.md`
+
 ## Security (Always Load — DO NOT REMOVE)
 
 - **SQL Injection Prevention.** ALL database queries MUST use parameterized statements. NEVER concatenate strings into SQL.
@@ -25,149 +30,93 @@
 - **File Upload MIME Validation (Magic-Byte).** ALL file upload endpoints MUST verify MIME type by reading magic bytes from the file buffer, not by trusting client-supplied `Content-Type` headers (use `file-type@16.5.4` for Node.js). Reject uploads whose detected type is not on the allowlist.
   → Source: `02-engineering-practices/file-upload-security.md`
 
-## Testing (Always Load)
+## Testing (Always Load — depth by mode)
 
-- **Regression Tests for Bug Fixes.** Every bug fix MUST include a regression test that reproduces the bug and verifies the fix.
-  → Source: `02-engineering-practices/testing-patterns.md`
-- **Tests for Critical and High-Risk Code.** New code touching critical flows (auth, payments, permissions, data persistence, core workflows) MUST include tests. Service boundaries SHOULD include integration tests. Simple UI rendering, pass-through code, and prototypes MAY skip tests. Optimize for regression risk, not coverage percentage.
+- **Mode Sets Test Depth.** vibe: smoke per iteration + regression only when the same path bites twice or at milestone — no suite while iterating. standard: behavioral tests on critical/high-risk code, regression every fix, integration at boundaries. guarded: full pyramid + critical-flow E2E before ship. Ship boundary (ALL modes): login/payments/permissions/persistence verified LTR and RTL before any release. Full matrix: `speed-tiered-workflow.md`.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Tests Before or With Code, Not After.** For critical and high-risk features, write behavioral tests first from requirements/PRD. For all other code, write tests in the same iteration as implementation. NEVER defer tests to a later sprint — tests written after features mirror bugs instead of defining correct behavior.
+- **Behavioral Tests Only; First/With Code in standard/guarded.** Tests assert inputs → outputs — never internals, spies, call counts. standard/guarded: behavioral tests first for critical features, same-iteration otherwise, NEVER deferred past a sprint; regression test with every fix; exhaustive `it.each()` on normalization/mapping functions. vibe exempt until milestone/second-bite.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Critical Flow E2E Coverage.** Critical workflow chains MUST have E2E coverage for both happy path and failure path.
-  → Source: `02-engineering-practices/testing-patterns.md`
-- **Test Behavior, Not Implementation.** Tests MUST verify behavior (what the code does), not implementation (how). Do not test internal function calls, state shape, or private methods.
-  → Source: `02-engineering-practices/testing-philosophy.md`
-- **No Code Without Test Verification.** Every line of AI-generated code is unverified until tests pass. "It compiled, so it works" is false.
-  → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Agent Verification Loop — Evidence Before "Done" (Cost-Tiered).** The agent MUST NOT report a task complete without executing verification itself. Verification is RATIONED BY COST — LLM-driven screen capture/vision/GUI automation is the most expensive instrument and is NOT routine: Tier 1 (default, every change) = automated tests, type-check, lint, contract/i18n parity. Tier 2 (slice/milestone completions) = programmatic headless E2E asserting DOM/data/DB — no screenshots, no vision. Tier 3 (rare exception) = visual/interactive verification, only for milestone exit/RTL-LTR sign-off of NEW screens, defects tests cannot observe, or explicit user request. Before any Tier-3 check ask: "can a test or DB query assert this?" If yes, write the test instead. Report WHAT was verified, HOW, RESULT — plus anything NOT verified. NEVER claim tests pass without running them; NEVER present predictions as observations.
+- **No Code Without Verification + Evidence Before "Done".** Every change is unverified until exercised (smoke/vibe, tests/standard+, Tier 0 lint for trivial edits) — "it compiled" is false; NEVER claim tests pass without running them or present predictions as observations. Cost tiers: Tier 0 trivial = lint + one line; Tier 1 default = tests/type-check/lint/parity; Tier 2 milestone = headless E2E on DOM/data/DB (no screenshots); Tier 3 rare = visual/vision only for sign-off, untestable layout, or explicit request. Report WHAT/HOW/RESULT + anything NOT verified. Detail: `agent-verification-loop.md`.
   → Source: `02-engineering-practices/agent-verification-loop.md`
-- **Normalization Functions Require Exhaustive Tests.** Every normalization/mapping function MUST have exhaustive parameterized tests: every valid input, every deprecated alias, empty/whitespace/invalid inputs, and case variations (`it.each()` or equivalent).
-  → Source: `02-engineering-practices/testing-patterns.md`
-- **Pre-Commit Hooks Mandatory.** Every project MUST have pre-commit hooks (husky + lint-staged) running lint, type-check, and formatting, installed automatically after `npm install`. No commits without passing hooks.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Local CI — Pre-Push Gate Mandatory.** CI runs locally; no cloud CI provider required. Every project MUST have a pre-push hook running the full pipeline: `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]`, plus the project's own dependency-audit wrapper (a bare `npm audit` that cannot reach the registry exits 0 — an unreachable registry MUST exit non-zero) and a `git status --porcelain` clean-tree check. `git push --no-verify` is forbidden. If the gate is slow, optimize the gate — never skip it. Hooks MUST NOT require real secrets.
-  → Source: `03-git-and-ci/local-ci-strategy.md`
-- **Two Loops: Fast Inside the Slice, Full at the Boundary.** Define `npm run gate:fast` (`lint` + `type-check` + tests scoped to the diff) for the seconds-long loop between edits, and run the full gate once before pushing. `gate:fast` is NOT evidence and MUST NOT be cited as verification; minutes-long suites that protect one subtree MUST be path-aware (run only when that subtree changed) rather than dropped.
-  → Source: `03-git-and-ci/local-ci-strategy.md`
-- **Gate Receipts — Evidence Is an Artifact.** `npm run gate:receipt` runs the gate and writes `docs/gate-receipts/<UTC-stamp>.md` (timestamp, commit, per-step exit and key figures, verdict). The instrument MUST strip ANSI escapes from captured output, and any step that cannot be green before the commit (clean-tree) is informational — it never decides the verdict.
+- **Pre-Commit + Pre-Push Gates + Two Loops + Receipts.** Hooks (husky + lint-staged): lint, type-check, format on every commit — no commits without them. Pre-push full pipeline `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]` + dependency-audit wrapper (bare `npm audit` exiting 0 on unreachable registry is forbidden — wrapper MUST exit non-zero) + clean-tree check; `--no-verify` forbidden; hooks MUST NOT need real secrets. Define `gate:fast` (lint + type-check + diff-scoped tests) for the edit loop — never citable as evidence; path-aware slow steps stay in the gate. `gate:receipt` writes `docs/gate-receipts/<UTC-stamp>.md` (strip ANSI; pre-commit-clean-tree step is informational only). Detail: `local-ci-strategy.md`.
   → Source: `03-git-and-ci/local-ci-strategy.md`
 
 ## Git (Load for All Code Changes)
 
-- **Commit After Every Working Increment.** Granular commits = cheap rollbacks. NEVER commit broken code "to save progress" — use stash or WIP branches.
+- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work, never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope — one sentence or split it. Checkpoint-commit before any major multi-file AI operation. Revert broken AI output immediately — regenerate with better constraints, never debug-in-place.
   → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Descriptive Commit Messages.** Conventional commit format with type and scope. Future you and future AI need the context.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Revert Broken AI Output Immediately.** Do not debug-in-place. Revert broken AI output and regenerate with better constraints.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Checkpoint Before Major AI Operations.** Always commit a checkpoint before running major AI operations that could modify multiple files.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **No Branch Requirement for New Features.** Work on the current branch unless the team's workflow explicitly requires otherwise. Branches are a team-workflow choice, not an AI mandate.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Protect Main Branch.** Main branch MUST always be deployable. Use branch protection rules. Agents never force-push to main.
+- **No Branch Mandate; Protect Main.** Single-agent work stays on the current branch (parallel agents get their own; merge sequentially with review). Main MUST stay deployable: branch protection, no force-push, green local gate before merge. Env files never committed — `.env` gitignored, `.env.example` committed.
   → Source: `03-git-and-ci/git-workflow-strategy.md`
 
 ## Architecture (Load for New Features)
 
-- **File Size Limit.** Files MUST NOT exceed 400 lines — plan new files for ~300. When a file reaches 400, refactor it down to under 300 (not merely under 400) before proceeding. Enforced by ESLint `max-lines`. Applies to source code only; docs, config, and generated files are excluded.
+- **File Size Limit.** Files MUST NOT exceed 400 lines — plan for ~300; at 400, refactor down under 300 before proceeding. ESLint `max-lines`; source only (docs/config/generated excluded).
   → Source: `02-engineering-practices/file-organization.md`
-- **Layer Separation.** NEVER put business logic in UI components. API calls, data transformations, and state management belong in services/hooks layers.
+- **Layer Separation.** NEVER put business logic in UI components — API calls, transforms, and state live in services/hooks layers.
   → Source: `04-architecture/backend-architecture.md`
-- **Pagination for Lists.** Every list endpoint MUST support pagination. No exceptions for lists that could exceed 50 items.
+- **Pagination for Lists.** Every list endpoint MUST support pagination — no exceptions past 50 items.
   → Source: `04-architecture/api-design-standards.md`
-- **AI-Readable Code Documentation.** Code comments serve the NEXT AI session. Use ICDC: INTENT (what should this do), CONSTRAINT (what it must NOT violate), DECISION (why this approach, when non-obvious), CAVEAT (surprising edge cases). Every file starts with a file-level context comment; every exported function has JSDoc/TSDoc. NEVER restate what the code does — comments add CONTEXT the code cannot express.
+- **AI-Readable Code Documentation (ICDC).** Every file starts with a file-level context comment; every exported symbol has JSDoc/TSDoc. Non-trivial code carries INTENT / CONSTRAINT / DECISION / CAVEAT as needed. NEVER restate what the code does — comments add CONTEXT only.
   → Source: `02-engineering-practices/ai-code-documentation.md`
-- **One Source of Truth Per State Type.** Server state lives in the data-fetching library (React Query / SWR), form state in the form library. NEVER duplicate state across stores.
+- **One Source of Truth Per State Type.** Server state in the data-fetching library (React Query / SWR), form state in the form library — NEVER duplicate across stores. Query keys are raw tuples `['entity', params] as const` — never stringified JSON or path strings; centralize key constants.
   → Source: `04-architecture/state-management.md`
-- **Error Responses with Machine-Readable Codes.** Error responses MUST include a machine-readable `code` field. NEVER expose stack traces in API responses.
+- **Error Responses with Machine-Readable Codes.** Responses MUST include a machine-readable `code` field. NEVER expose stack traces in API responses.
   → Source: `04-architecture/api-design-standards.md`
-- **Vertical Slice Development.** Build one complete feature UI → API → Database before starting the next. Never build by horizontal layers. The first increment is a working end-to-end feature, however thin.
+- **Vertical Slice Development.** Build one complete feature UI → API → Database before starting the next. Never build by horizontal layers; the first increment is a working end-to-end feature, however thin.
   → Source: `01-workflow-methodology/development-workflow.md`
-- **SWR / React Query Key Convention — Raw Tuples Only.** ALL query keys, mutations, and cache invalidations use raw tuple format: `['entity', params] as const`. NEVER stringified JSON, path strings, or loose arrays. Centralize key constants in a shared file.
-  → Source: `04-architecture/state-management.md`
-- **Router API — Data Router Only.** Use the framework's data router API exclusively (`createBrowserRouter` for React Router, never `<BrowserRouter>`) — required for native `useBlocker`, loaders, and actions. Custom navigation-blocking workarounds are forbidden.
+- **Stack Conventions (React projects).** Data router API only (`createBrowserRouter`, never `<BrowserRouter>`; native `useBlocker`, no custom navigation-blocking workarounds). Cap concurrent page fetches at 4 (`fetchAllPages<T>()` shared utility). ESLint enforces `import-x/no-duplicates` and `import-x/order`; inline `type` for type-only imports. Detail: `_guidelines/04-architecture/router-architecture.md`, `_guidelines/02-engineering-practices/performance-optimization.md`.
   → Source: `04-architecture/router-architecture.md`
-- **Batch Fetch Parallelism Cap.** When fetching paginated data across pages concurrently, cap parallelism at 4 simultaneous requests. Extract a shared `fetchAllPages<T>()` utility.
-  → Source: `02-engineering-practices/performance-optimization.md`
-- **Import Hygiene ESLint Rules.** ESLint MUST enforce `import-x/no-duplicates` and `import-x/order`. Use inline `type` for type-only imports from the same package. Fix violations immediately.
-  → Source: `02-engineering-practices/file-organization.md`
-- **Code Duplication Detection.** When the same mapping, validation, or transformation logic appears in 2+ files, extract to a shared utility in the same iteration — do not wait for a refactoring pass.
+- **Code Duplication Detection.** Same mapping/validation/transformation in 2+ files → extract to a shared utility in the same iteration; never wait for a refactoring pass.
   → Source: `02-engineering-practices/code-duplication-prevention.md`
 
 ## Design & UX (Load for UI Work)
 
-- **Apply Interaction Design Heuristics.** Every UI decision MUST align with Nielsen's 10 Usability Heuristics: visible feedback for every action, prevent errors before handling them, show options and state persistently, always provide an escape (Cancel/Undo), and speak the user's language — never expose internal jargon or error codes in the UI.
+- **Heuristics + Four States + Tokens.** Every UI aligns with Nielsen's 10 heuristics (visible feedback, error prevention, escape hatch, user's language — no jargon/error codes in UI). Every data-dependent component handles loading, error, empty, success. Design tokens only (theme.palette / CSS custom properties), lint-enforced. Shared components (StandardTable, PageHeader, StandardDialog) over raw primitives — each handles all four states, tested RTL+LTR. Detail: `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`.
   → Source: `02-engineering-practices/ux-design-principles.md`
-- **Handle All Four States.** Every data-dependent component MUST handle loading, error, empty, and success states.
-  → Source: `06-frontend-patterns/loading-and-empty-states.md`
-- **Visual Consistency Through Design Tokens.** All styling MUST use design tokens (theme.palette or CSS custom properties). Enforce via linting.
-  → Source: `06-frontend-patterns/visual-design-principles.md`
-- **Shared Components Over Raw Primitives.** Use application shared components (StandardTable, PageHeader, StandardDialog) over raw library primitives; every shared component handles all four states and is tested in both RTL and LTR.
-  → Source: `04-architecture/frontend-architecture.md`
-- **Visual Hierarchy and Spacing.** High contrast for important elements, low for structural. 8px-based spacing scale. Max 2 typefaces, body text 16px+. Never convey information through color alone — always pair with text, icons, or patterns.
-  → Source: `06-frontend-patterns/visual-design-principles.md`
-- **Incremental Adoption for Existing Projects.** Design system adoption MUST NOT block feature development: new features use design system components exclusively; existing code migrates when touched (Strangler Fig). Track adoption metrics with quarterly targets.
+- **Incremental Adoption.** Design-system adoption MUST NOT block feature work: new features use shared components exclusively; existing code migrates when touched (Strangler Fig); quarterly adoption targets.
   → Source: `08-governance/design-system-governance.md`
 
 ## AI Collaboration (Load for Every Session)
 
-- **AI Output is Draft, Not Final.** First AI output is ALWAYS a draft. Iterate at least once. Accepting first output without review is an anti-pattern.
+- **AI Output is Draft, Not Final.** First AI output is ALWAYS a draft — iterate at least once; accepting first output without review is an anti-pattern.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Specify Acceptance Criteria.** Every prompt MUST include acceptance criteria: "This is correct when [specific verifiable conditions]."
+- **Speed Is a Metric, Not a Vibe.** Record intent → first running slice each iteration. Correct-but-slow is a defect like fast-and-broken-auth — scale ceremony with WORLD.md mode; never scale security or honesty.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Reference Existing Files.** Always point AI at 2-3 existing files as pattern templates. Without references, AI invents its own inconsistent patterns.
-  → Source: `00-ai-fundamentals/prompt-engineering-patterns.md`
-- **Fresh Session Per Feature.** Use a fresh AI session per feature. 100-message threads produce inconsistent, constraint-violating output.
+- **Acceptance Criteria + Pattern References.** Every prompt states "correct when [verifiable conditions]" (vibe MAY compress to 3 intent bullets for small non-critical work) and points at 2–3 existing files as pattern templates — without references, AI invents inconsistent patterns.
+  → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
+- **Fresh Session Per Feature.** One fresh session per feature — 100-message threads produce constraint-violating output. Transfer via a 3-sentence handoff, not chat history.
   → Source: `00-ai-fundamentals/context-management-strategy.md`
-- **AI Has No Concept of Correctness.** "The AI said it's correct" is dangerous. AI predicts plausible tokens, not truth. Verify every claim, especially about APIs and versions.
+- **AI Has No Concept of Correctness.** AI predicts plausible tokens, not truth — verify every claim, especially APIs and versions. After 2 failed attempts, STOP and search the web before a 3rd.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **No Silent TODOs or Placeholders.** NEVER generate TODO, FIXME, HACK, or placeholder comments in production code without explicit permission. State gaps in the AI response instead. Escape hatch: reference a tracker issue number and throw a descriptive error for unimplemented paths.
+- **No Silent TODOs or Placeholders.** NEVER generate TODO/FIXME/HACK/placeholder comments without explicit permission — state gaps in the response. Escape hatch: tracker issue number + descriptive error on unimplemented paths.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Web Search Escalation.** If you fail to solve a problem after 2 attempts, STOP guessing. Search the web or consult current documentation before a 3rd attempt, and say so.
+- **Output Efficiency — Vibe Coder Optimized.** Describe WHAT changed (1–2 plain sentences) and WHERE (path + lines); compare behavior, not code; never paste code blocks unless asked. Edit files directly.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Output Efficiency — Vibe Coder Optimized.** The developer cannot read code. Describe WHAT changed in plain language (1-2 sentences) and WHERE (file path + line range); compare before/after behavior, not code; translate error messages into plain language. Use file edit tools directly — NEVER paste code blocks in chat unless the developer explicitly asks "show me the code".
-  → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Docs-Decision Before "Done".** Every task MUST end with `Docs: updated <files> | N/A (<reason>)`. Trigger-changes (new endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) MUST update steering docs in the same iteration — stale docs mislead the next session worse than missing docs.
+- **Docs Line Fires on Triggers Only.** Trigger-table match (new endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) → update steering docs same-iteration and report `Docs: updated <files>`. Non-trigger → NO Docs line; silence is correct, a padded `N/A` is ceremony. Missing a real trigger is a violation.
   → Source: `07-documentation/documentation-strategy.md`
-- **A Working Document Carries No History.** Every file a session must read at startup keeps its change log in dated archives (`docs/changelog/<doc>-<YYYY>-Q<n>.md`) behind a pointer heading that preserves the old anchor; relocated history moves verbatim and is proven against `git show HEAD:<path>`, never rewritten. Routine entries are ~50 words under `### YYYY-MM-DD`, wrapped so no line exceeds 400 characters.
+- **Boot Files Carry No History; One Copy Per Rule.** Always-read files keep change logs in dated archives (`docs/changelog/<doc>-<YYYY>-Q<n>.md`) behind a pointer heading (relocate verbatim, prove vs `git show HEAD:`; ~50-word entries, ≤400-char lines). Each canonical list lives in exactly one file — every other site links; parity tests guard the copies.
   → Source: `07-documentation/documentation-strategy.md`
-- **One Canonical Copy Per Rule.** Each list (trigger table, gate-step order, forbidden patterns, version table) lives in exactly one file and every other site links it. A restated list is a second document nobody edits; guard the copies with a parity test instead of summarizing them again.
+- **Reference Machine Output, Never Transcribe.** Verification numbers go into artifacts (`docs/gate-receipts/…`) and are cited by path — hand-copied figures decay silently.
   → Source: `07-documentation/documentation-strategy.md`
-- **Reference Machine Output, Never Transcribe.** Verification and measurement numbers are written by commands into artifacts (`docs/gate-receipts/…`) and cited by path in prose. Hand-copied figures decay silently — they are the claims that go stale without failing anything.
-  → Source: `07-documentation/documentation-strategy.md`
-- **Globalize Lessons.** When you discover a mistake worth never repeating, write it as a proposal in `guidelines-proposals/YYYY-MM-DD-<slug>.md` (what happened, the preventing rule, target guideline file). NEVER store the lesson only in the session. Proposals are reviewed at sync time.
+- **Globalize Lessons.** Mistakes worth never repeating become proposals in `guidelines-proposals/YYYY-MM-DD-<slug>.md` (event, preventing rule, target file) — never session-only; reviewed at sync time.
   → Source: `01-workflow-methodology/development-workflow.md`
 
 ## RTL & Arabic (Always Active — All Projects Are Bilingual)
 
-**All projects in this organization are bilingual (English + Arabic) by default. These rules always apply.**
+**All projects in this organization are bilingual (English + Arabic) by default. These rules always apply — in every speed mode.**
 
-- **Arabic-First Architecture.** Arabic support is an architectural requirement, NOT a localization afterthought. Every component, page, and feature MUST be designed for bidirectional text from day one, with direction handled at UI shell, workspace, document, paragraph, and inline span levels.
+- **Arabic-First Architecture.** Design every component for bidirectional text from day one — direction handled at UI shell, workspace, document, paragraph, and inline span levels. Arabic support is architectural, not a localization afterthought.
   → Source: `05-stack-guides/rtl-tech-stack.md`
-- **Logical CSS Properties Exclusively.** Use logical CSS properties everywhere in UI chrome: Tailwind `ms-*`, `me-*`, `ps-*`, `pe-*`, `start-*`, `end-*`, `text-start`; MUI Emotion `marginInlineStart`/`paddingInlineEnd` or direction-aware `sx`. NEVER physical properties (`ml-*`, `pl-*`, `left-*`, `right-*`, `text-left`) in UI chrome. Lint rule enforced.
+- **Logical CSS Properties Exclusively.** UI chrome uses only logical properties (Tailwind `ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; Emotion `marginInlineStart` etc.). NEVER physical (`ml-*`, `pl-*`, `left`, `right`, `text-left`). Lint-enforced.
   → Source: `02-engineering-practices/bidirectional-design-principles.md`
-- **Mirroring With Intent.** Navigation, breadcrumbs, pagination, timelines, and directional icons MUST mirror in RTL (`rtl:rotate-180` or equivalent). Logos, numbers, code, and non-directional icons MUST NOT mirror.
-  → Source: `02-engineering-practices/bidirectional-design-principles.md`
-- **Arabic Typography Rules.** Arabic text requires: line-height 1.6–1.8, minimum font-weight 400, zero letter-spacing (tracking disconnects cursive letters), no opacity on text blocks (jagged rendering in Firefox), no `word-break: break-all`.
-  → Source: `02-engineering-practices/bidirectional-design-principles.md`
-- **Portal Direction Inheritance.** Portal-based components (Dialog, Popover, DropdownMenu, Tooltip, Select, Menu, Drawer — React Portal, Radix, MUI, Ariakit, Headless UI) do NOT inherit `dir` from the document; every one MUST receive an explicit `dir` prop. The #1 RTL regression source.
-  → Source: `05-stack-guides/rtl-tech-stack.md`
-- **Numeral Policy.** Use Western Arabic numerals (0-9) for UI chrome by default. Domain products (writing, education, legal, religious, archival) MAY offer user-selectable numeral styles via `Intl.NumberFormat` with explicit numbering systems (`ar-u-nu-latn`, `ar-u-nu-arab`).
-  → Source: `02-engineering-practices/bidirectional-design-principles.md`
-- **RTL-Compliant Tech Stack.** Use libraries with proven RTL support. MUI 9+ is fully valid, NOT deprecated. Tailwind CSS v4 + shadcn/ui (initialized `--rtl`) + @base-ui/react + @radix-ui/react-direction + React Aria is the alternative for custom visual identity or zero-runtime RTL. Automated auditing: `npx rtlify-ai check`.
-  → Source: `05-stack-guides/rtl-tech-stack.md`
-- **Bilingual UI — All Text Uses i18n Keys.** All user-facing strings (labels, buttons, placeholders, errors, titles, tooltips) MUST use i18n keys. No hardcoded English or Arabic strings in components.
-  → Source: `05-stack-guides/rtl-tech-stack.md`
-- **LTR/RTL Testing Before Commit.** Every page MUST be tested in both LTR (English) and RTL (Arabic) before committing. Dual-direction E2E tests are mandatory. Visual regression in either direction is a bug.
+- **Portal `dir` + i18n Keys + Dual-Direction Test.** Every portal component (Dialog, Popover, DropdownMenu, Tooltip, Select, Menu, Drawer) gets an explicit `dir` prop — the #1 RTL regression. All user-facing strings use i18n keys — no hardcoded text. Pages are tested LTR and RTL before commit (standard/guarded: dual-direction E2E; vibe: both directions at milestone). Arabic typography: line-height 1.6–1.8, no `letter-spacing`, no text opacity, no `break-all`; Western numerals by default; mirror nav/breadcrumbs/pagination/timelines only. Full detail: `_guidelines/05-stack-guides/rtl-tech-stack.md`.
   → Source: `05-stack-guides/rtl-tech-stack.md`
 
 ## Performance (Load for Performance-Sensitive Features)
 
-- **Profile Before Optimizing.** NEVER optimize without measurement. Optimize only measured bottlenecks.
+- **Profile Before Optimizing.** NEVER optimize without measurement — only measured bottlenecks. Work → Clean → Fast; never premature.
   → Source: `02-engineering-practices/performance-optimization.md`
-- **Make It Work → Make It Clean → Make It Fast.** Optimize only after correctness and cleanliness are established. Never optimize prematurely.
-  → Source: `02-engineering-practices/performance-optimization.md`
-- **Performance Budgets.** Enforce budgets: LCP < 2.5s, bundle < 200KB gzipped, API p95 < 500ms. Reject PRs that increase bundle >10%.
+- **Budgets at Review Time.** Enforce at PR/milestone (not every edit): LCP < 2.5s, bundle < 200KB gz, API p95 < 500ms; reject PRs growing bundle >10%.
   → Source: `02-engineering-practices/performance-optimization.md`
 
 ## Reference & Project Setup
@@ -175,11 +124,9 @@
 ### Session Bootstrap
 
 1. Read this AGENTS.md — always
-2. Read WORLD.md for product intent guardrails
-3. For UI/UX work: also load `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`
-4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`
-5. Load primary guideline files per task-type table
-6. Apply compact extracts when context is tight (<20K tokens)
+2. Read WORLD.md — note `mode` (`vibe | standard | guarded`); it scales plan/test/docs/verification depth (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md`)
+3. UI/UX work: also load `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`
+4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load primary files per the table; compact extracts when context <20K tokens
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -228,40 +175,17 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 ### Forbidden Patterns Quick Scan
 
-- No `console.log` in production code
-- No `!important` in CSS
-- No TypeScript `any` casts, `eslint-disable` suppressions, or `@ts-ignore` without a comment explaining why
-- No inline styles when design system tokens exist
-- No hardcoded UI strings — all text MUST use i18n keys (every project is bilingual)
-- No `// TODO`, `// FIXME`, `// HACK` without explicit permission — state gaps in the AI response instead
-- No placeholder or filler content in UI (no "lorem ipsum", no "test test test")
-- No physical CSS direction properties (`ml-*`, `pl-*`, `left-*`, `right-*`, `text-left`) in UI chrome — use logical properties
-- No raw hex colors, pixel values, or font families in components — use design tokens
-- No `letter-spacing` / `tracking-*` on Arabic text — disconnects cursive letters
-- No opacity / `rgba()` transparency on Arabic text blocks — causes jagged rendering in Firefox
-- No portal components (Dialog, Popover, DropdownMenu) without explicit `dir` prop
-- No custom navigation-blocking workarounds — use the framework's native blocker
-- No stringified JSON or path strings as data-fetching cache keys — use raw tuples
-- No trusting client-supplied `Content-Type` for file uploads — verify MIME via magic-byte inspection
-- No multi-thousand-character prose line in a document — wrap at ≤400 chars; a table row is never wrapped, the prose leaves the cell instead
+- No `console.log` in production · no `!important` · no TS `any`/`eslint-disable`/`@ts-ignore` without a why-comment · no inline styles when tokens exist · no hardcoded UI strings (all i18n keys — bilingual by default) · no `// TODO`/`FIXME`/`HACK` without permission · no lorem/placeholder UI · no physical direction CSS in UI chrome — logical only · no raw hex/pixel/font-family in components — tokens only · no `letter-spacing` or text opacity on Arabic · no portal without explicit `dir` · no custom navigation-blocking workarounds · no non-tuple cache keys · no trusting client `Content-Type` for uploads (magic-byte) · no prose line >400 chars (table rows never wrap — prose leaves the cell).
 
 ### How to Use This File
 
-1. **Mirror** the central guidelines into `_guidelines/`: downstream projects run `npm run sync-guidelines`; from the central repo itself run `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .`. Skip if `_guidelines/` already exists.
-2. **Create** this file as `AGENTS.md` in your project root (all rules are inline — no external file references needed)
-3. **Search for `[FILL]`** and replace ALL occurrences with project-specific values
-4. **Review** the global rules above — remove any that don't apply to your stack
-5. **Add** any project-specific rules in the designated section
-6. **Commit** to Git. Treat this file as code — changes go through review.
-7. **Never let AI modify this file without human approval.**
+1. **Mirror** guidelines into `_guidelines/` — downstream: `npm run sync-guidelines`; central repo: `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` Skip if mirror exists.
+2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** Never let AI modify this file without human approval.
 
 ### Maintenance
 
-- **Quarterly:** Audit rules against source guidelines; re-extract outdated rules.
-- **Quarterly:** Measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — any always-read file over its budget or carrying more than 25% dated history gets history relocated to archives, not trimmed by hand. Read every row: a per-entry `**Change …:**` ledger is a change log even when no line starts with a date.
-    The report is non-failing by default; use `--strict` only with an authoritative `--files` list, where missing files fail and an entirely missing corpus is a data error.
-- **When guidelines change:** Check if extracted rules need updating.
-- **When stack changes:** Update the Stack table and review all rules.
-- **Source of truth:** Central repo (see Guideline source at top) — refresh `_guidelines/` via the sync script.
+- **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list).
+- **When guidelines or stack change:** refresh extracted rules + Stack table; source of truth is the central repo — re-sync `_guidelines/`.
 
-**Cross-References (in `_guidelines/` mirror):** Authority hierarchy: `_guidelines/08-governance/ai-governance-framework.md` · Loading strategy: `_guidelines/_index/RETRIEVAL_RULES.md` · Design principles: `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md` · Design governance: `_guidelines/08-governance/design-system-governance.md`
+**Cross-References (in `_guidelines/` mirror):** Authority hierarchy: `_guidelines/08-governance/ai-governance-framework.md` · Loading strategy: `_guidelines/_index/RETRIEVAL_RULES.md` · Speed modes: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md` · Design principles: `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md` · Design governance: `_guidelines/08-governance/design-system-governance.md`
