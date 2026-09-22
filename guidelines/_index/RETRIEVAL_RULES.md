@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global (AI Agent Configuration)
 **Token Tier:** Compact (~600 tokens)
-**Last Updated:** 2026-05-26
+**Last Updated:** 2026-09-22
 
 ---
 
@@ -64,6 +64,7 @@ Extract keywords from the user's request to identify task type:
 | "Form UX", "form usability", "error prevention", "user control" | Form/UX patterns | `#ux` `#heuristics` `#forms` |
 | "Beginner", "No coding experience", "Start here" | Beginner/onboarding | `#beginner` `#noncoder` |
 | "Multiple tools", "Cursor + Copilot", "Claude Code" | Multi-tool setup | `#multi-tool` `#cursor` |
+| "Speed mode", "vibe mode", "guarded", "scale ceremony", "milestone ship" | Speed mode / ceremony | `#speed` `#modes` `#workflow` |
 
 ### Step 2: Look Up Task in MASTER_INDEX.md
 

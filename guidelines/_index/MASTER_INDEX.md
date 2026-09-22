@@ -20,6 +20,8 @@ flowchart TD
 
     subgraph "01 — Workflow Methodology"
         B1[planning-and-scoping.md] --> B2[development-workflow.md]
+        B1 --> B7[speed-tiered-workflow.md]
+        B7 --> B2
         B2 --> B3[debugging-with-ai.md]
         B2 --> B4[refactoring-strategy.md]
         B2 --> B6[workflow-friction-audit.md]
@@ -80,6 +82,7 @@ flowchart TD
 | [code-review-workflow.md](../01-workflow-methodology/code-review-workflow.md) | Advisory | Global | ~1,500 | `#review` `#quality` `#collaboration` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~1,800 | `#refactoring` `#maintenance` `#technical-debt` |
 | [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~1,800 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
+| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~1,200 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` |
 
 ### 02 — Engineering Practices
 
@@ -179,7 +182,7 @@ flowchart TD
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
-| [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~6,000 | `#template` `#rules` `#agents` |
+| [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~5,000 | `#template` `#rules` `#agents` |
 | [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~50 | `#template` `#rules` `#copilot` |
 | [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~1,300 | `#template` `#product-intent` `#guardrail` |
 | [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~1,200 | `#template` `#product-intent` `#example` |
@@ -215,6 +218,9 @@ flowchart TD
 | [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 | [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |
+| [new-guideline.js](../global-configs/scripts/new-guideline.js) | Script | Global | ~250 | `#script` `#scaffold` `#guideline` `#master-index` |
+| [new-project.js](../global-configs/scripts/new-project.js) | Script | Global | ~350 | `#script` `#bootstrap` `#starter` `#speed-mode` |
+| [bump-freshness.js](../global-configs/scripts/bump-freshness.js) | Script | Global | ~200 | `#script` `#freshness` `#last-updated` `#maintenance` |
 
 ### Scripts & Sync Tools
 
@@ -267,7 +273,9 @@ flowchart TD
 | **Firestore cost optimization** | firestore-cost-optimization.skill.md, cost-optimization-strategy | performance-optimization (conflict: cost wins) |
 | **Firebase/Firestore development** | firebase-firestore-practices.skill.md, security-engineering | firestore-cost-optimization.skill.md, testing-philosophy |
 | **AI governance setup** | ai-governance-framework | design-system-governance |
-| **New project bootstrap** | planning-and-scoping, frontend-architecture, backend-architecture, git-workflow-strategy, bidirectional-design-principles, design-system-governance | monorepo-strategy, environment-management |
+| **New project bootstrap** | planning-and-scoping, speed-tiered-workflow, frontend-architecture, backend-architecture, git-workflow-strategy, bidirectional-design-principles, design-system-governance | monorepo-strategy, environment-management |
+| **Choose speed mode / scale ceremony** | speed-tiered-workflow | development-workflow, testing-philosophy, agent-verification-loop, documentation-strategy |
+| **Milestone / ship prep** | speed-tiered-workflow, agent-verification-loop | testing-philosophy, local-ci-strategy |
 | **Rules file setup** | AGENTS.starter.md, ai-governance-framework | — |
 | **Skill installation** | code-review.skill.md, test-generation.skill.md, refactoring.skill.md | security-audit.skill.md, performance-audit.skill.md |
 | **Windows installer** | inno-setup.skill | security-engineering, cost-optimization-strategy |
@@ -304,6 +312,7 @@ flowchart TD
 
 ### 01-workflow-methodology
 - `development-workflow.md` → depends on: `ai-collaboration-mindset.md`
+- `speed-tiered-workflow.md` → depends on: `development-workflow.md`, `documentation-strategy.md`; extended by: `testing-philosophy.md`, `agent-verification-loop.md`; referenced by: `workflow-friction-audit.md`, `ai-collaboration-mindset.md`
 - `planning-and-scoping.md` → depends on: `development-workflow.md`
 - `debugging-with-ai.md` → depends on: `development-workflow.md`, `error-handling-philosophy.md`
 - `code-review-workflow.md` → depends on: `development-workflow.md`

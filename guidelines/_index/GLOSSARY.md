@@ -22,6 +22,19 @@ If you are a beginner, memorize these ten key concepts to instantly understand a
 
 ---
 
+## Speed Modes (Vibe / Standard / Guarded)
+
+| Term | Definition | Non-Coder Analogy |
+|---|---|---|
+| **Vibe mode** | Fastest process tier for throwaway or early work: minimal plan/test/docs ceremony. Security, honesty, and ship-boundary rules never relax. See `01-workflow-methodology/speed-tiered-workflow.md`. | Sketching on a napkin — quick and loose, but you still don't lie about measurements. |
+| **Standard mode** | Default process tier: feature plans for non-trivial work, tests with code, evidence-by-change-type verification, trigger-table docs. | A normal workday with a checklist — steady, not heavy. |
+| **Guarded mode** | Heaviest process tier for high-risk work: architecture review, full test pyramid, ADRs for decisions. | Surgery protocol — slow on purpose because mistakes cost a lot. |
+| **Speed Mode (WORLD.md)** | The project field declaring which mode is active, plus the dated transition log of mode changes. | A thermostat setting with a maintenance log — you can see what it was set to and when. |
+| **Ship boundary** | The point where a loose inner loop hardens: full pre-push gate + critical-flow checks (LTR and RTL) before any release or milestone exit. | Handing over the keys — the renovation mess is fine during work, not at walkthrough. |
+| **Ceremony** | The process overhead (plans, tests, docs, verification depth) that modes scale up or down — never security or honesty. | Safety gear amount for the job: hard hat for framing, full harness for steelwork. |
+
+---
+
 ## Purpose
 
 Standardize terminology across all guideline documents so AI agents and humans share a consistent vocabulary. Each definition includes a non-coder analogy for vibe coders with zero programming experience.

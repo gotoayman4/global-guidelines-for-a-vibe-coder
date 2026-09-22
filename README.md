@@ -8,7 +8,7 @@ Centralized development guidelines + sync tools for AI-assisted coding projects.
 guidelines/
   _index/            — MASTER_INDEX.md, RETRIEVAL_RULES.md, GLOSSARY.md, AGENT_BOOT_PROTOCOL.md
   00-ai-fundamentals/   — mindset, setup, beginner guide
-  01-workflow-methodology/ — planning, debugging, refactoring
+  01-workflow-methodology/ — planning, speed modes, debugging, refactoring
   02-engineering-practices/ — UX, accessibility, testing, security
   03-git-and-ci/         — git workflow, CI templates
   04-architecture/      — patterns, decision records
@@ -19,7 +19,7 @@ guidelines/
   global-configs/
     templates/   — starter files for AGENTS.md, WORLD.md, tool configs
     fragments/   — single-source rule sections; rendered into templates/AGENTS.starter.md
-    scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js, render-agents-starter.js, check-project-freshness.js
+    scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js, render-agents-starter.js, check-project-freshness.js, new-guideline.js, new-project.js, bump-freshness.js
     skills/      — .skill.md files for code-review, refactoring, security-audit, etc.
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
 .github/workflows/       — optional cloud workflows (CI is local by default — see 03-git-and-ci/local-ci-strategy.md)
@@ -58,6 +58,18 @@ powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guideline
 | `npm run render:starters` | Regenerates `templates/AGENTS.starter.md` from `global-configs/fragments/`. |
 | `npm run check-drift` | Fails if `AGENTS.starter.md` was hand-edited or exceeds its token budget. |
 | `npm run status:projects` | Reports which rules each synced project's `AGENTS.md` is missing (informational, never fails). |
+| `npm run validate:fast` | Quick integrity pass (audit + check-index + check-drift; skips full link crawl). |
+| `npm run test:scripts` | Runs the Node test suite for `global-configs/scripts` helpers. |
+| `npm run new:guideline` | Scaffolds a guideline file + MASTER_INDEX row (use `-- --dry-run` first). |
+| `npm run new:project` | Bootstraps starter files into a project path (`-- <path> [--mode vibe\|standard\|guarded]`). |
+| `npm run bump:freshness` | Refreshes `Last Updated:` headers (`-- --check` to report staleness only). |
+
+## Speed Modes
+
+Projects declare a process mode in `WORLD.md` (`vibe | standard | guarded`) — see
+`guidelines/01-workflow-methodology/speed-tiered-workflow.md`. Default is `vibe` until the
+first ship; when WORLD.md is silent, assume `standard`. Modes scale plan/test/docs ceremony
+only — security, honesty, and the ship-boundary gate apply in every mode.
 
 ## The Single-Source Pipeline (how the rules are maintained)
 
@@ -79,7 +91,7 @@ fails if the template and the fragments diverge.
 edit the fragment  →  npm run render:starters  →  npm run validate  →  commit fragment + template together
 ```
 
-**4. Adding a rule costs budget.** The always-loaded constitution is capped (~7,000 tokens,
+**4. Adding a rule costs budget.** The always-loaded constitution is capped (~5,000 tokens,
 estimated at chars/4 — see `maxTokens` in `fragments/manifest.json`). A new rule must retire,
 narrow, or demote an existing one; detail that isn't needed every session belongs in a
 guideline file under `guidelines/0X-*`, reached via the `_guidelines/` mirror, not inlined.
@@ -123,7 +135,7 @@ every push via the local pre-push hook (`git config core.hooksPath .githooks`).
 
 ## How to Change Something Safely
 
-- **Adding a guideline:** create file → register in `guidelines/_index/MASTER_INDEX.md` → add cross-references → update matching fragment (and template) if normative
+- **Adding a guideline:** `npm run new:guideline` (or create file) → register in `guidelines/_index/MASTER_INDEX.md` → add cross-refs → update matching fragment (and template) if normative
 - **Updating a guideline:** edit file → update matching fragment in `global-configs/fragments/` → `npm run render:starters` → run `npm run validate`
 - **Adding a skill:** create `.skill.md` → register in MASTER_INDEX.md → verify sync-manifest skills glob picks it up
 - **Changing templates:** edit fragments, never the generated `AGENTS.starter.md` → render → validate

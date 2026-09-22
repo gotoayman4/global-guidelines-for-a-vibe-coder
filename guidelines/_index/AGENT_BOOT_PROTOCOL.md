@@ -4,7 +4,7 @@
 
 **Status:** Normative
 **Scope:** Global
-**Last Updated:** 2026-06-13
+**Last Updated:** 2026-09-22
 
 ---
 
@@ -24,7 +24,9 @@ Check the project root in this order. Stop at the first one found — it contain
 
 1. `AGENTS.md` — universal project constitution
 2. `CLAUDE.md` — Claude Code-specific rules
-3. `WORLD.md` — product intent guardrails
+3. `WORLD.md` — product intent guardrails (also declares the project's speed mode: `vibe | standard | guarded`)
+
+If `WORLD.md` declares a mode, scope plan/test/docs ceremony to `01-workflow-methodology/speed-tiered-workflow.md`. When WORLD.md is silent, assume `standard`. Security, honesty, and ship-boundary rules apply in every mode.
 
 ### Step 2: Load _guidelines/ Mirror (if present)
 
