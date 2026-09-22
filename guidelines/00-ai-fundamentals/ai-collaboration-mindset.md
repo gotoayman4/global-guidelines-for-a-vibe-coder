@@ -2,24 +2,25 @@
 
 **Status:** Normative
 **Scope:** Global
-**Token Tier:** Full (~1,100 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `prompt-engineering-patterns.md`, `context-management-strategy.md`, `ai-agent-orchestration.md`
+**Token Tier:** Full (~1,200 tokens)
+**Last Updated:** 2026-09-22
+**Cross-References:** `speed-tiered-workflow.md`, `prompt-engineering-patterns.md`, `context-management-strategy.md`, `ai-agent-orchestration.md`
 
 ---
 
 ## Core Principles
 
 1. **AI is a junior engineer; you are the senior.** Infinite speed, zero judgment. It confidently produces plausible-but-wrong code. Never delegate judgment — only execution.
-2. **Own the specification.** Specification quality is the single biggest output lever: happy path · boundaries (what NOT) · constraints · acceptance criteria · failure states.
-3. **Vertical slices, not horizontal layers** — one complete feature UI→DB at a time.
-4. **Tests are behavioral contracts,** not implementation verification. Write tests before/with code.
-5. **All AI output is a draft.** AI gets syntax right ~95%, business logic ~60%. The gap is your responsibility.
-6. **Control context aggressively** — see `context-management-strategy.md`.
-7. **Limit blast radius:** small isolated changes; commit frequently; never >3–5 files per change without review.
-8. **Use AI to reason, not just generate:** edge-case discovery, trade-off analysis, design review.
-9. **Iterate prompts:** first attempts are drafts; refine constraints based on observed output.
-10. **Know when NOT to use AI:** manual is faster for simple well-known patterns; security-critical code needs human authorship/review regardless.
+2. **Speed is a first-class metric alongside accuracy.** Time from intent to first running slice is measured every iteration, not guessed — a process that is correct but slow is a defect, same as a fast process that ships broken auth. Scale ceremony with the mode (`speed-tiered-workflow.md`); never scale security or honesty.
+3. **Own the specification.** Specification quality is the single biggest output lever: happy path · boundaries (what NOT) · constraints · acceptance criteria · failure states.
+4. **Vertical slices, not horizontal layers** — one complete feature UI→DB at a time.
+5. **Tests are behavioral contracts,** not implementation verification. Depth follows mode: smoke + regression-on-second-bite in vibe; full pyramid at the ship boundary.
+6. **All AI output is a draft.** AI gets syntax right ~95%, business logic ~60%. The gap is your responsibility.
+7. **Control context aggressively** — see `context-management-strategy.md`.
+8. **Limit blast radius:** small isolated changes; commit frequently; never >3–5 files per change without review (vibe MAY batch micro-edits into one conventional commit — never end a session uncommitted).
+9. **Use AI to reason, not just generate:** edge-case discovery, trade-off analysis, design review.
+10. **Iterate prompts:** first attempts are drafts; refine constraints based on observed output.
+11. **Know when NOT to use AI:** manual is faster for simple well-known patterns; security-critical code needs human authorship/review regardless.
 
 ## Core Risks & Mitigations
 
@@ -59,4 +60,4 @@
 
 ## Cross-References
 
-`prompt-engineering-patterns.md` · `context-management-strategy.md` · `ai-agent-orchestration.md` · `ai-security-governance.md`
+`speed-tiered-workflow.md` · `prompt-engineering-patterns.md` · `context-management-strategy.md` · `ai-agent-orchestration.md` · `ai-security-governance.md`

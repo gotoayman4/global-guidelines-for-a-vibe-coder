@@ -4,7 +4,7 @@
 **Scope:** Global
 **Token Tier:** Full (~1,800 tokens)
 **Last Updated:** 2026-09-22
-**Cross-References:** `documentation-strategy.md`, `local-ci-strategy.md`, `context-management-strategy.md`
+**Cross-References:** `speed-tiered-workflow.md`, `documentation-strategy.md`, `local-ci-strategy.md`, `context-management-strategy.md`
 
 ---
 
@@ -37,7 +37,7 @@ The cost never appears as a failing test, so it is never prioritised. That is wh
    **Read every row, including the files you expected to be clean.** The heaviest history is usually in the document nobody calls a change log, and its shape may not be a `| YYYY-MM-DD |` row at all — a per-slice bold ledger (`**Change (previous):** …`) is counted when three or more entries occur in one section, not when unrelated sections are combined.
    A long line is two findings: a long paragraph is a formatting accident (wrap it), a long table row is a shape error (prose does not belong in a cell).
 2. **Time the gate and classify each step by trigger frequency** — per edit, per slice, per push, per milestone. A step that runs on every edit but only detects what a per-push run also detects is mis-tiered, not slow.
-3. **Bucket the last 5 sessions** into: reading, editing, running, re-running, and *writing prose about what ran*. The last bucket is the one teams miss — transcribing a test count into a document is pure overhead, and it goes stale on the next commit.
+3. **Bucket the last 5 sessions** into: reading, editing, running, re-running, and *writing prose about what ran*. The last bucket is the one teams miss — transcribing a test count into a document is pure overhead, and it goes stale on the next commit. Record **intent → first running slice (minutes)** per iteration: the speed metric from `speed-tiered-workflow.md` — a mode that feels fast but measures slow is misconfigured.
 4. **Count copies of every canonical list** (trigger table, gate steps, forbidden patterns, version table). Every copy above one is a future divergence; one project measured three copies of a single trigger table, each stating a different set of triggers.
 5. **Grep for hand-copied machine output** in docs: numbers of tests, coverage percentages, audit counts, build sizes. Each one is a claim that will be wrong without failing anything.
 6. **Rank fixes by repeated cost** (frequency × minutes), not by severity language. A 90-second tax paid 40 times a day outranks a 20-minute job done twice a month.
@@ -56,7 +56,8 @@ The cost never appears as a failing test, so it is never prioritised. That is wh
 
 ## Do Not
 
-- **Never fix friction by skipping or weakening a gate.** Optimize the gate, tier it, or scope it by path — a fast workflow you cannot trust is not fast, it is deferred.
+- **Never fix friction by skipping or weakening a gate that guards critical stability** (security, honesty of evidence, ship-boundary critical-flow checks, the full pre-push pipeline). Optimize the gate, tier it, or scope it by path — a fast workflow you cannot trust at ship time is not fast, it is deferred.
+- **Process steps that guard nothing at the current mode's risk tier MAY be deferred or dropped** — recorded as a one-line accepted risk in the mode's trade-offs table (`speed-tiered-workflow.md`). If nobody can name what the step protects *right now*, its cost is pure tax.
 - **Never bulk-rewrite history** to make a document smaller. Relocate it verbatim and prove the move against `git show HEAD:<path>`.
 - **Never add a fifth copy of a list** to "make it easier to find". The pointer is the copy.
 - **Never delete a guard because it went red** on the day the mandated improvement landed; that is the guard telling you it never covered the new shape.
@@ -74,8 +75,8 @@ The cost never appears as a failing test, so it is never prioritised. That is wh
 ## Key Takeaways
 
 1. Audit the process on a schedule; no correctness gate will ever report it as a failure.
-2. Measure tokens and seconds — a felt bottleneck and the real one are usually different files, and the measurement's own heuristics need auditing too.
-3. Tier every verification step by how often it must run; the full gate is per push, the loop is per edit.
+2. Measure tokens, seconds, and intent → first running slice — a felt bottleneck and the real one are usually different files, and the measurement's own heuristics need auditing too.
+3. Tier every verification step by how often it must run and what the current mode's risk tier needs; the full gate is per push, the loop is per edit, accepted-risk steps may be dropped with a note.
 4. One canonical copy per rule; the guard refuses restatements instead of rewarding them.
 5. Machine output is referenced, never transcribed.
 6. Rank fixes by repeated cost. Small taxes paid often are the whole debt.
@@ -84,6 +85,6 @@ The cost never appears as a failing test, so it is never prioritised. That is wh
 
 ## Cross-References
 
-- **Depends on:** `development-workflow.md` — the workflow being audited, `context-management-strategy.md` — token budgets
+- **Depends on:** `development-workflow.md` — the workflow being audited, `speed-tiered-workflow.md` — mode and speed metric, `context-management-strategy.md` — token budgets
 - **Extended by:** `documentation-strategy.md` — the document-hygiene fixes, `local-ci-strategy.md` — the gate-tier and receipt fixes
 - **Applied by:** `performance-audit.skill.md` (code performance is the sibling audit — different subject, same method)

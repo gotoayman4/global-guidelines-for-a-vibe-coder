@@ -4,23 +4,29 @@
 **Scope:** Global
 **Token Tier:** Full (~2,550 tokens)
 **Last Updated:** 2026-09-22
-**Cross-References:** `ai-code-documentation.md`, `context-management-strategy.md`, `local-ci-strategy.md`, `workflow-friction-audit.md`
+**Cross-References:** `speed-tiered-workflow.md`, `ai-code-documentation.md`, `context-management-strategy.md`, `local-ci-strategy.md`, `workflow-friction-audit.md`
 
 ---
 
-Documentation is the memory layer of vibe coding: AI sessions start with zero context, models change across sessions, and human understanding of generated code is partial. Good documentation cuts AI onboarding from 10+ messages to 1–2.
+Documentation is the memory layer of vibe coding: AI sessions start with zero context, models change across sessions, and human understanding of generated code is partial. Good documentation cuts AI onboarding from 10+ messages to 1–2. Depth scales with the declared mode (`speed-tiered-workflow.md`): triggers always fire; vibe defers non-trigger prose to the milestone.
 
 ## Required Documentation Files
 
 1. **README.md** — new session (or human) understands the project in under 5 minutes: brief description · pinned tech stack · Quick Start (`npm install` → `cp .env.example .env` → `npm run dev`) · project structure tree · links to ADRs.
 2. **WORLD.md** — product intent guardrail: what the project is and must NOT become (template in `planning-and-scoping.md`). Referenced in every major prompt.
-3. **ADRs (`docs/adr/NNN-name.md`)** for significant architectural decisions — prevent AI from reversing decisions in future sessions. Format:
+3. **ADRs (`docs/adr/NNN-name.md`)** for significant architectural decisions — prevent AI from reversing decisions in future sessions. Two depths: **ADR-lite** (3 lines — Context · Decision · Date; for reversible or low-stakes calls in vibe/standard mode, one file per decision still) and **full ADR** (the format below; required for irreversible decisions and every ADR in guarded mode). Format:
    ```markdown
    # ADR 001: Use PostgreSQL as Primary Database
    ## Status: Accepted (2026-05-24)
    ## Context: Need relational DB for users/orders/inventory; considered Postgres/MySQL/Mongo.
    ## Decision: PostgreSQL — JSON support, RLS for multi-tenant isolation, deep AI training data.
    ## Consequences: requires PG expertise; RLS adds query complexity; strong ecosystem.
+   ```
+   ADR-lite:
+   ```markdown
+   # ADR 012: Zustand over Redux (lite)
+   ## Status: Accepted (2026-09-22)
+   ## Context/Decision: <50 users, no devtools need — Zustand; revisit if team >3 or time-travel needed.
    ```
 4. **Inline code comments** follow `ai-code-documentation.md` (ICDC framework) — persistent context for the next AI session.
 
@@ -29,7 +35,7 @@ Documentation is the memory layer of vibe coding: AI sessions start with zero co
 1. Update documentation in the SAME iteration as the code change (workflow Phase 8) — stale docs mislead future sessions worse than missing docs.
 2. Write for a reader with zero context: every doc states purpose, constraints, and pointers to related files.
 3. Keep README's stack versions pinned and current when the stack changes.
-4. Every task ends with a Docs-Decision: `Docs: updated <files> | N/A (<reason>)`. Silence is a violation — same as "Done" with no verification.
+4. **Every task ends with a Docs-Decision only when the Trigger table fires:** a matching trigger requires `Docs: updated <files>` in the same iteration. Non-trigger changes report no Docs line — silence is the correct non-trigger response; a padded `N/A (<reason>)` on every trivial edit is ceremony, not safety. Missing a real trigger is a violation, same as "Done" with no verification.
 5. Steering docs are AI-first: imperative tables and bullets, MUST/SHOULD per RFC 2119, no prose paragraphs. Humans are not the audience.
 6. **A working document does not carry its own history.** Any file inside the mandated boot chain keeps its change log in dated archives (see below). History is on-demand reading; a boot file is read before every edit, so every kilobyte of accumulated past in it is paid by every session.
 7. **One canonical copy per rule.** Each list (trigger table, gate steps, forbidden patterns, version table) exists in exactly one file; every other site names the file and links. A restated list is not redundancy, it is a second document that no one edits — measure how many copies exist before adding a "summary".
@@ -70,7 +76,7 @@ Documentation is the memory layer of vibe coding: AI sessions start with zero co
 | Scope/guardrail reversal | `WORLD.md` — AI proposes a `Proposed Update` block, human approves, then agent applies |
 | New subsystem | New row in `AI_ARCHITECTURE.md` Subsystems + `ARCHITECTURE_INDEX.md` if a doc was added |
 
-Non-trigger (typo, formatting, internal refactor with no contract change, test-only): leave docs, report `Docs: N/A (<reason>)`.
+Non-trigger (typo, formatting, internal refactor with no contract change, test-only): leave docs, report no Docs line. Mode check: vibe additionally defers non-trigger README/API prose to the milestone; triggers fire in every mode.
 
 ## Freshness Header
 
@@ -86,8 +92,9 @@ A header that is merely PRESENT is not fresh: a guard compares it against the ne
 
 | Anti-Pattern | Fix |
 |---|---|
-| Docs updated "later" | Same iteration as code |
-| Decisions living only in chat history | ADRs |
+| Trigger change with no Docs line | Same iteration as code |
+| Padded `Docs: N/A` on every non-trigger edit | Silence is the non-trigger response |
+| Decisions living only in chat history | ADRs (lite for reversible, full for irreversible) |
 | Stale README stack versions | Pin + update on change |
 | An always-read doc whose change log is a third of its size | Dated archive + pointer heading |
 | The same table restated in four files "for convenience" | One canonical copy; the rest link |
@@ -101,6 +108,6 @@ A header that is merely PRESENT is not fresh: a guard compares it against the ne
 
 ## Cross-References
 
-- **Depends on:** `context-management-strategy.md` — why an always-read file has a reading budget
+- **Depends on:** `speed-tiered-workflow.md` — mode-scaled doc depth, `context-management-strategy.md` — why an always-read file has a reading budget
 - **Extended by:** `workflow-friction-audit.md` — the scheduled audit that finds the boot-chain bloat
 - **Applied by:** `local-ci-strategy.md` — the gate receipts this policy refuses to let anyone hand-copy
