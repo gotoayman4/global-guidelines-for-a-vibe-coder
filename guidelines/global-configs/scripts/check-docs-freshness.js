@@ -87,7 +87,7 @@ function main() {
   if (hits.length > 0 && steeringTouched.length === 0) {
     console.log('⚠️  Trigger-like changes WITHOUT steering-doc updates:\n');
     for (const h of hits) console.log(`    - ${h.file}\n      → update: ${h.hint}`);
-    console.log('\n  Re-run your Docs-Decision: `Docs: updated <files> | N/A (<reason>)`.');
+    console.log('\n  Re-run your Docs-Decision: report `Docs: updated <files>` (triggers only — non-triggers stay silent).');
     console.log('  (Warning only — this check never fails.)');
   } else {
     console.log('✅ No trigger-like changes, or steering docs updated alongside.');

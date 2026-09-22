@@ -7,6 +7,15 @@
 
 ---
 
+## Speed Mode
+
+- **mode:** `vibe` — `vibe | standard | guarded` per `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`
+- **Set:** [FILL: date + reason]. Default is `vibe` until first ship; revisit at every milestone.
+- **Transition log:**
+  - [FILL: YYYY-MM-DD — mode change + reason]
+
+---
+
 ## What This Project Is
 
 [FILL: 2-3 paragraphs describing the core purpose. What problem does it solve? Who are the users? What is the primary value proposition?]
