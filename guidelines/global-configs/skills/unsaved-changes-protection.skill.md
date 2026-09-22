@@ -62,7 +62,7 @@ You are a senior frontend engineer specializing in form state management and UX 
 4. **For dialog forms:**
    a. Import the project's dirty-state hook and confirm dialog component.
    b. Add a guard that checks `isDirty` before calling `onClose()`.
-   c. Set `disableEscapeKeyDown={isDirty}` on the Dialog.
+   c. Set `disableEscapeKeyDown={isDirty}` on the Dialog (MUI ≤v8 only — the prop was removed in v9; on v9 handle `reason === 'escapeKeyDown'` inside `onClose` instead).
    d. Never call `onClose()` directly from cancel buttons without checking `isDirty`.
    e. Call baseline reset after successful save and on discard.
 5. **For multi-tab pages:**
@@ -91,7 +91,7 @@ When generating or modifying form components:
 - Do NOT call the close handler directly from cancel buttons without checking `isDirty`
 - Do NOT reset baseline on mount with empty defaults — only inside the data-fetch effect after real data loads
 - Do NOT use JSON.stringify for array comparison without handling order sensitivity
-- Do NOT forget `disableEscapeKeyDown={isDirty}` on dialog forms
+- Do NOT forget `disableEscapeKeyDown={isDirty}` on dialog forms (MUI ≤v8; on v9 guard the close `reason` in `onClose`)
 - Do NOT show a route-level banner inside dialog forms — use a confirm dialog instead
 - Do NOT disable Save with `disabled={!isDirty && !saving}` — the correct pattern is `disabled={!isDirty || saving}`
 

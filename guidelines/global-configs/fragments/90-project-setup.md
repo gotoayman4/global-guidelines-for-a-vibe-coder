@@ -48,6 +48,8 @@ npm run lint         # ESLint
 npm run type-check   # TypeScript check
 npm test             # unit tests
 npm run test:e2e     # E2E tests
+npm run gate:fast    # lint + type-check + changed tests — the loop between edits, NOT evidence
+npm run gate:receipt # full gate → docs/gate-receipts/<UTC-stamp>.md (cited by path, never copied)
 ```
 
 Before suggesting any code change, verify it would pass `lint` and `type-check`.
@@ -69,6 +71,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 - No custom navigation-blocking workarounds — use the framework's native blocker
 - No stringified JSON or path strings as data-fetching cache keys — use raw tuples
 - No trusting client-supplied `Content-Type` for file uploads — verify MIME via magic-byte inspection
+- No multi-thousand-character prose line in a document — wrap at ≤400 chars; a table row is never wrapped, the prose leaves the cell instead
 
 ### How to Use This File
 
@@ -83,6 +86,8 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 ### Maintenance
 
 - **Quarterly:** Audit rules against source guidelines; re-extract outdated rules.
+- **Quarterly:** Measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — any always-read file over its budget or carrying more than 25% dated history gets history relocated to archives, not trimmed by hand. Read every row: a per-entry `**Change …:**` ledger is a change log even when no line starts with a date.
+    The report is non-failing by default; use `--strict` only with an authoritative `--files` list, where missing files fail and an entirely missing corpus is a data error.
 - **When guidelines change:** Check if extracted rules need updating.
 - **When stack changes:** Update the Stack table and review all rules.
 - **Source of truth:** Central repo (see Guideline source at top) — refresh `_guidelines/` via the sync script.

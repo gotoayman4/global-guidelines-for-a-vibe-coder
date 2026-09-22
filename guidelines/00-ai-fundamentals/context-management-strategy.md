@@ -2,9 +2,9 @@
 
 **Status:** Normative
 **Scope:** Global
-**Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `ai-collaboration-mindset.md`, `prompt-engineering-patterns.md`
+**Token Tier:** Full (~1,000 tokens)
+**Last Updated:** 2026-09-22
+**Cross-References:** `ai-collaboration-mindset.md`, `prompt-engineering-patterns.md`, `documentation-strategy.md`, `workflow-friction-audit.md`
 
 ---
 
@@ -22,6 +22,12 @@ Context windows exceed 1M tokens in 2026 — the constraint is no longer "will i
 4. **Explicit file tagging always** (`@file` mentions or explicit paths) + explicit non-goals ("do NOT modify any other files"). AI searching a large repo picks wrong files, outdated versions, or wrong modules.
 5. **Token budgets by task size:** quick fix → MASTER_INDEX + one compact primary file · complex feature → full primary + compact secondary · default to compact extracts; load full versions only when stuck.
 6. **Compact extract format when context is tight:** Core Principles (numbered) + Anti-Patterns table only — skip purpose, examples, rationale (~200–500 tokens per file).
+7. **Budget the mandatory chain, not just the prompt.** Every project has reading it cannot skip: the constitution, the intent docs, the current plan. Those files are paid per session, so their growth is a tax, not a storage problem.
+   Measure them (`node _guidelines/global-configs/scripts/measure-boot-budget.js .` → characters, `chars/4` tokens, and how much of each file is dated history), then hold the line: an always-read file MUST NOT carry its own change log (relocate it to dated archives and keep the pointer — see `documentation-strategy.md`), and an index states where things are, never what they say.
+   The command is report-only by default; `--strict` enforces thresholds and missing files in an explicit authoritative list, while an entirely missing corpus is a data error in either mode.
+8. **A budget is a number with a guard.** The knowledge base budgets its own always-loaded constitution (`global-configs/fragments/manifest.json` → `maxTokens`, enforced by `render-agents-starter.js --check`), so a rule added to the constitution must retire a rule somewhere. Give the project's constitution the same treatment.
+   "It feels long" is not a measurement, and an unenforced budget is the same bloat with a number next to it. Keep the guard non-vacuous:
+   `guidelines/global-configs/scripts/tests/measure-boot-budget.test.js` proves valid input, missing-file diagnostics, strict failure, and a deliberately broken threshold fixture.
 
 ## Anti-Patterns
 
@@ -32,7 +38,9 @@ Context windows exceed 1M tokens in 2026 — the constraint is no longer "will i
 | Copying conversation history into new sessions | Handoff summary |
 | Letting the AI search for files | Explicit file tags |
 | Loading full guidelines for small tasks | Compact extracts |
+| A mandated boot file that grew for a year and was never measured | Budget it, then move its history out |
+| A "quick reference" copy of a table that already exists | Link the canonical file; a second copy is a second document to maintain |
 
 ## Cross-References
 
-`ai-collaboration-mindset.md` · `prompt-engineering-patterns.md` · MASTER_INDEX.md token tiers
+`ai-collaboration-mindset.md` · `prompt-engineering-patterns.md` · `documentation-strategy.md` (what leaves an always-read document) · `workflow-friction-audit.md` (the scheduled measurement) · MASTER_INDEX.md token tiers

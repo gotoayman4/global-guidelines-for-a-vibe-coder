@@ -3,7 +3,7 @@
 **Purpose:** Single source of truth for every guideline document in this knowledge base.
 AI agents and humans use this index to discover, load, and navigate the guideline system.
 
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-09-22
 
 **Loading note:** Projects that ran `sync-guidelines.ps1` have a `_guidelines/` mirror in their root.
 If you see `_guidelines/` in the project, use `_guidelines/_index/MASTER_INDEX.md` and
@@ -14,13 +14,15 @@ guaranteed to be readable.
 flowchart TD
     subgraph "00 — AI Fundamentals (Mindset & Setup)"
         A1[ai-collaboration-mindset.md] --> A3[multi-tool-workflows.md]
-        A3 --> A4[multi-tool-workflows.md]
+        A1 --> A2[ai-agent-orchestration.md]
+        A2 --> A3
     end
 
     subgraph "01 — Workflow Methodology"
         B1[planning-and-scoping.md] --> B2[development-workflow.md]
         B2 --> B3[debugging-with-ai.md]
         B2 --> B4[refactoring-strategy.md]
+        B2 --> B6[workflow-friction-audit.md]
     end
 
     subgraph "02 — Engineering Practices"
@@ -38,10 +40,15 @@ flowchart TD
         D3 --> D4
     end
 
+    subgraph "07 — Documentation"
+        F1[documentation-strategy.md] --> F2[adr-template.md]
+    end
+
     subgraph "08 — Governance"
         E1[ai-governance-framework.md] --> E3[AGENTS.starter.md]
     end
 
+    B6 --> F1
     "00 — AI Fundamentals (Mindset & Setup)" --> "01 — Workflow Methodology"
     "01 — Workflow Methodology" --> "02 — Engineering Practices"
     "02 — Engineering Practices" --> "05 — Stack Guides"
@@ -58,7 +65,7 @@ flowchart TD
 |---|---|---|---|---|
 | [ai-collaboration-mindset.md](../00-ai-fundamentals/ai-collaboration-mindset.md) | Normative | Global | ~2,500 | `#mindset` `#philosophy` `#anti-patterns` |
 | [prompt-engineering-patterns.md](../00-ai-fundamentals/prompt-engineering-patterns.md) | Normative | Global | ~2,000 | `#prompting` `#templates` `#context` |
-| [context-management-strategy.md](../00-ai-fundamentals/context-management-strategy.md) | Normative | Global | ~1,800 | `#context` `#tokens` `#efficiency` |
+| [context-management-strategy.md](../00-ai-fundamentals/context-management-strategy.md) | Normative | Global | ~1,000 | `#context` `#tokens` `#efficiency` |
 | [ai-agent-orchestration.md](../00-ai-fundamentals/ai-agent-orchestration.md) | Normative | Global | ~2,200 | `#agents` `#orchestration` `#parallel` |
 | [ai-security-governance.md](../00-ai-fundamentals/ai-security-governance.md) | Normative | Global | ~2,000 | `#security` `#governance` `#owasp` |
 | [multi-tool-workflows.md](../00-ai-fundamentals/multi-tool-workflows.md) | Normative | Global | ~1,800 | `#multi-tool` `#cursor` `#copilot` `#claude` |
@@ -72,6 +79,7 @@ flowchart TD
 | [debugging-with-ai.md](../01-workflow-methodology/debugging-with-ai.md) | Normative | Global | ~1,800 | `#debugging` `#troubleshooting` `#error` |
 | [code-review-workflow.md](../01-workflow-methodology/code-review-workflow.md) | Advisory | Global | ~1,500 | `#review` `#quality` `#collaboration` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~1,800 | `#refactoring` `#maintenance` `#technical-debt` |
+| [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~1,800 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
 
 ### 02 — Engineering Practices
 
@@ -98,7 +106,7 @@ flowchart TD
 |---|---|---|---|---|
 | [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~1,500 | `#git` `#branching` `#commits` |
 | [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~1,800 | `#ci-cd` `#pipelines` `#automation` |
-| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~750 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` |
+| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~1,800 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
 | [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~1,500 | `#environments` `#secrets` `#config` |
 
 ### 04 — Architecture
@@ -148,7 +156,7 @@ flowchart TD
 
 | File | Status | Scope | Tokens (Full) | Tags |
 |---|---|---|---|---|
-| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~900 | `#documentation` `#strategy` `#maintenance` |
+| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~2,550 | `#documentation` `#strategy` `#maintenance` `#changelog-archives` `#single-source` `#line-length` |
 | [adr-template.md](../07-documentation/adr-template.md) | Advisory | Global | ~800 | `#adr` `#decisions` `#template` |
 
 ### 08 — Governance
@@ -164,7 +172,7 @@ flowchart TD
 |---|---|---|---|---|
 | [MASTER_INDEX.md](MASTER_INDEX.md) | Normative | Global | ~500 | `#index` `#navigation` `#master` |
 | [RETRIEVAL_RULES.md](RETRIEVAL_RULES.md) | Normative | Global | ~600 | `#retrieval` `#loading` `#tokens` `#strategy` |
-| [GLOSSARY.md](GLOSSARY.md) | Advisory | Global | ~400 | `#glossary` `#terminology` `#reference` |
+| [GLOSSARY.md](GLOSSARY.md) | Advisory | Global | ~5,100 | `#glossary` `#terminology` `#reference` |
 | [AGENT_BOOT_PROTOCOL.md](AGENT_BOOT_PROTOCOL.md) | Normative | Global | ~500 | `#boot` `#session` `#initialization` `#protocol` |
 
 ### Global Configs — Reusable Configuration Artifacts
@@ -204,6 +212,7 @@ flowchart TD
 | [setup-global-references.ps1](../global-configs/scripts/setup-global-references.ps1) | Script | Global | ~1,200 | `#script` `#setup` `#global-config` |
 | [GuidelineSync.psm1](../global-configs/scripts/GuidelineSync.psm1) | Script | Global | ~1,400 | `#script` `#module` `#sync` `#shared` |
 | [render-agents-starter.js](../global-configs/scripts/render-agents-starter.js) | Script | Global | ~150 | `#script` `#render` `#single-source` `#drift-detection` `#token-budget` |
+| [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 | [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |
 
@@ -244,10 +253,11 @@ flowchart TD
 | **Any feature completion** | agent-verification-loop | testing-patterns |
 | **Writing or reviewing code comments** | ai-code-documentation | testing-philosophy, documentation-strategy |
 | **Docs / steering update** | documentation-strategy, ai-code-documentation | agent-verification-loop, ai-governance-framework |
+| **Workflow friction / slow agent loop** | workflow-friction-audit, context-management-strategy | local-ci-strategy, documentation-strategy, cost-optimization-strategy |
 | **File upload implementation** | file-upload-security, security-engineering | error-handling-philosophy, api-design-standards |
 | **Router / navigation setup** | router-architecture, frontend-architecture | react-architecture |
 | **Code duplication / deduplication** | code-duplication-prevention, testing-patterns | ai-collaboration-mindset |
-| **CI/CD setup** | local-ci-strategy, ci-cd-philosophy, git-workflow-strategy, environment-management | — |
+| **CI/CD setup** | local-ci-strategy, ci-cd-philosophy, git-workflow-strategy, environment-management | workflow-friction-audit |
 | **Code review** | code-review-workflow, ai-security-governance | testing-philosophy, ux-design-principles |
 | **Refactoring** | refactoring-strategy, testing-philosophy | performance-optimization, visual-design-principles |
 | **RTL/i18n support** | rtl-tech-stack, bidirectional-design-principles, accessibility-standards | frontend-architecture, mui-rtl-bidirectional only when MUI is selected, shadcn-rtl-bidirectional only when shadcn/ui is selected |
@@ -298,6 +308,7 @@ flowchart TD
 - `debugging-with-ai.md` → depends on: `development-workflow.md`, `error-handling-philosophy.md`
 - `code-review-workflow.md` → depends on: `development-workflow.md`
 - `refactoring-strategy.md` → depends on: `development-workflow.md`, `testing-philosophy.md`
+- `workflow-friction-audit.md` → depends on: `development-workflow.md`, `context-management-strategy.md`; extended by: `documentation-strategy.md`, `local-ci-strategy.md`
 
 ### 02-engineering-practices
 - `testing-philosophy.md` → depends on: `ai-collaboration-mindset.md`
@@ -346,7 +357,7 @@ flowchart TD
 - `icon-usage.md` → depends on: `visual-design-principles.md`, `bidirectional-design-principles.md`, `accessibility-standards.md`, `design-system-governance.md`
 
 ### 07-documentation
-- `documentation-strategy.md` → depends on: none
+- `documentation-strategy.md` → depends on: `context-management-strategy.md`; extended by: `workflow-friction-audit.md`; applied by: `local-ci-strategy.md`
 - `adr-template.md` → depends on: `documentation-strategy.md`
 
 ### 08-governance

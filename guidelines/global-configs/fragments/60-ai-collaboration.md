@@ -18,5 +18,11 @@
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Docs-Decision Before "Done".** Every task MUST end with `Docs: updated <files> | N/A (<reason>)`. Trigger-changes (new endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) MUST update steering docs in the same iteration — stale docs mislead the next session worse than missing docs.
   → Source: `07-documentation/documentation-strategy.md`
+- **A Working Document Carries No History.** Every file a session must read at startup keeps its change log in dated archives (`docs/changelog/<doc>-<YYYY>-Q<n>.md`) behind a pointer heading that preserves the old anchor; relocated history moves verbatim and is proven against `git show HEAD:<path>`, never rewritten. Routine entries are ~50 words under `### YYYY-MM-DD`, wrapped so no line exceeds 400 characters.
+  → Source: `07-documentation/documentation-strategy.md`
+- **One Canonical Copy Per Rule.** Each list (trigger table, gate-step order, forbidden patterns, version table) lives in exactly one file and every other site links it. A restated list is a second document nobody edits; guard the copies with a parity test instead of summarizing them again.
+  → Source: `07-documentation/documentation-strategy.md`
+- **Reference Machine Output, Never Transcribe.** Verification and measurement numbers are written by commands into artifacts (`docs/gate-receipts/…`) and cited by path in prose. Hand-copied figures decay silently — they are the claims that go stale without failing anything.
+  → Source: `07-documentation/documentation-strategy.md`
 - **Globalize Lessons.** When you discover a mistake worth never repeating, write it as a proposal in `guidelines-proposals/YYYY-MM-DD-<slug>.md` (what happened, the preventing rule, target guideline file). NEVER store the lesson only in the session. Proposals are reviewed at sync time.
   → Source: `01-workflow-methodology/development-workflow.md`

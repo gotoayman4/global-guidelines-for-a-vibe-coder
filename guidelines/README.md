@@ -19,7 +19,7 @@ entire directory as `_guidelines/` in their project root.
 |---|---|
 | `_index/` | Entry points and navigation |
 | `00-ai-fundamentals/` | AI mindset, setup, prompt engineering |
-| `01-workflow-methodology/` | Planning, debugging, refactoring |
+| `01-workflow-methodology/` | Planning, debugging, refactoring, workflow-friction audits |
 | `02-engineering-practices/` | UX, accessibility, testing, security, performance |
 | `03-git-and-ci/` | Git workflow, local CI strategy, CI/CD, environment management |
 | `04-architecture/` | Frontend/backend/database/API/state/router patterns |

@@ -2,9 +2,9 @@
 
 **Status:** Normative
 **Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-09-06
-**Cross-References:** `ai-code-documentation.md`
+**Token Tier:** Full (~2,550 tokens)
+**Last Updated:** 2026-09-22
+**Cross-References:** `ai-code-documentation.md`, `context-management-strategy.md`, `local-ci-strategy.md`, `workflow-friction-audit.md`
 
 ---
 
@@ -31,6 +31,33 @@ Documentation is the memory layer of vibe coding: AI sessions start with zero co
 3. Keep README's stack versions pinned and current when the stack changes.
 4. Every task ends with a Docs-Decision: `Docs: updated <files> | N/A (<reason>)`. Silence is a violation — same as "Done" with no verification.
 5. Steering docs are AI-first: imperative tables and bullets, MUST/SHOULD per RFC 2119, no prose paragraphs. Humans are not the audience.
+6. **A working document does not carry its own history.** Any file inside the mandated boot chain keeps its change log in dated archives (see below). History is on-demand reading; a boot file is read before every edit, so every kilobyte of accumulated past in it is paid by every session.
+7. **One canonical copy per rule.** Each list (trigger table, gate steps, forbidden patterns, version table) exists in exactly one file; every other site names the file and links. A restated list is not redundancy, it is a second document that no one edits — measure how many copies exist before adding a "summary".
+8. **Machine output is referenced, never transcribed.** Verification numbers (test counts, coverage, audit results, bundle size, file size) are written by a command into an artifact, and prose cites the artifact's path. A hand-copied number is a claim that decays silently on the next commit. When a number genuinely must sit in prose, it carries the command that re-measures it and the date it was
+   measured, or it is rounded to a precision that survives the drift — a precise figure with no provenance is the worst kind, because it reads as checked.
+9. **A claim about the docs is a test.** Anything steering docs assert about themselves (a step list, a next-D number, a pointer, a date that must be current) is asserted by a parity guard in the test suite, with a non-vacuity probe and a reversal proof — otherwise the document drifts exactly where it claimed it would not.
+   The boot-budget contract is guarded by `guidelines/global-configs/scripts/tests/measure-boot-budget.test.js`: report-only mode surfaces optional missing files,
+   `--strict` fails an incomplete authoritative list, and an entirely missing corpus returns a data error.
+10. **A guard follows the improvement.** When a mandated hygiene change lands (history moved to archives), the guards that read the old shape are updated in the same iteration: a guard that punishes hygiene gets deleted, and the repo loses both.
+11. **A long line is two different bugs.** A long *paragraph* is a formatting accident — insert hard newlines at word boundaries (≤400 characters) and it becomes skimmable in a diff, an editor, and a screen reader, with the byte content unchanged. A long *table row* cannot be wrapped without breaking the table, so the finding is not the length: it is that prose is living in a cell. Move the prose
+    to a paragraph or an archive; leave the table a lookup.
+
+## History Lives in Dated Archives
+
+1. **Location and name:** `docs/changelog/<doc>-<YYYY>-Q<n>.md`, one file per quarter, newest file holding the newest entries. A new quarter starts a new file; old files are never edited.
+2. **The live file keeps a pointer heading** that preserves the section's old anchor (`## 4. …` stays `## 4. …`), states the archive path as a literal repo-relative path, and stops. Nothing else lives there.
+3. **Entry format:** one `### YYYY-MM-DD — <scope>` heading per entry, ~50 words for a routine change: what changed, what guard proves it, where the detail lives (ADR, PRD section, commit). Long entries are reserved for reversals and incidents — a document whose every entry is long has no signal left.
+   **Wrap every entry:** no line over 400 characters. A single-line bullet is unreadable in a diff, an editor, and a screen reader.
+4. **Relocation is a move, not a rewrite.** Proves out: extract every dated row from the pre-change version (`git show HEAD:<path>`) and assert each one still appears verbatim in the union of live doc + archives. A "tidied up" history is a destroyed history — the rows are the record of decisions, and the append-only rule exists so a reversal can be cited.
+5. **Measure before acting:** `node _guidelines/global-configs/scripts/measure-boot-budget.js . --history-warn 25` prints tokens per boot file, the share of each that is dated history, and the longest paragraph and longest table row. Act on >25%, not on a feeling.
+6. **Read every row of the measurement, not the two files you expected.** History hides in shapes a "change log" regex will not see: a `## Freshness` section that grows one bold-ledger entry per slice is a change log, and a section-aware detector must count it even when no line starts with `| YYYY-MM-DD |`.
+   One repo moved the two change logs everyone knew about and left a third document 74% history.
+
+## Guards for Steering Claims
+
+- **Non-vacuity probe:** every guard asserts that its own corpus is non-empty and that a deliberately broken input fails it. A guard that reads zero files passes forever.
+- **Informational steps stay informational:** a check that cannot be green before the commit exists (clean working tree) never decides the verdict of a pre-commit artifact.
+- **Immutable records are exempt:** ADRs and dated reports carry their date in their name or their status line; making them look "current" destroys the reason they exist.
 
 ## Trigger Table (When Docs MUST Change)
 
@@ -49,6 +76,8 @@ Non-trigger (typo, formatting, internal refactor with no contract change, test-o
 
 Every steering doc (`AGENTS.md` mandates section, `WORLD.md`, `AI_CONTEXT.md`, `AI_ARCHITECTURE.md`, `ARCHITECTURE_INDEX.md`) carries: `**Last Updated:** YYYY-MM-DD | **Commit:** short SHA | **Change:** one line`. Bump it in the same commit as the behavior change.
 
+A header that is merely PRESENT is not fresh: a guard compares it against the newest dated entry in the document's own history (live text plus the archives it points at), so a slice landed without a marker is caught rather than re-asked by the next session.
+
 ## Drift Check (Warn-Only)
 
 `npm run docs:check` flags trigger-like diffs with no steering-doc change in the same commit. It NEVER fails — it warns. Run it before pushing; treat a warning as a prompt to re-run the Docs-Decision, not as a gate.
@@ -60,7 +89,18 @@ Every steering doc (`AGENTS.md` mandates section, `WORLD.md`, `AI_CONTEXT.md`, `
 | Docs updated "later" | Same iteration as code |
 | Decisions living only in chat history | ADRs |
 | Stale README stack versions | Pin + update on change |
+| An always-read doc whose change log is a third of its size | Dated archive + pointer heading |
+| The same table restated in four files "for convenience" | One canonical copy; the rest link |
+| A verification count typed into a paragraph | Machine-written receipt, cited by path |
+| Bulk-rewriting history to shrink a file | Relocate verbatim; prove against `git show HEAD:` |
+| A guard that fails when the mandated improvement lands | Fix the guard in the same iteration; add a non-vacuity probe |
+| Entry per date that pastes the whole design argument | ~50 words + a pointer to the ADR/PRD section |
+| A paragraph that runs to thousands of characters on one line | Wrap at word boundaries, ≤400 chars — the content is unchanged |
+| A table cell holding a paragraph | The prose leaves the table; the table stays a lookup |
+| A precise figure in prose with no way to re-measure it | Cite the artifact, or carry the command + date, or round it |
 
 ## Cross-References
 
-`planning-and-scoping.md` · `ai-code-documentation.md`
+- **Depends on:** `context-management-strategy.md` — why an always-read file has a reading budget
+- **Extended by:** `workflow-friction-audit.md` — the scheduled audit that finds the boot-chain bloat
+- **Applied by:** `local-ci-strategy.md` — the gate receipts this policy refuses to let anyone hand-copy

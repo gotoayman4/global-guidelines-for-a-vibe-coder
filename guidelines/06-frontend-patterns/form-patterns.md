@@ -19,7 +19,7 @@ React Hook Form (state) · Zod (validation) · MUI inputs (UI) · localStorage/s
 3. Server-side validation is authoritative — client validation is UX only.
 4. One field = one reusable component consuming `useFormContext()` + `register()`.
 5. Multi-step forms preserve state across steps (parent context or storage) — never lose completed step data. Conditional steps filtered dynamically; conditional fields via `useWatch()` (not `watch()`).
-6. Unsaved-changes protection on EVERY form: route-level → dirty banner + route blocker; dialogs → confirm on close attempt + `disableEscapeKeyDown={isDirty}`.
+6. Unsaved-changes protection on EVERY form: route-level → dirty banner + route blocker; dialogs → confirm on close attempt + `disableEscapeKeyDown={isDirty}` (MUI ≤v8 only; on v9 the prop is removed — guard `reason` inside `onClose` instead).
 7. Save button: `disabled={!isDirty || saving}`. Edit mode: call `resetBaseline(loaded)` AFTER data loads, not on mount.
 8. Numeric editable fields: spinner-less number input — no accidental wheel changes.
 9. Accessibility: programmatic labels; `aria-required` on required fields; `aria-invalid` + `aria-describedby` on errors; focus first invalid control on failed submit; don't disable submit to prevent bad submits — validate and show errors instead.

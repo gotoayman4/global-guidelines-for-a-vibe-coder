@@ -17,7 +17,7 @@ Dialog types: Confirmation (destructive/irreversible) · Form (create/edit in di
    const openDialog = () => { triggerRef.current = document.activeElement as HTMLElement; setOpen(true); };
    <Dialog disableRestoreFocus TransitionProps={{ onExited: () => { triggerRef.current?.focus(); triggerRef.current = null; } }}>
    ```
-2. **Unsaved changes protection in form dialogs:** intercept ALL close attempts (`handleCloseAttempt` checks `isDirty`) · `disableEscapeKeyDown={isDirty}` · "Discard changes?" confirmation sub-dialog before losing work · reset baseline before closing on discard.
+2. **Unsaved changes protection in form dialogs:** intercept ALL close attempts (`handleCloseAttempt` checks `isDirty`) · `disableEscapeKeyDown={isDirty}` (MUI ≤v8 only — removed in v9; on v9 route Esc/backdrop through the same guard via `onClose(event, reason)`) · "Discard changes?" confirmation sub-dialog before losing work · reset baseline before closing on discard.
 3. **Confirmation dialogs describe consequences:** title names the action ("Delete Program?", not "Are you sure?") · message states what is lost ("permanently deletes the program and all associated data") · confirm button colored by severity (red delete / orange warning) · Cancel is the safe default (Escape closes safely).
 4. **MUI Select inside Dialog needs `MenuProps={{ disablePortal: true }}`** — Select's Menu→Popover→Modal chain triggers a second `ariaHideOthers()` that conflicts with the Dialog's.
 5. **Accessibility:** focus trapped while open · `aria-labelledby` → dialog title · `aria-describedby` → main content · close button has `aria-label` · focus goes to the first/most logical element on open.

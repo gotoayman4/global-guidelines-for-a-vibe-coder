@@ -2,8 +2,8 @@
 
 **Status:** Normative
 **Scope:** Global
-**Token Tier:** Full (~1,000 tokens)
-**Last Updated:** 2026-05-28
+**Token Tier:** Full (~5,100 tokens — measured with `measure-boot-budget.js`, not estimated)
+**Last Updated:** 2026-09-22
 
 ## 💡 Top 10 Essential Terms (Quick Anchor)
 
@@ -103,6 +103,11 @@ Standardize terminology across all guideline documents so AI agents and humans s
 | **Pull Request (PR)** | A request to merge your branch's changes into the main branch, usually reviewed first. | Like submitting your homework — the teacher reviews it before accepting. |
 | **Local CI** | Running all CI quality gates on your own machine via Git hooks instead of a paid cloud CI service. See `03-git-and-ci/local-ci-strategy.md`. | Like doing your own quality inspection at home before shipping a package, instead of paying a factory to check it. |
 | **Pre-Push Gate** | A Git hook that runs the full quality pipeline (lint, type check, tests, build) before every push; the push is blocked if anything fails. | Like a final walkthrough of your house before handing over the keys — nothing leaves until everything checks out. |
+| **Fast Loop** (`gate:fast`) | The seconds-long check an agent runs between edits: lint, type check, and only the tests the diff touched. It is a convenience, never proof. | Like tasting the sauce while you cook — it is not the health inspector's visit. |
+| **Gate Receipt** | A file a command writes (`docs/gate-receipts/…`) recording each gate step's exit code and key figures, so documents can cite evidence by path instead of copying numbers. | Like a printed thermometer reading instead of "it felt fine." |
+| **Path-Aware Step** | A gate step that runs only when the files it protects changed, keeping a slow suite in the gate without paying for it on every push. | Like checking the tires before a long trip, not every time you get into the car. |
+| **Boot Chain** | The set of steering documents a session must read before it can work; its size is a tax paid by every session, so it gets a measured budget. | Like the safety briefing before every flight — necessary, and it still has to stay short. |
+| **Dated Archive** | A quarterly change-log file (`docs/changelog/…`) that holds a working document's history so the document itself stays instruction-only. | Like a hospital's archived records room — the ward keeps only the current chart. |
 | **act** | An optional open-source tool that runs GitHub Actions workflow files locally inside Docker, without spending cloud minutes. | Like a flight simulator for your automation scripts — practice on the ground before paying for the flight. |
 | **N+1 Query** | A performance problem where the app makes N+1 database queries instead of 1, causing slowness. | Like calling the pizza place 50 times to order 50 toppings one at a time instead of ordering once. |
 | **Debounce** | Delaying execution until the user stops typing, to avoid processing every keystroke. | Like waiting until someone finishes talking before you start responding. |

@@ -50,6 +50,7 @@ const EXTRACTION_EXCLUSIONS = [
   '01-workflow-methodology/debugging-with-ai.md',
   '01-workflow-methodology/development-workflow.md',
   '01-workflow-methodology/planning-and-scoping.md',
+  '01-workflow-methodology/workflow-friction-audit.md',
   '02-engineering-practices/accessibility-standards.md',
   '03-git-and-ci/ci-cd-philosophy.md',
   '04-architecture/database-architecture.md',

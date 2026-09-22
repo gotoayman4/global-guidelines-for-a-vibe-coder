@@ -45,7 +45,11 @@
   → Source: `02-engineering-practices/testing-patterns.md`
 - **Pre-Commit Hooks Mandatory.** Every project MUST have pre-commit hooks (husky + lint-staged) running lint, type-check, and formatting, installed automatically after `npm install`. No commits without passing hooks.
   → Source: `03-git-and-ci/git-workflow-strategy.md`
-- **Local CI — Pre-Push Gate Mandatory.** CI runs locally; no cloud CI provider required. Every project MUST have a pre-push hook running the full pipeline: `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]`, plus `npm audit --audit-level=high` and a clean-tree check. `git push --no-verify` is forbidden. If the gate is slow, optimize the gate — never skip it. Hooks MUST NOT require real secrets.
+- **Local CI — Pre-Push Gate Mandatory.** CI runs locally; no cloud CI provider required. Every project MUST have a pre-push hook running the full pipeline: `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]`, plus the project's own dependency-audit wrapper (a bare `npm audit` that cannot reach the registry exits 0 — an unreachable registry MUST exit non-zero) and a `git status --porcelain` clean-tree check. `git push --no-verify` is forbidden. If the gate is slow, optimize the gate — never skip it. Hooks MUST NOT require real secrets.
+  → Source: `03-git-and-ci/local-ci-strategy.md`
+- **Two Loops: Fast Inside the Slice, Full at the Boundary.** Define `npm run gate:fast` (`lint` + `type-check` + tests scoped to the diff) for the seconds-long loop between edits, and run the full gate once before pushing. `gate:fast` is NOT evidence and MUST NOT be cited as verification; minutes-long suites that protect one subtree MUST be path-aware (run only when that subtree changed) rather than dropped.
+  → Source: `03-git-and-ci/local-ci-strategy.md`
+- **Gate Receipts — Evidence Is an Artifact.** `npm run gate:receipt` runs the gate and writes `docs/gate-receipts/<UTC-stamp>.md` (timestamp, commit, per-step exit and key figures, verdict). The instrument MUST strip ANSI escapes from captured output, and any step that cannot be green before the commit (clean-tree) is informational — it never decides the verdict.
   → Source: `03-git-and-ci/local-ci-strategy.md`
 
 ## Git (Load for All Code Changes)
@@ -124,6 +128,12 @@
 - **Output Efficiency — Vibe Coder Optimized.** The developer cannot read code. Describe WHAT changed in plain language (1-2 sentences) and WHERE (file path + line range); compare before/after behavior, not code; translate error messages into plain language. Use file edit tools directly — NEVER paste code blocks in chat unless the developer explicitly asks "show me the code".
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Docs-Decision Before "Done".** Every task MUST end with `Docs: updated <files> | N/A (<reason>)`. Trigger-changes (new endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) MUST update steering docs in the same iteration — stale docs mislead the next session worse than missing docs.
+  → Source: `07-documentation/documentation-strategy.md`
+- **A Working Document Carries No History.** Every file a session must read at startup keeps its change log in dated archives (`docs/changelog/<doc>-<YYYY>-Q<n>.md`) behind a pointer heading that preserves the old anchor; relocated history moves verbatim and is proven against `git show HEAD:<path>`, never rewritten. Routine entries are ~50 words under `### YYYY-MM-DD`, wrapped so no line exceeds 400 characters.
+  → Source: `07-documentation/documentation-strategy.md`
+- **One Canonical Copy Per Rule.** Each list (trigger table, gate-step order, forbidden patterns, version table) lives in exactly one file and every other site links it. A restated list is a second document nobody edits; guard the copies with a parity test instead of summarizing them again.
+  → Source: `07-documentation/documentation-strategy.md`
+- **Reference Machine Output, Never Transcribe.** Verification and measurement numbers are written by commands into artifacts (`docs/gate-receipts/…`) and cited by path in prose. Hand-copied figures decay silently — they are the claims that go stale without failing anything.
   → Source: `07-documentation/documentation-strategy.md`
 - **Globalize Lessons.** When you discover a mistake worth never repeating, write it as a proposal in `guidelines-proposals/YYYY-MM-DD-<slug>.md` (what happened, the preventing rule, target guideline file). NEVER store the lesson only in the session. Proposals are reviewed at sync time.
   → Source: `01-workflow-methodology/development-workflow.md`
@@ -210,6 +220,8 @@ npm run lint         # ESLint
 npm run type-check   # TypeScript check
 npm test             # unit tests
 npm run test:e2e     # E2E tests
+npm run gate:fast    # lint + type-check + changed tests — the loop between edits, NOT evidence
+npm run gate:receipt # full gate → docs/gate-receipts/<UTC-stamp>.md (cited by path, never copied)
 ```
 
 Before suggesting any code change, verify it would pass `lint` and `type-check`.
@@ -231,6 +243,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 - No custom navigation-blocking workarounds — use the framework's native blocker
 - No stringified JSON or path strings as data-fetching cache keys — use raw tuples
 - No trusting client-supplied `Content-Type` for file uploads — verify MIME via magic-byte inspection
+- No multi-thousand-character prose line in a document — wrap at ≤400 chars; a table row is never wrapped, the prose leaves the cell instead
 
 ### How to Use This File
 
@@ -245,6 +258,8 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 ### Maintenance
 
 - **Quarterly:** Audit rules against source guidelines; re-extract outdated rules.
+- **Quarterly:** Measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — any always-read file over its budget or carrying more than 25% dated history gets history relocated to archives, not trimmed by hand. Read every row: a per-entry `**Change …:**` ledger is a change log even when no line starts with a date.
+    The report is non-failing by default; use `--strict` only with an authoritative `--files` list, where missing files fail and an entirely missing corpus is a data error.
 - **When guidelines change:** Check if extracted rules need updating.
 - **When stack changes:** Update the Stack table and review all rules.
 - **Source of truth:** Central repo (see Guideline source at top) — refresh `_guidelines/` via the sync script.
