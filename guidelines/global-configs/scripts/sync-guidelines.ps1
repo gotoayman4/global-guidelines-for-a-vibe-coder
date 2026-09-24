@@ -1,4 +1,4 @@
-﻿# sync-guidelines.ps1
+# sync-guidelines.ps1
 # Syncs the central guidelines repo into a project and sets up global tool configs.
 # Run from any project directory, or pass -ProjectPath.
 #

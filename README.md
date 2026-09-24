@@ -58,6 +58,7 @@ powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guideline
 | `npm run render:starters` | Regenerates `templates/AGENTS.starter.md` from `global-configs/fragments/`. |
 | `npm run check-drift` | Fails if `AGENTS.starter.md` was hand-edited or exceeds its token budget. |
 | `npm run status:projects` | Reports which rules each synced project's `AGENTS.md` is missing (informational, never fails). |
+| `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; updates `lastSynced`; exits 1 if any fail). |
 | `npm run validate:fast` | Quick integrity pass (audit + check-index + check-drift; skips full link crawl). |
 | `npm run test:scripts` | Runs the Node test suite for `global-configs/scripts` helpers. |
 | `npm run new:guideline` | Scaffolds a guideline file + MASTER_INDEX row (use `-- --dry-run` first). |

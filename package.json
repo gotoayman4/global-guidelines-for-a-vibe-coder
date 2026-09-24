@@ -10,6 +10,7 @@
     "render:starters": "node guidelines/global-configs/scripts/render-agents-starter.js",
     "check-drift": "node guidelines/global-configs/scripts/render-agents-starter.js --check",
     "status:projects": "node guidelines/global-configs/scripts/check-project-freshness.js",
+    "sync:all": "node guidelines/global-configs/scripts/sync-all.js",
     "docs:check": "node guidelines/global-configs/scripts/check-docs-freshness.js",
     "new:guideline": "node guidelines/global-configs/scripts/new-guideline.js",
     "new:project": "node guidelines/global-configs/scripts/new-project.js",

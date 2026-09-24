@@ -212,6 +212,7 @@ flowchart TD
 | [firebase-firestore-practices.skill.md](../global-configs/skills/firebase-firestore-practices.skill.md) | Skill | Global | ~900 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [audit-rules.js](../global-configs/scripts/audit-rules.js) | Script | Global | ~300 | `#script` `#automation` `#drift-detection` |
 | [sync-guidelines.ps1](../global-configs/scripts/sync-guidelines.ps1) | Script | Global | ~1,800 | `#script` `#sync` `#project-setup` |
+| [sync-all.js](../global-configs/scripts/sync-all.js) | Script | Global | ~150 | `#script` `#sync` `#batch` `#fleet` `#project-setup` |
 | [setup-global-references.ps1](../global-configs/scripts/setup-global-references.ps1) | Script | Global | ~1,200 | `#script` `#setup` `#global-config` |
 | [GuidelineSync.psm1](../global-configs/scripts/GuidelineSync.psm1) | Script | Global | ~1,400 | `#script` `#module` `#sync` `#shared` |
 | [render-agents-starter.js](../global-configs/scripts/render-agents-starter.js) | Script | Global | ~150 | `#script` `#render` `#single-source` `#drift-detection` `#token-budget` |
@@ -378,6 +379,7 @@ flowchart TD
 - All skill files → depend on: the skill's own Load Guidelines section
 - `audit-rules.js` → implements the extraction methodology (see docs/repo-meta/)
 - `sync-guidelines.ps1` → depends on: `GuidelineSync.psm1`
+- `sync-all.js` → depends on: `sync-guidelines.ps1`, `sync-projects.json`
 - `setup-global-references.ps1` → depends on: `opencode.json.template`
 - `GuidelineSync.psm1` → depends on: `sync-manifest.json`
 - All tool config templates → copied into project or tool config directories by `sync-guidelines.ps1` and `sync-manager.ps1`

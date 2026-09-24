@@ -8,7 +8,7 @@ description: Activate when user is setting up their first project, needs onboard
 **Status:** Advisory
 **Scope:** Global (Task-Type Skill)
 **Token Tier:** Compact (~600 tokens)
-**Source:** `D:\WebApps\global-guidelines-for-a-vibe-coder\global-configs\skills\first-project-setup.skill.md`
+**Source:** `global-configs/skills/first-project-setup.skill.md`
 **Last Updated:** 2026-05-25
 
 ---
