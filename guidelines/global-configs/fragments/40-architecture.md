@@ -14,7 +14,7 @@
   → Source: `04-architecture/api-design-standards.md`
 - **Vertical Slice Development.** Build one complete feature UI → API → Database before starting the next. Never build by horizontal layers; the first increment is a working end-to-end feature, however thin.
   → Source: `01-workflow-methodology/development-workflow.md`
-- **Stack Conventions (React projects).** Data router API only (`createBrowserRouter`, never `<BrowserRouter>`; native `useBlocker`, no custom navigation-blocking workarounds). Cap concurrent page fetches at 4 (`fetchAllPages<T>()` shared utility). ESLint enforces `import-x/no-duplicates` and `import-x/order`; inline `type` for type-only imports. Detail: `_guidelines/04-architecture/router-architecture.md`, `_guidelines/02-engineering-practices/performance-optimization.md`.
+- **Stack Conventions (React projects).** Data router API only (`createBrowserRouter`, never `<BrowserRouter>`; native `useBlocker`, no custom nav-blocking workarounds). Cap concurrent page fetches at 4 (`fetchAllPages<T>()` shared). ESLint enforces `import-x/no-duplicates` and `import-x/order`; inline `type` for type-only imports. Detail: `_guidelines/04-architecture/router-architecture.md`, `_guidelines/02-engineering-practices/performance-optimization.md`.
   → Source: `04-architecture/router-architecture.md`
 - **Code Duplication Detection.** Same mapping/validation/transformation in 2+ files → extract to a shared utility in the same iteration; never wait for a refactoring pass.
   → Source: `02-engineering-practices/code-duplication-prevention.md`

@@ -167,7 +167,13 @@ if (-not $SourceOnly) {
         if (Test-Path -LiteralPath $symlinkPath) {
             Remove-Item -LiteralPath $symlinkPath -Force
         }
-        $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file.FullName -Force
+        # Symlink needs elevation (or Developer Mode) on Windows; fall back to a
+        # copy so an unelevated sync:all still lands the skill (D192 lesson).
+        try {
+            $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file.FullName -Force -ErrorAction Stop
+        } catch {
+            Copy-Item -LiteralPath $file.FullName -Destination $symlinkPath -Force
+        }
         $skillCount++
     }
     # Global AGENTS.md for opencode
@@ -285,7 +291,11 @@ Use absolute base path `$guidelinesRepo/` when loading files.
         if (Test-Path -LiteralPath $qoderSymlink) {
             Remove-Item -LiteralPath $qoderSymlink -Force
         }
-        $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file.FullName -Force
+        try {
+            $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file.FullName -Force -ErrorAction Stop
+        } catch {
+            Copy-Item -LiteralPath $file.FullName -Destination $qoderSymlink -Force
+        }
         $qoderSkillCount++
     }
     Write-Host "    Skills: $qoderSkillCount linked" -ForegroundColor Green

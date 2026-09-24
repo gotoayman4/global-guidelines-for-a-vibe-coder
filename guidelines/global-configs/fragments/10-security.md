@@ -14,5 +14,5 @@
   → Source: `00-ai-fundamentals/ai-security-governance.md`
 - **Security Headers.** Security headers (CSP, HSTS, X-Frame-Options) MUST be configured. They are mandatory, not optional.
   → Source: `02-engineering-practices/security-engineering.md`
-- **File Upload MIME Validation (Magic-Byte).** ALL file upload endpoints MUST verify MIME type by reading magic bytes from the file buffer, not by trusting client-supplied `Content-Type` headers (use `file-type@16.5.4` for Node.js). Reject uploads whose detected type is not on the allowlist.
+- **File Upload MIME Validation (Magic-Byte).** ALL file upload endpoints MUST verify MIME type by reading magic bytes from the file buffer, not by trusting client-supplied `Content-Type` headers (use `file-type` — the version pinned in the project's `package.json`). Reject uploads whose detected type is not on the allowlist.
   → Source: `02-engineering-practices/file-upload-security.md`

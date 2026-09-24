@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-09-22
+**Last Updated:** 2026-09-24
 **Cross-References:** `speed-tiered-workflow.md`, `ai-collaboration-mindset.md`, `testing-patterns.md`
 
 ---
@@ -42,6 +42,7 @@
 | Full pyramid enforced on a throwaway spike | Declare vibe mode; ceremony protects nothing there |
 | E2E-only | Integration layer for fast feedback |
 | Screenshot/vision-driven E2E where DOM/state assertions suffice | Headless programmatic e2e; reserve visual checks for layout sign-off (see `agent-verification-loop.md` Cost Tiering) |
+| Test policy and ship boundary read as contradictory, so a scripted production write is proposed as the "honest" resolution | The boundary asks for **verification**, not automation. Restrict tests to a sandbox **and** schedule a dated human pass on the real target — write both down in the same file |
 
 ## Cross-References
 

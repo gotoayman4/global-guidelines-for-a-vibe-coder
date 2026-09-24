@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Full (~1,300 tokens)
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-09-24
 **Cross-References:** `ai-security-governance.md`, `error-handling-philosophy.md`, `file-upload-security.md`
 
 ---
@@ -37,6 +37,9 @@
 14. Secrets only in environment variables; `.env` gitignored and agent-ignored (`.cursorignore`/`.claudeignore`); separate secrets per environment; CI secrets via platform managers; pre-commit secret scanning; a committed secret is rotated immediately.
 15. Dependencies: audit on every PR (`npm audit`, `npm ls <pkg>` existence check); verify latest stable version via web/npm before pinning (AI training data is stale); pin critical deps exactly; ADR required to stay on older majors; reject abandoned packages (<1 year unmaintained) and <100 weekly downloads unless from a trusted org.
 16. Environments: production DEBUG=false, stack traces hidden; staging mirrors production.
+
+**Declared vs enforced**
+17. A control whose failure mode is "the platform ignores it" (headers, retention, cache TTL, rewrites) is asserted on the response, not the config — or the unit test states in its name which it checks, and the list under test is extracted from the artifact rather than hand-copied beside it. Delete a declaration the platform overrides; if the guarantee is real but not yours, assert it as a measured platform fact with the measured value so it goes red if the platform stops providing it. Every check distinguishes "clean" from "not read"; "not read" is a failure, never a pass. When comparing a declaration to a provider's normalised form, normalise the declaration first and keep a case built from the provider's literal output. An exemption names the fact that earns it and is re-checkable (pin the premise with a tripwire so the exemption dies when the code changes). Local-emulator green is not capability — one live CLI/GET read belongs with the rest.
 
 ## Review Checklist (every AI PR touching auth/input/db/uploads/config)
 

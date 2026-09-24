@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-08-28
+**Last Updated:** 2026-09-24
 **Cross-References:** `git-workflow-strategy.md`, `ci-cd-philosophy.md`, `security-engineering.md`, `local-ci-strategy.md`
 
 ---
@@ -20,6 +20,7 @@
 5. **Specify the environment when asking AI to generate configuration** ("generate for STAGING; use env vars; no hardcoded connection strings").
 6. **AI tool artifact hygiene:** auto-generated tool directories (`.kilocode/`, `.qoder/`, `.qodo/`, `.trae/`, `.windsurf/`, `playwright-report/`, `test-results/`, `uploads/`) are gitignored. Only commit explicitly shared team configs (e.g., `.vscode/extensions.json`).
 7. **Clean-working-tree gate (pre-push hook):** after build, fail the gate if `git status --porcelain` is non-empty — catches misplaced build outputs, tool-created files, accidental source modifications. Runs locally in the pre-push gate, not in a cloud job.
+8. **An empty value in git config can mean "clear the chain."** `credential.helper =` (blank) is not "unset" — it resets the accumulated helper list from higher-precedence files and can silently disable a system credential manager. Diagnose auth-shaped failures with `git config --show-origin --get-all credential.helper`; prove recovery with a NON-INTERACTIVE `git ls-remote`. Never let an agent edit global git config without the operator's explicit approval — record the fix in a runbook instead.
 
 ## Setup Checklist (new project)
 

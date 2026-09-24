@@ -12,11 +12,11 @@
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **No Silent TODOs or Placeholders.** NEVER generate TODO/FIXME/HACK/placeholder comments without explicit permission — state gaps in the response. Escape hatch: tracker issue number + descriptive error on unimplemented paths.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Output Efficiency — Vibe Coder Optimized.** Describe WHAT changed (1–2 plain sentences) and WHERE (path + lines); compare behavior, not code; never paste code blocks unless asked. Edit files directly.
+- **Output Efficiency.** Describe WHAT changed (1–2 plain sentences) and WHERE (path + lines); compare behavior, not code; never paste code blocks unless asked. Edit files directly.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Docs Line Fires on Triggers Only.** Trigger-table match (new endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) → update steering docs same-iteration and report `Docs: updated <files>`. Non-trigger → NO Docs line; silence is correct, a padded `N/A` is ceremony. Missing a real trigger is a violation.
+- **Docs Line Fires on Triggers Only.** Trigger-table match (endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) → update steering docs same-iteration and report `Docs: updated <files>`. Non-trigger → NO Docs line; silence is correct, a padded `N/A` is ceremony. Missing a real trigger is a violation.
   → Source: `07-documentation/documentation-strategy.md`
-- **Boot Files Carry No History; One Copy Per Rule.** Always-read files keep change logs in dated archives (`docs/changelog/<doc>-<YYYY>-Q<n>.md`) behind a pointer heading (relocate verbatim, prove vs `git show HEAD:`; ~50-word entries, ≤400-char lines). Each canonical list lives in exactly one file — every other site links; parity tests guard the copies.
+- **Boot Files Carry No History; One Copy Per Rule.** Always-read files keep change logs in dated archives (`docs/changelog/<doc>-<YYYY>-Q<n>.md`) behind a pointer heading (relocate verbatim; ~50-word entries, ≤400-char lines). Each canonical list lives in exactly one file — every other site links; parity tests guard the copies.
   → Source: `07-documentation/documentation-strategy.md`
 - **Reference Machine Output, Never Transcribe.** Verification numbers go into artifacts (`docs/gate-receipts/…`) and are cited by path — hand-copied figures decay silently.
   → Source: `07-documentation/documentation-strategy.md`

@@ -54,7 +54,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 ### Forbidden Patterns Quick Scan
 
-- No `console.log` in production · no `!important` · no TS `any`/`eslint-disable`/`@ts-ignore` without a why-comment · no inline styles when tokens exist · no hardcoded UI strings (all i18n keys — bilingual by default) · no `// TODO`/`FIXME`/`HACK` without permission · no lorem/placeholder UI · no physical direction CSS in UI chrome — logical only · no raw hex/pixel/font-family in components — tokens only · no `letter-spacing` or text opacity on Arabic · no portal without explicit `dir` · no custom navigation-blocking workarounds · no non-tuple cache keys · no trusting client `Content-Type` for uploads (magic-byte) · no prose line >400 chars (table rows never wrap — prose leaves the cell).
+- No `console.log` in production · no `!important` · no TS `any`/`eslint-disable`/`@ts-ignore` without why · no inline styles when tokens exist · no hardcoded UI strings (i18n keys — bilingual) · no `// TODO`/`FIXME`/`HACK` without permission · no lorem/placeholder UI · no physical direction CSS — logical only · no raw hex/pixel/font-family — tokens only · no `letter-spacing`/text opacity on Arabic · no portal needing `dir` (differs from document / context-only stack) without one · no custom nav-blocking workarounds · no non-tuple cache keys · no trusting client `Content-Type` (magic-byte) · no prose line >400 chars (table rows never wrap).
 
 ### How to Use This File
 
@@ -67,4 +67,4 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 - **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list).
 - **When guidelines or stack change:** refresh extracted rules + Stack table; source of truth is the central repo — re-sync `_guidelines/`.
 
-**Cross-References (in `_guidelines/` mirror):** Authority hierarchy: `_guidelines/08-governance/ai-governance-framework.md` · Loading strategy: `_guidelines/_index/RETRIEVAL_RULES.md` · Speed modes: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md` · Design principles: `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md` · Design governance: `_guidelines/08-governance/design-system-governance.md`
+**Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`, `02-engineering-practices/bidirectional-design-principles.md` · Governance: `08-governance/design-system-governance.md`

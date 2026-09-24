@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Full (~1,800 tokens)
-**Last Updated:** 2026-09-22
+**Last Updated:** 2026-09-24
 **Cross-References:** `ci-cd-philosophy.md`, `git-workflow-strategy.md`, `environment-management.md`, `documentation-strategy.md`, `workflow-friction-audit.md`
 
 ---
@@ -56,6 +56,8 @@ Before every push, run the full pipeline locally. This gate replaces the cloud C
 - **Nested npm inherits the parent's env.** A step that shells out to `npm run …` must re-apply the wrapper's own env handling (the audit case above), or it fails for reasons that have nothing to do with the code.
 - **Receipts are append-only and dated.** Never rewrite one to make a slice look green; the next run writes a new file.
 - A guard asserts the cited receipts exist and their verdict is GREEN — so a citation cannot rot into a lie about a file that was never written.
+- **A gate that cannot run is not a gate.** Any step whose pass depends on an external tool exits a distinct code when the tool never executed, and is verified through its real invocation path (hook → `npm run` → child), never only by running the underlying command by hand. Nested invocations inherit the parent toolchain's exported config; where a child refuses an inherited key, sanitize the child environment explicitly and document which keys were dropped and why dropping them cannot weaken the check. Exit-0 with unparsed, empty, or absent output is a failure, not a pass.
+- **Never surface a single tool field as the whole error.** Print the tool's machine-readable code plus its human summary, with a fallback for blank values — a formatter that can emit `""` leaves the operator nothing to act on.
 
 ## Tier C — act (Optional)
 

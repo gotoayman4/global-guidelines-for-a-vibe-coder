@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global — All Projects (Bilingual by Default)
 **Token Tier:** Full (~1,200 tokens)
-**Last Updated:** 2026-08-26
+**Last Updated:** 2026-09-24
 **Cross-References:** `rtl-tech-stack.md`, `accessibility-standards.md`, `ux-design-principles.md`, `frontend-architecture.md`, `visual-design-principles.md`, `icon-usage.md`
 
 ---
@@ -18,7 +18,7 @@
 4. **Arabic typography defaults:** line-height 1.6–1.8 · font-weight ≥400 (never 300) · letter-spacing MUST be 0 on Arabic · NO opacity/rgba on Arabic text blocks (jagged glyphs in Firefox) · no `word-break: break-all` (use `overflow-wrap: break-word`) · underline-offset ≥4px.
 5. **Dual-direction content density:** Arabic text runs 20–30% shorter than English — use min/max-width constraints not fixed widths; labels/buttons tolerate ±30% length; fluid table columns; tooltips carry truncated full text.
 6. **Direction at multiple levels:** app shell → workspace/page → editor document → paragraph → inline span (`bdi` / `dir="auto"`). User-authored content containers always `dir="auto"`.
-7. **Portal components do NOT inherit `dir`:** DialogContent, PopoverContent, DropdownMenuContent, TooltipContent, SelectContent, SheetContent all need explicit `dir` props. This is the #1 production RTL regression; fixing it has zero LTR impact.
+7. **Overlays and the ancestor they actually inherit from:** portal content renders outside the subtree that declared it, so it inherits nothing from its React parent — but it does inherit `direction` from `<html>`, which is its DOM ancestor. If the app owns direction on `document.documentElement` and sets it before first paint, portal content inherits it and needs no `dir` prop; it needs one exactly where its direction must DIFFER from the page's (a quoted extract, a code block, an embedded foreign document) or where the stack carries direction in a React context only (see the stack guide). Decide per stack, record which the project uses, and never state this as unconditional. (A blanket "portals never inherit" is false for document-driven stacks and was the source of a six-sprint false finding — see the portal-direction proposal.)
 8. **Dual-direction testing mandatory:** E2E in both directions; Storybook RTL+LTR stories for every shared component; visual regression per direction; manual QA checklist (forms align RTL, tables scroll RTL, dialogs positioned correctly, icons flipped correctly, bidi content clean).
 
 ## Adoption
@@ -34,7 +34,7 @@ New projects: all principles from initialization (`pnpm dlx shadcn@latest init -
 | Un-flipped directional icons | Mirror with intent |
 | `tracking-*` / opacity on Arabic | Zero spacing, opaque tokens |
 | Fixed-width text containers | min/max constraints |
-| Portal without dir prop | Explicit dir always |
+| Portal whose direction must differ from the document (or context-only stack) without `dir` | Explicit `dir` where the mechanism requires it; document-driven stacks inherit from `<html>` |
 | Testing only in LTR | Dual-direction mandatory |
 
 ## Cross-References

@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Full (~5,100 tokens — measured with `measure-boot-budget.js`, not estimated)
-**Last Updated:** 2026-09-22
+**Last Updated:** 2026-09-24
 
 ## 💡 Top 10 Essential Terms (Quick Anchor)
 
@@ -17,7 +17,7 @@ If you are a beginner, memorize these ten key concepts to instantly understand a
 6. **Normative:** A binding rule that **must** be strictly followed. Advisory guidelines are recommended but flexible.
 7. **Design Token:** A named variable (e.g., `theme.colors.primary`) representing colors, font, or spacing. You must use these instead of hardcoded raw values.
 8. **Logical CSS Properties:** CSS commands (e.g., `margin-inline-start`) that automatically flip layouts when switching between English and Arabic.
-9. **Portal Components:** Overlays like Dialogs or Menus that sit outside the normal page structure. They **must** be given explicit directions (`dir="rtl"`) to avoid rendering issues.
+9. **Portal Components:** Overlays like Dialogs or Menus that sit outside the normal page structure. They escape the React parent; they still inherit `direction` from `<html>` when the app owns it there — give them explicit `dir` only where direction must differ from the document, or where the stack keeps direction in a React context only.
 10. **Silent Regression:** A hidden bug introduced by changes that compiles successfully but breaks other undocumented behaviors.
 
 ---
@@ -30,7 +30,7 @@ If you are a beginner, memorize these ten key concepts to instantly understand a
 | **Standard mode** | Default process tier: feature plans for non-trivial work, tests with code, evidence-by-change-type verification, trigger-table docs. | A normal workday with a checklist — steady, not heavy. |
 | **Guarded mode** | Heaviest process tier for high-risk work: architecture review, full test pyramid, ADRs for decisions. | Surgery protocol — slow on purpose because mistakes cost a lot. |
 | **Speed Mode (WORLD.md)** | The project field declaring which mode is active, plus the dated transition log of mode changes. | A thermostat setting with a maintenance log — you can see what it was set to and when. |
-| **Ship boundary** | The point where a loose inner loop hardens: full pre-push gate + critical-flow checks (LTR and RTL) before any release or milestone exit. | Handing over the keys — the renovation mess is fine during work, not at walkthrough. |
+| **Ship boundary** | The point where a loose inner loop hardens: full pre-push gate + critical-flow verification (LTR and RTL) before any release or milestone exit — automated **or a dated human pass**, never assumed. | Handing over the keys — the renovation mess is fine during work, not at walkthrough. |
 | **Ceremony** | The process overhead (plans, tests, docs, verification depth) that modes scale up or down — never security or honesty. | Safety gear amount for the job: hard hat for framing, full harness for steelwork. |
 
 ---

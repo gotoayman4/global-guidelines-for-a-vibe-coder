@@ -3,7 +3,7 @@
 **Status:** Normative
 **Scope:** Global
 **Token Tier:** Compact (~700 tokens)
-**Last Updated:** 2026-09-22
+**Last Updated:** 2026-09-24
 **Cross-References:** `speed-tiered-workflow.md`, `testing-patterns.md`, `verification-for-non-coders.md`, `debugging-with-ai.md`
 
 ---
@@ -55,6 +55,12 @@ Never as routine per-change verification. Never loop captures — one capture, o
 
 **Selection rule:** before any Tier-3 check, ask "can a test or DB query assert this?" If yes, write the test instead. The cheaper tiers are not shortcuts — they are STRONGER evidence (deterministic, repeatable, regression-catching) than one-off visual inspection.
 
+**Exit-code rule (never pipe a gate through a formatter):** when pass/fail is judged by exit code, run the command unpiped (redirect to a temp log, then inspect: `npm run type-check > tc.log 2>&1; echo EXIT:$LASTEXITCODE`). PowerShell `$LASTEXITCODE` after a pipeline is the exit of the LAST element (`Select-Object` → always 0); truncating formatters also drop the error text. Truncated output is never evidence.
+
+**Two halves of a protection are two tests:** a UI affordance (e.g. `disabled`) and a handler guard (`if (busy) return` / a synchronously-written ref) assert separately, and each must be proved able to fail alone — a click-on-disabled test stays green when the handler guard is deleted. State is stale inside the render that set it: two events before a commit both observe the pre-update value, so a re-entrant guard that must hold synchronously belongs in a ref, not a state read. Run the whole file, not just `-t`-filtered single tests: an unhandled error in a later test's teardown is a run failure no filtered invocation can see. Record harness artefacts (focus-restore crashes, jsdom quirks) as harness artefacts in `afterEach`, never as product coverage. A disabled control owes its reason in rendered text beside it (a tooltip/`title` on a disabled control reaches nobody) — see the acceptance line and any ADR the change cites, not only the defect report.
+
+**A declared control is not an enforced one:** any control whose failure mode is "the platform ignores it" (headers, retention, cache TTL, rewrites) is asserted on the response, not the config — or the unit test states in its name which of the two it checks, and the list under test is extracted from the artifact, not hand-copied beside it. Every check distinguishes "clean" from "not read"; "not read" is a failure, never a pass (absent artifact, failed request, empty status). A probe that cannot fail is not evidence; a probe that measures its own cache is not a probe — disable the cache or prove fresh bytes, keep the red run, and record the cache TTL as an operational fact. Local-emulator green is not capability: a backend the emulator creates (buckets, index enforcement, auth) is exactly where "works locally, dead in production" hides — one CLI read-only query or one live GET belongs in the same instrument.
+
 ## Loop Steps
 
 1. **Implement** the requested change.
@@ -84,6 +90,9 @@ Never as routine per-change verification. Never loop captures — one capture, o
 | Fixing forward silently after failure | User loses track of what changed during debugging |
 | Screenshot/vision checks as routine per-change verification | Most expensive, slowest instrument; deterministic tests are stronger evidence (see Cost Tiering) |
 | Verifying data/logic state through the screen when a DB query or test can assert it directly | Wastes tokens and time; indirect observation is also less reliable |
+| Gate exit code read from a pipeline tail (`… \| Select-Object`; `$LASTEXITCODE` is the formatter's) | Run unpiped; redirect to a log and echo `$LASTEXITCODE` / `$?` |
+| Green unit test over a declared control that the platform ignores | Assert on the response (or name the config-check in the test); "not read" fails |
+| Affordance-only test that stays green when the handler guard is deleted | Assert affordance and guard separately; reversal (delete the guard) must redden |
 
 ---
 
