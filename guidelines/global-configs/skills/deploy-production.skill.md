@@ -22,6 +22,11 @@ Activate when:
 - User wants to push their application to a live hosting environment
 - User asks about deploying to Vercel, Netlify, or other hosting platforms
 - User has completed a feature and wants to make it available to real users
+- **The deploy target has an operation-billed backend or a download-billed host:** fire
+  `firestore-cost-optimization` **before shipping**, not after the invoice. Two setup-time facts are
+  verified at this moment, once: cache headers on content-hashed assets (long `max-age` + `immutable`) and
+  the shipped bundle size — and a backend the emulator created for you locally must be confirmed to exist
+  in the live project (see `security-engineering.md` rule 17 / the D177 first-deploy findings).
 
 ---
 

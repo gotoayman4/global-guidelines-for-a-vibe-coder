@@ -102,6 +102,17 @@ These features have been specifically considered and rejected. AI must not re-pr
 - [FILL — e.g., "Must deploy on [platform]. No [alternative platform]."]
 - [FILL — e.g., "Must support both RTL (Arabic) and LTR (English)."]
 - [FILL — e.g., "Must use design tokens for all styling. No raw hex colors."]
+- **Billing ceiling** (only if the backend bills per operation — Firestore, DynamoDB, serverless functions):
+  [FILL — the actual daily read/write/delete and download quotas, plus WHERE they were read: Console or CLI,
+  with a date. A ceiling copied from a template is a guess; re-measure it, and name the database edition —
+  a Standard-edition database does not necessarily bill like a legacy free tier.]
+- **Headroom rule:** [FILL — e.g., "any single flow projected >30% of a daily quota is refactored or blocked
+  before merge"]. **State the check that enforces it, or mark it advisory:** a ceiling with no failing test
+  is a promise the next session has to remember, and a green gate does not mean cost is under control.
+- **Prune / archive trigger:** [FILL — the measured condition that starts pruning or archiving, e.g.
+  "storage bytes > 60% of ceiling" or "collection > N documents", plus who reads the number and when]. A
+  scale row in this file is the place a cost decision gets made *before* the invoice, so keep it beside the
+  projection table above rather than in a runbook nobody opens.
 - [FILL]
 
 ---

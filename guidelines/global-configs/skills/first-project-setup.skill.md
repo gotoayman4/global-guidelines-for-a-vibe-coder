@@ -21,6 +21,10 @@ Activate when:
 - User says "set up a new project", "create my first app", "starting from scratch", "initialize project"
 - User has no existing project structure and needs to bootstrap one
 - User asks "how do I start" or "where do I begin" with a new project
+- **The backend bills per operation** (Firebase/Firestore, DynamoDB, serverless functions): fire
+  `firestore-cost-optimization` (or the platform's cost skill) **here**, not only when someone says "this is
+  expensive". A billing ceiling is a setup decision — fill the ceiling/headroom/prune lines in `WORLD.md`
+  before the first document is written, and note where the quota numbers were read (Console/CLI + date).
 
 ---
 

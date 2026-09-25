@@ -7,9 +7,9 @@ description: Activate when working with Firebase and Cloud Firestore — data mo
 
 **Status:** Advisory
 **Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~900 tokens)
+**Token Tier:** Compact (~1K tokens)
 **Source:** `global-configs/skills/firebase-firestore-practices.skill.md`
-**Last Updated:** 2026-08-17
+**Last Updated:** 2026-09-25
 
 ---
 
@@ -66,7 +66,11 @@ For changes touching Firestore, report:
 - **Data model delta:** [collections/subcollections/fields changed]
 - **Rules impact:** [validate/auth checks added]
 - **Index impact:** [new composite indexes, if any]
-- **Cost impact:** [est. added reads/writes/deletes per day — cross-reference `firestore-cost-optimization` skill]
+- **Cost impact:** COUNTED, never described — `+N reads per view open`, `+M writes per action`, `+K deletes
+  per cleanup run`, and the worst-case daily figure beside the quota that was **read from the live project**
+  (cross-reference `firestore-cost-optimization` skill, incl. its "Enforced by" section). "This adds a few
+  reads" is not a number and cannot be checked; if the count is unknown, say `unknown — not measured` rather
+  than writing prose that reads like an estimate.
 
 ---
 
@@ -81,6 +85,9 @@ For changes touching Firestore, report:
 - Do NOT trigger heavy read/write work per-invocation in Cloud Functions without batching
 - Do NOT run tests against production — use the emulator
 - Do NOT write UI code that reads Firestore directly — keep it in services/hooks/stores
+- Do NOT state a cost impact as an adjective ("cheap", "a few reads") — the line exists to be arithmetic
+- Do NOT add a realtime listener where a one-shot read serves: it is the #1 read-budget killer, and in
+  projects that adopted the static ban in `firestore-cost-optimization` → "Enforced by" it fails `lint`
 
 ---
 
@@ -89,8 +96,10 @@ For changes touching Firestore, report:
 1. Edition detection first; official skill references at `.agents/skills/firebase-firestore/` for deep detail.
 2. Modular SDK imports only; rules with `validate()` + auth checks; parity across mirrored rules files.
 3. Counters via `FieldValue.increment`; batch writes; idempotent triggers; batched scheduled cleanup.
-4. Composite queries require explicit indexes; unbounded queries are a bug.
-5. Every data decision has a cost impact — see `firestore-cost-optimization` skill for quotas and decision rules.
+4. Composite queries require explicit indexes; unbounded queries are a bug — in an adopting project the
+   bounded-read census turns that sentence into a failing test, not a style preference.
+5. Every data decision has a cost impact — see `firestore-cost-optimization` skill for quotas and decision
+   rules, and report it counted (reads/view-open, writes/action), never as prose.
 
 ---
 
