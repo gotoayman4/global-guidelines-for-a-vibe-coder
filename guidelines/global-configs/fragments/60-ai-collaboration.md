@@ -1,6 +1,6 @@
 ## AI Collaboration (Load for Every Session)
 
-- **AI Output is Draft, Not Final.** First AI output is ALWAYS a draft — iterate at least once; accepting first output without review is an anti-pattern.
+- **AI Output is Draft, Not Final.** Treat first AI output as a draft; iterate WHEN it misses acceptance criteria — a correct first output needs no forced second pass.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Speed Is a Metric, Not a Vibe.** Record intent → first running slice each iteration. Correct-but-slow is a defect like fast-and-broken-auth — scale ceremony with WORLD.md mode; never scale security or honesty.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`

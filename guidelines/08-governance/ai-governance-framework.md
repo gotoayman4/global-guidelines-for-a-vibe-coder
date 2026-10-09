@@ -29,7 +29,7 @@ Higher overrides lower. Guideline conflicts resolve: Normative > Advisory, Speci
 
 ## Governance Mechanisms
 
-1. **Project rules file = constitution:** exact stack versions, forbidden patterns, security mandates, conventions. Committed to Git; human-authored; AI changes require human approval.
+1. **Project rules file = constitution:** exact stack versions, forbidden patterns, security mandates, conventions. Committed to Git. AI MAY freely ADD project-specific rules and mandates; REMOVING or EDITING an existing global/baseline rule requires explicit human approval (gate removals/edits of global rules, not additions).
 2. **WORLD.md product guardrail:** what the project is and must NOT become (see `planning-and-scoping.md`).
 3. **MCP governance** (full detail in `ai-security-governance.md`): whitelist tools per agent · separate credentials per environment · no production write for background agents · review destructive calls.
 
@@ -56,7 +56,7 @@ Before session: load rules file → WORLD.md → task-relevant guidelines. Durin
 | Anti-Pattern | Fix |
 |---|---|
 | No rules file | Create AGENTS.md first |
-| AI-written rules file | Human authors; AI suggests only |
+|| AI-written rules file | AI may freely ADD rules; only removals/edits of global baseline rules need human approval |
 | Ignoring violations | Enforce or fix the guideline |
 | Too many Normative rules | Reserve for critical constraints |
 

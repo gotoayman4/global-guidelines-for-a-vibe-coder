@@ -19,7 +19,7 @@
    ├── types/  utils/
    └── pages/
    ```
-2. **One component, one responsibility.** Plan 300 lines per file; 400 hard limit (ESLint max-lines) — a file reaching 400 MUST be refactored down to under 300 before moving on (see `file-organization.md`).
+2. **One component, one responsibility.** Plan 300 lines per file; 400 is a soft ceiling — record it as debt and split before the next feature touches the file (or in a scheduled refactor pass); do not stall the current change mid-slice. ESLint `max-lines` warns; source only (docs/config/generated excluded).
 3. **Composition over inheritance:** children/render props/slots; no class inheritance or HOC chains.
 4. **Centralize business logic:** one `validation.ts`, not validation copy-pasted across forms.
 5. **Explicit data flow:** props down, events up; global state accessed only via well-known hooks (`useAuth()`); side effects contained in hooks with clear dependency arrays. No implicit/magical data flow.

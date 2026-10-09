@@ -22,7 +22,7 @@
 8. **Fonts:** always Arabic + Latin fallbacks (Tajawal/Cairo/Noto Sans Arabic for UI; Noto Naskh/Amiri for long-form). Load with `unicode-range` subsetting (Arabic fonts are 3–5x larger). Arabic typography: line-height 1.6–1.8 · weight ≥400 · NO tracking/letter-spacing · NO opacity on Arabic text · underline-offset ≥4px · no break-all.
 9. **Dates/numbers/currency ALWAYS via Intl formatters or React Aria I18nProvider** — never manual strings. Hijri: `calendar: "islamic-umalqura"`.
 10. **i18n keys for all user-facing strings** (react-i18next / next-intl); URL strategy `/en/*` and `/ar/*`.
-11. **Testing mandatory both directions:** dual Playwright projects (ar-SA + en-US), Storybook direction toolbar for shared components, `npx rtlify-ai check` in CI on every PR.
+11. **Testing scales with mode (see `../01-workflow-methodology/speed-tiered-workflow.md`):** always-on cheap gate = logical-properties lint (cross-platform ESLint rule — unlike `rtlify-ai`, which is POSIX-only and scans 0 files on Windows). vibe = one direction per iteration, both directions at the milestone/ship boundary; standard/guarded = dual Playwright projects (ar-SA + en-US) before commit, Storybook direction toolbar for shared components. Visual regression is a milestone/ship-boundary activity, never routine.
 
 ---
 
@@ -41,7 +41,7 @@ body { font-family: 'Tajawal', 'Noto Sans Arabic', 'Segoe UI', sans-serif; }
 
 ```bash
 pnpm dlx shadcn@latest init --rtl   # if shadcn chosen
-npx rtlify-ai check                 # CI gate
+npm run lint:rtl                    # CI gate — logical-properties ESLint rule (cross-platform)
 ```
 
 ---
@@ -53,7 +53,7 @@ npx rtlify-ai check                 # CI gate
 | Physical CSS properties | Logical properties exclusively |
 | Accidental numeral mixing | Per-context numeral policy via Intl |
 | Hardcoded direction | Single state applied pre-render |
-| No RTL testing | Dual-direction E2E mandatory |
+|| No RTL testing | Dual-direction E2E per mode — lint always-on; both directions at commit (standard/guarded) or milestone (vibe) |
 | Latin-only font stack | Arabic fallbacks included |
 | Flipping non-directional icons | Directional only |
 | Manual date/number formatting | Intl formatters |

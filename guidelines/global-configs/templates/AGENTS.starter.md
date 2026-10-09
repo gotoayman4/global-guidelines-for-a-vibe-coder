@@ -19,12 +19,11 @@
   → Source: `03-git-and-ci/environment-management.md`
 - **Input Validation.** ALL user input MUST be validated at system boundaries (API controllers, DTOs). Trust no client-side validation.
   → Source: `02-engineering-practices/error-handling-philosophy.md`
-- **Authentication Code Review.** Authentication code MUST receive 100% human review. No exceptions.
+- **Authentication Code Review.** Auth code gets careful review, tiered by mode: vibe = AI self-review + automated auth-flow test, human pass at ship boundary; standard/guarded = 100% human review. Security never relaxes.
   → Source: `02-engineering-practices/security-engineering.md`
-- **Dependency Audit and Version Pinning.** Dependencies MUST be audited on every AI PR. AI-suggested package names and versions are unverified — search the web or npm registry for the current latest stable before installing. Pin to older majors only with a documented ADR.
+- **Dependency Audit and Version Pinning.** AI-suggested package names/versions are unverified — before installing any NEW dep or major bump, verify latest stable via web/npm (skip re-search for versions already verified here). Pin older majors only with an ADR.
   → Source: `00-ai-fundamentals/ai-security-governance.md`
 - **CORS.** NEVER use `origin: '*'`. Configure an explicit CORS whitelist from day one.
-  → Source: `00-ai-fundamentals/ai-security-governance.md`
 - **Security Headers.** Security headers (CSP, HSTS, X-Frame-Options) MUST be configured. They are mandatory, not optional.
   → Source: `02-engineering-practices/security-engineering.md`
 - **File Upload MIME Validation (Magic-Byte).** ALL file upload endpoints MUST verify MIME type by reading magic bytes from the file buffer, not by trusting client-supplied `Content-Type` headers (use `file-type` — the version pinned in the project's `package.json`). Reject uploads whose detected type is not on the allowlist.
@@ -43,14 +42,12 @@
 
 ## Git (Load for All Code Changes)
 
-- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work, never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope — one sentence or split it. Checkpoint-commit before any major multi-file AI operation. Revert broken AI output immediately — regenerate with better constraints, never debug-in-place.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
+- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work, never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope — one sentence or split it. Checkpoint-commit before major multi-file AI operations. Revert broken AI output immediately — regenerate with better constraints, never debug-in-place.
 - **No Branch Mandate; Protect Main.** Single-agent work stays on the current branch (parallel agents get their own; merge sequentially with review). Main MUST stay deployable: branch protection, no force-push, green local gate before merge. Env files never committed — `.env` gitignored, `.env.example` committed.
-  → Source: `03-git-and-ci/git-workflow-strategy.md`
 
 ## Architecture (Load for New Features)
 
-- **File Size Limit.** Files MUST NOT exceed 400 lines — plan for ~300; at 400, refactor down under 300 before proceeding. ESLint `max-lines`; source only (docs/config/generated excluded).
+- **File Size Limit.** Files SHOULD NOT exceed 400 lines — plan for ~300. At 400, record as debt; split before the NEXT feature touches the file (or a scheduled pass) — do not stall the current change mid-slice.
   → Source: `02-engineering-practices/file-organization.md`
 - **Layer Separation.** NEVER put business logic in UI components — API calls, transforms, and state live in services/hooks layers.
   → Source: `04-architecture/backend-architecture.md`
@@ -78,7 +75,7 @@
 
 ## AI Collaboration (Load for Every Session)
 
-- **AI Output is Draft, Not Final.** First AI output is ALWAYS a draft — iterate at least once; accepting first output without review is an anti-pattern.
+- **AI Output is Draft, Not Final.** Treat first AI output as a draft; iterate WHEN it misses acceptance criteria — a correct first output needs no forced second pass.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Speed Is a Metric, Not a Vibe.** Record intent → first running slice each iteration. Correct-but-slow is a defect like fast-and-broken-auth — scale ceremony with WORLD.md mode; never scale security or honesty.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
@@ -107,9 +104,9 @@
 
 - **Arabic-First Architecture.** Design every component for bidirectional text from day one — direction handled at UI shell, workspace, document, paragraph, and inline span levels. Arabic support is architectural, not a localization afterthought.
   → Source: `05-stack-guides/rtl-tech-stack.md`
-- **Logical CSS Properties Exclusively.** UI chrome uses only logical properties (Tailwind `ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; Emotion `marginInlineStart` etc.). NEVER physical (`ml-*`, `pl-*`, `left`, `right`, `text-left`). Lint-enforced.
+- **Logical CSS Properties Exclusively.** UI chrome uses only logical properties (Tailwind `ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; Emotion `marginInlineStart`). NEVER physical (`ml-*`, `pl-*`, `left`, `right`, `text-left`). Lint-enforced.
   → Source: `02-engineering-practices/bidirectional-design-principles.md`
-- **Portal `dir` + i18n Keys + Dual-Direction Test.** Portals escape the React parent but inherit `direction` from `<html>` — explicit `dir` only where direction differs from the page or the stack keeps direction in React context only. All user-facing strings use i18n keys — no hardcoded text. Pages tested LTR and RTL before commit (standard/guarded: dual-direction E2E; vibe: both directions at milestone). Arabic typography: line-height 1.6–1.8, no `letter-spacing`, no text opacity, no `break-all`; Western numerals by default; mirror nav/breadcrumbs/pagination/timelines only. Detail: `_guidelines/05-stack-guides/rtl-tech-stack.md`.
+- **Portal `dir` + i18n Keys + Dual-Direction Test.** Portals escape the React parent but inherit `direction` from `<html>` — explicit `dir` only where direction differs from the page or the stack keeps direction in React context only. All user-facing strings use i18n keys. Direction testing scales with mode: **vibe** = one direction per iteration, both at milestone; **standard/guarded** = dual-direction E2E before commit (logical-properties lint always-on). Visual/screenshot checks are Tier-3 rare — milestone sign-off, untestable layout, or explicit request. Arabic typography + numerals: see `_guidelines/05-stack-guides/rtl-tech-stack.md`.
   → Source: `05-stack-guides/rtl-tech-stack.md`
 
 ## Performance (Load for Performance-Sensitive Features)
@@ -125,12 +122,12 @@
 
 1. Read this AGENTS.md — always
 2. Read WORLD.md — note `mode` (`vibe | standard | guarded`); it scales plan/test/docs/verification depth (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md`)
-3. UI/UX work: also load `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`
+3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md` (design rules; ux/visual are on-demand via MASTER_INDEX)
 4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load primary files per the table; compact extracts when context <20K tokens
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
-**Before filling this table, search the web or npm registry for the latest stable version of each package. AI-suggested version numbers are unverified.**
+**Before filling this table, search the web or npm registry for the latest stable version of each package — AI-suggested version numbers are unverified.** Versions already verified in this project need no re-search.
 
 | Layer                | Technology | Version |
 |----------------------|------------|---------|
@@ -181,7 +178,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 1. **Mirror** guidelines into `_guidelines/` — downstream: `npm run sync-guidelines`; central repo: `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` Skip if mirror exists.
 2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
-3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** Never let AI modify this file without human approval.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD project rules/mandates; REMOVING or EDITING an existing global (baseline) rule requires explicit human approval.
 
 ### Maintenance
 

@@ -21,7 +21,7 @@ possible concerns; propose minimal fixes for confirmed issues.
 ```
 Catches syntax/imports/obvious logic. Misses business logic, domain edges, architectural misfits.
 
-**Phase 2 — Human review (the real gate), every change:**
+**Phase 2 — Human review (the real gate):** every change in standard/guarded; in vibe it collapses to the run-it-once check and is deferred to the ship boundary, where the full checklist runs. When it does run:
 - **Correctness:** solves the requirement · acceptance criteria met · edge cases handled (null/empty/large/concurrent) · errors not leaking internals
 - **Security:** parameterized queries · auth on protected routes · server-side validation · no hardcoded secrets · CORS whitelisted (full list: `security-engineering.md`)
 - **Consistency:** follows project conventions · not a newly-invented pattern

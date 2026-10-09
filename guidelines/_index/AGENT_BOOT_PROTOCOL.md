@@ -76,7 +76,7 @@ Using the task-type table in MASTER_INDEX.md:
 - Do NOT skip MASTER_INDEX.md — you don't know what you don't know
 - Do NOT guess file names — consult the index
 - Do NOT load full files when context is tight — use compact extracts
-- Do NOT modify AGENTS.md without human approval
+- **Who May Change What in AGENTS.md.** AI MAY freely ADD project-specific rules and mandates. REMOVING or EDITING an existing **global/baseline** rule requires explicit human approval. Adding rules never does — gate only removals/edits of global rules.
 
 ---
 

@@ -31,7 +31,7 @@ Choose shadcn/ui when you need custom visual identity, full component source own
 5. Icon mirroring: directional icons (arrows, chevrons, back/forward) MUST flip via `className="rtl:rotate-180"`. Non-directional (home, search, settings), logos, media-player controls MUST NOT flip.
 6. Arabic typography: line-height 1.6–1.8 · font-weight ≥400 · NO letter-spacing/tracking (disconnects cursive letters) · NO opacity on Arabic text blocks (jagged in Firefox) · no `word-break: break-all` · underline-offset ≥4px on links. Font stack MUST include Arabic fallbacks; load Arabic fonts with `unicode-range` subsetting (they are 3–5x larger than Latin).
 7. Mixed content: wrap LTR spans inside RTL sentences (`<span dir="ltr" lang="en">`); unknown-direction user content in `<bdi>`; email/URL/phone inputs forced `dir="ltr"` even on RTL pages.
-8. Every component MUST be tested in BOTH directions before merge: Storybook direction toolbar + Playwright dual projects (`chromium-rtl` locale ar-SA / `chromium-ltr` en-US) + visual regression per direction. Run `npx rtlify-ai check` in CI.
+8. Every component MUST be tested in BOTH directions before merge, scaled by mode (see `speed-tiered-workflow.md`): vibe = one direction per iteration, both at the milestone/ship boundary; standard/guarded = dual-direction before commit. Always-on cheap gate = logical-properties lint (an ESLint rule forbidding physical properties — cross-platform, unlike `rtlify-ai`, which is POSIX-only and scans 0 files on Windows). Storybook direction toolbar + Playwright dual projects (`chromium-rtl` ar-SA / `chromium-ltr` en-US) for standard/guarded. Visual regression per direction is a milestone/ship-boundary activity, never routine — routine checks use DOM/data assertions, no screenshots.
 9. All user-facing strings via i18n keys (react-i18next / next-intl). Numbers: Western numerals for UI chrome via `useNumberFormatter({ numberingSystem: "latn" })`; Hijri dates via `calendar: "islamic-umalqura"` when needed.
 10. Accessibility in RTL: focus/tab order follows visual right-to-left flow; skip-link appears on the right; form error icons on inline-start side; toggles flip direction; NEVER mirror media controls; NEVER add tabindex to override DOM order.
 11. Performance: use logical properties instead of `[dir="rtl"]` selector overrides; never scaleX(-1) on many elements; profile portal rendering in RTL.
@@ -76,7 +76,7 @@ Init/migrate:
 ```bash
 pnpm dlx shadcn@latest create --template next --rtl   # new project
 pnpm dlx shadcn@latest migrate rtl                    # existing project
-npx rtlify-ai check                                   # CI audit
+npm run lint:rtl                                      # CI audit — logical-properties ESLint rule (cross-platform)
 ```
 
 ---
@@ -92,7 +92,7 @@ npx rtlify-ai check                                   # CI audit
 | `word-break: break-all` on Arabic | `normal` |
 | Auto-flipping all icons | Flip directional only |
 | dir set only in React | Inline script pre-paint |
-| Skipping dual-direction testing | Storybook RTL + Playwright both directions |
+| Skipping dual-direction testing | Dual-direction per mode: lint always-on; E2E both directions at commit (standard/guarded) or milestone (vibe) |
 
 ---
 

@@ -77,9 +77,9 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
    - `unicode-range` for font subsetting
 7. **Set up i18n:** Install and configure `react-i18next` or `next-intl`. Create `ar/translation.json` and `en/translation.json`.
 8. **Create direction toggle component:** Updates `document.documentElement.dir`, `document.documentElement.lang`, `localStorage`, and i18n language atomically.
-9. **Set up Storybook RTL mode:** Global toolbar for direction switching + `DirectionProvider` decorator.
+9. **Set up Storybook RTL mode** (standard/guarded only — vibe relies on logical-properties lint + milestone dual-direction pass): Global toolbar for direction switching + `DirectionProvider` decorator.
 10. **Set up Playwright dual-direction testing:** RTL and LTR projects in config with Arabic locale (`ar-SA`).
-11. **Add RTL audit to CI:** `npx rtlify-ai check` in GitHub Actions.
+11. **Add RTL audit to CI:** logical-properties ESLint rule in GitHub Actions (cross-platform; `rtlify-ai` is POSIX-only and false-greens on Windows — do not use it as the gate).
 12. **Verify with checklist:** Ensure portal components have explicit `dir`, no physical CSS classes in codebase, Arabic typography rules applied.
 
 ---
@@ -105,7 +105,7 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 - [ ] Direction toggle component created
 - [ ] Storybook RTL mode configured
 - [ ] Playwright dual-direction testing configured
-- [ ] RTL audit in CI (`npx rtlify-ai check`)
+- [ ] RTL audit in CI (logical-properties ESLint rule)
 
 ### RTL Acceptance Checklist
 - [ ] All pages render correctly with dir="rtl"
@@ -149,8 +149,8 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 4. Every portal component MUST receive explicit `dir` prop — portals don't inherit from parent DOM.
 5. Arabic typography: no letter-spacing, no opacity on text, line-height 1.6–1.8, minimum font-weight 400.
 6. Flicker prevention: inline script sets `document.documentElement.dir` before React mounts.
-7. Test in both directions — Storybook RTL mode + Playwright dual-direction projects.
-8. Run `npx rtlify-ai check` in CI to prevent RTL regressions.
+7. Test in both directions, scaled by mode — logical-properties lint always; standard/guarded: Storybook RTL mode + Playwright dual-direction projects; vibe: one direction per iteration, both at milestone.
+8. Enforce RTL in CI with the logical-properties ESLint rule (cross-platform; `rtlify-ai` false-greens on Windows — do not use as the gate).
 9. Wrap LTR content in RTL sentences with `<bdi>` or `<span dir="ltr">`.
 10. React Aria handles Arabic dates, Hijri calendar, Western/Eastern numeral switching — use it over manual `Intl`.
 

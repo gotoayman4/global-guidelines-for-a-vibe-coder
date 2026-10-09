@@ -4,12 +4,12 @@
 
 1. Read this AGENTS.md — always
 2. Read WORLD.md — note `mode` (`vibe | standard | guarded`); it scales plan/test/docs/verification depth (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md`)
-3. UI/UX work: also load `_guidelines/02-engineering-practices/ux-design-principles.md`, `_guidelines/02-engineering-practices/bidirectional-design-principles.md`, `_guidelines/06-frontend-patterns/visual-design-principles.md`
+3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md` (design rules; ux/visual are on-demand via MASTER_INDEX)
 4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load primary files per the table; compact extracts when context <20K tokens
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
-**Before filling this table, search the web or npm registry for the latest stable version of each package. AI-suggested version numbers are unverified.**
+**Before filling this table, search the web or npm registry for the latest stable version of each package — AI-suggested version numbers are unverified.** Versions already verified in this project need no re-search.
 
 | Layer                | Technology | Version |
 |----------------------|------------|---------|
@@ -60,7 +60,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 1. **Mirror** guidelines into `_guidelines/` — downstream: `npm run sync-guidelines`; central repo: `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` Skip if mirror exists.
 2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
-3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** Never let AI modify this file without human approval.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD project rules/mandates; REMOVING or EDITING an existing global (baseline) rule requires explicit human approval.
 
 ### Maintenance
 

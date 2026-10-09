@@ -19,7 +19,7 @@ The vibe coder's role shifts from prompt writer to **specification author + qual
 | **Agent team** | implementer + reviewer + tester + auditor | Production-critical code |
 | **Background agents** | Long autonomous runs, sandboxed | Boilerplate, test suites, docs |
 | **Arena mode** | Same brief to 2–3 models; synthesize best | High-stakes architecture decisions |
-| **Sequential gates** | ARCHITECT → IMPLEMENT → TEST → SECURITY → DOCUMENT, human approval at every gate | Critical paths |
+| **Sequential gates** | ARCHITECT → IMPLEMENT → TEST → SECURITY → DOCUMENT, human approval at critical-path gates only | Critical paths |
 
 ## Directives
 
