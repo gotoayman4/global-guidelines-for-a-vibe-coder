@@ -90,6 +90,26 @@ function Sync-MirrorDirectory {
     $robocopyArgs += @("/NJH", "/NJS", "/NDL", "/NP", "/R:1", "/W:1",
                        "/XD", ".git", ".github")
 
+    # /XD stops robocopy COPYING these directories — but it also stops it DELETING one
+    # already present in the target, so /MIR can never converge a mirror that once
+    # picked one up. Two projects carried a stale `_guidelines/.github/workflows/
+    # validate-guidelines.yml` (left from when the central repo shipped a GitHub
+    # Actions workflow, since replaced by .githooks/pre-push) and reported "sync exited
+    # 0 but the mirror does not match the source" on every run, forever.
+    # Prune only the excluded names the SOURCE does not have. `.git` is deliberately
+    # never pruned — deleting a repository is never a sync's job.
+    foreach ($name in @(".github")) {
+        $stale = Join-Path $targetDir $name
+        if ((Test-Path -LiteralPath $stale) -and -not (Test-Path -LiteralPath (Join-Path $sourceDir $name))) {
+            if ($DryRun) {
+                Write-Host "  [DRY-RUN] Would prune stale $name from mirror (absent in source)" -ForegroundColor Yellow
+            } else {
+                Remove-Item -LiteralPath $stale -Recurse -Force
+                Write-Host "  Pruned stale $name from mirror (absent in source)" -ForegroundColor Yellow
+            }
+        }
+    }
+
     if ($DryRun) {
         Write-Host "  [DRY-RUN] robocopy $sourceDir → $targetDir" -ForegroundColor Yellow
         Write-Host "  [DRY-RUN] Args: $($robocopyArgs -join ' ')" -ForegroundColor Yellow

@@ -60,6 +60,7 @@ at **4,997/5,000**. `check-drift` enforces it.
 npm run validate          → exit 0 · 82/82 tests · 1020 links · 4 canonical facts, one home each
 constitution budget       → 4,997 / 5,000 tokens (was 4,991; seven rules narrowed to pay for the new dimension)
 npm run sync:drift        → ❌ 6 of 6 projects are not running the current rules   ← the finding, now visible
+                            (after `sync:all`: ✅ 6 of 6 in sync at 144 files — see §Fleet synced below)
 npm run audit:friction .  → 154,488 tokens · OVER the vibe cap of 40,000
                             docs +9,785 vs code +11,778 → 0.83 doc lines per code line
                             30 of 30 proposals name no guard
@@ -68,10 +69,32 @@ npm run audit:friction .  → 154,488 tokens · OVER the vibe cap of 40,000
 The first two instrument runs are the reform's own justification: **the boot chain is 3.9× the vibe cap**, and
 **every dependent project is running older rules than it believes**. Both numbers were previously invisible.
 
+### Fleet synced (done — and the plan for it was wrong)
+
+`npm run sync:all` was run. **All 6 of 6 projects now mirror the source at 144 files**, and `sync:drift`
+reports `✅ all 6 project(s) run the current rules`.
+
+The earlier framing of this item — *"fixing that means … committing in six other repositories"* — was
+**factually wrong, and the correction is itself a lesson.** `sync-guidelines.ps1` writes `_guidelines/`
+**and adds it to the project's `.gitignore`**; `git ls-files _guidelines` returns **0** in every project.
+The mirror is a local, machine-generated artifact, so a refresh needs no commit anywhere. The tool's own
+advice said *"re-commit the project"*, which sent the operator looking for a change that does not exist in
+git — corrected in `check-sync-drift.js`.
+
+Two further defects surfaced only because the sync was actually run, and both are fixed:
+
+| Defect | Cause | Fix |
+|---|---|---|
+| 2 projects failed with *"sync exited 0 but the mirror does not match the source"* | `Sync-MirrorDirectory` runs robocopy `/MIR` with `/XD .git .github`. Excluded dirs are neither copied **nor deleted**, so a mirror can never converge once a project picks one up — those two carried a stale `_guidelines/.github/workflows/validate-guidelines.yml` (left from when the central repo shipped a GitHub Actions workflow, since replaced by `.githooks/pre-push`) | `GuidelineSync.psm1` now prunes an excluded dir the **source does not have**; `.git` is deliberately never pruned |
+| `npm run validate` went **red the moment the fleet was fixed** | `check-sync-drift.test.js` asserted *the live fleet's* state — its message read *"the live fleet is behind the source — this is the finding, not a test bug"*. A test whose green depends on the world being wrong | The CLI gained `SYNC_DRIFT_SOURCE` / `SYNC_DRIFT_REGISTRY` overrides and the test is now hermetic, asserting **both** directions (exit 0 matching, exit 1 edited/stale) |
+
+The second one is the sharper lesson, and it is this document's own thesis turned on itself: **a test that
+encodes today's measurement as an expectation is not a control.** It was green for exactly as long as the
+bug it was reporting existed, and the fix for the bug was indistinguishable from a regression. The 82/82
+gate had one test that could only ever pass while the fleet was broken — and nothing else noticed.
+
 ### Still open (deliberately not done here)
 
-- **Syncing the fleet.** `sync:drift` reports 6 of 6 behind; fixing that means running `npm run sync:all` and
-  committing in six other repositories, which is a separate decision with its own review.
 - **The `ship`-tier guard set.** S5 defines the tiers and the derivation; tagging the existing guards is
   per-project work, and the referenced repo already has the machinery (`@docs-guard`, the non-DOM lane).
 - **`docs:verify`.** S10 prefers one regenerate-and-diff over a parity guard per document; the central repo

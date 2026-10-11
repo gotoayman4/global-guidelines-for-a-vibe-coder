@@ -100,8 +100,23 @@ test('compareProjects reports a project with no mirror at all', () => {
 });
 
 test('CLI exits 1 on a drifted fleet and 0 on a synced one', () => {
-  const drifted = runSync(process.execPath, [SCRIPT, '--quiet'], { cwd: REPO_ROOT });
-  assert.equal(drifted.status, 1, 'the live fleet is behind the source — this is the finding, not a test bug');
+  // Hermetic: the CLI is pointed at a fixture source + registry via env, never at the live
+  // fleet. The first version of this test asserted the live fleet's state ("the finding, not a
+  // test bug"), so it passed only while the fleet was broken and failed the moment `sync:all`
+  // fixed it. A test whose green depends on the world being wrong is not a test.
+  const run = (mirrorMode) => {
+    const f = fixture(mirrorMode);
+    const registry = path.join(f.root, 'sync-projects.json');
+    fs.writeFileSync(registry, JSON.stringify([{ name: 'p', path: f.project }]));
+    return runSync(process.execPath, [SCRIPT, '--quiet'], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, SYNC_DRIFT_SOURCE: f.source, SYNC_DRIFT_REGISTRY: registry },
+    });
+  };
+
+  assert.equal(run('ok').status, 0, 'a mirror that matches the source is not drift');
+  assert.equal(run('edited').status, 1, 'an edited mirror is drift');
+  assert.equal(run('extra').status, 1, 'a file left behind in the mirror is drift');
 });
 
 test('CLI exits 2 when the registry is unreadable rather than reporting success', () => {

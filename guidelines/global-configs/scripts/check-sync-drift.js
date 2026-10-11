@@ -35,8 +35,11 @@ const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const SOURCE = path.join(REPO_ROOT, 'guidelines');
-const REGISTRY = path.join(REPO_ROOT, 'sync-projects.json');
+// Overridable so the CLI's exit-code contract can be exercised against a fixture instead of
+// the live fleet. The first version of that test asserted the live fleet's state, so it passed
+// only while the fleet was broken and failed the moment `sync:all` fixed it (2026-10-11).
+const SOURCE = process.env.SYNC_DRIFT_SOURCE || path.join(REPO_ROOT, 'guidelines');
+const REGISTRY = process.env.SYNC_DRIFT_REGISTRY || path.join(REPO_ROOT, 'sync-projects.json');
 const MIRROR_NAME = '_guidelines';
 
 /** sha256 over every file's normalised path + LF-normalised content, in sorted order. */
@@ -157,7 +160,10 @@ function main() {
     if (!quiet) {
       console.log(`  ❌ ${row.name}: DRIFT — mirror ${row.mirrorHash.slice(0, 12)} (${row.mirrorFiles} files) ≠ source ${source.hash.slice(0, 12)} (${source.count} files)`);
       console.log(`       recorded: ${row.recorded}${row.lastSynced ? ` · lastSynced: ${row.lastSynced}` : ''}`);
-      console.log('       → run `npm run sync:all` (or the GUI) and re-commit the project');
+      // The mirror is local: sync-guidelines.ps1 writes `_guidelines/` AND adds it to the
+      // project's .gitignore, so a refresh needs no commit. Saying "re-commit the project"
+      // sent the operator looking for a change that does not exist in git.
+      console.log('       → run `npm run sync:all` to refresh the mirror (`_guidelines/` is gitignored — nothing to commit)');
     }
   }
 
