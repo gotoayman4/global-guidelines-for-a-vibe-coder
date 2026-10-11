@@ -17,7 +17,7 @@ tags: [database, sql, schema]
 5. **Naming conventions:** tables `snake_case` plural (`users`, `blog_posts`) · FK `[singular]_id` · indexes `idx_[table]_[column]` · unique `uq_[table]_[column]` · booleans `is_*`/`has_*` · event dates `[event]_at`.
 6. **Parameterized queries ALWAYS** (`WHERE email = $1`) — string concatenation in SQL is the #1 AI-generated vulnerability. Enforce via lint + review + CI.
 7. **All database access through repositories** — no raw queries in routes or services. Transactions wrap multi-step atomic operations (row-lock with `FOR UPDATE` where needed).
-8. **Migrations:** reversible (forward AND down), one logical change per migration, staging-tested before production, human approval required before any drop of columns/tables. Naming `YYYYMMDDHHMMSS_name.sql`.
+8. **Migrations:** reversible (forward AND down), one logical change per migration, staging-tested before production, and a verified backup plus a tested down-migration required before any drop of columns/tables. Naming `YYYYMMDDHHMMSS_name.sql`.
 9. **Default database choice: PostgreSQL** (95% of use cases; SQLite for embedded/single-user; Redis for cache/sessions only).
 
 ## Anti-Patterns

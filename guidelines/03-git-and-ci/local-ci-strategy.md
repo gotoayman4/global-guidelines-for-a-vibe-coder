@@ -30,21 +30,45 @@ The two named tiers are the boundaries; almost all agent time is spent between t
 - The fast loop is a convenience, **never** a gate: it is not evidence, and a claim of "verified" MUST NOT cite it. Its whole purpose is to move the cheap failures earlier.
 - `--changed` trusts the diff to name the dependents. Anything a shared file can break without appearing in the diff (contracts, i18n parity, path-scoped suites) is exactly what the full gate is for.
 
+## Which Gate Runs — the Mode Decides
+
+The gate's *construction* is fixed; **how much of it runs is the declared mode's decision** (`speed-tiered-workflow.md` §The Gate Scales With the Mode):
+
+| Mode | Per push | At the ship boundary |
+|---|---|---|
+| `vibe` | `gate:fast` + the `always` guard tier | the full pipeline |
+| `standard` | the full pipeline | the full pipeline |
+| `guarded` | the full pipeline + the path-aware extras | the full pipeline |
+
+`--no-verify` is forbidden in all three. Deferring a step to the ship boundary is not skipping it — it is running it where it can still catch something, instead of forty times where it cannot. **A step that runs on every edit but only detects what a per-push run also detects is mis-tiered, not slow** (`workflow-friction-audit.md`).
+
+## Guard Tiers — a Guard Declares When It Must Run
+
+A suite whose every test runs on every push grows without bound, because its cost becomes a function of the repo's age rather than its risk. Give each guard a tier in its own file-level docblock, and let the gate derive the set from the guards themselves:
+
+| Tier | Runs | Belongs here |
+|---|---|---|
+| `always` | every push, in every mode | security controls, honesty guards, structural invariants — cheap and non-negotiable |
+| `standard+` | `standard`/`guarded` pushes, plus any `vibe` slice whose mode escalated | contract and parity guards |
+| `ship` | the ship boundary, in every mode | critical-flow E2E, the deny matrix, the full suite |
+
+The mechanism is not new: it is the `@docs-guard` docblock the documentation gate already derives its set from, with the derivation key changed from *path* to *mode and tier*. **Derive the set from the guards themselves** — a list kept by hand in the hook is a list that goes stale, and it fails in the direction nobody notices.
+
 ## Tier B — The Pre-Push Gate (Mandatory)
 
-Before every push, run the full pipeline locally. This gate replaces the cloud CI gate: a push that has not passed it is a violation, the same as merging on a red pipeline.
+Before every push, run that mode's gate locally. This gate replaces the cloud CI gate: a push that has not passed it is a violation, the same as merging on a red pipeline.
 
 1. Install husky once per project: `npx husky init`, then define `.husky/pre-push`:
    ```sh
    npm run lint && npm run typecheck && npm run test -- --run && npm run build
    ```
-   Map each step to the project's actual script names (`[FILL]` in starter templates).
+   Map each step to the project's actual script names (`[FILL]` in starter templates), and branch on the declared `mode`.
 2. **The hook header comment is the normative list.** Write the step order once, as a `# Order: a → b → c` comment at the top of `.husky/pre-push`; the constitution restates it (and a guard compares the two token-for-token), every other document links to it. Measured in production: two hand-kept copies of one step list had already drifted apart.
 3. **The dependency audit runs through the project's own wrapper** (`npm run audit:gate`), never a bare `npm audit`. A bare `npm audit` that cannot reach the registry reports nothing and exits 0 — an unreachable registry MUST exit non-zero, never a silent pass.
    The wrapper owns the reasoned, expiring allowlist (each entry: why, what, review-by date) and the npm flags its sandbox needs: `npm audit` inside a lifecycle script needs script execution disabled, so pin that env var in the wrapper, not in the developer's shell.
 4. **Clean-tree check:** `git status --porcelain` must be empty after the build. It belongs in the hook, not a cloud job.
-5. **Path-aware steps:** a step that takes minutes and protects a subtree (E2E over the data layer, the desktop shell's IPC tests) runs only when that subtree changed. Put the path list in the hook next to the step it gates, so the trigger and the check cannot drift apart. A security-relevant pin is not a convenience: if it is the only place a check runs, it stays in the gate.
-6. **Skip is forbidden:** `git push --no-verify` is forbidden exactly like `--no-verify` on commit hooks. If the gate is slow, fix the gate (tier it, scope it by path, cache it) — never skip it.
+5. **Conditional steps, two conditions.** A step that takes minutes and protects a subtree (E2E over the data layer, the desktop shell's IPC tests) runs only when that subtree changed; a step whose tier is `ship` runs only at the ship boundary. Put the trigger in the hook **next to the step it gates**, so trigger and check cannot drift apart. A security-relevant pin is not a convenience: if it is the only place a check runs, it stays in the gate.
+6. **Skip is forbidden:** `git push --no-verify` is forbidden exactly like `--no-verify` on commit hooks. If the gate is slow, fix the gate (tier it, scope it by path or mode, cache it) — never skip it.
 7. **Fail fast locally:** the gate runs in seconds-to-minutes, not queue-minutes — iterate freely with `gate:fast`, push only green.
 
 ## Gate Receipts — Evidence Is an Artifact, Not a Sentence
@@ -58,6 +82,22 @@ Before every push, run the full pipeline locally. This gate replaces the cloud C
 - A guard asserts the cited receipts exist and their verdict is GREEN — so a citation cannot rot into a lie about a file that was never written.
 - **A gate that cannot run is not a gate.** Any step whose pass depends on an external tool exits a distinct code when the tool never executed, and is verified through its real invocation path (hook → `npm run` → child), never only by running the underlying command by hand. Nested invocations inherit the parent toolchain's exported config; where a child refuses an inherited key, sanitize the child environment explicitly and document which keys were dropped and why dropping them cannot weaken the check. Exit-0 with unparsed, empty, or absent output is a failure, not a pass.
 - **Never surface a single tool field as the whole error.** Print the tool's machine-readable code plus its human summary, with a fallback for blank values — a formatter that can emit `""` leaves the operator nothing to act on.
+
+## Slice Close — the Steering Writes Are Derived Too
+
+A receipt proves the gate ran. The rest of what a slice owes — the changelog entry, the decision number, the freshness line — was still typed by hand, and a hand-typed derived fact decays. `npm run slice:close` writes them from the repository's own state:
+
+```sh
+npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md --receipt docs/gate-receipts/<stamp>.md
+```
+
+| It writes | Derived from |
+|---|---|
+| `docs/changelog/<YYYY>-Q<n>.md` — the dated entry | today's date · `git rev-parse --short HEAD` · `--title` |
+| the next decision number, `D<max+1>` | the numbers already present in the docs **and** the archives — never a counter kept in a file |
+| the freshness line on `WORLD.md` / `docs/AI_ARCHITECTURE.md` | the same date and SHA, where the project carries one |
+
+`--dry-run` prints the plan and writes nothing; `--decision` overrides the derived number when a concurrent session took it. **Prose stays human:** the acceptance body and the ADR. Everything else is a fact the repository already knows — and a fact a machine writes cannot be forgotten, mistyped, or raced.
 
 ## Tier C — act (Optional)
 

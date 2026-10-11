@@ -4,9 +4,9 @@
 
 **Guideline source:** `{{GUIDELINES_ROOT}}` (the sync script expands this token automatically)
 **How to use:** Search for `[FILL]` and replace with project-specific values.
-**Rule precedence:** Security rules override all others. When two rules conflict, the more restrictive one wins. When a rule is ambiguous for your situation, ask the user — never guess.
+**Rule precedence:** Security rules override all others. When two rules conflict, the more restrictive wins. When a rule is ambiguous, ask the user — never guess.
 
 ## Speed Mode (Declared in WORLD.md)
 
-- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (default `vibe` until first ship). vibe = 3-bullet intent, no plan gate, smoke + regression-on-second-bite, one-line reports, Docs line on triggers only. standard/guarded = full depth. Absolute everywhere: security rules, no fake evidence, revert-broken-output, critical-flow checks LTR+RTL before any ship, full pre-push gate. Record intent → first running slice each iteration; escalate mode when the same bug bites twice. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (default `vibe` until first ship). The mode scales what a session **reads** (≤40K / ≤90K / ≤160K tokens before the first edit), how many steering files a trigger writes (1 / 2 / full set), and what the per-push gate runs (`gate:fast` + `always` guards / full pipeline / full + path extras). vibe = 3-bullet intent, no plan gate, one-line reports. Never scaled: security, no fake evidence, revert-broken-output, the decision record, and the ship boundary (critical flows LTR+RTL, full pipeline green). Escalation is automatic on evidence. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
   → Source: `01-workflow-methodology/speed-tiered-workflow.md`

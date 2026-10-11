@@ -46,7 +46,15 @@ const path = require('path');
 const VALUE_FLAGS = new Set(['files', 'max-tokens', 'history-warn']);
 const BOOLEAN_FLAGS = new Set(['json', 'strict']);
 
-/** The chain every session is told to read before it reads anything else. */
+/**
+ * The chain every session is told to read before it reads anything else.
+ *
+ * OWNER: the chain's definition — and the per-mode cap it is measured against — live in
+ * `01-workflow-methodology/speed-tiered-workflow.md` §The Context Budget. This list is the
+ * instrument's default view of that chain; a project's own boot-budget guard reads the same
+ * definition. Two definitions of "the boot chain" is one too many — if they disagree, this
+ * one is wrong.
+ */
 const DEFAULT_FILES = [
   'AGENTS.md',
   'WORLD.md',
@@ -59,6 +67,21 @@ const DEFAULT_FILES = [
   'docs/RUNBOOKS.md',
   'docs/adr/README.md',
 ];
+
+/**
+ * The declared per-mode reading caps, read from the file that owns them. Returns nulls when
+ * the owner file is absent (a standalone project without the `_guidelines/` mirror).
+ */
+function contextCaps() {
+  const file = path.join(__dirname, '..', '..', '01-workflow-methodology', 'speed-tiered-workflow.md');
+  const caps = { vibe: null, standard: null, guarded: null };
+  if (!fs.existsSync(file)) return caps;
+  const row = fs.readFileSync(file, 'utf8').split('\n').find((l) => /^\|\s*\*\*Context\*\*/.test(l));
+  if (!row) return caps;
+  const found = [...row.matchAll(/≤\s*(\d+)K/g)].map((m) => Number(m[1]) * 1000);
+  if (found.length === 3) [caps.vibe, caps.standard, caps.guarded] = found;
+  return caps;
+}
 
 /** A paragraph this long cannot be skimmed; wrap it at word boundaries. */
 const PARA_WARN = 500;
@@ -352,6 +375,12 @@ if (options.json) {
     );
   }
   console.log(`\n  chain total: ~${total} tokens read before the first edit`);
+  const caps = contextCaps();
+  if (caps.vibe) {
+    const verdict = total > caps.vibe ? `OVER the vibe cap (${caps.vibe})` : `within the vibe cap (${caps.vibe})`;
+    console.log(`  mode caps (speed-tiered-workflow.md): vibe ${caps.vibe} · standard ${caps.standard} · guarded ${caps.guarded}`);
+    console.log(`  → ${verdict}`);
+  }
   console.log(`  missing files: ${missing.length}${missing.length ? ` (${missing.map((row) => row.rel).join(', ')})` : ''}`);
   if (problems.length === 0) {
     console.log('  ✅ nothing over threshold' + (options.maxTokens === null ? ' (no --max-tokens given, report only)' : ''));

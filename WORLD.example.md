@@ -107,7 +107,7 @@ The primary value proposition is giving teams visibility into who is doing what,
 ## Maintenance
 
 - **When:** Update WORLD.md when product scope changes, new out-of-scope decisions are made, or scale expectations change.
-- **Who:** Product owner or lead developer. Not AI.
+- **Who:** The product owner / lead developer, or an AI agent acting on their instruction.
 - **Review:** Quarterly alongside guideline review.
 - **How AI uses this:** Before suggesting any feature, AI checks WORLD.md for guardrail violations. Features that cross NOT boundaries are rejected automatically.
 

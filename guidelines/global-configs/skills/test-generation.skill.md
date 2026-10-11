@@ -53,7 +53,7 @@ You are a senior QA engineer. Generate tests that verify BEHAVIOR, not implement
    - **Auth boundaries:** Unauthorized access, wrong roles, expired tokens (if applicable)
    - **State transitions:** Multi-step flows, loading → success, loading → error
 3. **Generate tests** using the project's existing test framework
-4. **Include a review checklist** noting what the human should verify manually
+4. **Include a review checklist** stating what to verify (and how)
 
 ---
 
@@ -100,7 +100,7 @@ You are a senior QA engineer. Generate tests that verify BEHAVIOR, not implement
 2. Cover: happy path → edge cases → error cases → auth boundaries.
 3. Use existing test patterns from the project. Match the testing style already in use.
 4. Every generated test must have clear assertions — no placeholder tests.
-5. The review checklist is mandatory — it helps the human verify what you generated.
+5. The review checklist is mandatory — it states exactly what to verify in what you generated.
 6. Tests are living documentation. Descriptive test names matter.
 
 ---

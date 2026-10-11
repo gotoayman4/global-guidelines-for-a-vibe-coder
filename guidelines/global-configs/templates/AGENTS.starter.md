@@ -4,11 +4,11 @@
 
 **Guideline source:** `{{GUIDELINES_ROOT}}` (the sync script expands this token automatically)
 **How to use:** Search for `[FILL]` and replace with project-specific values.
-**Rule precedence:** Security rules override all others. When two rules conflict, the more restrictive one wins. When a rule is ambiguous for your situation, ask the user — never guess.
+**Rule precedence:** Security rules override all others. When two rules conflict, the more restrictive wins. When a rule is ambiguous, ask the user — never guess.
 
 ## Speed Mode (Declared in WORLD.md)
 
-- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (default `vibe` until first ship). vibe = 3-bullet intent, no plan gate, smoke + regression-on-second-bite, one-line reports, Docs line on triggers only. standard/guarded = full depth. Absolute everywhere: security rules, no fake evidence, revert-broken-output, critical-flow checks LTR+RTL before any ship, full pre-push gate. Record intent → first running slice each iteration; escalate mode when the same bug bites twice. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (default `vibe` until first ship). The mode scales what a session **reads** (≤40K / ≤90K / ≤160K tokens before the first edit), how many steering files a trigger writes (1 / 2 / full set), and what the per-push gate runs (`gate:fast` + `always` guards / full pipeline / full + path extras). vibe = 3-bullet intent, no plan gate, one-line reports. Never scaled: security, no fake evidence, revert-broken-output, the decision record, and the ship boundary (critical flows LTR+RTL, full pipeline green). Escalation is automatic on evidence. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
   → Source: `01-workflow-methodology/speed-tiered-workflow.md`
 
 ## Security (Always Load — DO NOT REMOVE)
@@ -19,31 +19,31 @@
   → Source: `03-git-and-ci/environment-management.md`
 - **Input Validation.** ALL user input MUST be validated at system boundaries (API controllers, DTOs). Trust no client-side validation.
   → Source: `02-engineering-practices/error-handling-philosophy.md`
-- **Authentication Code Review.** Auth code gets careful review, tiered by mode: vibe = AI self-review + automated auth-flow test, human pass at ship boundary; standard/guarded = 100% human review. Security never relaxes.
+- **Authentication Code Review.** Auth code gets the highest scrutiny in EVERY mode: AI self-review + an automated auth-flow test at each milestone. Security never relaxes; no human reviewer is required.
   → Source: `02-engineering-practices/security-engineering.md`
 - **Dependency Audit and Version Pinning.** AI-suggested package names/versions are unverified — before installing any NEW dep or major bump, verify latest stable via web/npm (skip re-search for versions already verified here). Pin older majors only with an ADR.
   → Source: `00-ai-fundamentals/ai-security-governance.md`
 - **CORS.** NEVER use `origin: '*'`. Configure an explicit CORS whitelist from day one.
 - **Security Headers.** Security headers (CSP, HSTS, X-Frame-Options) MUST be configured. They are mandatory, not optional.
   → Source: `02-engineering-practices/security-engineering.md`
-- **File Upload MIME Validation (Magic-Byte).** ALL file upload endpoints MUST verify MIME type by reading magic bytes from the file buffer, not by trusting client-supplied `Content-Type` headers (use `file-type` — the version pinned in the project's `package.json`). Reject uploads whose detected type is not on the allowlist.
+- **File Upload MIME Validation (Magic-Byte).** ALL file upload endpoints MUST verify MIME type by reading magic bytes from the file buffer, not by trusting client-supplied `Content-Type` headers (use `file-type`, pinned in the project's `package.json`). Reject uploads whose detected type is not on the allowlist.
   → Source: `02-engineering-practices/file-upload-security.md`
 
 ## Testing (Always Load — depth by mode)
 
-- **Mode Sets Test Depth.** vibe: smoke per iteration + regression only when the same path bites twice or at milestone — no suite while iterating. standard: behavioral tests on critical/high-risk code, regression every fix, integration at boundaries. guarded: full pyramid + critical-flow E2E before ship. Ship boundary (ALL modes): login/payments/permissions/persistence verified — automated E2E **or a dated human pass on the deployed target** — LTR and RTL before any release (sandbox test policy restricts *tests*, not the boundary). Full matrix: `speed-tiered-workflow.md`.
+- **Mode Sets Test Depth.** vibe: smoke per iteration + regression only when the same path bites twice or at milestone — no suite. standard: behavioral tests on critical/high-risk code, regression every fix, integration at boundaries. guarded: full pyramid + critical-flow E2E before ship. Ship boundary (ALL modes): login/payments/permissions/persistence verified by automated E2E against the deployed target, LTR and RTL. Full matrix: `speed-tiered-workflow.md`.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Behavioral Tests Only; First/With Code in standard/guarded.** Tests assert inputs → outputs — never internals, spies, call counts. standard/guarded: behavioral tests first for critical features, same-iteration otherwise, NEVER deferred past a sprint; regression test with every fix; exhaustive `it.each()` on normalization/mapping functions. vibe exempt until milestone/second-bite.
+- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. standard/guarded: written first for critical features, same-iteration otherwise, never deferred past a sprint; a regression test with every fix. vibe exempt until milestone/second-bite.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **No Code Without Verification + Evidence Before "Done".** Every change is unverified until exercised (smoke/vibe, tests/standard+, Tier 0 lint for trivial edits) — "it compiled" is false; NEVER claim tests pass without running them or present predictions as observations. Cost tiers: Tier 0 trivial = lint + one line; Tier 1 default = tests/type-check/lint/parity; Tier 2 milestone = headless E2E on DOM/data/DB (no screenshots); Tier 3 rare = visual/vision only for sign-off, untestable layout, or explicit request. Report WHAT/HOW/RESULT + anything NOT verified. Detail: `agent-verification-loop.md`.
+- **No Code Without Verification + Evidence Before "Done".** Every change is unverified until exercised — "it compiled" is false; NEVER claim tests pass without running them, or present predictions as observations. Tiers: 0 trivial = lint + one line; 1 default = tests/type-check/lint/parity; 2 milestone = headless E2E on DOM/data/DB (no screenshots); 3 rare = visual, sign-off or untestable layout only. Report WHAT/HOW/RESULT + anything NOT verified. Detail: `agent-verification-loop.md`.
   → Source: `02-engineering-practices/agent-verification-loop.md`
-- **Pre-Commit + Pre-Push Gates + Two Loops + Receipts.** Hooks (husky + lint-staged): lint, type-check, format on every commit — no commits without them. Pre-push full pipeline `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]` + dependency-audit wrapper (bare `npm audit` exiting 0 on unreachable registry is forbidden — wrapper MUST exit non-zero) + clean-tree check; `--no-verify` forbidden; hooks MUST NOT need real secrets. Define `gate:fast` (lint + type-check + diff-scoped tests) for the edit loop — never citable as evidence; path-aware slow steps stay in the gate. `gate:receipt` writes `docs/gate-receipts/<UTC-stamp>.md` (strip ANSI; clean-tree step informational only). Detail: `local-ci-strategy.md`.
+- **Pre-Commit + Pre-Push Gates + Two Loops + Receipts.** Hooks (husky + lint-staged): lint, type-check, format on every commit. The pre-push gate is the **declared mode's** gate: `gate:fast` + the `always` guard tier in vibe; the full pipeline `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]` in standard/guarded. Both add the dependency-audit wrapper (a bare `npm audit` exiting 0 on an unreachable registry is forbidden) and the clean-tree check; `--no-verify` forbidden in every mode; hooks MUST NOT need real secrets. Guards declare a tier (`always` | `standard+` | `ship`) and the ship boundary runs all of them. `gate:receipt` writes `docs/gate-receipts/<UTC-stamp>.md` (strip ANSI; clean-tree informational only). Detail: `local-ci-strategy.md`.
   → Source: `03-git-and-ci/local-ci-strategy.md`
 
 ## Git (Load for All Code Changes)
 
 - **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work, never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope — one sentence or split it. Checkpoint-commit before major multi-file AI operations. Revert broken AI output immediately — regenerate with better constraints, never debug-in-place.
-- **No Branch Mandate; Protect Main.** Single-agent work stays on the current branch (parallel agents get their own; merge sequentially with review). Main MUST stay deployable: branch protection, no force-push, green local gate before merge. Env files never committed — `.env` gitignored, `.env.example` committed.
+- **No Branch Mandate; Protect Main.** Single-agent work stays on the current branch (parallel agents get their own; merge sequentially with self-review between merges). Main MUST stay deployable: branch protection, no force-push, green local gate before merge. Env files never committed — `.env` gitignored, `.env.example` committed.
 
 ## Architecture (Load for New Features)
 
@@ -53,7 +53,7 @@
   → Source: `04-architecture/backend-architecture.md`
 - **Pagination for Lists.** Every list endpoint MUST support pagination — no exceptions past 50 items.
   → Source: `04-architecture/api-design-standards.md`
-- **AI-Readable Code Documentation (ICDC).** Every file starts with a file-level context comment; every exported symbol has JSDoc/TSDoc. Non-trivial code carries INTENT / CONSTRAINT / DECISION / CAVEAT as needed. NEVER restate what the code does — comments add CONTEXT only.
+- **AI-Readable Code Documentation (ICDC).** Every file starts with a file-level context comment; every exported symbol has JSDoc/TSDoc. Non-trivial code carries INTENT / CONSTRAINT / DECISION / CAVEAT. NEVER restate what the code does — comments add CONTEXT only.
   → Source: `02-engineering-practices/ai-code-documentation.md`
 - **One Source of Truth Per State Type.** Server state in the data-fetching library (React Query / SWR), form state in the form library — NEVER duplicate across stores. Query keys are raw tuples `['entity', params] as const` — never stringified JSON or path strings; centralize key constants.
   → Source: `04-architecture/state-management.md`
@@ -61,7 +61,7 @@
   → Source: `04-architecture/api-design-standards.md`
 - **Vertical Slice Development.** Build one complete feature UI → API → Database before starting the next. Never build by horizontal layers; the first increment is a working end-to-end feature, however thin.
   → Source: `01-workflow-methodology/development-workflow.md`
-- **Stack Conventions (React projects).** Data router API only (`createBrowserRouter`, never `<BrowserRouter>`; native `useBlocker`, no custom nav-blocking workarounds). Cap concurrent page fetches at 4 (`fetchAllPages<T>()` shared). ESLint enforces `import-x/no-duplicates` and `import-x/order`; inline `type` for type-only imports. Detail: `_guidelines/04-architecture/router-architecture.md`, `_guidelines/02-engineering-practices/performance-optimization.md`.
+- **Stack Conventions (React).** Data router API only — `createBrowserRouter`, never `<BrowserRouter>`; native `useBlocker`, no custom nav-blocking. Cap concurrent page fetches at 4. Detail: `_guidelines/04-architecture/router-architecture.md`.
   → Source: `04-architecture/router-architecture.md`
 - **Code Duplication Detection.** Same mapping/validation/transformation in 2+ files → extract to a shared utility in the same iteration; never wait for a refactoring pass.
   → Source: `02-engineering-practices/code-duplication-prevention.md`
@@ -75,7 +75,7 @@
 
 ## AI Collaboration (Load for Every Session)
 
-- **AI Output is Draft, Not Final.** Treat first AI output as a draft; iterate WHEN it misses acceptance criteria — a correct first output needs no forced second pass.
+- **AI Output is Draft, Not Final.** Treat first AI output as a draft; iterate WHEN it misses acceptance criteria — a correct first output needs no second pass.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Speed Is a Metric, Not a Vibe.** Record intent → first running slice each iteration. Correct-but-slow is a defect like fast-and-broken-auth — scale ceremony with WORLD.md mode; never scale security or honesty.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
@@ -89,13 +89,13 @@
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Output Efficiency.** Describe WHAT changed (1–2 sentences) and WHERE (path + lines); compare behavior, not code; no code blocks unless asked. Edit files directly.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Docs Line Fires on Triggers Only.** Trigger-table match (endpoint, table, env var, dependency, auth/RBAC, shared component, convention, guardrail) → update steering docs same-iteration and report `Docs: updated <files>`. Non-trigger → NO Docs line; silence is correct, a padded `N/A` is ceremony. Missing a real trigger is a violation.
+- **Docs Line Fires on Triggers Only.** Trigger-table match (`documentation-strategy.md`) → update steering the same iteration and report `Docs: updated <files>`; non-trigger → NO Docs line, silence is correct, a padded `N/A` is ceremony. **Breadth scales with the mode** (vibe writes the record only); the decision record never scales. Missing a real trigger is a violation.
   → Source: `07-documentation/documentation-strategy.md`
 - **One Home Per Fact.** The mandated doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never add a compressed "AI context"/index copy; a new doc retires one. Each canonical list lives in exactly one file; every other site links, and `npm run docs:census` fails on a restated fact. Always-read files keep change logs in dated archives (`docs/changelog/…`), not inline.
   → Source: `07-documentation/documentation-strategy.md`
 - **Reference Machine Output, Never Transcribe.** Verification numbers go into artifacts (`docs/gate-receipts/…`) and are cited by path — hand-copied figures decay silently.
   → Source: `07-documentation/documentation-strategy.md`
-- **Globalize Lessons.** Mistakes worth never repeating become proposals in `guidelines-proposals/YYYY-MM-DD-<slug>.md` (event, preventing rule, target) — reviewed at sync time.
+- **Globalize Lessons.** A mistake worth never repeating becomes a proposal in `guidelines-proposals/YYYY-MM-DD-<slug>.md` naming the event, the preventing rule, the target guideline, **and the guard that fails if the lesson is unlearned** — a lesson with no failing check is a wish, not a control.
   → Source: `01-workflow-methodology/development-workflow.md`
 
 ## RTL & Arabic (Always Active — All Projects Are Bilingual)
@@ -106,7 +106,7 @@
   → Source: `05-stack-guides/rtl-tech-stack.md`
 - **Logical CSS Properties Exclusively.** UI chrome uses only logical properties (Tailwind `ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; Emotion `marginInlineStart`). NEVER physical (`ml-*`, `pl-*`, `left`, `right`, `text-left`). Lint-enforced.
   → Source: `02-engineering-practices/bidirectional-design-principles.md`
-- **Portal `dir` + i18n Keys + Dual-Direction Test.** Portals escape the React parent but inherit `direction` from `<html>` — explicit `dir` only where direction differs from the page or the stack keeps direction in React context only. All user-facing strings use i18n keys. Direction testing scales with mode: **vibe** = one direction per iteration, both at milestone; **standard/guarded** = dual-direction E2E before commit (logical-properties lint always-on). Visual/screenshot checks are Tier-3 rare — milestone sign-off, untestable layout, or explicit request. Arabic typography + numerals: see `_guidelines/05-stack-guides/rtl-tech-stack.md`.
+- **Portal `dir` + i18n Keys + Dual-Direction Test.** Portals escape the React parent but inherit `direction` from `<html>` — set explicit `dir` only where direction differs. All user-facing strings use i18n keys. Direction testing scales with mode: **vibe** = one direction per iteration, both at milestone; **standard/guarded** = dual-direction E2E before commit (logical-properties lint always-on). Visual checks are Tier-3 rare. Arabic typography + numerals: `_guidelines/05-stack-guides/rtl-tech-stack.md`.
   → Source: `05-stack-guides/rtl-tech-stack.md`
 
 ## Performance (Load for Performance-Sensitive Features)
@@ -120,10 +120,12 @@
 
 ### Session Bootstrap
 
+**Budget the read before you start** — the declared mode's context cap (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md` §The Context Budget). The chain below is a menu, not a checklist: name the 2–4 files THIS task needs.
+
 1. Read this AGENTS.md — always
-2. Read WORLD.md — note `mode` (`vibe | standard | guarded`); it scales plan/test/docs/verification depth (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md`)
-3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md` (design rules; ux/visual are on-demand via MASTER_INDEX)
-4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load primary files per the table; compact extracts when context <20K tokens
+2. Read WORLD.md — note `mode`; it scales how much you read, how many steering files a trigger writes, and what the per-push gate runs
+3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md`
+4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load the primary files for the task
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -176,13 +178,13 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 ### How to Use This File
 
-1. **Mirror** guidelines into `_guidelines/` — downstream: `npm run sync-guidelines`; central repo: `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` Skip if mirror exists.
+1. **Mirror** the guidelines into `_guidelines/` — `npm run sync:all` (or `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` from the central repo). **An existing mirror is never assumed current:** `npm run sync:drift` compares the mirror against the source hash and fails on drift. "Skip if the mirror exists" is how a project runs last month's rules.
 2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
-3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD project rules/mandates; REMOVING or EDITING an existing global (baseline) rule requires explicit human approval.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD, narrow, or retire rules; only a MAJOR change to AGENTS.md (removing/editing a global baseline rule, or the security section) needs human approval.
 
 ### Maintenance
 
-- **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list).
-- **When guidelines or stack change:** refresh extracted rules + Stack table; source of truth is the central repo — re-sync `_guidelines/`.
+- **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list). Run `npm run audit:friction` and work the ranked list.
+- **When guidelines or stack change:** refresh extracted rules + Stack table; the central repo is the source of truth — re-sync `_guidelines/` (`npm run sync:drift` fails until you do).
 
 **Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`, `02-engineering-practices/bidirectional-design-principles.md` · Governance: `08-governance/design-system-governance.md`

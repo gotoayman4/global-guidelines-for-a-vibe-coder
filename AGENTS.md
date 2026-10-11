@@ -38,7 +38,7 @@ This is **not** an application project. It is a centralized development guidelin
 - Rule text lives in `guidelines/global-configs/fragments/` — one `##` section per file, order and token budget in `fragments/manifest.json`
 - `guidelines/global-configs/templates/AGENTS.starter.md` is GENERATED output — NEVER hand-edit it (`npm run check-drift` fails validate if it diverges)
 - To change a rule: edit the fragment → `npm run render:starters` → `npm run validate` → commit fragment + template together
-- The constitution has a token budget (~7,000 tokens): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined
+- The constitution has a token budget (**5,000 tokens** — `fragments/manifest.json` `maxTokens`; the rendered starter currently measures 4,997): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure: this line said "~7,000" for months while the manifest said 5,000 and `check-drift` enforced it.
 - Other starter templates (WORLD, DEVTOOLS, tool configs) are hand-maintained; when a guideline changes, update the matching one
 - Starter templates use `[FILL]` placeholders for project-specific values
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
@@ -61,7 +61,10 @@ npm run docs:census     # Fail if a canonical fact appears in >1 mandated projec
 npm run render:starters # Regenerate AGENTS.starter.md from global-configs/fragments/
 npm run render:index    # Regenerate the MASTER_INDEX tables + graph from front-matter and footers
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
-npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + docs:census
+npm run sync:drift      # Fail if a project's _guidelines/ mirror is not the current source (content hash, not a date)
+npm run slice:close     # Derive the changelog entry, the decision number and the freshness line for a slice
+npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, untriaged lessons
+npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + docs:census + test:scripts
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.
@@ -151,6 +154,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - No `execSync` / `execFileSync` / piped `spawnSync` in scripts — use `runSync` from `global-configs/scripts/lib/run-sync.js`
 - No unregistered files — every guideline file MUST be in `guidelines/_index/MASTER_INDEX.md`
 - No `// TODO` or `// FIXME` without explicit permission
+- No rule, template, or skill may require a human reviewer or approver — the single exception is a **MAJOR** change to `AGENTS.md` (see §Maintenance)
 
 ---
 
@@ -169,7 +173,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - **Quarterly:** Audit skills and templates against source guidelines
 - **When adding a file:** Add front-matter + a `## Cross-References` footer, run `npm run render:index`, check RETRIEVAL_RULES.md
 - **When updating a guideline:** Also update the matching fragment in `global-configs/fragments/`, then `npm run render:starters`
-- **Never let AI modify this file without human approval**
+- **Who may change this file.** AI MAY freely make incremental changes — add a rule, narrow a rule, fix wording, retire a superseded rule. A **MAJOR** change requires human approval: removing or editing a global baseline rule, changing the Security section, or altering the authority hierarchy. Nothing else in this repo needs a human reviewer.
 
 ---
 

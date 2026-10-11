@@ -8,7 +8,7 @@ tags: [ci-cd, pipelines, automation]
 
 ---
 
-CI is the first reviewer of every AI-generated change — it catches what human review misses and never gets tired. Every AI-generated PR passes automated gates before merge.
+CI is the first reviewer of every AI-generated change — it catches what a quick eyeball misses and never gets tired. Every AI-generated PR passes automated gates before merge.
 
 **Execution is local by default.** The pipeline runs on the dev machine — pre-commit hooks for staged files, a mandatory pre-push gate for the full pipeline. No cloud CI provider or paid Actions minutes are required; see `local-ci-strategy.md`.
 
@@ -43,7 +43,7 @@ PUSH (pre-push gate, local) → LINT → TYPE CHECK → TEST → BUILD → SECUR
 
 ## Deployment Progression
 
-Development: auto-deploy on push to main · Staging: PR preview environments mirroring production · Production: **manual approval required — never auto-deploy AI-generated changes.**
+Development: auto-deploy on push to main · Staging: PR preview environments mirroring production · Production: **gated — deploy only from a green pipeline with a tested rollback; never auto-deploy a red gate.**
 
 Rollback readiness is mandatory: reversible migrations (tested down-migrations), documented+tested rollback procedure, monitoring alerts live before deploy.
 

@@ -11,7 +11,7 @@
 
 **Last Updated:** [FILL: YYYY-MM-DD] | **Commit:** [FILL: short SHA] | **Change:** [FILL: one line]
 
-> Agent MUST update this header in the SAME iteration as a scope/guardrail change. Then report `Docs: updated WORLD.md`. (Only `WORLD.md` and `docs/AI_ARCHITECTURE.md` carry this header — `AGENTS.md` and `README.md` change on a trigger and git dates them.)
+> **Written, never typed:** `npm run slice:close` derives all three facts and rewrites this line in place. A human updating it by hand is the failure mode it exists to prevent. Only `WORLD.md` and `docs/AI_ARCHITECTURE.md` carry it — `AGENTS.md` and `README.md` change on a trigger and git dates them.
 
 ## Speed Mode
 
@@ -149,7 +149,7 @@ Describe how authentication, authorization, and data access controls work:
 ## Maintenance
 
 - **When:** Update WORLD.md when product scope changes, new out-of-scope decisions are made, or scale expectations change.
-- **Who:** Product owner or lead developer. Not AI.
+- **Who:** The product owner / lead developer, or an AI agent acting on their instruction.
 - **Review:** Quarterly alongside guideline review.
 - **How AI uses this:** Before suggesting any feature, AI checks WORLD.md for guardrail violations. Features that cross NOT boundaries are rejected automatically.
 

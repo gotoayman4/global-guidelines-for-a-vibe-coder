@@ -16,7 +16,7 @@ tags: [security, auth, xss, csp]
 1. Passwords: bcrypt or argon2 (never MD5/SHA1/SHA256) · min 8 chars with upper+number+special · login rate limit 5/min per IP · temporary lockout after 10 failures. Never store/log/return plaintext or hashes.
 2. Sessions/tokens: JWT expiration 15–60 min + refresh rotation; refresh tokens in httpOnly cookies (never localStorage); invalidation on logout/password change; CSRF protection on state-changing requests.
 3. OAuth: validate state parameter, whitelist redirect_uri, verify audience/issuer, minimum scopes.
-4. **Auth code review by risk tier.** Authentication code MUST receive careful review. In vibe mode an AI self-review + automated auth-flow test is the floor and a human pass is due at the ship boundary; in standard/guarded, auth code gets 100% human review. The security property (auth works correctly, no bypass) never relaxes — only WHO reviews at which milestone scales with mode.
+4. **Auth code gets the highest scrutiny.** Authentication code MUST receive careful review in every mode: an AI self-review plus an automated auth-flow test, run at every milestone and again at the ship boundary. The security property (auth works correctly, no bypass) never relaxes, and no human reviewer is required.
 
 **Authorization & data access**
 5. Least privilege on every endpoint: `authenticate` AND `authorize(role)` middleware. Multi-tenant data isolated via database RLS, not application checks alone.
@@ -53,8 +53,8 @@ auth checks on protected routes · authorization verified per operation · param
 | `origin: '*'` "for now" | Whitelist from day one |
 | Skipping dependency audit | Audit every AI PR |
 | Hardcoding secrets "temporarily" | .env + hooks from day one |
-| Trusting AI security tests | Manual review of auth coverage |
-| Unreviewed AI security fixes | Manual review of every fix |
+| Trusting AI security tests | Automated auth-coverage test |
+| Unverified AI security fixes | Re-run the security checklist on every fix |
 
 ## Cross-References
 

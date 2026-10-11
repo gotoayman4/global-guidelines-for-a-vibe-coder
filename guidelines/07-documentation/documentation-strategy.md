@@ -24,6 +24,14 @@ The steering set is deliberately small. Each document owns exactly one question;
 
 **Deleted, deliberately — do not recreate them:** a `docs/AI_CONTEXT.md` "compressed onboarding" and an `ARCHITECTURE_INDEX.md` "document index". Each was a second copy of facts already owned above (stack table, commands, "how to change safely", the project description, the file list). A compressed copy is still a copy: it drifts, and because it is *always loaded* it taxes every session twice. Onboarding is served by `README.md`; navigation is served by the links in `README.md` and by search.
 
+## Delivery — a Mirror Is a Copy That Owes a Check
+
+A project consumes this doc set through a `_guidelines/` mirror. A mirror is a copy, and a copy that nothing compares drifts in silence — measured once at 19 days and **105 of 105 files behind**, while the registry tracking the fleet reported that project `synced`.
+
+- **Compare content, not dates.** `npm run sync:drift` hashes the mirror against the source and fails on any difference; `npm run sync:all` records the source hash it delivered. A `lastSynced` timestamp says when someone *tried*; the hash says what *arrived*. Only the sync writes a hash — a hash written by anything else stops meaning "this content was delivered".
+- **"Skip if the mirror exists" is not a rule.** An existing mirror is precisely the thing that needs checking; it is the stale one.
+- **A missing mandated document is a failure, not a note.** An instrument that reports an absent `README.md` while the build stays green is telling you the doc set can silently lose a member.
+
 ## Required Documentation Files
 
 1. **README.md** — the single home for the project description, structure tree, and Quick Start (`npm install` → `cp .env.example .env` → `npm run dev`), plus links to the other four documents. A new session (or human) understands the project in under 5 minutes; nothing here is restated elsewhere.
@@ -48,7 +56,7 @@ The steering set is deliberately small. Each document owns exactly one question;
 
 ## Directives
 
-1. Update documentation in the SAME iteration as the code change (workflow Phase 8) — stale docs mislead future sessions worse than missing docs.
+1. Update documentation in the SAME iteration as the code change (workflow Phase 8) — stale docs mislead future sessions worse than missing docs. The **breadth** of the update scales with the declared mode (§Trigger Table); the **record** never does (§Record vs Ritual).
 2. Write for a reader with zero context: every doc states purpose, constraints, and pointers to related files.
 3. Keep README's stack versions pinned and current when the stack changes.
 4. **Every task ends with a Docs-Decision only when the Trigger table fires:** a matching trigger requires `Docs: updated <files>` in the same iteration. Non-trigger changes report no Docs line — silence is the correct non-trigger response; a padded `N/A (<reason>)` on every trivial edit is ceremony, not safety. Missing a real trigger is a violation, same as "Done" with no verification.
@@ -66,9 +74,10 @@ The steering set is deliberately small. Each document owns exactly one question;
 
 ## History Lives in Dated Archives
 
-1. **Location and name:** `docs/changelog/<doc>-<YYYY>-Q<n>.md`, one file per quarter, newest file holding the newest entries. A new quarter starts a new file; old files are never edited.
+1. **One archive per quarter, not one per document:** `docs/changelog/<YYYY>-Q<n>.md`, newest file holding the newest entries. A new quarter starts a new file; old files are never edited.
+   A per-document archive (`prd-2026-Q4.md`, `roadmap-2026-Q4.md`, `agents-2026-Q4.md`) writes one event four times — the "one canonical copy" violation this document outlaws for *rules*, applied to *events*. The event names its doc in a `**Doc:**` column instead.
 2. **The live file keeps a pointer heading** that preserves the section's old anchor (`## 4. …` stays `## 4. …`), states the archive path as a literal repo-relative path, and stops. Nothing else lives there.
-3. **Entry format:** one `### YYYY-MM-DD — <scope>` heading per entry, ~50 words for a routine change: what changed, what guard proves it, where the detail lives (ADR, PRD section, commit). Long entries are reserved for reversals and incidents — a document whose every entry is long has no signal left.
+3. **Entry format:** one `### YYYY-MM-DD — D<n> · <title>` heading, then one bullet carrying the derived facts — `**Mode:** … · **Doc:** … · **Commit:** … · **Receipt:** …`. `npm run slice:close` writes the whole entry. A human adds prose only for a reversal or an incident, and only in addition to the derived line.
    **Wrap every entry:** no line over 400 characters. A single-line bullet is unreadable in a diff, an editor, and a screen reader.
 4. **Relocation is a move, not a rewrite.** Proves out: extract every dated row from the pre-change version (`git show HEAD:<path>`) and assert each one still appears verbatim in the union of live doc + archives. A "tidied up" history is a destroyed history — the rows are the record of decisions, and the append-only rule exists so a reversal can be cited.
 5. **Measure before acting:** `node _guidelines/global-configs/scripts/measure-boot-budget.js . --history-warn 25` prints tokens per boot file, the share of each that is dated history, and the longest paragraph and longest table row. Act on >25%, not on a feeling.
@@ -78,31 +87,50 @@ The steering set is deliberately small. Each document owns exactly one question;
 ## Guards for Steering Claims
 
 - **Non-vacuity probe:** every guard asserts that its own corpus is non-empty and that a deliberately broken input fails it. A guard that reads zero files passes forever.
+- **A lesson ships with a control.** A proposal in `guidelines-proposals/` names the event, the preventing rule, the target guideline, **and the guard that fails if the lesson is unlearned**. A proposal without a named control is a wish; `npm run audit:friction` reports how many of them there are, so the number is visible rather than assumed.
+- **Meta-guards are budgeted.** A guard whose subject is another document is a tax paid on every push to check prose about prose. Keep them under **5% of the suite**, give each a non-vacuity probe, and prefer **one** `docs:verify` that regenerates every derived fact and diffs it — the `check-index-drift` pattern — over a parity guard per document. Six pairwise parity guards are six things to fix the day a document's shape changes, and a guard that punishes hygiene gets deleted.
 - **Informational steps stay informational:** a check that cannot be green before the commit exists (clean working tree) never decides the verdict of a pre-commit artifact.
 - **Immutable records are exempt:** ADRs and dated reports carry their date in their name or their status line; making them look "current" destroys the reason they exist.
 
-## Trigger Table (When Docs MUST Change)
+## Trigger Table (When Steering MUST Change)
 
-Each trigger names **exactly one file** — the single home of that fact. A change that appears to need two writes means one document is repeating a fact it should link to; fix the duplication, never do the double write.
+Each row names **exactly one file per mode** — the cheapest home that keeps the fact findable. The row is the *trigger*; the declared mode decides how much of it is written. A change that appears to need two writes *in the same mode* means one document is repeating a fact it should link to; fix the duplication, never do the double write.
 
-| Trigger | The one file that changes |
-|---|---|
-| New dependency or stack version bump | `AGENTS.md` §Stack |
-| New or changed build / lint / test / gate command | `AGENTS.md` §Build & Validation Commands |
-| New endpoint, table, migration, or env var | `docs/AI_ARCHITECTURE.md` |
-| Auth / RBAC change | `docs/AI_ARCHITECTURE.md` §Cross-Cutting (+ an ADR if it is a decision) |
-| New shared component, convention, or forbidden pattern | `AGENTS.md` §Project-Specific Mandates |
-| New subsystem | `docs/AI_ARCHITECTURE.md` §Subsystems |
-| New top-level directory or a change to the project's purpose | `README.md` §Structure / §What this is |
-| Scope / guardrail reversal | `WORLD.md` — AI proposes a `Proposed Update` block, human approves, then agent applies |
+| Trigger | vibe — 1 write | standard — 2 writes | guarded |
+|---|---|---|---|
+| New dependency or stack version bump | `AGENTS.md` §Stack | + the migration/rollback note | + an ADR if the pin is a decision |
+| New or changed build / lint / test / gate command | `AGENTS.md` §Build & Validation Commands | + `README.md` §Quick Start if the developer path changed | + an ADR for a gate-structure change |
+| New endpoint, table, migration, or env var | `docs/AI_ARCHITECTURE.md` — its registry row | + the contract/version note | + an ADR |
+| Auth / RBAC change | `docs/AI_ARCHITECTURE.md` §Cross-Cutting | + the deny-matrix proof | **+ an ADR in every mode** — auth is always a decision |
+| New shared component, convention, or forbidden pattern | `AGENTS.md` §Project-Specific Mandates | + `docs/AI_ARCHITECTURE.md` if it owns a subsystem | + an ADR |
+| New subsystem | `docs/AI_ARCHITECTURE.md` §Subsystems | + `README.md` §Structure | + an ADR |
+| New top-level directory, or a change to the project's purpose | `README.md` §Structure / §What this is | + `WORLD.md` if scope moved | + an ADR |
+| Scope / guardrail reversal | `WORLD.md` — the `Proposed Update` block | + `README.md` if the description moved | **+ an ADR in every mode** |
 
-Non-trigger (typo, formatting, internal refactor with no contract change, test-only): leave docs, report no Docs line. Mode check: vibe additionally defers non-trigger README/API prose to the milestone; triggers fire in every mode.
+Non-trigger (typo, formatting, internal refactor with no contract change, test-only): leave steering alone, report no Docs line. `vibe` additionally defers non-trigger README/API prose to the milestone. Triggers fire in every mode; only their **breadth** scales.
 
-## Freshness Header
+## Record vs Ritual — What Scales, What Never Does
 
-Only the docs that go stale silently carry a header: `WORLD.md` and `docs/AI_ARCHITECTURE.md` take `**Last Updated:** YYYY-MM-DD | **Commit:** short SHA | **Change:** one line`. Bump it in the same commit as the behavior change.
+Two different things hide under the word "documentation", and only one of them may scale with the mode:
 
-`AGENTS.md` and `README.md` do not carry one — they change only on a trigger and git already dates them. A header that is merely PRESENT is not fresh: a guard compares it against the newest dated entry in the document's own history (live text plus the archives it points at), so a slice landed without a marker is caught rather than re-asked by the next session.
+| | The **record** | The **ritual** |
+|---|---|---|
+| What it is | the decision number, its one-line entry, the receipt path | the §20.7 pointer, the freshness header, the second and third file, the full steering set |
+| Why it exists | so the next session can find out *why* — and so a reversal can be cited | so the fact is reachable from every entry point |
+| Scales with mode? | **No — every mode writes it.** It is one line, and it is the project's memory | **Yes** — `vibe` writes 1 file, `standard` 2, `guarded` the full set |
+| Cost of skipping it | the reason is lost permanently; the next session re-litigates a settled question | the fact is still findable from its one home; a reader takes one more hop |
+
+A mode that removes the **record** is not fast, it is amnesiac. A mode that keeps every **ritual** is not safe, it is slow. The failure this table exists to prevent is a `vibe` slice writing five steering files (the ritual, un-scaled) while leaving no decision entry (the record, skipped) — the worst of both.
+
+**The decision number is derived, never counted.** The next number is `max(existing) + 1`, computed by the tooling at slice close from the numbers already in the project. Do not maintain a counter in a document: a hand-kept counter needs its own parity guard, and two concurrent sessions take the same number. See `local-ci-strategy.md` §Slice Close.
+
+## Freshness — Written, Never Typed
+
+`WORLD.md` and `docs/AI_ARCHITECTURE.md` carry `**Last Updated:** YYYY-MM-DD | **Commit:** short SHA | **Change:** one line` **because a machine writes it**. `npm run slice:close` derives all three facts from the repository — the date, the short SHA, the slice title — and rewrites the line in place. A human typing a derived fact is the exact failure mode this document exists to prevent: the referenced project ran a header-bumping script that wrote `**Commit:** nosha` for months, and nothing failed.
+
+`AGENTS.md` and `README.md` carry none — they change only on a trigger and git already dates them. A freshness line that no script writes is worse than no line at all: it reads as checked.
+
+Staleness is **derived, not asserted**: compare `git log -1 --format=%ad` on the file against the newest dated entry in the document's own history (live text plus the archives it points at). That comparison needs no marker in the document, so a slice that forgot to bump a header has nowhere to hide.
 
 ## Drift Check (Warn-Only)
 
@@ -128,6 +156,12 @@ Only the docs that go stale silently carry a header: `WORLD.md` and `docs/AI_ARC
 | A paragraph that runs to thousands of characters on one line | Wrap at word boundaries, ≤400 chars — the content is unchanged |
 | A table cell holding a paragraph | The prose leaves the table; the table stays a lookup |
 | A precise figure in prose with no way to re-measure it | Cite the artifact, or carry the command + date, or round it |
+| **A `vibe` slice writing five steering files** | Breadth scales with the mode; `vibe` writes the record (one file) |
+| **A slice that skipped the decision entry to save time** | The record is one line and never scales — skipping it is amnesia, not speed |
+| **A hand-maintained "next number" counter in a document** | Derive `max(existing) + 1`; a counter races between concurrent sessions |
+| **A mode declared, but the same six-file write in every mode** | Wire the mode to the trigger table's breadth column, or the mode is decoration |
+| **A freshness line typed by hand** | `npm run slice:close` writes it; a marker no script writes reads as checked |
+| **One event written into four per-document archives** | One archive per quarter + a `**Doc:**` column |
 
 ## Cross-References
 

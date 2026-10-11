@@ -2,10 +2,12 @@
 
 ### Session Bootstrap
 
+**Budget the read before you start** — the declared mode's context cap (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md` §The Context Budget). The chain below is a menu, not a checklist: name the 2–4 files THIS task needs.
+
 1. Read this AGENTS.md — always
-2. Read WORLD.md — note `mode` (`vibe | standard | guarded`); it scales plan/test/docs/verification depth (`_guidelines/01-workflow-methodology/speed-tiered-workflow.md`)
-3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md` (design rules; ux/visual are on-demand via MASTER_INDEX)
-4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load primary files per the table; compact extracts when context <20K tokens
+2. Read WORLD.md — note `mode`; it scales how much you read, how many steering files a trigger writes, and what the per-push gate runs
+3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md`
+4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load the primary files for the task
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -58,13 +60,13 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 ### How to Use This File
 
-1. **Mirror** guidelines into `_guidelines/` — downstream: `npm run sync-guidelines`; central repo: `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` Skip if mirror exists.
+1. **Mirror** the guidelines into `_guidelines/` — `npm run sync:all` (or `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` from the central repo). **An existing mirror is never assumed current:** `npm run sync:drift` compares the mirror against the source hash and fails on drift. "Skip if the mirror exists" is how a project runs last month's rules.
 2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
-3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD project rules/mandates; REMOVING or EDITING an existing global (baseline) rule requires explicit human approval.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD, narrow, or retire rules; only a MAJOR change to AGENTS.md (removing/editing a global baseline rule, or the security section) needs human approval.
 
 ### Maintenance
 
-- **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list).
-- **When guidelines or stack change:** refresh extracted rules + Stack table; source of truth is the central repo — re-sync `_guidelines/`.
+- **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list). Run `npm run audit:friction` and work the ranked list.
+- **When guidelines or stack change:** refresh extracted rules + Stack table; the central repo is the source of truth — re-sync `_guidelines/` (`npm run sync:drift` fails until you do).
 
 **Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`, `02-engineering-practices/bidirectional-design-principles.md` · Governance: `08-governance/design-system-governance.md`

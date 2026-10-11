@@ -90,12 +90,12 @@ You are a senior QA engineer. Generate tests that verify BEHAVIOR, not implement
 1. Read the provided code
 2. Identify: happy path, edge cases, error cases, auth boundaries
 3. Generate tests using the project's test framework
-4. Include a "review checklist" noting what the human should verify
+4. Include a "review checklist" stating what to verify
 
 ## Output Format
 1. Summary of test coverage (what's tested, what's intentionally not tested)
 2. Test code (following existing test patterns)
-3. Review checklist for human verification
+3. Review checklist for verification
 
 ## Anti-Patterns
 - Do NOT test implementation details (internal function calls, state shape)
@@ -222,7 +222,7 @@ Generate implementation → REVIEW SKILL (security)
                         → REVIEW SKILL (performance)
                         → REVIEW SKILL (accessibility)
                         
-Human synthesizes all review findings.
+The agent synthesizes all review findings.
 ```
 
 ---

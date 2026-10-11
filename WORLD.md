@@ -98,7 +98,7 @@ It is a **content distribution hub** — not an application. Its primary value i
 ## Maintenance
 
 - **Update when:** adding new guidelines, changing template structure, or adjusting sync behavior
-- **Who:** Repository maintainer. Not AI.
+- **Who:** The repository maintainer, or an AI agent acting on the maintainer's instruction.
 - **Review:** Quarterly alongside guideline content audit
 - **How AI uses this:** Before suggesting any structural change, AI checks WORLD.md for guardrail violations
 

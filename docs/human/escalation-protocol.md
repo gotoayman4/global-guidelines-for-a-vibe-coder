@@ -10,7 +10,7 @@ tags: [escalation, debugging, troubleshooting]
 
 ## Purpose
 
-AI tools fail. They produce incorrect code, hallucinate APIs, misunderstand requirements, and get stuck in loops. This document provides a clear escalation path: what to try, in what order, and when to seek human help.
+AI tools fail. They produce incorrect code, hallucinate APIs, misunderstand requirements, and get stuck in loops. This document provides a clear escalation path: what to try, in what order, and when to step outside the current approach (including, as a last resort, outside help).
 
 ---
 
@@ -102,7 +102,7 @@ Some error types have faster escalation paths:
 | **"Module not found" or "Package does not exist"** | Level 2 immediately | AI likely hallucinated the package name. Search web first. |
 | **Type errors after AI change** | Level 1 with exact error | Reformulate: paste the exact error message and ask AI to fix only that error |
 | **App crashes on startup** | Level 3 immediately | Strip down to minimal version. Something fundamental is broken. |
-| **Authentication/security issues** | Level 6 immediately | Do NOT attempt to fix auth issues with AI alone. Get professional help. |
+| **Authentication/security issues** | Levels 1–4 with extra rigor | Auth mistakes are catastrophic — exhaust the AI-side ladder before considering outside help. |
 | **Database migration failures** | Level 2 immediately | Check the database docs. AI often hallucinates migration syntax. |
 | **RTL/layout issues** | Level 1 with screenshot | Reformulate with exact visual description of what's wrong. |
 | **AI keeps generating the same broken code** | Level 4 immediately | The approach is wrong. Try a different method entirely. |
@@ -120,7 +120,7 @@ Some error types have faster escalation paths:
 | 1-2 hours | Seek community help |
 | 2+ hours | Stop. Get professional help. |
 
-**Hard rule:** NEVER spend more than 2 hours on a single problem without escalating. The cost of professional help for 1 hour is less than the cost of 10+ hours of failed AI attempts.
+**Soft rule:** after 2 hours on a single problem, step back and try a different rung of the ladder. A solo project has no reviewer to fall back on — the ladder is your escalation path, not a requirement.
 
 ---
 
@@ -149,7 +149,7 @@ and what could go wrong.
 |---|---|
 | Repeating the same prompt 5+ times | AI will produce the same broken output — reformulate instead |
 | Skipping web search | For package/API issues, web search almost always finds the answer faster |
-| Trying to fix auth/security with AI alone | Auth mistakes are catastrophic. Get professional review. |
+| Trying to fix auth/security with AI alone without exhausting the ladder | Auth mistakes are catastrophic — escalate with extra rigor. |
 | Spending 4+ hours on one problem | Sunk cost fallacy. Escalate. Professional help is cheaper. |
 | Asking AI "what's wrong?" without giving the error message | AI needs the exact error text. Always copy-paste, never paraphrase. |
 
@@ -160,8 +160,8 @@ and what could go wrong.
 1. Follow the escalation ladder IN ORDER: Reformulate → Web Search → Reduce Scope → Alternative Approach → Community → Professional Help.
 2. Never repeat the same prompt more than twice. Reformulate or try a different approach.
 3. Copy exact error messages. Never paraphrase errors for AI.
-4. Security and auth issues: escalate to professional help immediately.
-5. Time-box: 2 hours maximum on any single problem before seeking human help.
+4. Security and auth issues: escalate through the ladder with extra rigor.
+5. Time-box: after 2 hours on any single problem, step back and change level.
 
 ---
 

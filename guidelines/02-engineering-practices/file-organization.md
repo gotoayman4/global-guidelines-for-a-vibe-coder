@@ -29,7 +29,7 @@ Lint runs with `--max-warnings 0`; violations block CI.
 
 ## Exceptions
 
-A file may exceed 400 lines ONLY with an inline `eslint-disable-next-line max-lines -- reason` comment AND PR approval. Valid: large union types, error-code catalogs, permission matrices. Invalid: "too busy to split", "it's one component", "the AI wrote it this way".
+A file may exceed 400 lines ONLY with an inline `eslint-disable-next-line max-lines -- reason` comment AND that documented reason (the inline comment IS the record — no reviewer required). Valid: large union types, error-code catalogs, permission matrices. Invalid: "too busy to split", "it's one component", "the AI wrote it this way".
 
 ## When to Split
 

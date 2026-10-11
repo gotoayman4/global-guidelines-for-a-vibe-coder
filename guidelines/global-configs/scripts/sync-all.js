@@ -14,7 +14,10 @@
  *
  * DECISION: lastSynced is updated only after sync-guidelines.ps1 exits 0 for
  * that project — a timestamp on a failed sync is a lie the freshness report
- * would then trust.
+ * would then trust. The CONTENT HASH is recorded in the same step, because a
+ * date says when someone tried and a hash says what they actually delivered
+ * (check-sync-drift.js). A date without a hash is how a project ran 19-day-old
+ * rules while the registry reported it `synced`.
  *
  * CAVEAT: sync-guidelines.ps1 writes global tool configs under the user
  * profile as well as the project mirror; concurrent runs are not supported.
@@ -27,11 +30,13 @@
  */
 
 const { runSync } = require('./lib/run-sync.js');
+const { hashTree } = require('./check-sync-drift.js');
 const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const PROJECTS_PATH = path.join(REPO_ROOT, 'sync-projects.json');
+const SOURCE = path.join(REPO_ROOT, 'guidelines');
 const SYNC_PS1 = path.join(__dirname, 'sync-guidelines.ps1');
 const dryRun = process.argv.includes('--dry-run');
 
@@ -102,7 +107,17 @@ function main() {
     if (result.status === 0) {
       project.status = 'synced';
       project.lastSynced = now;
-      console.log(`  OK   ${name}`);
+      const source = hashTree(SOURCE);
+      const mirrorPath = path.join(projectPath, '_guidelines');
+      const delivered = fs.existsSync(mirrorPath) ? hashTree(mirrorPath) : null;
+      project.contentHash = source.hash;
+      project.hashFiles = source.count;
+      if (delivered && delivered.hash === source.hash) {
+        console.log(`  OK   ${name}`);
+      } else {
+        failed += 1;
+        console.error(`  FAIL ${name}: sync exited 0 but the mirror does not match the source — verify manually`);
+      }
     } else {
       failed += 1;
       project.status = 'failed';

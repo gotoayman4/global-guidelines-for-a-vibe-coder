@@ -11,7 +11,7 @@
 
 **Last Updated:** [FILL: YYYY-MM-DD] | **Commit:** [FILL: short SHA] | **Change:** [FILL: one line]
 
-> Agent MUST update this header + the affected table in the SAME iteration as the code change. Then report `Docs: updated docs/AI_ARCHITECTURE.md`.
+> **Written, never typed:** `npm run slice:close` derives all three facts and rewrites this line in place. The affected table still changes in the same iteration as the code — that is prose, and prose is the human's job.
 
 ## Subsystems
 

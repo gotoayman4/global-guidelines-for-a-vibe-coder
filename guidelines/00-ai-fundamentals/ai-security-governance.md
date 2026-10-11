@@ -20,7 +20,7 @@ tags: [security, governance, owasp]
 6. **Agent secrets isolation:** block agents from `.env`/`credentials/` via ignore files; separate MCP credentials per environment (dev creds never match production); no shared sessions across environments.
 7. **Git hygiene:** pre-commit secret scanning (git-secrets/talisman) + CI commit scanning; a committed secret is ROTATED immediately, not just deleted from history.
 8. **Security review checklist applies to every AI-generated change before merge** (see consolidated checklist in `security-engineering.md`).
-9. **AI security fixes get manual review too** — AI can introduce new vulnerabilities while fixing old ones.
+9. **AI security fixes get the same scrutiny too** — AI can introduce new vulnerabilities while fixing old ones; re-run the security checklist on every fix.
 
 ## Anti-Patterns
 
@@ -29,7 +29,7 @@ tags: [security, governance, owasp]
 | "The AI is smart enough for security" | Assume all AI code insecure until reviewed |
 | Accepting `origin: '*'` "temporarily" | Explicit whitelist from day one |
 | Unrestricted MCP access | Per-agent whitelist; no production writes |
-| Trusting AI tests to cover attacks | Manual auth/permission test review |
+| Trusting AI tests to cover attacks | Automated auth/permission test coverage |
 | Skipping dependency verification | Audit + version check every PR |
 | Removing committed secret from history only | Rotate immediately |
 

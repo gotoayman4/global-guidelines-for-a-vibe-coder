@@ -30,11 +30,11 @@ Define the three-tier classification system used by all guidelines in this knowl
 - Enforce strictly
 - Flag violations before output
 - Refuse to generate code that violates normative guidelines (or flag explicitly)
-- Do not override without explicit human acknowledgment
+- Do not override without an explicit, recorded acknowledgment
 
 **Examples:**
 - "All database queries MUST use parameterized statements."
-- "Authentication code MUST receive 100% human review."
+- "Authentication code MUST have an automated auth-flow test."
 - "Secrets MUST NEVER be hardcoded in source files."
 
 ### Tier 2: Advisory (Recommended)

@@ -31,7 +31,7 @@ If you are a beginner, memorize these ten key concepts to instantly understand a
 | **Standard mode** | Default process tier: feature plans for non-trivial work, tests with code, evidence-by-change-type verification, trigger-table docs. | A normal workday with a checklist — steady, not heavy. |
 | **Guarded mode** | Heaviest process tier for high-risk work: architecture review, full test pyramid, ADRs for decisions. | Surgery protocol — slow on purpose because mistakes cost a lot. |
 | **Speed Mode (WORLD.md)** | The project field declaring which mode is active, plus the dated transition log of mode changes. | A thermostat setting with a maintenance log — you can see what it was set to and when. |
-| **Ship boundary** | The point where a loose inner loop hardens: full pre-push gate + critical-flow verification (LTR and RTL) before any release or milestone exit — automated **or a dated human pass**, never assumed. | Handing over the keys — the renovation mess is fine during work, not at walkthrough. |
+| **Ship boundary** | The point where a loose inner loop hardens: full pre-push gate + critical-flow verification (LTR and RTL) before any release or milestone exit — automated and dated, never assumed. | Handing over the keys — the renovation mess is fine during work, not at walkthrough. |
 | **Ceremony** | The process overhead (plans, tests, docs, verification depth) that modes scale up or down — never security or honesty. | Safety gear amount for the job: hard hat for framing, full harness for steelwork. |
 
 ---
@@ -46,7 +46,7 @@ Standardize terminology across all guideline documents so AI agents and humans s
 
 | Term | Definition | Non-Coder Analogy |
 |---|---|---|
-| **Vibe Coding** | AI-assisted software development where natural language instructions drive code generation, with the human acting as orchestrator and quality gate. | You're the architect who describes the house; the AI is the construction crew that builds it. |
+| **Vibe Coding** | AI-assisted software development where natural language instructions drive code generation, with the developer acting as orchestrator and specification author. | You're the architect who describes the house; the AI is the construction crew that builds it. |
 | **Behavioral Contract** | A test that verifies WHAT the system does (inputs → outputs), not HOW it's implemented internally. | Like a vending machine contract: you put in money and press B4, you get a soda. You don't need to know how the gears work inside. |
 | **Context Window** | The maximum token capacity an AI model can process in a single conversation turn. | Like a whiteboard — only so much fits before old notes get erased to make room for new ones. |
 | **Token** | The atomic unit of AI text processing (~4 characters in English). Guidelines are measured in tokens to estimate context cost. | Like a word counter for AI. 100 tokens ≈ 75 English words. |
