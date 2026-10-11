@@ -26,7 +26,7 @@
  * Source: global-configs/scripts/sync-all.js
  */
 
-const { spawnSync } = require('child_process');
+const { runSync } = require('./lib/run-sync.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -85,7 +85,7 @@ function main() {
       continue;
     }
 
-    const result = spawnSync(
+    const result = runSync(
       'powershell.exe',
       [
         '-NoProfile',
@@ -96,7 +96,7 @@ function main() {
         '-ProjectPath',
         projectPath,
       ],
-      { encoding: 'utf8', windowsHide: true },
+      { windowsHide: true },
     );
 
     if (result.status === 0) {

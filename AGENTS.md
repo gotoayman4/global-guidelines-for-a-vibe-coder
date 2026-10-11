@@ -26,6 +26,9 @@ This is **not** an application project. It is a centralized development guidelin
 - `guidelines/global-configs/` — templates, scripts, skills
 - Every guideline file MUST carry YAML front-matter (`status`, `scope`, `tags`) and end with a `## Cross-References` section — `npm run render:index` registers it in `guidelines/_index/MASTER_INDEX.md`
 
+### Subprocess Capture
+- Any script that runs a child process MUST use `runSync` from `guidelines/global-configs/scripts/lib/run-sync.js` — NEVER `execSync`, `execFileSync`, or `spawnSync` with piped stdio. Those use libuv's *synchronous pipe* path, which fails with `EBUSY` on Windows hosts where a filesystem filter driver blocks it (async `spawn` and `stdio:'ignore'` still work — the sync pipe read is the only broken part). `runSync` captures output through inherited file handles instead, so it works everywhere and cannot deadlock on a full pipe.
+
 ### Index Maintenance
 - `guidelines/_index/MASTER_INDEX.md` is GENERATED — NEVER hand-edit inside its `GENERATED` markers. Add or change a file, then run `npm run render:index` (`npm run check-index-drift` fails validate on divergence)
 - `guidelines/_index/RETRIEVAL_RULES.md` MUST be updated when loading strategies change
@@ -145,6 +148,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - No hardcoded absolute paths in templates — use relative paths or `[FILL]` markers
 - No breaking changes to templates without updating the `sync-manager.ps1` manifest fallback
 - No `console.log` in production scripts
+- No `execSync` / `execFileSync` / piped `spawnSync` in scripts — use `runSync` from `global-configs/scripts/lib/run-sync.js`
 - No unregistered files — every guideline file MUST be in `guidelines/_index/MASTER_INDEX.md`
 - No `// TODO` or `// FIXME` without explicit permission
 

@@ -24,7 +24,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { runSync } = require('./lib/run-sync.js');
 
 // Only the docs that carry a freshness header (documentation-strategy.md §Freshness Header).
 // AGENTS.md and README.md deliberately have none — they change on a trigger and git dates them.
@@ -40,11 +40,9 @@ function usage(msg) {
 }
 
 function shortSha(cwd) {
-  try {
-    return execSync('git rev-parse --short HEAD', { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-  } catch {
-    return 'nosha';
-  }
+  const result = runSync('git', ['rev-parse', '--short', 'HEAD'], { cwd });
+  const sha = result.stdout.trim();
+  return result.status === 0 && sha ? sha : 'nosha';
 }
 
 function bumpHeader(content, date, sha, message) {

@@ -1,8 +1,8 @@
 const assert = require('node:assert/strict');
-const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
+const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/new-guideline.js');
@@ -10,10 +10,7 @@ const { buildContent, tagsFor } = require('../new-guideline.js');
 const { parseFrontMatter } = require('../render-index.js');
 
 function run(args) {
-  return childProcess.spawnSync(process.execPath, [SCRIPT, ...args], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  });
+  return runSync(process.execPath, [SCRIPT, ...args], { cwd: REPO_ROOT });
 }
 
 test('buildContent opens with YAML front-matter, not a bold metadata block', () => {

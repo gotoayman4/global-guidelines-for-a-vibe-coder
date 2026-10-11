@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
-const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/new-project.js');
@@ -17,10 +17,7 @@ function makeProject() {
 }
 
 function run(args, cwd) {
-  return childProcess.spawnSync(process.execPath, [SCRIPT, ...args], {
-    cwd: cwd || REPO_ROOT,
-    encoding: 'utf8',
-  });
+  return runSync(process.execPath, [SCRIPT, ...args], { cwd: cwd || REPO_ROOT });
 }
 
 test('injectMode inserts a Speed Mode section once and is idempotent', () => {

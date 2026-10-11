@@ -19,7 +19,7 @@
  * Source: global-configs/scripts/check-docs-freshness.js
  */
 
-const { execSync } = require('child_process');
+const { runSync } = require('./lib/run-sync.js');
 
 const TARGET_DIR = process.argv[2] || process.cwd();
 
@@ -53,12 +53,9 @@ const TRIGGERS = [
 const TEST_FILE = /\.test\.|\.spec\.|__tests__\//;
 
 function gitNames(args) {
-  try {
-    return execSync(`git ${args}`, { cwd: TARGET_DIR, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-      .split('\n').map((s) => s.trim()).filter(Boolean);
-  } catch {
-    return null;
-  }
+  const result = runSync('git', args, { cwd: TARGET_DIR });
+  if (result.status !== 0) return null;
+  return result.stdout.split('\n').map((s) => s.trim()).filter(Boolean);
 }
 
 function main() {
@@ -66,8 +63,8 @@ function main() {
   console.log('  Docs Freshness Check (warn-only, never fails)');
   console.log('═══════════════════════════════════════════\n');
 
-  const uncommitted = gitNames('diff --name-only HEAD');
-  const lastCommit = gitNames('show --name-only --pretty=format: HEAD');
+  const uncommitted = gitNames(['diff', '--name-only', 'HEAD']);
+  const lastCommit = gitNames(['show', '--name-only', '--pretty=format:', 'HEAD']);
   if (uncommitted === null || lastCommit === null) {
     console.log('Not a git repository (or git unavailable) — nothing to check.');
     process.exit(0);

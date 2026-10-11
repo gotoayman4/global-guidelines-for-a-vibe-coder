@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
-const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/measure-boot-budget.js');
@@ -19,10 +19,7 @@ function makeFixture(files) {
 }
 
 function runBudget(root, args) {
-  const result = childProcess.spawnSync(process.execPath, [SCRIPT, root, ...args], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  });
+  const result = runSync(process.execPath, [SCRIPT, root, ...args], { cwd: REPO_ROOT });
   if (result.error) throw result.error;
   return {
     ...result,

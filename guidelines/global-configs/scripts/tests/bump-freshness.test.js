@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
-const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/bump-freshness.js');
@@ -17,10 +17,7 @@ function makeFile(contents) {
 }
 
 function run(args, cwd = REPO_ROOT) {
-  return childProcess.spawnSync(process.execPath, [SCRIPT, ...args], {
-    cwd,
-    encoding: 'utf8',
-  });
+  return runSync(process.execPath, [SCRIPT, ...args], { cwd });
 }
 
 const today = () => new Date().toISOString().split('T')[0];

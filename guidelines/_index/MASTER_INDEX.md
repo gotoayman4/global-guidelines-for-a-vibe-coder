@@ -160,6 +160,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [GuidelineSync.psm1](../global-configs/scripts/GuidelineSync.psm1) | Script | Global | ~1,400 | `#script` `#module` `#sync` `#shared` |
 | [render-agents-starter.js](../global-configs/scripts/render-agents-starter.js) | Script | Global | ~150 | `#script` `#render` `#single-source` `#drift-detection` `#token-budget` |
 | [render-index.js](../global-configs/scripts/render-index.js) | Script | Global | ~250 | `#script` `#render` `#index` `#single-source` `#drift-detection` |
+| [lib/run-sync.js](../global-configs/scripts/lib/run-sync.js) | Script | Global | ~250 | `#script` `#subprocess` `#portability` `#windows` `#ebusy` |
 | [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 | [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |
