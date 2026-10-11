@@ -1,10 +1,10 @@
-# Dialog Patterns
+---
+status: "Normative"
+scope: "Global"
+tags: [dialogs, modals, focus]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Low (~600 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `form-patterns.md`, `accessibility-standards.md`
+# Dialog Patterns
 
 ---
 

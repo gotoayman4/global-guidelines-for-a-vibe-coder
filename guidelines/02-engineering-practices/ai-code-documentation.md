@@ -1,10 +1,10 @@
-# AI-Optimized Code Documentation — Comments for the Next AI Session
+---
+status: "Normative"
+scope: "Global"
+tags: [documentation, comments, ai-context, icdc]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `documentation-strategy.md`, `ai-collaboration-mindset.md`, `context-management-strategy.md`
+# AI-Optimized Code Documentation — Comments for the Next AI Session
 
 ---
 

@@ -1,10 +1,10 @@
-# Table Patterns
+---
+status: "Normative"
+scope: "Global"
+tags: [tables, pagination, sorting]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Low (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `loading-and-empty-states.md`, `api-design-standards.md`, `react-performance.md`
+# Table Patterns
 
 ---
 

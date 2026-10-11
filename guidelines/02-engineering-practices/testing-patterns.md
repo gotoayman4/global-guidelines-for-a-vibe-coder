@@ -1,10 +1,10 @@
-# Testing Patterns — Concrete Strategies for AI-Assisted Testing
+---
+status: "Normative"
+scope: "Global"
+tags: [testing, patterns, unit, integration, e2e]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,400 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `testing-philosophy.md`, `development-workflow.md`, `agent-verification-loop.md`
+# Testing Patterns — Concrete Strategies for AI-Assisted Testing
 
 ---
 

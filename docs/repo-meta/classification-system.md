@@ -1,10 +1,10 @@
-# Classification System — Normative, Advisory, and Archived Tiers
+---
+status: "Normative"
+scope: "Global"
+tags: [classification, governance, authority]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,200 tokens)
-**Last Updated:** 2026-05-24
-**Cross-References:** `ai-governance-framework.md`, `guideline-authoring-standards.md`
+# Classification System — Normative, Advisory, and Archived Tiers
 
 ---
 
@@ -116,10 +116,10 @@ When a guideline is no longer relevant:
 
 Every guideline file declares its classification in the header:
 
-```markdown
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~2,000 tokens)
+```yaml
+status: "Normative"
+scope: "Global"
+tags: [topic, subtopic]
 ```
 
 The combination of Status + Scope tells AI:
@@ -140,7 +140,7 @@ The combination of Status + Scope tells AI:
 2. Security and data integrity guidelines are always Normative.
 3. Style and preference guidelines are Advisory by default.
 4. Guidelines evolve: Advisory → Normative (promotion), Normative → Advisory (demotion), Any → Archived.
-5. Every guideline file declares its Status, Scope, and Token Tier in the header.
+5. Every guideline file declares its Status and Scope in YAML front-matter; token counts are computed (chars ÷ 4), never stored.
 6. AI enforces Normative strictly; follows Advisory by default but allows exceptions.
 
 ---

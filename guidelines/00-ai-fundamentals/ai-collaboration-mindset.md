@@ -1,10 +1,10 @@
-# AI Collaboration Mindset — The Vibe Coder's Foundation
+---
+status: "Normative"
+scope: "Global"
+tags: [mindset, philosophy, anti-patterns]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,200 tokens)
-**Last Updated:** 2026-09-22
-**Cross-References:** `speed-tiered-workflow.md`, `prompt-engineering-patterns.md`, `context-management-strategy.md`, `ai-agent-orchestration.md`
+# AI Collaboration Mindset — The Vibe Coder's Foundation
 
 ---
 

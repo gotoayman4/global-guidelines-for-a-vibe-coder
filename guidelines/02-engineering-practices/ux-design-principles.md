@@ -1,10 +1,10 @@
-# UX Design Principles — Heuristics for Interaction Design
+---
+status: "Normative"
+scope: "Global"
+tags: [ux, heuristics, cognition, nielsen]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,300 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `accessibility-standards.md`, `error-handling-philosophy.md`, `frontend-architecture.md`, `bidirectional-design-principles.md`
+# UX Design Principles — Heuristics for Interaction Design
 
 ---
 

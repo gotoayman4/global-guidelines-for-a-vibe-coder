@@ -1,15 +1,12 @@
 ---
 name: deploy-production
 description: Activate when user wants to deploy, ship, publish, or release to production
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, deploy, production, hosting]
 ---
 
 # Skill: Deploy to Production
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~650 tokens)
-**Source:** `global-configs/skills/deploy-production.skill.md`
-**Last Updated:** 2026-05-25
 
 ---
 
@@ -141,7 +138,6 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 
 ---
 
-**Cross-References:**
 - Git workflow: `03-git-and-ci/git-workflow-strategy.md`
 - CI/CD philosophy: `03-git-and-ci/ci-cd-philosophy.md`
 - Local CI strategy: `03-git-and-ci/local-ci-strategy.md`

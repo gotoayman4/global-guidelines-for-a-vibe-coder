@@ -1,10 +1,10 @@
-# Notification Patterns
+---
+status: "Normative"
+scope: "Global"
+tags: [notifications, toast, snackbar]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Low (~550 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `form-patterns.md`, `error-handling-philosophy.md`, `accessibility-standards.md`
+# Notification Patterns
 
 ---
 

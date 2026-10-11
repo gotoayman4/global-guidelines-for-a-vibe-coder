@@ -1,15 +1,12 @@
 ---
 name: first-project-setup
 description: Activate when user is setting up their first project, needs onboarding, or has no coding experience
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, setup, beginner, onboarding]
 ---
 
 # Skill: First Project Setup
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~600 tokens)
-**Source:** `global-configs/skills/first-project-setup.skill.md`
-**Last Updated:** 2026-05-25
 
 ---
 
@@ -159,7 +156,6 @@ You are a project setup specialist. You guide users with zero coding experience 
 
 ---
 
-**Cross-References:**
 - Day one setup guide: `../../docs/human/day-one-setup.md`
 - Beginner vibe coder guide: `../../docs/human/beginner-vibe-coder-guide.md`
 - Git workflow: `03-git-and-ci/git-workflow-strategy.md`

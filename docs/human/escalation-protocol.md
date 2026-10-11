@@ -1,10 +1,10 @@
-# Escalation Protocol — When AI Fails, What to Do Next
+---
+status: "Normative"
+scope: "Global"
+tags: [escalation, debugging, troubleshooting]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~900 tokens)
-**Last Updated:** 2026-05-25
-**Cross-References:** `ai-collaboration-mindset.md`, `debugging-with-ai.md`, `beginner-vibe-coder-guide.md`
+# Escalation Protocol — When AI Fails, What to Do Next
 
 ---
 

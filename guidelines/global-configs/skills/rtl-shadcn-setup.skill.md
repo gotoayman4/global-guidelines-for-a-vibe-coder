@@ -1,15 +1,12 @@
 ---
 name: rtl-shadcn-setup
 description: Activate when user needs to set up RTL/Arabic support with shadcn/ui and Tailwind
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, rtl, shadcn, tailwind, setup, arabic]
 ---
 
 # Skill: RTL App Setup with shadcn/ui + Tailwind
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~800 tokens)
-**Source:** `global-configs/skills/rtl-shadcn-setup.skill.md`
-**Last Updated:** 2026-05-26
 
 ---
 
@@ -156,7 +153,6 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 
 ---
 
-**Cross-References:**
 - shadcn/ui RTL guide: `05-stack-guides/shadcn/shadcn-rtl-bidirectional.md`
 - RTL tech stack overview: `05-stack-guides/rtl-tech-stack.md`
 - MUI RTL guide (for comparison): `05-stack-guides/mui/mui-rtl-bidirectional.md`

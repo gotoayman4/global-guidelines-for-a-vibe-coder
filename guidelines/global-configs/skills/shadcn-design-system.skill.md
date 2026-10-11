@@ -1,15 +1,12 @@
 ---
 name: shadcn-design-system
 description: Activate when user wants to create or extend a shared shadcn/ui design system
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, shadcn, design-system, shared-components]
 ---
 
 # Skill: shadcn/ui Design System
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~750 tokens)
-**Source:** `global-configs/skills/shadcn-design-system.skill.md`
-**Last Updated:** 2026-05-26
 
 ---
 
@@ -97,7 +94,6 @@ When generating or modifying UI code:
 
 ---
 
-**Cross-References:**
 - shadcn/ui RTL guide: `05-stack-guides/shadcn/shadcn-rtl-bidirectional.md`
 - Design system governance: `08-governance/design-system-governance.md`
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`

@@ -1,10 +1,10 @@
-# Performance Optimization — Measure First, Optimize Later
+---
+status: "Normative"
+scope: "Global"
+tags: [performance, profiling, caching]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `react-performance.md`, `performance budgets in AGENTS.starter.md`
+# Performance Optimization — Measure First, Optimize Later
 
 ---
 

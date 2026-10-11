@@ -1,10 +1,10 @@
-# Context Management Strategy — Optimizing AI Attention
+---
+status: "Normative"
+scope: "Global"
+tags: [context, tokens, efficiency]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,000 tokens)
-**Last Updated:** 2026-09-22
-**Cross-References:** `ai-collaboration-mindset.md`, `prompt-engineering-patterns.md`, `documentation-strategy.md`, `workflow-friction-audit.md`
+# Context Management Strategy — Optimizing AI Attention
 
 ---
 

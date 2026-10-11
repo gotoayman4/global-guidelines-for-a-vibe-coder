@@ -1,15 +1,12 @@
 ---
 name: firebase-firestore-practices
 description: Activate when working with Firebase and Cloud Firestore — data modeling, SDK usage, queries, security rules, indexes, Cloud Functions triggers, or emulator testing
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, firebase, firestore, rules, practices]
 ---
 
 # Skill: Firebase & Firestore Practices
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~1K tokens)
-**Source:** `global-configs/skills/firebase-firestore-practices.skill.md`
-**Last Updated:** 2026-09-25
 
 ---
 
@@ -103,7 +100,6 @@ For changes touching Firestore, report:
 
 ---
 
-**Cross-References:**
 - Cost rules: `global-configs/skills/firestore-cost-optimization.skill.md`
 - Security rules auditing: `.agents/skills/firebase-security-rules-auditor/`
 - Security engineering: `02-engineering-practices/security-engineering.md`

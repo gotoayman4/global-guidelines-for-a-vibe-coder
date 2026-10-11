@@ -1,15 +1,12 @@
 ---
 name: implementation-plan
 description: Activate when user needs a structured implementation plan with checklists and steps
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, planning, execution, checklist]
 ---
 
 # Skill: Implementation Plan
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~900 tokens)
-**Source:** `global-configs/skills/implementation-plan.skill.md`
-**Last Updated:** 2026-06-05
 
 ---
 

@@ -1,10 +1,10 @@
-# Frontend Architecture — Structuring UI Applications
+---
+status: "Normative"
+scope: "Global"
+tags: [frontend, spa, components]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `state-management.md`, `api-design-standards.md`
+# Frontend Architecture — Structuring UI Applications
 
 ---
 

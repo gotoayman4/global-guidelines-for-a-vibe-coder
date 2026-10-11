@@ -1,10 +1,10 @@
-# Beginner Vibe Coder Guide — Zero Coding Experience, Maximum Results
+---
+status: "Normative"
+scope: "Global"
+tags: [beginner, onboarding, guide]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~1,400 tokens)
-**Last Updated:** 2026-05-25
-**Cross-References:** `ai-collaboration-mindset.md`, `development-workflow.md`, `cost-optimization-strategy.md`
+# Beginner Vibe Coder Guide — Zero Coding Experience, Maximum Results
 
 ---
 

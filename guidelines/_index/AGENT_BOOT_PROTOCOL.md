@@ -1,10 +1,12 @@
+---
+status: "Normative"
+scope: "Global"
+tags: [boot, session, initialization, protocol]
+---
+
 # Agent Boot Protocol
 
 **Purpose:** Standard session-initialization procedure for AI agents. Read this at the start of every session to determine how to load guidelines.
-
-**Status:** Normative
-**Scope:** Global
-**Last Updated:** 2026-09-22
 
 ---
 

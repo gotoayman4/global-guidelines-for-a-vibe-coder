@@ -1,10 +1,10 @@
-# Skill: MUI Design System
+---
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, mui, design-system, shared-components]
+---
 
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~750 tokens)
-**Source:** `global-configs/skills/mui-design-system.skill.md`
-**Last Updated:** 2026-05-26
+# Skill: MUI Design System
 
 ---
 
@@ -93,7 +93,6 @@ When generating or modifying UI code:
 
 ---
 
-**Cross-References:**
 - MUI styling guide: `05-stack-guides/mui/mui-styling.md`
 - MUI RTL guide: `05-stack-guides/mui/mui-rtl-bidirectional.md`
 - Design system governance: `08-governance/design-system-governance.md`

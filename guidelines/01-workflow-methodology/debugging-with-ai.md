@@ -1,10 +1,10 @@
-# Debugging with AI — Systematic Troubleshooting
+---
+status: "Normative"
+scope: "Global"
+tags: [debugging, troubleshooting, error]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `development-workflow.md`, `error-handling-philosophy.md`, `agent-verification-loop.md`
+# Debugging with AI — Systematic Troubleshooting
 
 ---
 

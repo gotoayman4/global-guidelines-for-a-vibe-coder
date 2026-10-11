@@ -1,10 +1,10 @@
-# Environment Management — Configuration, Secrets, and Environments
+---
+status: "Normative"
+scope: "Global"
+tags: [environments, secrets, config]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-09-24
-**Cross-References:** `git-workflow-strategy.md`, `ci-cd-philosophy.md`, `security-engineering.md`, `local-ci-strategy.md`
+# Environment Management — Configuration, Secrets, and Environments
 
 ---
 

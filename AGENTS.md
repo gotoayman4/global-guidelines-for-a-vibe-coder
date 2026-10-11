@@ -24,11 +24,10 @@ This is **not** an application project. It is a centralized development guidelin
 - All content lives under `guidelines/` — domain directories `guidelines/00-*` through `guidelines/08-*`
 - `guidelines/_index/` — entry points (MASTER_INDEX.md, RETRIEVAL_RULES.md, GLOSSARY.md, AGENT_BOOT_PROTOCOL.md)
 - `guidelines/global-configs/` — templates, scripts, skills
-- Every guideline file MUST be registered in `guidelines/_index/MASTER_INDEX.md`
-- Every guideline file MUST have a `→ See also:` cross-reference section at the bottom
+- Every guideline file MUST carry YAML front-matter (`status`, `scope`, `tags`) and end with a `## Cross-References` section — `npm run render:index` registers it in `guidelines/_index/MASTER_INDEX.md`
 
 ### Index Maintenance
-- `guidelines/_index/MASTER_INDEX.md` MUST be updated when a new guideline file is added
+- `guidelines/_index/MASTER_INDEX.md` is GENERATED — NEVER hand-edit inside its `GENERATED` markers. Add or change a file, then run `npm run render:index` (`npm run check-index-drift` fails validate on divergence)
 - `guidelines/_index/RETRIEVAL_RULES.md` MUST be updated when loading strategies change
 - `guidelines/_index/GLOSSARY.md` MUST be updated when new terminology is introduced
 
@@ -42,7 +41,7 @@ This is **not** an application project. It is a centralized development guidelin
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
 
 ### Skill File Standards
-- Each `.skill.md` file in `guidelines/global-configs/skills/` MUST have a matching entry in `guidelines/_index/MASTER_INDEX.md`
+- Each `.skill.md` file in `guidelines/global-configs/skills/` MUST carry YAML front-matter and a `## Cross-References` footer — `npm run render:index` lists it in `MASTER_INDEX.md`
 - Skills must include: name, description, trigger conditions, and full instructions
 
 ---
@@ -54,10 +53,12 @@ npm run audit           # Validate extracted rules against source guideline file
 npm run check-links     # Check for broken internal links
 npm run check-index     # Verify all files have MASTER_INDEX entries
 npm run check-drift     # Fail if AGENTS.starter.md was hand-edited or exceeds its token budget
+npm run check-index-drift # Fail if MASTER_INDEX.md was hand-edited — regenerate it instead
 npm run docs:census     # Fail if a canonical fact appears in >1 mandated project doc (one home per fact)
 npm run render:starters # Regenerate AGENTS.starter.md from global-configs/fragments/
+npm run render:index    # Regenerate the MASTER_INDEX tables + graph from front-matter and footers
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
-npm run validate        # Run audit + check-links + check-index + check-drift + docs:census
+npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + docs:census
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.
@@ -99,7 +100,7 @@ Main branch MUST always be validatable (`npm run validate` passes). Use branch p
 ## Editing Guidelines (Load for Content Changes)
 
 ### Front Matter
-Every guideline file in `guidelines/` SHOULD have: title, purpose, and cross-references.
+Every guideline file in `guidelines/` MUST open with YAML front-matter — `status` (`Normative` | `Advisory` | `Archived`), `scope` (`Global` | `Stack (X)`), and `tags` (inline list). MASTER_INDEX reads these; no other file repeats them.
 
 ### One Home Per Fact
 - The mandated project doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand). A new document in this set MUST retire one.
@@ -108,7 +109,7 @@ Every guideline file in `guidelines/` SHOULD have: title, purpose, and cross-ref
 - `npm run docs:census` fails the gate if a canonical fact appears in more than one mandated project doc.
 
 ### Cross-References
-Guidelines should reference related files using relative paths from `guidelines/` as root. Example: `→ Source: 02-engineering-practices/testing-patterns.md`
+Every guideline file MUST end with a `## Cross-References` section — typed bullets (`- **Depends on:** \`x.md\``) or a flat backticked list. Reference files by basename. `npm run render:index` builds the cross-reference graph from this section; a file without one renders as `no cross-references`.
 
 ### Language & Tone
 Guidelines are authoritative but not aggressive. Use MUST/SHOULD/MAY per RFC 2119. Keep sections scannable with clear headings and short paragraphs.
@@ -162,13 +163,14 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 ## Maintenance
 
 - **Quarterly:** Audit skills and templates against source guidelines
-- **When adding a file:** Register in MASTER_INDEX.md, add cross-references, check RETRIEVAL_RULES.md
+- **When adding a file:** Add front-matter + a `## Cross-References` footer, run `npm run render:index`, check RETRIEVAL_RULES.md
 - **When updating a guideline:** Also update the matching fragment in `global-configs/fragments/`, then `npm run render:starters`
 - **Never let AI modify this file without human approval**
 
 ---
 
-**Cross-References:**
+## Cross-References
+
 - Index & retrieval: `guidelines/_index/MASTER_INDEX.md`, `guidelines/_index/RETRIEVAL_RULES.md`
 - Templates: `guidelines/global-configs/templates/` (AGENTS.starter.md is generated — edit `guidelines/global-configs/fragments/`)
 - Fragments pipeline: `guidelines/global-configs/fragments/README.md`

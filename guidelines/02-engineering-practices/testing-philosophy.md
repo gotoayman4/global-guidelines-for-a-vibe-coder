@@ -1,10 +1,10 @@
-# Testing Philosophy — Survival Infrastructure for AI-Assisted Development
+---
+status: "Normative"
+scope: "Global"
+tags: [testing, philosophy, contracts]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-09-24
-**Cross-References:** `speed-tiered-workflow.md`, `ai-collaboration-mindset.md`, `testing-patterns.md`
+# Testing Philosophy — Survival Infrastructure for AI-Assisted Development
 
 ---
 

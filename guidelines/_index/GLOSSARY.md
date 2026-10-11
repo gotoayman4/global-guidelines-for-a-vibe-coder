@@ -1,9 +1,10 @@
-# Glossary — Global Guidelines for Vibe Coders
+---
+status: "Normative"
+scope: "Global"
+tags: [glossary, terminology, reference]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~5,100 tokens — measured with `measure-boot-budget.js`, not estimated)
-**Last Updated:** 2026-09-24
+# Glossary — Global Guidelines for Vibe Coders
 
 ## 💡 Top 10 Essential Terms (Quick Anchor)
 

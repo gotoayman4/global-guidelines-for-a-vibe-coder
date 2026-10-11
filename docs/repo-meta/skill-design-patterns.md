@@ -1,10 +1,10 @@
-# Skill Design Patterns — Reusable Agent Configurations
+---
+status: "Advisory"
+scope: "Global"
+tags: [skills, design, patterns]
+---
 
-**Status:** Advisory
-**Scope:** Global
-**Token Tier:** Full (~1,800 tokens)
-**Last Updated:** 2026-05-24
-**Cross-References:** `ai-governance-framework.md`, `ai-agent-orchestration.md`
+# Skill Design Patterns — Reusable Agent Configurations
 
 ---
 

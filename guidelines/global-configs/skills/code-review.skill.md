@@ -1,15 +1,12 @@
 ---
 name: code-review
 description: Activate when user provides code for review, asks for PR review, or requests code quality assessment
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, review, quality]
 ---
 
 # Skill: Code Review
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~800 tokens)
-**Source:** `global-configs/skills/code-review.skill.md`
-**Last Updated:** 2026-05-24
 
 ---
 
@@ -116,7 +113,6 @@ You are a strict senior engineer performing a professional code review. You prio
 
 ---
 
-**Cross-References:**
 - Review workflow methodology: `01-workflow-methodology/code-review-workflow.md`
 - Security governance framework: `00-ai-fundamentals/ai-security-governance.md`
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

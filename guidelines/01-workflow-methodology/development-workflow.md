@@ -1,10 +1,10 @@
-# Development Workflow — The Standard Loop
+---
+status: "Normative"
+scope: "Global"
+tags: [workflow, process, lifecycle]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,100 tokens)
-**Last Updated:** 2026-09-22
-**Cross-References:** `speed-tiered-workflow.md`, `ai-collaboration-mindset.md`, `prompt-engineering-patterns.md`
+# Development Workflow — The Standard Loop
 
 ---
 

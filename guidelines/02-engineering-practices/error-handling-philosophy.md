@@ -1,10 +1,10 @@
-# Error Handling Philosophy — Making Failures Safe and Diagnosable
+---
+status: "Normative"
+scope: "Global"
+tags: [error, contracts, recovery]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,100 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `api-design-standards.md`, `ai-security-governance.md`, `ux-design-principles.md`
+# Error Handling Philosophy — Making Failures Safe and Diagnosable
 
 ---
 

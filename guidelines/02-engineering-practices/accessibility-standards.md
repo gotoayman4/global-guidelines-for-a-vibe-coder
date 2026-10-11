@@ -1,10 +1,10 @@
-# Accessibility Standards — Building Inclusive Interfaces
+---
+status: "Normative"
+scope: "Global"
+tags: [a11y, wcag, aria]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `frontend-architecture.md`, `icon-usage.md`, `visual-design-principles.md`
+# Accessibility Standards — Building Inclusive Interfaces
 
 ---
 

@@ -1,15 +1,12 @@
 ---
 name: inno-setup
 description: Activate when user wants to create a Windows installer using Inno Setup
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, inno-setup, installer, windows]
 ---
 
 # Skill: Inno Setup — Bundle Windows Installer
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~700 tokens)
-**Source:** `global-configs/skills/inno-setup.skill.md`
-**Last Updated:** 2026-05-25
 
 ---
 
@@ -128,7 +125,6 @@ You are a Windows installer packaging specialist using Inno Setup. You create cl
 
 ---
 
-**Cross-References:**
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Cost optimization: `02-engineering-practices/cost-optimization-strategy.md`
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

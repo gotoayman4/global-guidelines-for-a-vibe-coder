@@ -1,10 +1,10 @@
-# Backend Architecture — Structuring Server Applications
+---
+status: "Normative"
+scope: "Global"
+tags: [backend, rest, services]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `api-design-standards.md`, `database-architecture.md`
+# Backend Architecture — Structuring Server Applications
 
 ---
 

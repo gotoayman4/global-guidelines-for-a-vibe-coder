@@ -1,15 +1,13 @@
 ---
 name: bidirectional-docx-rtl
 description: Activate when user needs bidirectional or RTL support in DOCX document generation
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, docx, rtl, bidirectional, arabic]
 ---
 
 # Skill: Bidirectional DOCX Generation for Arabic/RTL Content
 
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~900 tokens)
-**Source:** `global-configs/skills/bidirectional-docx-rtl.skill.md`
-**Last Updated:** 2026-05-27
 **Companion Skills:** `docx-per-paragraph-language.skill.md` (proofing/spell-check language per-paragraph and per-run)
 
 ---
@@ -195,7 +193,6 @@ You are an OOXML/bidirectional text specialist for the `docx` npm library (v9.7.
 
 ---
 
-**Cross-References:**
 - Working implementation: `packages/backend/src/modules/export/serializers/docx-serializer.service.ts`
 - Compile service (direction normalization): `packages/backend/src/modules/export/compile/compile.service.ts`
 - Compiled document interface: `packages/backend/src/modules/export/compile/compiled-document.interface.ts`

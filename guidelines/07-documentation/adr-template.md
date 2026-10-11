@@ -1,10 +1,10 @@
-# Architecture Decision Record (ADR) Template
+---
+status: "Advisory"
+scope: "Global"
+tags: [adr, decisions, template]
+---
 
-**Status:** Advisory
-**Scope:** Global
-**Token Tier:** Full (~450 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `documentation-strategy.md`
+# Architecture Decision Record (ADR) Template
 
 ---
 

@@ -1,11 +1,12 @@
+---
+status: "Normative"
+scope: "Stack (Playwright)"
+tags: [playwright, e2e, testing]
+---
+
 # Playwright E2E Testing
 
-**Status:** Normative
-**Scope:** Stack (Playwright)
-**Token Tier:** Medium (~800 tokens)
 **Tags:** `#playwright` `#e2e` `#testing` `#browser` `#a11y`
-**Last Updated:** 2026-08-26
-
 ---
 
 ## Directives

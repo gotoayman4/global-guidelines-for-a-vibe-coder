@@ -1,10 +1,10 @@
-# Form Patterns
+---
+status: "Normative"
+scope: "Global"
+tags: [forms, validation, multi-step]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Medium (~1,300 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `react-architecture.md`, `typescript-conventions.md`, `error-handling-philosophy.md`, `accessibility-standards.md`, `notification-patterns.md`
+# Form Patterns
 
 ---
 

@@ -1,10 +1,10 @@
-# Security Engineering — Building Secure Systems with AI
+---
+status: "Normative"
+scope: "Global"
+tags: [security, auth, xss, csp]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,300 tokens)
-**Last Updated:** 2026-09-24
-**Cross-References:** `ai-security-governance.md`, `error-handling-philosophy.md`, `file-upload-security.md`
+# Security Engineering — Building Secure Systems with AI
 
 ---
 

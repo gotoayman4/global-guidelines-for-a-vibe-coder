@@ -1,9 +1,10 @@
-# Retrieval Rules — AI Loading Strategy
+---
+status: "Normative"
+scope: "Global (AI Agent Configuration)"
+tags: [retrieval, loading, tokens, strategy]
+---
 
-**Status:** Normative
-**Scope:** Global (AI Agent Configuration)
-**Token Tier:** Compact (~600 tokens)
-**Last Updated:** 2026-09-22
+# Retrieval Rules — AI Loading Strategy
 
 ---
 

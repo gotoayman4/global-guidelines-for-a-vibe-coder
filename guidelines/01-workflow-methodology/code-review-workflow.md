@@ -1,10 +1,10 @@
-# Code Review Workflow — Quality Gates for AI-Generated Code
+---
+status: "Advisory"
+scope: "Global"
+tags: [review, quality, collaboration]
+---
 
-**Status:** Advisory
-**Scope:** Global
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `development-workflow.md`, `ai-security-governance.md`, `security-engineering.md`
+# Code Review Workflow — Quality Gates for AI-Generated Code
 
 ---
 

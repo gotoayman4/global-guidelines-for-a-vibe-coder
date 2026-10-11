@@ -1,10 +1,10 @@
-# Refactoring Strategy — Maintaining Coherence Over Time
+---
+status: "Normative"
+scope: "Global"
+tags: [refactoring, maintenance, technical-debt]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `development-workflow.md`, `testing-philosophy.md`
+# Refactoring Strategy — Maintaining Coherence Over Time
 
 ---
 

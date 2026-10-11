@@ -19,7 +19,7 @@ guidelines/
   global-configs/
     templates/   — starter files for AGENTS.md, WORLD.md, README.md, tool configs
     fragments/   — single-source rule sections; rendered into templates/AGENTS.starter.md
-    scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js, render-agents-starter.js, check-project-freshness.js, new-guideline.js, new-project.js, bump-freshness.js
+    scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js, render-agents-starter.js, render-index.js, check-project-freshness.js, new-guideline.js, new-project.js, bump-freshness.js
     skills/      — .skill.md files for code-review, refactoring, security-audit, etc.
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
 .github/workflows/       — optional cloud workflows (CI is local by default — see 03-git-and-ci/local-ci-strategy.md)
@@ -51,20 +51,22 @@ powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guideline
 
 | Command | What it does |
 |---|---|
-| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + docs:census + test:scripts. Runs on every push (local pre-push hook). |
+| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + docs:census + test:scripts. Runs on every push (local pre-push hook). |
 | `npm run audit` | Verifies extracted rules in starter templates still match their source guideline files. |
 | `npm run check-links` | Checks internal links across all `.md` files. |
 | `npm run check-index` | Verifies every file is registered in `guidelines/_index/MASTER_INDEX.md`. |
 | `npm run render:starters` | Regenerates `templates/AGENTS.starter.md` from `global-configs/fragments/`. |
+| `npm run render:index` | Regenerates the `MASTER_INDEX.md` category tables, skills table, and cross-reference graph from each file's front-matter + `## Cross-References` footer. |
 | `npm run check-drift` | Fails if `AGENTS.starter.md` was hand-edited or exceeds its token budget. |
+| `npm run check-index-drift` | Fails if `MASTER_INDEX.md` was hand-edited — regenerate it instead. |
 | `npm run docs:census` | Fails if a canonical fact (stack table, commands block, forbidden-pattern list, "How to Change Safely") appears in more than one mandated project doc — one home per fact. |
 | `npm run status:projects` | Reports which rules each synced project's `AGENTS.md` is missing (informational, never fails). |
 | `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; updates `lastSynced`; exits 1 if any fail). |
 | `npm run validate:fast` | Quick integrity pass (audit + check-index + check-drift; skips full link crawl). |
 | `npm run test:scripts` | Runs the Node test suite for `global-configs/scripts` helpers. |
-| `npm run new:guideline` | Scaffolds a guideline file + MASTER_INDEX row (use `-- --dry-run` first). |
+| `npm run new:guideline` | Scaffolds a guideline file (front-matter + `## Cross-References`) and re-renders `MASTER_INDEX.md` (use `-- --dry-run` first). |
 | `npm run new:project` | Bootstraps starter files into a project path (`-- <path> [--mode vibe\|standard\|guarded]`). |
-| `npm run bump:freshness` | Refreshes `Last Updated:` headers (`-- --check` to report staleness only). |
+| `npm run bump:freshness` | Refreshes `Last Updated:` headers on steering docs only (`-- --check` to report staleness only). |
 
 ## Speed Modes
 
@@ -132,12 +134,12 @@ Already ignored: `sync-projects.json`, `opencode.json` (machine-specific), `REPO
 
 ## Validation
 
-Covered by `npm run validate` — see the Commands table above. All four checks run on
+Covered by `npm run validate` — see the Commands table above. Every check runs on
 every push via the local pre-push hook (`git config core.hooksPath .githooks`).
 
 ## How to Change Something Safely
 
-- **Adding a guideline:** `npm run new:guideline` (or create file) → register in `guidelines/_index/MASTER_INDEX.md` → add cross-refs → update matching fragment (and template) if normative
-- **Updating a guideline:** edit file → update matching fragment in `global-configs/fragments/` → `npm run render:starters` → run `npm run validate`
-- **Adding a skill:** create `.skill.md` → register in MASTER_INDEX.md → verify sync-manifest skills glob picks it up
+- **Adding a guideline:** `npm run new:guideline <category> <slug>` (front-matter + `## Cross-References` are scaffolded and the index re-renders automatically) → update the matching fragment (and template) if normative → `npm run validate`
+- **Updating a guideline:** edit file → update matching fragment in `global-configs/fragments/` → `npm run render:starters` → `npm run render:index` (if front-matter or footers changed) → run `npm run validate`
+- **Adding a skill:** create `.skill.md` with front-matter → `npm run render:index` → verify the sync-manifest skills glob picks it up
 - **Changing templates:** edit fragments, never the generated `AGENTS.starter.md` → render → validate

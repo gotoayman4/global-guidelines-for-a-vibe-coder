@@ -1,10 +1,10 @@
-# Day One Setup — From Zero to First Working Feature
+---
+status: "Normative"
+scope: "Global"
+tags: [setup, onboarding, beginner]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~1,200 tokens)
-**Last Updated:** 2026-05-25
-**Cross-References:** `beginner-vibe-coder-guide.md`, `cost-optimization-strategy.md`, `git-workflow-strategy.md`
+# Day One Setup — From Zero to First Working Feature
 
 ---
 

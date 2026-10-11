@@ -1,15 +1,12 @@
 ---
 name: tiptap-tailwind-reset
 description: Activate when user needs to reset or customize TipTap editor styles with Tailwind
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, tiptap, tailwind, rich-text, css]
 ---
 
 # Skill: Fix Tiptap v3 + Tailwind CSS v4 Rich Text Formatting
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~700 tokens)
-**Source:** `global-configs/skills/tiptap-tailwind-reset.skill.md`
-**Last Updated:** 2026-05-27
 
 ---
 
@@ -140,7 +137,6 @@ You are a rich text editor specialist for Tiptap v3 + ProseMirror + Tailwind CSS
 
 ---
 
-**Cross-References:**
 - Tiptap v3 docs: https://tiptap.dev/docs/editor/guide/configuration
 - Tailwind CSS v4 preflight: https://tailwindcss.com/docs/preflight
 - Visual design principles: `06-frontend-patterns/visual-design-principles.md`

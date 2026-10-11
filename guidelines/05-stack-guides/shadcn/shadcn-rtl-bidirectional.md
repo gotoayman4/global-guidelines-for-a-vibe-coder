@@ -1,10 +1,12 @@
+---
+status: "Normative"
+scope: "Stack (shadcn/ui + Tailwind CSS v4)"
+tags: [shadcn, tailwind, rtl, i18n, bidirectional, radix, base-ui, logical-properties]
+---
+
 # shadcn/ui + Tailwind CSS v4 — RTL & Bidirectional UI Guide
 
-**Status:** Normative
-**Scope:** Stack (shadcn/ui + Tailwind CSS v4)
 **Version:** shadcn/ui latest (RTL support since Jan 2026), Tailwind CSS v4
-**Token Tier:** Full (~1,400 tokens)
-**Last Updated:** 2026-08-26
 **Tags:** `#shadcn` `#tailwind` `#rtl` `#i18n` `#bidirectional` `#arabic` `#radix` `#base-ui` `#logical-properties`
 
 ---

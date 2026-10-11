@@ -1,12 +1,13 @@
+---
+status: "Normative"
+scope: "Stack (MUI 7+ / 9+ RTL)"
+tags: [mui, rtl, i18n, bidirectional]
+---
+
 # MUI RTL & Bidirectional UI Guide (v7 & v9)
 
-**Status:** Normative
-**Scope:** Stack (MUI 7+ / 9+ RTL)
 **Version:** Covers MUI 7 (legacy projects) and MUI 9 (new projects). Do NOT generate MUI v5/v6 RTL patterns. Items marked **v9** apply only to MUI 9+; prefer v9-compatible APIs in v7 code too.
-**Token Tier:** Medium (~1,200 tokens)
 **Tags:** `#mui` `#rtl` `#i18n` `#bidirectional` `#arabic` `#emotion`
-**Last Updated:** 2026-08-26
-
 ---
 
 ## Directives

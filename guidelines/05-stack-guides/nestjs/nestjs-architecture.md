@@ -1,11 +1,12 @@
+---
+status: "Normative"
+scope: "Stack (NestJS)"
+tags: [nestjs, backend, modules]
+---
+
 # NestJS Backend Architecture
 
-**Status:** Normative
-**Scope:** Stack (NestJS)
-**Token Tier:** Medium (~900 tokens)
 **Tags:** `#nestjs` `#backend` `#modules` `#controllers` `#services` `#guards`
-**Last Updated:** 2026-08-26
-
 ---
 
 ## Directives

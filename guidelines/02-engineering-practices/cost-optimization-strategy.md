@@ -1,10 +1,10 @@
-# Cost Optimization Strategy — Maximizing Value, Minimizing Spend
+---
+status: "Normative"
+scope: "Global"
+tags: [cost, hosting, tokens, free-tier]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~850 tokens)
-**Last Updated:** 2026-09-25
-**Cross-References:** `context-management-strategy.md`, `multi-tool-workflows.md`, `development-workflow.md`, `../03-git-and-ci/local-ci-strategy.md`, `security-engineering.md` (rule 17, "Declared vs enforced" — applied to spend at directive 7)
+# Cost Optimization Strategy — Maximizing Value, Minimizing Spend
 
 ---
 

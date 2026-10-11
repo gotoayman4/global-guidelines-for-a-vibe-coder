@@ -1,10 +1,10 @@
-# Visual Design Principles — Hierarchy, Depth, Color, and Typography
+---
+status: "Normative"
+scope: "Global"
+tags: [visual, hierarchy, color, typography, depth]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `bidirectional-design-principles.md`, `accessibility-standards.md`, `ux-design-principles.md`, `icon-usage.md`
+# Visual Design Principles — Hierarchy, Depth, Color, and Typography
 
 ---
 

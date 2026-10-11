@@ -1,10 +1,10 @@
-# React Architecture — Component Patterns
+---
+status: "Normative"
+scope: "Stack (React)"
+tags: [react, hooks, components]
+---
 
-**Status:** Normative
-**Scope:** Stack (React)
-**Token Tier:** Full (~1,300 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `frontend-architecture.md`, `state-management.md`, `react-performance.md`, `react-testing.md`
+# React Architecture — Component Patterns
 
 ---
 

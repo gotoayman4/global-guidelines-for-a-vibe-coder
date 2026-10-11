@@ -1,10 +1,10 @@
-# Documentation Strategy — Knowledge Persistence for AI and Humans
+---
+status: "Normative"
+scope: "Global"
+tags: [documentation, strategy, maintenance, changelog-archives, single-source, line-length]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~2,550 tokens)
-**Last Updated:** 2026-09-22
-**Cross-References:** `speed-tiered-workflow.md`, `ai-code-documentation.md`, `context-management-strategy.md`, `local-ci-strategy.md`, `workflow-friction-audit.md`
+# Documentation Strategy — Knowledge Persistence for AI and Humans
 
 ---
 

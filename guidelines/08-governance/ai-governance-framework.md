@@ -1,10 +1,10 @@
-# AI Governance Framework — Authority Hierarchy and Control
+---
+status: "Normative"
+scope: "Global"
+tags: [governance, hierarchy, authority]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `ai-security-governance.md`, `planning-and-scoping.md`
+# AI Governance Framework — Authority Hierarchy and Control
 
 ---
 

@@ -1,15 +1,12 @@
 ---
 name: unsaved-changes-protection
 description: Activate when user needs unsaved changes protection, dirty state handling, or navigation guards
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, forms, ux, dirty-state]
 ---
 
 # Skill: Unsaved Changes Protection
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~750 tokens)
-**Source:** `global-configs/skills/unsaved-changes-protection.skill.md`
-**Last Updated:** 2026-05-26
 
 ---
 
@@ -107,7 +104,6 @@ When generating or modifying form components:
 
 ---
 
-**Cross-References:**
 - Form patterns: `06-frontend-patterns/form-patterns.md`
 - Dialog patterns: `06-frontend-patterns/dialog-patterns.md`
 - UX design principles: `02-engineering-practices/ux-design-principles.md`

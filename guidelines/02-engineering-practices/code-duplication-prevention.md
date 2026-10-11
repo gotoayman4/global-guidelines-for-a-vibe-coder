@@ -1,10 +1,10 @@
-# Code Duplication Prevention — AI-Assisted Deduplication
+---
+status: "Normative"
+scope: "Global"
+tags: [deduplication, dry, code-smells, ai]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~600 tokens)
-**Last Updated:** 2026-06-18
-**Cross-References:** `file-organization.md`, `ai-collaboration-mindset.md`
+# Code Duplication Prevention — AI-Assisted Deduplication
 
 ---
 

@@ -1,10 +1,10 @@
-# AI Agent Orchestration — Multi-Agent Workflow Design
+---
+status: "Normative"
+scope: "Global"
+tags: [agents, orchestration, parallel]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `context-management-strategy.md`, `prompt-engineering-patterns.md`, `ai-governance-framework.md`
+# AI Agent Orchestration — Multi-Agent Workflow Design
 
 ---
 

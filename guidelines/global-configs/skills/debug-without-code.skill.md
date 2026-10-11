@@ -1,15 +1,12 @@
 ---
 name: debug-without-code
 description: Activate when the user cannot read code and needs help debugging visual issues
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, debugging, noncoder, visual]
 ---
 
 # Skill: Debug Without Code — Visual and Behavioral Debugging for Vibe Coders
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~600 tokens)
-**Source:** `global-configs/skills/debug-without-code.skill.md`
-**Last Updated:** 2026-05-25
 
 ---
 
@@ -119,7 +116,6 @@ You are a debugging assistant for vibe coders who cannot read code. You diagnose
 
 ---
 
-**Cross-References:**
 - Visual verification guide: `../../docs/human/verification-for-non-coders.md`
 - Escalation protocol: `../../docs/human/escalation-protocol.md`
 - Debugging with AI (full): `01-workflow-methodology/debugging-with-ai.md`

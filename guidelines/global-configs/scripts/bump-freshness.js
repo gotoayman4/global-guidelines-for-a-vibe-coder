@@ -6,13 +6,13 @@
  * Freshness header format (documentation-strategy.md):
  *   **Last Updated:** YYYY-MM-DD | **Commit:** short SHA | **Change:** one line
  *
- * Also bumps the plain `**Last Updated:** YYYY-MM-DD` front-matter used by
- * guideline files when --guidelines is passed.
+ * Guideline files carry NO freshness field — their `Last Updated` answer comes from
+ * `git log`, and `render-index.js` derives everything else from front-matter. This
+ * script therefore only touches steering docs (WORLD.md, docs/AI_ARCHITECTURE.md).
  *
  * Usage:
  *   node bump-freshness.js [file ...]           # explicit files (steering docs)
  *   node bump-freshness.js --steering           # default steering set in cwd
- *   node bump-freshness.js --guidelines         # Last Updated only, under guidelines/
  *   node bump-freshness.js --steering --message "short change note"
  *   node bump-freshness.js --check --steering   # exit 1 if any header older than today (report mode)
  *
@@ -35,7 +35,7 @@ const STEERING_DEFAULT = [
 
 function usage(msg) {
   if (msg) console.error(`❌ ${msg}`);
-  console.error('Usage: node bump-freshness.js [--steering|--guidelines] [files...] [--message "<note>"] [--check]');
+  console.error('Usage: node bump-freshness.js [--steering] [files...] [--message "<note>"] [--check]');
   process.exit(2);
 }
 
@@ -75,8 +75,8 @@ function main() {
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === '--steering' || a === '--guidelines') {
-      if (mode) usage('specify only one of --steering / --guidelines');
+    if (a === '--steering') {
+      if (mode) usage('--steering specified twice');
       mode = a;
     } else if (a === '--check') {
       check = true;
@@ -97,9 +97,7 @@ function main() {
   let targets = files;
   if (!targets.length) {
     if (mode === '--steering') targets = STEERING_DEFAULT;
-    else if (mode === '--guidelines') {
-      usage('--guidelines mode expects no explicit files; run from repo root');
-    } else usage('pass file paths or --steering');
+    else usage('pass file paths or --steering');
   }
 
   const absTargets = targets.map((f) => path.resolve(cwd, f));

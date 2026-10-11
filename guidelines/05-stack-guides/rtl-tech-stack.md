@@ -1,10 +1,10 @@
-# RTL Tech Stack — Arabic-Optimized Development
+---
+status: "Normative"
+scope: "Global — All Projects (Bilingual by Default)"
+tags: [rtl, arabic, bidirectional, numerals]
+---
 
-**Status:** Normative
-**Scope:** Global — All Projects (Bilingual by Default)
-**Token Tier:** Full (~1,300 tokens)
-**Last Updated:** 2026-09-24
-**Cross-References:** `mui/mui-rtl-bidirectional.md`, `shadcn/shadcn-rtl-bidirectional.md`, `accessibility-standards.md`, `frontend-architecture.md`, `icon-usage.md`
+# RTL Tech Stack — Arabic-Optimized Development
 
 ---
 

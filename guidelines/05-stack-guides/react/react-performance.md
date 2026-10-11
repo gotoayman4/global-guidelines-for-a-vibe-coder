@@ -1,10 +1,10 @@
-# React Performance — Optimization Patterns
+---
+status: "Normative"
+scope: "Stack (React)"
+tags: [react, performance, memo]
+---
 
-**Status:** Normative
-**Scope:** Stack (React)
-**Token Tier:** Full (~1,100 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `react-architecture.md`, `performance-optimization.md`
+# React Performance — Optimization Patterns
 
 ---
 

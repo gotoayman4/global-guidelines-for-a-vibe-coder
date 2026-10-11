@@ -1,10 +1,10 @@
-# CI/CD Philosophy — Automated Quality Gates for AI-Generated Code
+---
+status: "Normative"
+scope: "Global"
+tags: [ci-cd, pipelines, automation]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-28
-**Cross-References:** `git-workflow-strategy.md`, `testing-philosophy.md`, `environment-management.md`, `local-ci-strategy.md`
+# CI/CD Philosophy — Automated Quality Gates for AI-Generated Code
 
 ---
 

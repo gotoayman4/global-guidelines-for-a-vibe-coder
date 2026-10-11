@@ -1,10 +1,10 @@
-# Router Architecture — React Router Data Router Standard
+---
+status: "Normative"
+scope: "Global"
+tags: [router, react-router, createBrowserRouter, useBlocker]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~500 tokens)
-**Last Updated:** 2026-06-18
-**Cross-References:** `frontend-architecture.md`, `react-architecture.md`
+# Router Architecture — React Router Data Router Standard
 
 ---
 

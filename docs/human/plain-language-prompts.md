@@ -1,10 +1,10 @@
-# Plain-Language Prompts — Prompt Templates for Vibe Coders
+---
+status: "Normative"
+scope: "Global"
+tags: [prompts, templates, beginner]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~1,400 tokens)
-**Last Updated:** 2026-05-25
-**Cross-References:** `prompt-engineering-patterns.md`, `beginner-vibe-coder-guide.md`, `verification-for-non-coders.md`
+# Plain-Language Prompts — Prompt Templates for Vibe Coders
 
 ---
 

@@ -1,10 +1,10 @@
-# Git Workflow Strategy — AI-Assisted Git Discipline
+---
+status: "Normative"
+scope: "Global"
+tags: [git, branching, commits]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-08-28
-**Cross-References:** `ci-cd-philosophy.md`, `environment-management.md`, `development-workflow.md`, `local-ci-strategy.md`
+# Git Workflow Strategy — AI-Assisted Git Discipline
 
 ---
 

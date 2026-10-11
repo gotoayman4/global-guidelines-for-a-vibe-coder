@@ -1,10 +1,10 @@
-# File Upload Security — Magic-Byte MIME Validation
+---
+status: "Normative"
+scope: "Global"
+tags: [security, file-upload, mime, magic-byte]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~700 tokens)
-**Last Updated:** 2026-06-18
-**Cross-References:** `security-engineering.md`, `error-handling-philosophy.md`
+# File Upload Security — Magic-Byte MIME Validation
 
 ---
 

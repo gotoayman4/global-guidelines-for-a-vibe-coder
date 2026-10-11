@@ -1,15 +1,12 @@
 ---
 name: docx-per-paragraph-language
 description: Activate when user needs per-paragraph language handling in DOCX documents
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, docx, language, paragraph, spell-check]
 ---
 
 # Skill: Per-Paragraph/Run Language for Bilingual DOCX Generation
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~1000 tokens)
-**Source:** `global-configs/skills/docx-per-paragraph-language.skill.md`
-**Last Updated:** 2026-05-27
 
 ---
 
@@ -260,7 +257,6 @@ You distinguish between:
 
 ---
 
-**Cross-References:**
 - Working implementation: `packages/backend/src/modules/export/serializers/docx-serializer.service.ts`
 - Compiled document interface (per-block `direction`): `packages/backend/src/modules/export/compile/compiled-document.interface.ts`
 - Three-layer RTL skill (prerequisite): `global-configs/skills/bidirectional-docx-rtl.skill.md`

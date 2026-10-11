@@ -1,10 +1,10 @@
-# Speed-Tiered Workflow — Vibe / Standard / Guarded Modes
+---
+status: "Normative"
+scope: "Global"
+tags: [speed, modes, vibe, standard, guarded, ceremony, ship-boundary]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,200 tokens)
-**Last Updated:** 2026-09-22
-**Cross-References:** `development-workflow.md`, `testing-philosophy.md`, `agent-verification-loop.md`, `documentation-strategy.md`
+# Speed-Tiered Workflow — Vibe / Standard / Guarded Modes
 
 ---
 

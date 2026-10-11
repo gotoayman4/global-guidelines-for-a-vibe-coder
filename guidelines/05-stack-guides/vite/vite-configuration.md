@@ -1,11 +1,12 @@
+---
+status: "Normative"
+scope: "Stack (Vite)"
+tags: [vite, build, bundler]
+---
+
 # Vite Configuration Guide
 
-**Status:** Normative
-**Scope:** Stack (Vite)
-**Token Tier:** Low (~600 tokens)
 **Tags:** `#vite` `#build` `#bundler` `#hmr` `#typescript`
-**Last Updated:** 2026-08-26
-
 ---
 
 ## Directives

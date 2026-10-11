@@ -1,10 +1,10 @@
-# AI Security Governance — Securing AI-Assisted Development
+---
+status: "Normative"
+scope: "Global"
+tags: [security, governance, owasp]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `ai-collaboration-mindset.md`, `ai-agent-orchestration.md`, `security-engineering.md`
+# AI Security Governance — Securing AI-Assisted Development
 
 ---
 

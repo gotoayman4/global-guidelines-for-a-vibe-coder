@@ -1,10 +1,10 @@
-# Verification for Non-Coders — How to Confirm AI Output Without Reading Code
+---
+status: "Normative"
+scope: "Global"
+tags: [verification, non-coder, evidence]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~1,100 tokens)
-**Last Updated:** 2026-05-25
-**Cross-References:** `beginner-vibe-coder-guide.md`, `testing-philosophy.md`, `code-review-workflow.md`
+# Verification for Non-Coders — How to Confirm AI Output Without Reading Code
 
 ---
 

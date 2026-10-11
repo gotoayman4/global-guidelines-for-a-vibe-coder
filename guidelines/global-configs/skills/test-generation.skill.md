@@ -1,15 +1,12 @@
 ---
 name: test-generation
 description: Activate when user asks to write tests, generate test cases, or set up testing infrastructure
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, testing, generation]
 ---
 
 # Skill: Generate Tests
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~750 tokens)
-**Source:** `global-configs/skills/test-generation.skill.md`
-**Last Updated:** 2026-05-24
 
 ---
 
@@ -108,7 +105,6 @@ You are a senior QA engineer. Generate tests that verify BEHAVIOR, not implement
 
 ---
 
-**Cross-References:**
 - Test philosophy: `02-engineering-practices/testing-philosophy.md`
 - Test patterns: `02-engineering-practices/testing-patterns.md`
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

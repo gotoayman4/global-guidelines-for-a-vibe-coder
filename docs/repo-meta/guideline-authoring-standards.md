@@ -1,10 +1,10 @@
-# Guideline Authoring Standards — Writing AI-Optimized Knowledge
+---
+status: "Normative"
+scope: "Global"
+tags: [authoring, standards, conventions]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,300 tokens)
-**Last Updated:** 2026-05-24
-**Cross-References:** `documentation-strategy.md`, `classification-system.md`
+# Guideline Authoring Standards — Writing AI-Optimized Knowledge
 
 ---
 
@@ -23,13 +23,13 @@ Define the standards for authoring guideline documents in this knowledge base. E
 Every guideline file follows this structure:
 
 ```markdown
-# Title — Short Descriptive Subtitle
+---
+status: "Normative"          # Normative | Advisory | Archived
+scope: "Global"              # Global | Stack (Technology)
+tags: [topic, subtopic]      # inline list — MASTER_INDEX renders these
+---
 
-**Status:** [Normative | Advisory | Archived]
-**Scope:** [Global | Stack (Technology)]
-**Token Tier:** [Full (~N tokens) | Compact (~N tokens)]
-**Last Updated:** YYYY-MM-DD
-**Cross-References:** `related-file.md`, `other-file.md`
+# Title — Short Descriptive Subtitle
 
 ---
 
@@ -61,6 +61,8 @@ This section is the "compact extract" — AI loads this when tokens are tight.
 - **Applied by:** — files that put these principles into practice
 ```
 
+**Two rules the tooling enforces.** (1) Front-matter is the only home for `status`/`scope`/`tags` — never repeat them as bold lines in the body. (2) The `## Cross-References` footer is the graph's only input; `npm run render:index` builds `_index/MASTER_INDEX.md` from front-matter + footer, and `npm run check-index-drift` fails the gate if the index was hand-edited. There is no `Last Updated` field — `git log` answers that.
+
 ---
 
 ## Writing Conventions
@@ -91,7 +93,7 @@ This section is the "compact extract" — AI loads this when tokens are tight.
 
 ## Token Tier Strategy
 
-Each guideline is tagged with a token tier:
+Token counts are computed (characters ÷ 4) by `npm run render:index` and shown in `MASTER_INDEX.md` — no file stores its own count. The tier describes how a document is consumed:
 
 | Tier | Use Case | What to Include |
 |---|---|---|

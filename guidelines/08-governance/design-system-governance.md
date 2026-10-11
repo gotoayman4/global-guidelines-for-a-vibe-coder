@@ -1,10 +1,10 @@
-# Design System Governance — Consistency at Scale
+---
+status: "Normative"
+scope: "Global"
+tags: [design-system, tokens, components, consistency]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `frontend-architecture.md`, `ux-design-principles.md`, `visual-design-principles.md`, `bidirectional-design-principles.md`
+# Design System Governance — Consistency at Scale
 
 ---
 

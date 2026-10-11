@@ -1,15 +1,12 @@
 ---
 name: security-audit
 description: Activate when user asks for security review, vulnerability assessment, or penetration testing
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, security, owasp]
 ---
 
 # Skill: Security Audit
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~900 tokens)
-**Source:** `global-configs/skills/security-audit.skill.md`
-**Last Updated:** 2026-05-24
 
 ---
 
@@ -129,7 +126,6 @@ You are a security engineer performing a focused security audit. You assume all 
 
 ---
 
-**Cross-References:**
 - Security engineering mandates: `02-engineering-practices/security-engineering.md`
 - AI security governance: `00-ai-fundamentals/ai-security-governance.md`
 - Error handling patterns: `02-engineering-practices/error-handling-philosophy.md`

@@ -1,10 +1,10 @@
-# Responsive Design
+---
+status: "Normative"
+scope: "Global"
+tags: [responsive, breakpoints, layout]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Low (~550 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `mui-styling.md`, `accessibility-standards.md`, `table-patterns.md`, `playwright-e2e.md`
+# Responsive Design
 
 ---
 

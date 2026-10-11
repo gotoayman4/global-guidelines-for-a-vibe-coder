@@ -1,10 +1,10 @@
-# Rule Extraction Methodology — From Guidelines to Compact Rules
+---
+status: "Normative"
+scope: "Global"
+tags: [extraction, rules, methodology]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,500 tokens)
-**Last Updated:** 2026-05-24
-**Cross-References:** `ai-governance-framework.md`, `guideline-authoring-standards.md`
+# Rule Extraction Methodology — From Guidelines to Compact Rules
 
 ---
 

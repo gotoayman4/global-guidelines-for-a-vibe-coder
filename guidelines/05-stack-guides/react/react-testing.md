@@ -1,10 +1,10 @@
-# React Testing — Component and Hook Testing Patterns
+---
+status: "Normative"
+scope: "Stack (React)"
+tags: [react, testing, rtl]
+---
 
-**Status:** Normative
-**Scope:** Stack (React)
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `react-architecture.md`, `testing-patterns.md`
+# React Testing — Component and Hook Testing Patterns
 
 ---
 

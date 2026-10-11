@@ -1,15 +1,12 @@
 ---
 name: performance-audit
 description: Activate when user wants performance optimization, profiling, or speed improvements
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, performance, optimization]
 ---
 
 # Skill: Performance Audit
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~900 tokens)
-**Source:** `global-configs/skills/performance-audit.skill.md`
-**Last Updated:** 2026-05-24
 
 ---
 
@@ -126,7 +123,6 @@ You are a performance engineer. You never suggest optimizations without first id
 
 ---
 
-**Cross-References:**
 - Performance optimization philosophy: `02-engineering-practices/performance-optimization.md`
 - React performance patterns: `05-stack-guides/react/react-performance.md`
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

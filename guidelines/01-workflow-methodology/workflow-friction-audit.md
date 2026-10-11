@@ -1,10 +1,10 @@
-# Workflow Friction Audit — Measuring Where Agent Time Actually Goes
+---
+status: "Normative"
+scope: "Global"
+tags: [workflow, friction, measurement, token-budget, gate, audit]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,800 tokens)
-**Last Updated:** 2026-09-22
-**Cross-References:** `speed-tiered-workflow.md`, `documentation-strategy.md`, `local-ci-strategy.md`, `context-management-strategy.md`
+# Workflow Friction Audit — Measuring Where Agent Time Actually Goes
 
 ---
 

@@ -1,10 +1,10 @@
-# Agent Verification Loop — Self-Verification Before Claiming Done
+---
+status: "Normative"
+scope: "Global"
+tags: [verification, agent, testing, evidence, done-criteria, cost-control]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~700 tokens)
-**Last Updated:** 2026-09-24
-**Cross-References:** `speed-tiered-workflow.md`, `testing-patterns.md`, `verification-for-non-coders.md`, `debugging-with-ai.md`
+# Agent Verification Loop — Self-Verification Before Claiming Done
 
 ---
 
@@ -103,3 +103,8 @@ Never as routine per-change verification. Never loop captures — one capture, o
 3. Match verification COST to need: automated tests first, programmatic e2e second, visual/interactive last (Cost Tiering).
 4. Report format: what was verified, how, result — plus anything not verified. Docs line only on triggers.
 5. Two failed fixes = stop and escalate, never a third blind attempt.
+
+## Cross-References
+
+- **Depends on:** `speed-tiered-workflow.md`, `testing-patterns.md`
+- **Applied by:** `debugging-with-ai.md`, `AGENTS.starter.md`

@@ -1,11 +1,12 @@
+---
+status: "Normative"
+scope: "Stack (Supabase / PostgreSQL)"
+tags: [supabase, postgresql, rls, grants, postgrest]
+---
+
 # Supabase Database Patterns
 
-**Status:** Normative
-**Scope:** Stack (Supabase / PostgreSQL)
-**Token Tier:** Medium (~1,200 tokens)
 **Tags:** `#supabase` `#postgresql` `#rls` `#migrations` `#transactions` `#schema` `#grants` `#postgrest`
-**Last Updated:** 2026-08-26
-
 ---
 
 > **⚠️ Breaking Change:** Since **2026-05-30**, new Supabase projects do NOT expose new `public` tables to the Data API by default; enforced on ALL projects **2026-10-30**. Explicit `GRANT` statements are now required for every new table (three-step pattern below). Direct Postgres connections, non-public schemas, and pre-existing tables are unaffected.

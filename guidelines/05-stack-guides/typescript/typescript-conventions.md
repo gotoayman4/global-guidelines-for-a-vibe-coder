@@ -1,11 +1,12 @@
+---
+status: "Normative"
+scope: "Stack (TypeScript)"
+tags: [typescript, types, strict]
+---
+
 # TypeScript Conventions
 
-**Status:** Normative
-**Scope:** Stack (TypeScript)
-**Token Tier:** Medium (~700 tokens)
 **Tags:** `#typescript` `#types` `#strict` `#dto` `#generics`
-**Last Updated:** 2026-08-26
-
 ---
 
 ## Directives

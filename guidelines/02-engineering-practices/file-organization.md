@@ -1,10 +1,10 @@
-# File Organization — Size Limits and Modularity
+---
+status: "Normative"
+scope: "Global"
+tags: [files, organization, modularity, limits]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Compact (~600 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `frontend-architecture.md`, `implementation-plan.skill.md`, `AGENTS.starter.md`
+# File Organization — Size Limits and Modularity
 
 ---
 

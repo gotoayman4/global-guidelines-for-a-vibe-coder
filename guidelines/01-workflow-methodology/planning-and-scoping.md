@@ -1,10 +1,10 @@
-# Planning and Scoping — Building the Right Thing
+---
+status: "Normative"
+scope: "Global"
+tags: [planning, scoping, prd]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,100 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `development-workflow.md`, `ai-collaboration-mindset.md`
+# Planning and Scoping — Building the Right Thing
 
 ---
 

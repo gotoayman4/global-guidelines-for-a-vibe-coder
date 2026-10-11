@@ -3,8 +3,11 @@
 /**
  * new-guideline.js — Scaffold a guideline file and register it in MASTER_INDEX.md.
  *
- * Kills the manual ceremony (create file → frontmatter → See-also stub → index row).
- * Existing guards (check-index, check-links, audit) still validate the result.
+ * Kills the manual ceremony (create file → front-matter → cross-reference footer → index row).
+ * The scaffold carries the two things every guideline must declare — YAML front-matter
+ * (`status` / `scope` / `tags`) and a `## Cross-References` footer — and then re-renders
+ * MASTER_INDEX.md from the corpus instead of hand-inserting a row. Existing guards
+ * (check-index, check-links, check-index-drift, audit) still validate the result.
  *
  * Usage:
  *   node new-guideline.js <category-dir> <slug> ["Title — Subtitle"]
@@ -38,19 +41,21 @@ function fail(msg) {
   process.exit(1);
 }
 
-function today() {
-  return new Date().toISOString().split('T')[0];
+/** Front-matter tags: the slug's leading words, capped, plus a generic marker. */
+function tagsFor(slug) {
+  const words = slug.split('-').slice(0, 3);
+  return [...words, 'guideline'];
 }
 
-function buildContent(title, category) {
+function buildContent(title, category, slug) {
   return [
-    `# ${title}`,
+    '---',
+    'status: "Normative"',
+    'scope: "Global"',
+    `tags: [${tagsFor(slug).join(', ')}]`,
+    '---',
     '',
-    '**Status:** Normative',
-    '**Scope:** Global',
-    '**Token Tier:** Full (~800 tokens)',
-    `**Last Updated:** ${today()}`,
-    '**Cross-References:** `development-workflow.md`',
+    `# ${title}`,
     '',
     '---',
     '',
@@ -75,49 +80,6 @@ function buildContent(title, category) {
   ].join('\n');
 }
 
-function findSectionAnchor(indexContent, category) {
-  // Sections are "### NN — Display Name"; rows link as ../NN-dir/….
-  // Prefer the section whose table already contains rows for this category.
-  const headingRe = /^###\s+.*$/gm;
-  const headings = [...indexContent.matchAll(headingRe)];
-  for (let i = 0; i < headings.length; i++) {
-    const start = headings[i].index;
-    const end = i + 1 < headings.length ? headings[i + 1].index : indexContent.length;
-    const section = indexContent.slice(start, end);
-    if (section.includes(`](../${category}/`)) {
-      return anchorAtLastRow(section, start);
-    }
-  }
-  // Fallback: match heading by category numeric prefix, e.g. 01-workflow-methodology → ### 01 —
-  const num = category.split('/')[0].slice(0, 2);
-  const prefixRe = new RegExp(`^###\\s+${num}\\b`, 'm');
-  const match = prefixRe.exec(indexContent);
-  if (!match) return null;
-  const start = match.index;
-  const rest = indexContent.slice(start + match[0].length);
-  const nextHeading = /^#{2,3}\s+/m.exec(rest);
-  const end = nextHeading ? start + match[0].length + nextHeading.index : indexContent.length;
-  return anchorAtLastRow(indexContent.slice(start, end), start);
-}
-
-function anchorAtLastRow(section, offset) {
-  const rows = [...section.matchAll(/^﻿?\|.*\|$/gm)];
-  if (rows.length === 0) return null;
-  const lastRow = rows[rows.length - 1];
-  return offset + lastRow.index + lastRow[0].length;
-}
-
-function buildIndexRow(slug, category) {
-  const title = slug
-    .split('-')
-    .map((w) => (w === 'md' ? w : w.charAt(0).toUpperCase() + w.slice(1)))
-    .join(' ');
-  // Display title: keep kebab but capitalize first letter of each word for label
-  const label = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  void title;
-  return `\n| [${slug}.md](../${category}/${slug}.md) | Normative | Global | ~800 | \`#${slug.split('-')[0]}\` \`#guideline\` |`;
-}
-
 function main() {
   const args = process.argv.slice(2).filter((a) => a !== '--dry-run');
   if (args.length < 2) usage();
@@ -136,41 +98,32 @@ function main() {
   if (fs.existsSync(filePath)) fail(`file already exists: ${path.relative(REPO_ROOT, filePath)}`);
 
   const title = titleArg || `${slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} — TODO purpose`;
-  const content = buildContent(title, category);
-
-  const indexContent = fs.readFileSync(INDEX_PATH, 'utf8');
-  if (indexContent.includes(`](../${category}/${slug}.md)`)) {
-    fail(`MASTER_INDEX.md already lists ${category}/${slug}.md`);
-  }
-  const anchor = findSectionAnchor(indexContent, category);
-  if (anchor === null) {
-    fail(`no indexed section found in MASTER_INDEX.md for "${category}" — add the category heading first`);
-  }
-
-  const row = buildIndexRow(slug, category);
-  const newIndex = indexContent.slice(0, anchor) + row + indexContent.slice(anchor);
+  const content = buildContent(title, category, slug);
 
   if (dryRun) {
     console.log('── dry run — would write file ──');
     console.log(path.relative(REPO_ROOT, filePath));
     console.log(content);
-    console.log('── dry run — would insert into MASTER_INDEX.md ──');
-    console.log(row.trim());
+    console.log('── dry run — would re-render _index/MASTER_INDEX.md ──');
     process.exit(0);
   }
 
   fs.mkdirSync(dirPath, { recursive: true });
   fs.writeFileSync(filePath, content, 'utf8');
-  fs.writeFileSync(INDEX_PATH, newIndex, 'utf8');
-
   console.log(`✅ created ${path.relative(REPO_ROOT, filePath)}`);
-  console.log(`✅ registered row in _index/MASTER_INDEX.md`);
+
+  // Register by regenerating the index from the corpus — never by hand-inserting a row.
+  const { collect, renderIndex } = require('./render-index.js');
+  const rendered = renderIndex(fs.readFileSync(INDEX_PATH, 'utf8'), collect());
+  fs.writeFileSync(INDEX_PATH, rendered, 'utf8');
+  console.log('✅ registered in _index/MASTER_INDEX.md (rendered)');
+
   console.log('Next steps:');
-  console.log('  1. Replace [TODO] placeholders with real directives');
+  console.log('  1. Replace the [bracketed] placeholders with real directives and add domain tags');
   console.log('  2. Add a matching fragment rule if the rule belongs in the constitution');
   console.log('  3. npm run render:starters (if fragment changed) && npm run validate');
 }
 
 if (require.main === module) main();
 
-module.exports = { buildContent, buildIndexRow, findSectionAnchor };
+module.exports = { buildContent, tagsFor };

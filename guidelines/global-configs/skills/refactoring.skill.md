@@ -1,15 +1,12 @@
 ---
 name: refactoring
 description: Activate when user wants to refactor, restructure, clean up, or improve existing code
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, refactoring, maintenance]
 ---
 
 # Skill: Refactor Code
-
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~750 tokens)
-**Source:** `global-configs/skills/refactoring.skill.md`
-**Last Updated:** 2026-05-24
 
 ---
 
@@ -105,7 +102,6 @@ You are a senior engineer specializing in safe, incremental refactoring. You nev
 
 ---
 
-**Cross-References:**
 - Refactoring strategy: `01-workflow-methodology/refactoring-strategy.md`
 - Behavioral contracts: `02-engineering-practices/testing-philosophy.md`
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

@@ -1,10 +1,10 @@
-# State Management — Managing Application State with AI
+---
+status: "Normative"
+scope: "Global"
+tags: [state, caching, react]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~800 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `frontend-architecture.md`
+# State Management — Managing Application State with AI
 
 ---
 

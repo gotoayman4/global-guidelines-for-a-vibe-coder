@@ -1,10 +1,10 @@
-# Multi-Tool Workflows — Coordinating Multiple AI Tools in One Repository
+---
+status: "Normative"
+scope: "Global"
+tags: [multi-tool, cursor, copilot, claude]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `ai-agent-orchestration.md`, `ai-collaboration-mindset.md`, `context-management-strategy.md`
+# Multi-Tool Workflows — Coordinating Multiple AI Tools in One Repository
 
 ---
 

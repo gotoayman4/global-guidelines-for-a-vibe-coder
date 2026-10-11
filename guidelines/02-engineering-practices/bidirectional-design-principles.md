@@ -1,10 +1,10 @@
-# Bidirectional Design Principles — Arabic-First, RTL-Native UX
+---
+status: "Normative"
+scope: "Global — All Projects (Bilingual by Default)"
+tags: [rtl, bidirectional, arabic, design]
+---
 
-**Status:** Normative
-**Scope:** Global — All Projects (Bilingual by Default)
-**Token Tier:** Full (~1,200 tokens)
-**Last Updated:** 2026-09-24
-**Cross-References:** `rtl-tech-stack.md`, `accessibility-standards.md`, `ux-design-principles.md`, `frontend-architecture.md`, `visual-design-principles.md`, `icon-usage.md`
+# Bidirectional Design Principles — Arabic-First, RTL-Native UX
 
 ---
 

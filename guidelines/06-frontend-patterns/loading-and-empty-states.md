@@ -1,10 +1,10 @@
-# Loading & Empty States
+---
+status: "Advisory"
+scope: "Global"
+tags: [loading, empty, ux]
+---
 
-**Status:** Advisory
-**Scope:** Global
-**Token Tier:** Low (~450 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `table-patterns.md`, `form-patterns.md`, `error-handling-philosophy.md`
+# Loading & Empty States
 
 ---
 

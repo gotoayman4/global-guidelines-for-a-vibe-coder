@@ -1,10 +1,10 @@
-# Database Architecture — Data Modeling and Access Patterns
+---
+status: "Normative"
+scope: "Global"
+tags: [database, sql, schema]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `backend-architecture.md`, `api-design-standards.md`
+# Database Architecture — Data Modeling and Access Patterns
 
 ---
 

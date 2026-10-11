@@ -1,10 +1,10 @@
-# API Design Standards — Contracts Between Frontend and Backend
+---
+status: "Normative"
+scope: "Global"
+tags: [api, rest, contracts]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,000 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `backend-architecture.md`, `error-handling-philosophy.md`
+# API Design Standards — Contracts Between Frontend and Backend
 
 ---
 

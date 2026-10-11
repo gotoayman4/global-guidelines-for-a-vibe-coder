@@ -1,15 +1,13 @@
 ---
 name: architect
 description: Activate when user needs architecture design, system design review, or architectural decision support
+status: "Advisory"
+scope: "Global (Task-Type Skill)"
+tags: [skill, architecture, design, stress-test]
 ---
 
 # Skill: Architect
 
-**Status:** Advisory
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~850 tokens)
-**Source:** `global-configs/skills/architect.skill.md`
-**Last Updated:** 2026-06-05
 **Companion Skills:** `implementation-plan.skill.md` (consumes architect output for task-level execution breakdown)
 
 ---

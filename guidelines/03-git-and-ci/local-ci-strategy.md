@@ -1,10 +1,10 @@
-# Local CI Strategy — Free, Cloud-Independent Quality Gates
+---
+status: "Normative"
+scope: "Global"
+tags: [ci-cd, local-ci, pre-push, cost, husky, gate-receipt, path-aware]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~1,800 tokens)
-**Last Updated:** 2026-09-24
-**Cross-References:** `ci-cd-philosophy.md`, `git-workflow-strategy.md`, `environment-management.md`, `documentation-strategy.md`, `workflow-friction-audit.md`
+# Local CI Strategy — Free, Cloud-Independent Quality Gates
 
 ---
 

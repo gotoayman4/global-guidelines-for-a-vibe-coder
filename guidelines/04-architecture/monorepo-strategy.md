@@ -1,10 +1,10 @@
-# Monorepo Strategy — Managing Multi-Package Projects
+---
+status: "Advisory"
+scope: "Global"
+tags: [monorepo, workspace, structure]
+---
 
-**Status:** Advisory
-**Scope:** Global
-**Token Tier:** Full (~500 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `frontend-architecture.md`, `backend-architecture.md`
+# Monorepo Strategy — Managing Multi-Package Projects
 
 ---
 

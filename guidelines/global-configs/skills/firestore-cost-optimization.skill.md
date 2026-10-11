@@ -1,19 +1,16 @@
 ---
 name: firestore-cost-optimization
 description: Activate when optimizing Firebase/Firestore costs, minimizing reads/writes/deletes, staying within free-tier quotas, or reducing hosting download volume
+status: "Advisory — **with an enforced core.** The tactics below are judgment; the three bans named in"
+scope: "Global (Task-Type Skill)"
+tags: [skill, firestore, firebase, cost, quota]
 ---
 
 # Skill: Firestore Cost Optimization
 
-**Status:** Advisory — **with an enforced core.** The tactics below are judgment; the three bans named in
 "Enforced by" are gate-checked in projects that adopted them. Name which kind a line is: an agent that
 cannot tell a wish from a wall will treat both as optional, and a skill whose trigger the session never
 fires constrains nothing at all (see "Enforced by", D201-class lesson).
-**Scope:** Global (Task-Type Skill)
-**Token Tier:** Compact (~1.7K tokens including the guard snippet)
-**Source:** `global-configs/skills/firestore-cost-optimization.skill.md`
-**Last Updated:** 2026-09-25
-
 ---
 
 **Activation announcement:** When this skill activates, output in chat: `Skill: firestore-cost-optimization activated -- Source: _skills/firestore-cost-optimization.skill.md`
@@ -196,7 +193,6 @@ then delete them. A guard that has never been seen red is a rumor.
 
 ---
 
-**Cross-References:**
 - Cost philosophy: `02-engineering-practices/cost-optimization-strategy.md`
 - Why a declared control needs a failing check: `02-engineering-practices/security-engineering.md` (rule 17),
   and where the checks run: `03-git-and-ci/local-ci-strategy.md`

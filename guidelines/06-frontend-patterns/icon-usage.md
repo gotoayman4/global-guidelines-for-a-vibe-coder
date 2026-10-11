@@ -1,10 +1,10 @@
-# Icon Usage — Selection, Sizing, and Consistency
+---
+status: "Normative"
+scope: "Global"
+tags: [icons, svg, accessibility, rtl, consistency]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~900 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `visual-design-principles.md`, `bidirectional-design-principles.md`, `accessibility-standards.md`, `design-system-governance.md`, `rtl-tech-stack.md`
+# Icon Usage — Selection, Sizing, and Consistency
 
 ---
 

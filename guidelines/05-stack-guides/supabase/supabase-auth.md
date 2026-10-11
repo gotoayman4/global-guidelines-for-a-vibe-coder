@@ -1,11 +1,12 @@
+---
+status: "Normative"
+scope: "Stack (Supabase Auth)"
+tags: [supabase, auth, jwt, grants]
+---
+
 # Supabase Authentication
 
-**Status:** Normative
-**Scope:** Stack (Supabase Auth)
-**Token Tier:** Low (~700 tokens)
 **Tags:** `#supabase` `#auth` `#jwt` `#rls` `#guards` `#grants`
-**Last Updated:** 2026-08-26
-
 ---
 
 > **⚠️ Breaking Change:** since 2026-05-30, new tables need explicit per-role `GRANT` statements before Data API access. Full pattern in [Supabase Database Patterns](./supabase-database.md).

@@ -1,10 +1,10 @@
-# Prompt Engineering Patterns — Structured AI Communication
+---
+status: "Normative"
+scope: "Global"
+tags: [prompting, templates, context]
+---
 
-**Status:** Normative
-**Scope:** Global
-**Token Tier:** Full (~700 tokens)
-**Last Updated:** 2026-08-26
-**Cross-References:** `ai-collaboration-mindset.md`, `context-management-strategy.md`
+# Prompt Engineering Patterns — Structured AI Communication
 
 ---
 

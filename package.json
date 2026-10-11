@@ -8,7 +8,9 @@
     "check-links": "node guidelines/global-configs/scripts/check-links.js",
     "check-index": "node guidelines/global-configs/scripts/check-index-coverage.js",
     "render:starters": "node guidelines/global-configs/scripts/render-agents-starter.js",
+    "render:index": "node guidelines/global-configs/scripts/render-index.js",
     "check-drift": "node guidelines/global-configs/scripts/render-agents-starter.js --check",
+    "check-index-drift": "node guidelines/global-configs/scripts/render-index.js --check",
     "status:projects": "node guidelines/global-configs/scripts/check-project-freshness.js",
     "sync:all": "node guidelines/global-configs/scripts/sync-all.js",
     "docs:check": "node guidelines/global-configs/scripts/check-docs-freshness.js",
@@ -18,7 +20,7 @@
     "bump:freshness": "node guidelines/global-configs/scripts/bump-freshness.js",
     "validate:fast": "npm run check-links && npm run check-index",
     "test:scripts": "node --test guidelines/global-configs/scripts/tests/*.test.js",
-    "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run docs:census && npm run test:scripts"
+    "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run check-index-drift && npm run docs:census && npm run test:scripts"
   },
   "engines": {
     "node": ">=18"
