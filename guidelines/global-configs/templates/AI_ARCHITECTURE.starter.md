@@ -1,6 +1,6 @@
 # AI_ARCHITECTURE.md — Detailed Technical Reference (On Demand)
 
-**Purpose:** Deep reference for all subsystems. Agents load sections of this file per task — it is NOT read whole every session (that is `docs/AI_CONTEXT.md`).
+**Purpose:** Deep reference for all subsystems. Agents load sections of this file per task — it is NOT read whole every session (that is `README.md` + `AGENTS.md`).
 
 **Source:** `global-configs/templates/AI_ARCHITECTURE.starter.md`
 **How to use:** Copy to `docs/AI_ARCHITECTURE.md` in your project root. Replace every `[FILL]`. One row per subsystem/endpoint — tables over prose.
@@ -42,6 +42,15 @@
 - **Auth/RBAC:** [FILL: e.g., "JWT via X; roles checked in Y, never in UI alone"]
 - **i18n/RTL:** [FILL: e.g., "all strings via keys; logical CSS only; portals get explicit dir"]
 - **Cache:** [FILL: e.g., "raw tuple keys; mutate() after every mutation; batch cap 4"]
+
+## How to Change Safely
+
+Per domain: what to read first, then the pattern to copy. This is the one home for this table — other docs link here instead of restating it.
+
+| Domain | Read first | Then |
+|---|---|---|
+| [FILL: e.g., orders] | [FILL: this file §Subsystems + an existing service] | [FILL: copy `src/services/orders/`] |
+| [FILL] | [FILL] | [FILL] |
 
 ## Decisions (ADRs)
 

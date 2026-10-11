@@ -54,9 +54,10 @@ npm run audit           # Validate extracted rules against source guideline file
 npm run check-links     # Check for broken internal links
 npm run check-index     # Verify all files have MASTER_INDEX entries
 npm run check-drift     # Fail if AGENTS.starter.md was hand-edited or exceeds its token budget
+npm run docs:census     # Fail if a canonical fact appears in >1 mandated project doc (one home per fact)
 npm run render:starters # Regenerate AGENTS.starter.md from global-configs/fragments/
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
-npm run validate        # Run audit + check-links + check-index + check-drift
+npm run validate        # Run audit + check-links + check-index + check-drift + docs:census
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.
@@ -100,6 +101,12 @@ Main branch MUST always be validatable (`npm run validate` passes). Use branch p
 ### Front Matter
 Every guideline file in `guidelines/` SHOULD have: title, purpose, and cross-references.
 
+### One Home Per Fact
+- The mandated project doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand). A new document in this set MUST retire one.
+- `docs/AI_CONTEXT.md` and `ARCHITECTURE_INDEX.md` were deleted as duplicate copies — do NOT recreate them. Onboarding is `README.md`; navigation is links + search.
+- A canonical list (trigger table, gate steps, forbidden patterns, version table) lives in exactly one file; every other site names that file and links.
+- `npm run docs:census` fails the gate if a canonical fact appears in more than one mandated project doc.
+
 ### Cross-References
 Guidelines should reference related files using relative paths from `guidelines/` as root. Example: `→ Source: 02-engineering-practices/testing-patterns.md`
 
@@ -107,7 +114,7 @@ Guidelines should reference related files using relative paths from `guidelines/
 Guidelines are authoritative but not aggressive. Use MUST/SHOULD/MAY per RFC 2119. Keep sections scannable with clear headings and short paragraphs.
 
 ### No Breaking Changes Without Migration
-Renaming or restructuring guideline files MUST update all cross-references and the MASTER_INDEX. Prefer additive changes; deprecate rather than remove.
+Renaming or restructuring guideline files MUST update all cross-references and the MASTER_INDEX. **Retire or replace — never leave a superseded copy in place:** when a rule is replaced, remove the old text in the same commit. "Deprecate in place" is a second copy that still loads; the one-way ratchet is what grew this repo's doc set. Immutable records (ADRs, dated reports, changelogs) are the exception — those are never deleted.
 
 ---
 

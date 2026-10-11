@@ -26,12 +26,10 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+// Only the docs that carry a freshness header (documentation-strategy.md §Freshness Header).
+// AGENTS.md and README.md deliberately have none — they change on a trigger and git dates them.
 const STEERING_DEFAULT = [
-  'AGENTS.md',
   'WORLD.md',
-  'DEVTOOLS.md',
-  'ARCHITECTURE_INDEX.md',
-  'docs/AI_CONTEXT.md',
   'docs/AI_ARCHITECTURE.md',
 ];
 

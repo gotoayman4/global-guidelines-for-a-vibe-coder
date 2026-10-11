@@ -187,8 +187,7 @@ flowchart TD
 | [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~1,300 | `#template` `#product-intent` `#guardrail` |
 | [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~1,200 | `#template` `#product-intent` `#example` |
 | [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~600 | `#template` `#devtools` `#gitignore` |
-| [ARCHITECTURE_INDEX.starter.md](../global-configs/templates/ARCHITECTURE_INDEX.starter.md) | Starter | Global | ~400 | `#template` `#architecture` `#navigation` `#index` |
-| [AI_CONTEXT.starter.md](../global-configs/templates/AI_CONTEXT.starter.md) | Starter | Global | ~800 | `#template` `#ai-context` `#onboarding` |
+| [README.starter.md](../global-configs/templates/README.starter.md) | Starter | Global | ~500 | `#template` `#readme` `#overview` `#single-source` |
 | [AI_ARCHITECTURE.starter.md](../global-configs/templates/AI_ARCHITECTURE.starter.md) | Starter | Global | ~800 | `#template` `#architecture` `#reference` |
 | [code-review.skill.md](../global-configs/skills/code-review.skill.md) | Skill | Global | ~800 | `#skill` `#review` `#quality` |
 | [test-generation.skill.md](../global-configs/skills/test-generation.skill.md) | Skill | Global | ~750 | `#skill` `#testing` `#generation` |
@@ -219,6 +218,7 @@ flowchart TD
 | [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 | [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |
+| [check-doc-census.js](../global-configs/scripts/check-doc-census.js) | Script | Global | ~250 | `#script` `#documentation` `#single-source` `#census` `#gate` |
 | [new-guideline.js](../global-configs/scripts/new-guideline.js) | Script | Global | ~250 | `#script` `#scaffold` `#guideline` `#master-index` |
 | [new-project.js](../global-configs/scripts/new-project.js) | Script | Global | ~350 | `#script` `#bootstrap` `#starter` `#speed-mode` |
 | [bump-freshness.js](../global-configs/scripts/bump-freshness.js) | Script | Global | ~200 | `#script` `#freshness` `#last-updated` `#maintenance` |

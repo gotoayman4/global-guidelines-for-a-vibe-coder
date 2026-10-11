@@ -3,7 +3,7 @@
 /**
  * new-project.js — One-command project bootstrap from the single-source starters.
  *
- * Expands AGENTS.starter.md and WORLD.starter.md into a target project root,
+ * Expands AGENTS.starter.md, WORLD.starter.md, and README.starter.md into a target project root,
  * injects the speed-mode declaration, merges gate:fast / gate:receipt scripts into
  * package.json when present, and writes a pre-push hook skeleton. Husky install
  * is printed as a next step (no network installs from this script).
@@ -143,10 +143,14 @@ function main() {
 
   const agentsSrc = path.join(STARTERS, 'AGENTS.starter.md');
   const worldSrc = path.join(STARTERS, 'WORLD.starter.md');
-  if (!fs.existsSync(agentsSrc) || !fs.existsSync(worldSrc)) fail('starter templates missing');
+  const readmeSrc = path.join(STARTERS, 'README.starter.md');
+  if (!fs.existsSync(agentsSrc) || !fs.existsSync(worldSrc) || !fs.existsSync(readmeSrc)) {
+    fail('starter templates missing (AGENTS.starter.md, WORLD.starter.md, README.starter.md)');
+  }
 
   const agentsDest = path.join(projectPath, 'AGENTS.md');
   const worldDest = path.join(projectPath, 'WORLD.md');
+  const readmeDest = path.join(projectPath, 'README.md');
   const pkgDest = path.join(projectPath, 'package.json');
   const hooksDir = path.join(projectPath, '.husky');
   const hookDest = path.join(hooksDir, 'pre-push');
@@ -165,6 +169,12 @@ function main() {
     actions.push({ file: 'WORLD.md', status: `would write (mode=${args.mode})`, write: () => fs.writeFileSync(worldDest, worldContent, 'utf8') });
   }
 
+  if (fs.existsSync(readmeDest)) {
+    actions.push({ file: 'README.md', status: 'exists — skipped (create-if-missing)' });
+  } else {
+    actions.push({ file: 'README.md', status: 'would write', write: () => fs.copyFileSync(readmeSrc, readmeDest) });
+  }
+
   if (fs.existsSync(pkgDest)) {
     try {
       const pkg = JSON.parse(fs.readFileSync(pkgDest, 'utf8'));
@@ -173,7 +183,7 @@ function main() {
       if (changed) {
         actions.push({
           file: 'package.json',
-          status: 'would merge gate:fast + gate:receipt scripts',
+          status: 'would write (merge gate:fast + gate:receipt scripts)',
           write: () => fs.writeFileSync(pkgDest, `${JSON.stringify(merged, null, 2)}\n`, 'utf8'),
         });
       } else {
@@ -211,11 +221,14 @@ function main() {
   }
 
   console.log('\nNext steps:');
-  console.log('  1. Search [FILL] in AGENTS.md — fill stack table + project mandates');
+  console.log('  1. Search [FILL] in AGENTS.md — fill the stack table + project mandates (the only home for rules)');
   console.log('  2. Complete WORLD.md sections (mode already set to ' + args.mode + ')');
-  console.log('  3. npx husky init   # install hooks; keep the generated pre-push order comment');
-  console.log('  4. pwsh -File <central-repo>\\guidelines\\global-configs\\scripts\\sync-guidelines.ps1 -ProjectPath .  # mirror _guidelines/');
-  console.log('  5. git config core.hooksPath .husky   # if not using husky default');
+  console.log('  3. Complete README.md — what this is, structure tree, quick start');
+  console.log('  4. npx husky init   # install hooks; keep the generated pre-push order comment');
+  console.log('  5. pwsh -File <central-repo>\\guidelines\\global-configs\\scripts\\sync-guidelines.ps1 -ProjectPath .  # mirror _guidelines/');
+  console.log('  6. git config core.hooksPath .husky   # if not using husky default');
+  console.log('\n  Docs set: AGENTS.md + WORLD.md + README.md (+ docs/AI_ARCHITECTURE.md on demand).');
+  console.log('  There is no AI_CONTEXT.md or ARCHITECTURE_INDEX.md — one home per fact (07-documentation/documentation-strategy.md).');
 }
 
 if (require.main === module) main();

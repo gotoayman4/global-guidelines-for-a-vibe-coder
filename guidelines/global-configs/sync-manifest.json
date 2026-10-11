@@ -53,18 +53,11 @@
       "description": "Product scope and AI guardrails"
     },
     {
-      "template": "global-configs/templates/ARCHITECTURE_INDEX.starter.md",
-      "target": "ARCHITECTURE_INDEX.md",
+      "template": "global-configs/templates/README.starter.md",
+      "target": "README.md",
       "mode": "create-if-missing",
-      "required": false,
-      "description": "Architecture document navigation index"
-    },
-    {
-      "template": "global-configs/templates/AI_CONTEXT.starter.md",
-      "target": "docs/AI_CONTEXT.md",
-      "mode": "create-if-missing",
-      "required": false,
-      "description": "Compressed AI onboarding overview — always loaded at session start"
+      "required": true,
+      "description": "Project overview — the single home for what-this-is, structure, and quick start. Replaces the deleted AI_CONTEXT.md / ARCHITECTURE_INDEX.md."
     },
     {
       "template": "global-configs/templates/AI_ARCHITECTURE.starter.md",

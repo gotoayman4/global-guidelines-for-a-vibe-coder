@@ -87,7 +87,7 @@ if ($manifest -and $manifest.starters) {
 } else {
     $STARTERS = @(
         @{ template = "global-configs\templates\AGENTS.starter.md";              target = "AGENTS.md";                        mode = "create-if-missing"; header = "# AGENTS.md";                  body = "**Purpose:**" }
-        @{ template = "global-configs\templates\ARCHITECTURE_INDEX.starter.md";  target = "ARCHITECTURE_INDEX.md";            mode = "create-if-missing"; header = "# ARCHITECTURE_INDEX.md";      body = "**Purpose:**" }
+        @{ template = "global-configs\templates\README.starter.md";              target = "README.md";                        mode = "create-if-missing"; header = "# README.md";                  body = "**Purpose:**" }
         @{ template = "global-configs\templates\DEVTOOLS.starter.md";             target = "DEVTOOLS.md";                      mode = "create-if-missing"; header = "# DEVTOOLS.md";                body = "**Purpose:**" }
         @{ template = "global-configs\templates\WORLD.starter.md";               target = "WORLD.md";                         mode = "create-if-missing"; header = "# WORLD.md";                  body = "**Purpose:**" }
         @{ template = "global-configs\templates\copilot-instructions.starter.md"; target = ".github\copilot-instructions.md"; mode = "create-if-missing"; header = "# GitHub Copilot Instructions"; body = "**Purpose:**" }

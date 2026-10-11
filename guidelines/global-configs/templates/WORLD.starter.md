@@ -7,6 +7,12 @@
 
 ---
 
+## Freshness
+
+**Last Updated:** [FILL: YYYY-MM-DD] | **Commit:** [FILL: short SHA] | **Change:** [FILL: one line]
+
+> Agent MUST update this header in the SAME iteration as a scope/guardrail change. Then report `Docs: updated WORLD.md`. (Only `WORLD.md` and `docs/AI_ARCHITECTURE.md` carry this header — `AGENTS.md` and `README.md` change on a trigger and git dates them.)
+
 ## Speed Mode
 
 - **mode:** `vibe` — `vibe | standard | guarded` per `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`

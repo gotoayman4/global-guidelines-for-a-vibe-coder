@@ -17,7 +17,7 @@ guidelines/
   07-documentation/     — writing standards, changelog
   08-governance/        — AI governance, design system governance, classification
   global-configs/
-    templates/   — starter files for AGENTS.md, WORLD.md, tool configs
+    templates/   — starter files for AGENTS.md, WORLD.md, README.md, tool configs
     fragments/   — single-source rule sections; rendered into templates/AGENTS.starter.md
     scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js, render-agents-starter.js, check-project-freshness.js, new-guideline.js, new-project.js, bump-freshness.js
     skills/      — .skill.md files for code-review, refactoring, security-audit, etc.
@@ -51,12 +51,13 @@ powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guideline
 
 | Command | What it does |
 |---|---|
-| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift. Runs on every push (local pre-push hook). |
+| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + docs:census + test:scripts. Runs on every push (local pre-push hook). |
 | `npm run audit` | Verifies extracted rules in starter templates still match their source guideline files. |
 | `npm run check-links` | Checks internal links across all `.md` files. |
 | `npm run check-index` | Verifies every file is registered in `guidelines/_index/MASTER_INDEX.md`. |
 | `npm run render:starters` | Regenerates `templates/AGENTS.starter.md` from `global-configs/fragments/`. |
 | `npm run check-drift` | Fails if `AGENTS.starter.md` was hand-edited or exceeds its token budget. |
+| `npm run docs:census` | Fails if a canonical fact (stack table, commands block, forbidden-pattern list, "How to Change Safely") appears in more than one mandated project doc — one home per fact. |
 | `npm run status:projects` | Reports which rules each synced project's `AGENTS.md` is missing (informational, never fails). |
 | `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; updates `lastSynced`; exits 1 if any fail). |
 | `npm run validate:fast` | Quick integrity pass (audit + check-index + check-drift; skips full link crawl). |

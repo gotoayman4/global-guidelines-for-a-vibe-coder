@@ -314,7 +314,7 @@ function audit() {
 
   const KNOWN_NON_GUIDELINE_FILES = new Set([
     'skill.md', 'README.md', 'CHANGELOG.md', 'AGENTS.md', 'CLAUDE.md', 'WORLD.md',
-    'DEVTOOLS.md', 'ARCHITECTURE_INDEX.md', 'GEMINI.md', 'GEMINI.md.template',
+    'DEVTOOLS.md', 'GEMINI.md', 'GEMINI.md.template',
     'instructions.md', 'copilot-instructions.md', 'copilot-instructions.starter.md',
     'global-guidelines.md', 'cursor-global-guidelines.md', 'windsurf-global-guidelines.md',
     'trae-global-guidelines.md', 'qoder-global-guidelines.md', 'starter.md',

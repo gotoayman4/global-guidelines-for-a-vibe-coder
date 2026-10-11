@@ -70,6 +70,7 @@ test('CLI --dry-run writes nothing', () => {
   assert.match(result.stdout, /dry run/);
   assert.equal(fs.existsSync(path.join(project, 'AGENTS.md')), false);
   assert.equal(fs.existsSync(path.join(project, 'WORLD.md')), false);
+  assert.equal(fs.existsSync(path.join(project, 'README.md')), false);
 });
 
 test('CLI scaffolds create-if-missing files and never overwrites', () => {
@@ -79,6 +80,7 @@ test('CLI scaffolds create-if-missing files and never overwrites', () => {
   const first = run([project, '--mode', 'vibe'], REPO_ROOT);
   assert.equal(first.status, 0);
   assert.ok(fs.existsSync(path.join(project, 'AGENTS.md')));
+  assert.ok(fs.existsSync(path.join(project, 'README.md')), 'README.md is part of the mandated doc set');
   const world = fs.readFileSync(path.join(project, 'WORLD.md'), 'utf8');
   assert.match(world, /## Speed Mode/);
   assert.match(world, /`vibe`/);
@@ -89,10 +91,12 @@ test('CLI scaffolds create-if-missing files and never overwrites', () => {
   // Plant a sentinel, re-run: must not overwrite
   fs.writeFileSync(path.join(project, 'AGENTS.md'), '# SENTINEL\n');
   fs.writeFileSync(path.join(project, 'WORLD.md'), '# SENTINEL WORLD\n');
+  fs.writeFileSync(path.join(project, 'README.md'), '# SENTINEL README\n');
   const second = run([project], REPO_ROOT);
   assert.equal(second.status, 0);
   assert.equal(fs.readFileSync(path.join(project, 'AGENTS.md'), 'utf8'), '# SENTINEL\n');
   assert.equal(fs.readFileSync(path.join(project, 'WORLD.md'), 'utf8'), '# SENTINEL WORLD\n');
+  assert.equal(fs.readFileSync(path.join(project, 'README.md'), 'utf8'), '# SENTINEL README\n');
   assert.match(second.stdout, /exists — skipped/);
 });
 

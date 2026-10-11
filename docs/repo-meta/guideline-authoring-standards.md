@@ -131,6 +131,8 @@ Cross-references are structured to support progressive disclosure:
 
 **Rule:** Never duplicate content that exists in another guideline. Cross-reference instead. This keeps each file focused and reduces total token consumption.
 
+**One home per fact.** A canonical list — a trigger table, a gate step order, a forbidden-pattern list, a version table — lives in exactly one file. Every other site names that file and links; it never restates the list "for convenience", because a restated list is a second document that no one remembers to edit. When a guideline is replaced, retire the old text in the same commit rather than leaving it in place as "deprecated" — the ratchet that only adds is what turns a doc set into a maintenance tax. `npm run docs:census` enforces the project-facing half of this (a canonical fact may appear in only one of the mandated project docs).
+
 ---
 
 ## Known Tensions and Intentional Divergences

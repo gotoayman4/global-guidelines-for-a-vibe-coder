@@ -27,26 +27,26 @@ const TARGET_DIR = process.argv[2] || process.cwd();
 const STEERING = [
   /(^|\/)AGENTS\.md$/,
   /(^|\/)WORLD\.md$/,
+  /(^|\/)README\.md$/,
   /(^|\/)DEVTOOLS\.md$/,
-  /(^|\/)ARCHITECTURE_INDEX\.md$/,
-  /docs\/AI_CONTEXT\.md$/,
   /docs\/AI_ARCHITECTURE\.md$/,
   /docs\/adr\//,
   /(^|\/)REQUIREMENTS\.md$/,
 ];
 
-// Trigger patterns with the steering doc each one points at.
+// Trigger patterns with the steering doc each one points at (one home per fact —
+// documentation-strategy.md §Trigger Table).
 const TRIGGERS = [
-  { re: /(^|\/)\.env\.example$/, hint: 'DEVTOOLS.md + docs/AI_CONTEXT.md commands' },
-  { re: /(^|\/)package\.json$/, hint: 'AGENTS.md Stack table + docs/AI_CONTEXT.md' },
-  { re: /Dockerfile$|docker-compose.*\.yml$/, hint: 'DEVTOOLS.md + docs/AI_CONTEXT.md commands' },
+  { re: /(^|\/)\.env\.example$/, hint: 'AGENTS.md §Build & Validation Commands (env setup)' },
+  { re: /(^|\/)package\.json$/, hint: 'AGENTS.md §Stack + §Build & Validation Commands' },
+  { re: /Dockerfile$|docker-compose.*\.yml$/, hint: 'AGENTS.md §Build & Validation Commands' },
   { re: /src\/pages\/api\/|src\/app\/api\/|\/routes?\//, hint: 'docs/AI_ARCHITECTURE.md API Registry' },
   { re: /\/controllers?\//, hint: 'docs/AI_ARCHITECTURE.md API Registry' },
   { re: /prisma\/|\/migrations?\//, hint: 'docs/AI_ARCHITECTURE.md Data & Migrations' },
   // Auth: any path segment containing "auth" (oauth, authentication, …),
   // except author-byline files (AuthorCard, authors, …).
-  { test: (f) => f.split(/[\\/]/).some((seg) => /auth/i.test(seg) && !/^author/i.test(seg)), hint: 'docs/AI_ARCHITECTURE.md Cross-Cutting + WORLD.md Security Model' },
-  { re: /src\/components\/ui\/|src\/shared\/|packages\/ui\//, hint: 'AGENTS.md mandates + docs/AI_ARCHITECTURE.md' },
+  { test: (f) => f.split(/[\\/]/).some((seg) => /auth/i.test(seg) && !/^author/i.test(seg)), hint: 'docs/AI_ARCHITECTURE.md Cross-Cutting (+ ADR if a decision)' },
+  { re: /src\/components\/ui\/|src\/shared\/|packages\/ui\//, hint: 'AGENTS.md §Project-Specific Mandates' },
 ];
 
 // Test-only files are never triggers (see Trigger table: test-only = N/A).

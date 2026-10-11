@@ -48,13 +48,12 @@ const BOOLEAN_FLAGS = new Set(['json', 'strict']);
 
 /** The chain every session is told to read before it reads anything else. */
 const DEFAULT_FILES = [
-  'ARCHITECTURE_INDEX.md',
   'AGENTS.md',
   'WORLD.md',
+  'README.md',
   'DEVTOOLS.md',
   'docs/PRD.md',
   'docs/ROADMAP.md',
-  'docs/AI_CONTEXT.md',
   'docs/AI_ARCHITECTURE.md',
   'docs/DATA_POLICY.md',
   'docs/RUNBOOKS.md',

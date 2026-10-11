@@ -20,11 +20,14 @@ Estimate available token budget before loading anything:
 
 ### Step 1: Load Project Steering Files
 
-Check the project root in this order. Stop at the first one found — it contains all mandatory rules:
+Read these from the project root. The set is small and fixed (`documentation-strategy.md` §The Mandated Doc Set) — there is no compressed "AI context" companion to find:
 
-1. `AGENTS.md` — universal project constitution
-2. `CLAUDE.md` — Claude Code-specific rules
+1. `AGENTS.md` — the constitution: all binding rules inline (stack table, commands, forbidden patterns). Read this first.
+2. `CLAUDE.md` — Claude Code-specific rules, if present; otherwise `AGENTS.md` is authoritative.
 3. `WORLD.md` — product intent guardrails (also declares the project's speed mode: `vibe | standard | guarded`)
+4. `README.md` — what the project is, its structure, and the quick start. Orientation only; it holds no rules.
+
+Subsystem / API detail lives in `docs/AI_ARCHITECTURE.md` and is loaded on demand, not at boot.
 
 If `WORLD.md` declares a mode, scope plan/test/docs ceremony to `01-workflow-methodology/speed-tiered-workflow.md`. When WORLD.md is silent, assume `standard`. Security, honesty, and ship-boundary rules apply in every mode.
 

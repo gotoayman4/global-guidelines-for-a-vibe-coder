@@ -26,7 +26,7 @@ Define how AI coding assistants should discover, prioritize, and load guideline 
 
 Load guidelines in this order:
 
-1. **Project AGENTS.md** — self-contained, all rules inline. Always loaded first.
+1. **Project `AGENTS.md`** — self-contained, all rules inline. Always loaded first, together with `WORLD.md` (intent + `mode`) and `README.md` (orientation). There is no `docs/AI_CONTEXT.md` to load — the facts have one home in those three, and `docs/AI_ARCHITECTURE.md` is pulled only when a task needs subsystem detail.
 2. **`_guidelines/_index/MASTER_INDEX.md`** — if the project has a `_guidelines/` mirror (created by `sync-guidelines.ps1`). Use relative paths starting with `_guidelines/` to load files — these are guaranteed to be accessible since they're inside the project.
 3. **Global tool configs** — `~/.config/opencode/AGENTS.md` (opencode), `~/.codeium/windsurf/memories/global_rules.md` (Windsurf), `~/.cursor/rules/*.mdc` (Cursor). These load automatically per tool and provide fallback guidelines.
 4. **Absolute path** — the central repo path from the machine's global agent config — last resort. Agents may fail to read files outside the project.
