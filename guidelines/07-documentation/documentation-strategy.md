@@ -70,7 +70,7 @@ A project consumes this doc set through a `_guidelines/` mirror. A mirror is a c
    `--strict` fails an incomplete authoritative list, and an entirely missing corpus returns a data error.
 10. **A guard follows the improvement.** When a mandated hygiene change lands (history moved to archives), the guards that read the old shape are updated in the same iteration: a guard that punishes hygiene gets deleted, and the repo loses both.
 11. **A long line is two different bugs.** A long *paragraph* is a formatting accident — insert hard newlines at word boundaries (≤400 characters) and it becomes skimmable in a diff, an editor, and a screen reader, with the byte content unchanged. A long *table row* cannot be wrapped without breaking the table, so the finding is not the length: it is that prose is living in a cell. Move the prose
-    to a paragraph or an archive; leave the table a lookup.
+    to a paragraph or an archive; leave the table a lookup. `measure-boot-budget.js` reports both as **advisories** — never fatal, in any mode — because readability does not break a build, and a gate that fails a milestone exit over a 500-character paragraph is a gate people delete. A fact that must not drift belongs in a guard (directive 9); a sentence that reads badly belongs in a note.
 
 ## History Lives in Dated Archives
 

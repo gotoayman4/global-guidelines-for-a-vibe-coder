@@ -44,6 +44,7 @@
 const fs = require('fs');
 const path = require('path');
 const { runSync } = require('./lib/run-sync.js');
+const { deriveMode } = require('./lib/project-mode.js');
 
 /** Documents a decision number may appear in. Read-only; nothing is written back to them. */
 const DECISION_SOURCES = ['AGENTS.md', 'WORLD.md', 'docs/PRD.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
@@ -184,12 +185,8 @@ function nextDecision(root, docs) {
 }
 
 /** The declared mode, read from WORLD.md. Absent or silent → `standard` (speed-tiered-workflow.md). */
-function deriveMode(root) {
-  const abs = path.join(root, 'WORLD.md');
-  if (!fs.existsSync(abs)) return 'standard';
-  const m = fs.readFileSync(abs, 'utf8').match(/^[-*]\s*\*\*mode:\*\*\s*`?([a-z]+)`?/m);
-  return m ? m[1] : 'standard';
-}
+// Owned by `lib/project-mode.js` — this file reads the same declaration that resolves the
+// context cap in `measure-boot-budget.js`, and two copies of the regex would drift.
 
 function shortSha(root) {
   const result = runSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root });

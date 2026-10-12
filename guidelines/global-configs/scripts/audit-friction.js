@@ -64,11 +64,16 @@ function bootChain(root) {
   try {
     const parsed = JSON.parse(result.stdout);
     const present = (parsed.files || []).filter((f) => Number.isFinite(f.tokens));
+    const menu = (parsed.onDemand || []).filter((f) => Number.isFinite(f.tokens));
     return {
       totalTokens: parsed.totalTokens,
       files: present.length,
       missing: parsed.missingFiles || [],
       heaviest: present.slice().sort((a, b) => b.tokens - a.tokens).slice(0, 3).map((f) => `${f.rel} ${f.tokens}`),
+      // Reported beside the chain, never added to it: the menu is a ratchet (rule 4),
+      // and a sum of the two is the figure that made the cap look unmet when it was not.
+      menuTokens: parsed.onDemandTokens || 0,
+      menuFiles: menu.length,
     };
   } catch {
     return null;
@@ -142,8 +147,11 @@ function render(report) {
   } else {
     const cap = caps.vibe;
     const verdict = cap && boot.totalTokens > cap ? `over the vibe cap of ${cap} tokens` : cap ? `within the vibe cap of ${cap}` : 'no cap found to compare against';
-    lines.push(`    ${boot.totalTokens} tokens across ${boot.files} files — ${verdict}`);
-    lines.push(`    heaviest: ${boot.heaviest.join(' · ')}`);
+      lines.push(`    ${boot.totalTokens} tokens across ${boot.files} files — ${verdict}`);
+      if (boot.menuTokens) {
+        lines.push(`    menu (read by choice, ratcheted not budgeted): ${boot.menuTokens} tokens across ${boot.menuFiles} documents`);
+      }
+      lines.push(`    heaviest: ${boot.heaviest.join(' · ')}`);
     if (boot.missing.length) lines.push(`    ⚠️  mandated but absent: ${boot.missing.join(', ')}`);
   }
   lines.push('');

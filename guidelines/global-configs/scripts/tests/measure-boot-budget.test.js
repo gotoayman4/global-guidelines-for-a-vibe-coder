@@ -58,13 +58,14 @@ test('keeps partial input visible while strict mode enforces completeness', () =
   assert.deepEqual(reportOnly.json.files.find((file) => file.rel === 'missing.md'), {
     rel: 'missing.md',
     missing: true,
+    load: 'always',
   });
   assert.match(reportOnly.json.problems.join('\n'), /missing\.md/);
 
   const human = runBudget(root, ['--files', 'present.md,missing.md']);
   assert.equal(human.status, 0);
   assert.match(human.stdout, /missing\.md\s+— \(not present\)/);
-  assert.match(human.stdout, /missing files: 1/);
+  assert.match(human.stdout, /missing chain files: 1/);
   assert.match(human.stdout, /report only/);
 
   const strict = runBudget(root, [...args, '--strict']);
@@ -226,4 +227,155 @@ test('fails a deliberately over-budget fixture in strict mode', () => {
   assert.ok(reportOnly.json.problems.length > 0);
   assert.equal(strict.status, 1);
   assert.match(strict.json.problems.join('\n'), /tokens/);
+});
+
+/** The instrument's default reading set, split by the doctrine's own load policy. */
+const CHAIN = ['AGENTS.md', 'WORLD.md', 'README.md'];
+const MENU = [
+  'DEVTOOLS.md',
+  'docs/PRD.md',
+  'docs/ROADMAP.md',
+  'docs/AI_ARCHITECTURE.md',
+  'docs/DATA_POLICY.md',
+  'docs/RUNBOOKS.md',
+  'docs/adr/README.md',
+  'docs/STATE_TRANSITION_MATRIX.md',
+  'docs/DECISIONS.md',
+];
+
+/** A corpus that satisfies the default list, with a deliberately heavy on-demand spec. */
+function defaultCorpus() {
+  const files = {};
+  for (const rel of [...CHAIN, ...MENU]) files[rel] = `# ${rel}\n\nInstruction.\n`;
+  // Heavy, but in short lines: a long paragraph would trip the unwrappable-prose finding
+  // and mask the budget behaviour this fixture exists to exercise.
+  files['docs/PRD.md'] = `# Spec\n\n${'xxxx\n'.repeat(800)}`;
+  return files;
+}
+
+test('charges the mode budget for the always-read chain, not the on-demand menu', () => {
+  const root = makeFixture(defaultCorpus());
+  const json = runBudget(root, ['--json']).json;
+
+  assert.equal(json.missingCount, 0);
+  assert.deepEqual(json.files.map((file) => file.rel), CHAIN);
+  assert.deepEqual([...json.onDemand.map((file) => file.rel)].sort(), [...MENU].sort());
+  assert.ok(json.onDemandTokens > 1000, `expected the menu to carry the spec, got ${json.onDemandTokens}`);
+  assert.ok(json.totalTokens < 100, `the chain is three short files, got ${json.totalTokens}`);
+});
+
+test('the menu is not charged to the chain budget (reversal proof)', () => {
+  const root = makeFixture(defaultCorpus());
+  const measured = runBudget(root, ['--json']).json;
+  const budget = String(measured.totalTokens);
+
+  // As declared: three short files, so the budget fits and strict mode passes.
+  const declared = runBudget(root, ['--max-tokens', budget, '--strict', '--json']);
+  assert.equal(declared.status, 0);
+
+  // The reversal: the SAME budget with every document treated as chain — the behaviour
+  // this split replaced — must fail. A test that passed both ways would prove nothing.
+  const allAsChain = runBudget(root, [
+    '--files', [...CHAIN, ...MENU].join(','),
+    '--max-tokens', budget,
+    '--strict',
+    '--json',
+  ]);
+  assert.equal(allAsChain.status, 1);
+  assert.match(allAsChain.json.problems.join('\n'), /chain ~\d+ tokens > budget/);
+});
+
+test('reports the chain and the menu as separate sections in the human output', () => {
+  const root = makeFixture(defaultCorpus());
+  const result = runBudget(root, []);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /BOOT CHAIN — read every session, charged to the mode budget/);
+  assert.match(result.stdout, /ON-DEMAND MENU — read by choice, NOT charged to the mode budget/);
+  assert.match(result.stdout, /chain total: ~\d+ tokens/);
+  assert.match(result.stdout, /menu total: ~\d+ tokens across 9 document\(s\)/);
+});
+
+test('an absent menu file is a note, an absent chain file is a failure', () => {
+  // Only the three chain documents exist: the whole menu is absent.
+  const root = makeFixture({
+    'AGENTS.md': '# Rules\n\nInstruction.\n',
+    'WORLD.md': '# Product\n\n- **mode:** `vibe`\n',
+    'README.md': '# Readme\n\nInstruction.\n',
+  });
+  const json = runBudget(root, ['--cap-from-mode', '--strict', '--json']).json;
+
+  // Nine absent menu documents do not fail the check...
+  assert.equal(json.missingMenuFiles.length, 9);
+  assert.deepEqual(json.missingFiles, []);
+  assert.deepEqual(json.problems, []);
+
+  // ...but the same absence in the chain does. Same corpus, one file moved into the floor.
+  const chainGap = runBudget(root, ['--files', 'AGENTS.md,GHOST.md', '--strict', '--json']);
+  assert.equal(chainGap.status, 1);
+  assert.match(chainGap.json.problems.join('\n'), /GHOST\.md: file not found/);
+});
+
+test('a long paragraph is an advisory, never a failure', () => {
+  const root = makeFixture({
+    'AGENTS.md': `# Rules\n\n${'word '.repeat(200)}\n`,
+    'WORLD.md': '# Product\n\n- **mode:** `vibe`\n',
+    'README.md': '# Readme\n\nInstruction.\n',
+  });
+
+  const json = runBudget(root, ['--cap-from-mode', '--strict', '--json']).json;
+  assert.deepEqual(json.problems, []);
+  assert.equal(json.advisories.length, 1);
+  assert.match(json.advisories[0], /paragraph of \d+ chars/);
+
+  // The same input under --strict still exits 0: readability never gates a milestone.
+  const strict = runBudget(root, ['--cap-from-mode', '--strict']);
+  assert.equal(strict.status, 0);
+  assert.match(strict.stdout, /readability note\(s\) — never fatal/);
+});
+
+test('--cap-from-mode resolves the cap from the declared mode', () => {
+  const root = makeFixture({
+    ...defaultCorpus(),
+    'WORLD.md': '# Product\n\n- **mode:** `guarded`\n',
+  });
+  const json = runBudget(root, ['--cap-from-mode', '--json']).json;
+
+  assert.equal(json.mode, 'guarded');
+  assert.equal(json.maxTokens, 160000);
+});
+
+test('--cap-from-mode defaults to standard, never vibe, when WORLD.md is silent', () => {
+  const root = makeFixture(defaultCorpus());
+  const json = runBudget(root, ['--cap-from-mode', '--json']).json;
+
+  assert.equal(json.mode, 'standard');
+  assert.equal(json.maxTokens, 90000);
+});
+
+test('--cap-from-mode and --max-tokens are mutually exclusive', () => {
+  const root = makeFixture(defaultCorpus());
+  const result = runBudget(root, ['--cap-from-mode', '--max-tokens', '1']);
+
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /mutually exclusive/);
+});
+
+test('the resolved cap follows the mode (reversal proof)', () => {
+  // ~50K tokens in one file: over the vibe cap, comfortably inside the guarded one.
+  const heavy = `# Rules\n\n${'xxxx\n'.repeat(40000)}`;
+  const root = makeFixture({
+    'AGENTS.md': heavy,
+    'WORLD.md': '# Product\n\n- **mode:** `vibe`\n',
+  });
+
+  const vibe = runBudget(root, ['--files', 'AGENTS.md,WORLD.md', '--cap-from-mode', '--strict', '--json']);
+  assert.equal(vibe.status, 1);
+  assert.match(vibe.json.problems.join('\n'), /tokens > budget 40000/);
+
+  // The same corpus under `guarded` is within its cap: the number moved with the mode,
+  // which is the whole point of deriving it instead of typing it into package.json.
+  fs.writeFileSync(path.join(root, 'WORLD.md'), '# Product\n\n- **mode:** `guarded`\n', 'utf8');
+  const guarded = runBudget(root, ['--files', 'AGENTS.md,WORLD.md', '--cap-from-mode', '--strict', '--json']);
+  assert.equal(guarded.status, 0);
 });

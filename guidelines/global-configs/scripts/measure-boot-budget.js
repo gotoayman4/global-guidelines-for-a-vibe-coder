@@ -6,10 +6,22 @@
  * INTENT: Report the reading cost of a project's mandated steering chain: per-file
  * characters, estimated tokens (chars/4), line count, longest paragraph, longest
  * table row, and how much of each file is dated history rather than instruction.
- * Optionally fail on a budget (--max-tokens), a per-file history share
- * (--history-warn + --strict), or missing files in an authoritative chain
- * (--files + --strict). Report-only mode is the default because generic chains
- * often include optional downstream steering files.
+ * Optionally fail on a budget (--max-tokens, or --cap-from-mode to derive it from the
+ * mode `WORLD.md` declares), a per-file history share (--history-warn + --strict), or
+ * missing files in an authoritative chain (--files + --strict).
+ *
+ * The chain and the menu are reported separately, and only the chain is budgeted. The
+ * chain is what the doctrine marks `every session`; the menu is everything else the
+ * project carries, which a session opens by choice. Adding the two together and calling
+ * the sum "what a session pays" overstates the cost by whatever the project's spec
+ * weighs — measured once at 65K for a project whose actual session read was 14K — and a
+ * budget nothing can meet is a budget nobody wires. Report-only mode remains the default
+ * because the menu is genuinely optional.
+ *
+ * Long paragraphs and long table rows are reported as ADVISORIES: readability, not
+ * correctness. They appear in every mode, including `--strict`, but they never set the
+ * exit code. The thresholds are `*_WARN` constants and a 500-character paragraph does not
+ * break a build; a gate that fails a milestone exit over one is a gate people delete.
  *
  * CONSTRAINT: This is a measurement instrument, not a gate. Without --strict it
  * reports threshold and missing-file findings without failing; malformed options
@@ -42,30 +54,46 @@
 
 const fs = require('fs');
 const path = require('path');
+const { deriveMode } = require('./lib/project-mode.js');
 
 const VALUE_FLAGS = new Set(['files', 'max-tokens', 'history-warn']);
-const BOOLEAN_FLAGS = new Set(['json', 'strict']);
+const BOOLEAN_FLAGS = new Set(['json', 'strict', 'cap-from-mode']);
 
 /**
- * The chain every session is told to read before it reads anything else.
+ * The default reading set: the documents the doctrine tells a session to read, plus the
+ * on-demand documents a project of this shape carries.
  *
- * OWNER: the chain's definition — and the per-mode cap it is measured against — live in
- * `01-workflow-methodology/speed-tiered-workflow.md` §The Context Budget. This list is the
- * instrument's default view of that chain; a project's own boot-budget guard reads the same
- * definition. Two definitions of "the boot chain" is one too many — if they disagree, this
- * one is wrong.
+ * `load` is the doctrine's own word for it. `documentation-strategy.md` §The Mandated Doc
+ * Set marks each document `every session` or `on demand`, and only the `every session`
+ * rows are the boot chain — the chain a mode's context budget is about. The `on-demand`
+ * rows are a menu: reported, because a bloated spec is worth seeing, but NOT charged to
+ * the mode's budget, because a budget that also covers the documents you read by choice
+ * measures a library rather than a session.
+ *
+ * OWNER: the chain's membership and the per-mode cap it is measured against live in
+ * `01-workflow-methodology/speed-tiered-workflow.md` §The Context Budget, which delegates
+ * the load policy to `07-documentation/documentation-strategy.md` §The Mandated Doc Set.
+ * A project with its own documents passes `--files`, which replaces this list and treats
+ * every path as chain — the flag declares a floor, and a floor is what gets budgeted.
+ *
+ * CAVEAT: a missing `always` file is a failure; a missing `on-demand` file is a note. The
+ * menu is generic and a project may legitimately not carry all of it, which is the reason
+ * report-only is the default. Failing a build because a project has no `DEVTOOLS.md` would
+ * teach people to delete the check.
  */
 const DEFAULT_FILES = [
-  'AGENTS.md',
-  'WORLD.md',
-  'README.md',
-  'DEVTOOLS.md',
-  'docs/PRD.md',
-  'docs/ROADMAP.md',
-  'docs/AI_ARCHITECTURE.md',
-  'docs/DATA_POLICY.md',
-  'docs/RUNBOOKS.md',
-  'docs/adr/README.md',
+  { rel: 'AGENTS.md', load: 'always' },
+  { rel: 'WORLD.md', load: 'always' },
+  { rel: 'README.md', load: 'always' },
+  { rel: 'DEVTOOLS.md', load: 'on-demand' },
+  { rel: 'docs/PRD.md', load: 'on-demand' },
+  { rel: 'docs/ROADMAP.md', load: 'on-demand' },
+  { rel: 'docs/AI_ARCHITECTURE.md', load: 'on-demand' },
+  { rel: 'docs/DATA_POLICY.md', load: 'on-demand' },
+  { rel: 'docs/RUNBOOKS.md', load: 'on-demand' },
+  { rel: 'docs/adr/README.md', load: 'on-demand' },
+  { rel: 'docs/STATE_TRANSITION_MATRIX.md', load: 'on-demand' },
+  { rel: 'docs/DECISIONS.md', load: 'on-demand' },
 ];
 
 /**
@@ -101,6 +129,7 @@ function usage() {
   return [
     'Usage: node measure-boot-budget.js [projectRoot] [--files a.md,b.md] [--json] [--strict]',
     '       node measure-boot-budget.js . --max-tokens 40000 --history-warn 25 --strict',
+    '       node measure-boot-budget.js . --cap-from-mode --strict',
   ].join('\n');
 }
 
@@ -153,17 +182,34 @@ function parseArgs(argv) {
 
   const files = values.files === undefined
     ? DEFAULT_FILES
-    : values.files.split(',').map((file) => file.trim()).filter(Boolean);
+    : values.files.split(',').map((file) => ({ rel: file.trim(), load: 'always' })).filter((f) => f.rel);
   if (files.length === 0) {
     throw new UsageError('--files requires at least one non-empty path');
+  }
+
+  const capFromMode = flags.has('cap-from-mode');
+  let maxTokens = values['max-tokens'] === undefined
+    ? null
+    : parsePositiveInteger(values['max-tokens'], 'max-tokens');
+  if (capFromMode) {
+    if (maxTokens !== null) {
+      throw new UsageError('--cap-from-mode and --max-tokens are mutually exclusive — the cap has one source');
+    }
+    const mode = deriveMode(path.resolve(rootArg || process.cwd()));
+    const cap = contextCaps()[mode];
+    if (!cap) {
+      throw new UsageError(
+        `--cap-from-mode could not resolve the ${mode} cap — is the _guidelines/ mirror present?`,
+      );
+    }
+    maxTokens = cap;
   }
 
   return {
     root: path.resolve(rootArg || process.cwd()),
     files,
-    maxTokens: values['max-tokens'] === undefined
-      ? null
-      : parsePositiveInteger(values['max-tokens'], 'max-tokens'),
+    maxTokens,
+    capFromMode,
     historyWarn: values['history-warn'] === undefined
       ? 25
       : parsePercentage(values['history-warn'], 'history-warn'),
@@ -319,13 +365,20 @@ try {
   process.exit(2);
 }
 
-const rows = options.files.map((file) => measure(options.root, file));
+const rows = options.files.map((file) => ({ ...measure(options.root, file.rel), load: file.load }));
 const missing = rows.filter((row) => row.missing);
+const missingChain = missing.filter((row) => row.load === 'always');
+const missingMenu = missing.filter((row) => row.load === 'on-demand');
 const present = rows.filter((row) => !row.missing);
-const total = present.reduce((s, r) => s + r.tokens, 0);
+const chain = present.filter((row) => row.load === 'always');
+const menu = present.filter((row) => row.load === 'on-demand');
+const total = chain.reduce((s, r) => s + r.tokens, 0);
+const menuTotal = menu.reduce((s, r) => s + r.tokens, 0);
 
 const problems = [];
-for (const row of missing) {
+const advisories = [];
+// A missing chain file is a failure; a missing menu file is a note (see DEFAULT_FILES).
+for (const row of missingChain) {
   problems.push(`${row.rel}: file not found under ${options.root}`);
 }
 if (options.maxTokens !== null && total > options.maxTokens) {
@@ -336,11 +389,14 @@ for (const r of present) {
     const why = r.ledgerEntries >= LEDGER_MIN ? `incl. a ${r.ledgerEntries}-entry ledger` : 'dated rows/headings';
     problems.push(`${r.rel}: ${r.historyPct}% dated history (${why}) > ${options.historyWarn}%`);
   }
+  // Readability, not correctness — the constants are named `*_WARN` and the docblock lists
+  // only budget/history/missing as fatal. A 500-character paragraph does not break a build,
+  // and a check that fails a milestone exit over one is a check people delete.
   if (r.longestPara > PARA_WARN) {
-    problems.push(`${r.rel}: paragraph of ${r.longestPara} chars > ${PARA_WARN} — wrap it, a hard newline costs nothing`);
+    advisories.push(`${r.rel}: paragraph of ${r.longestPara} chars > ${PARA_WARN} — wrap it, a hard newline costs nothing`);
   }
   if (r.longestRow > ROW_WARN) {
-    problems.push(
+    advisories.push(
       `${r.rel}: table row of ${r.longestRow} chars > ${ROW_WARN} — a row cannot be wrapped, so the prose does not belong in a table cell`,
     );
   }
@@ -350,43 +406,78 @@ if (options.json) {
   console.log(JSON.stringify({
     root: options.root,
     totalTokens: total,
-    missingCount: missing.length,
-    missingFiles: missing.map((row) => row.rel),
-    files: rows,
+    onDemandTokens: menuTotal,
+    maxTokens: options.maxTokens,
+    mode: options.capFromMode ? deriveMode(options.root) : null,
+    missingCount: missingChain.length,
+    missingFiles: missingChain.map((row) => row.rel),
+    missingMenuFiles: missingMenu.map((row) => row.rel),
+    files: rows.filter((row) => row.load === 'always'),
+    onDemand: rows.filter((row) => row.load === 'on-demand'),
     problems,
+    advisories,
   }, null, 2));
 } else {
   console.log('═══════════════════════════════════════════');
   console.log(`  Boot Reading Budget — ${options.root}`);
   console.log(`  ${new Date().toISOString().split('T')[0]}`);
   console.log('═══════════════════════════════════════════\n');
-  console.log(
-    'file'.padEnd(30) + 'tokens'.padStart(9) + 'chars'.padStart(10) + 'lines'.padStart(7) +
-    'paraMax'.padStart(9) + 'rowMax'.padStart(8) + 'rows>400'.padStart(10) +
-    'historyChars'.padStart(13) + 'history%'.padStart(10) + 'pointers'.padStart(10),
-  );
-  for (const r of rows) {
-    if (r.missing) { console.log(r.rel.padEnd(30) + '  — (not present)'); continue; }
+
+  const printTable = (group) => {
     console.log(
-      r.rel.padEnd(30) + String(r.tokens).padStart(9) + String(r.chars).padStart(10) +
-      String(r.lines).padStart(7) + String(r.longestPara).padStart(9) + String(r.longestRow).padStart(8) +
-      String(r.rowsOverNoted).padStart(10) + String(r.historyChars).padStart(13) + String(r.historyPct).padStart(10) +
-      String(r.archivePointers).padStart(10),
+      'file'.padEnd(30) + 'tokens'.padStart(9) + 'chars'.padStart(10) + 'lines'.padStart(7) +
+      'paraMax'.padStart(9) + 'rowMax'.padStart(8) + 'rows>400'.padStart(10) +
+      'historyChars'.padStart(13) + 'history%'.padStart(10) + 'pointers'.padStart(10),
     );
-  }
+    for (const r of group) {
+      if (r.missing) { console.log(r.rel.padEnd(30) + '  — (not present)'); continue; }
+      console.log(
+        r.rel.padEnd(30) + String(r.tokens).padStart(9) + String(r.chars).padStart(10) +
+        String(r.lines).padStart(7) + String(r.longestPara).padStart(9) + String(r.longestRow).padStart(8) +
+        String(r.rowsOverNoted).padStart(10) + String(r.historyChars).padStart(13) + String(r.historyPct).padStart(10) +
+        String(r.archivePointers).padStart(10),
+      );
+    }
+  };
+
+  console.log('  BOOT CHAIN — read every session, charged to the mode budget\n');
+  printTable(rows.filter((r) => r.load === 'always'));
   console.log(`\n  chain total: ~${total} tokens read before the first edit`);
   const caps = contextCaps();
   if (caps.vibe) {
-    const verdict = total > caps.vibe ? `OVER the vibe cap (${caps.vibe})` : `within the vibe cap (${caps.vibe})`;
     console.log(`  mode caps (speed-tiered-workflow.md): vibe ${caps.vibe} · standard ${caps.standard} · guarded ${caps.guarded}`);
-    console.log(`  → ${verdict}`);
+    if (options.maxTokens === null) {
+      const verdict = total > caps.vibe ? `OVER the vibe cap (${caps.vibe})` : `within the vibe cap (${caps.vibe})`;
+      console.log(`  → ${verdict} — report only, no budget given`);
+    } else {
+      const mode = options.capFromMode ? deriveMode(options.root) : null;
+      const label = mode ? `the ${mode} cap` : 'the given budget';
+      const verdict = total > options.maxTokens
+        ? `OVER ${label} (${options.maxTokens})`
+        : `within ${label} (${options.maxTokens})`;
+      console.log(`  → ${verdict}`);
+    }
   }
-  console.log(`  missing files: ${missing.length}${missing.length ? ` (${missing.map((row) => row.rel).join(', ')})` : ''}`);
+
+  if (menu.length > 0 || rows.some((r) => r.load === 'on-demand')) {
+    console.log('\n  ON-DEMAND MENU — read by choice, NOT charged to the mode budget\n');
+    printTable(rows.filter((r) => r.load === 'on-demand'));
+    console.log(`\n  menu total: ~${menuTotal} tokens across ${menu.length} document(s) — a ratchet (rule 4), not a budget`);
+  }
+
+  console.log(`\n  missing chain files: ${missingChain.length}${missingChain.length ? ` (${missingChain.map((row) => row.rel).join(', ')})` : ''}`);
+  if (missingMenu.length) {
+    console.log(`  absent menu files: ${missingMenu.length} (${missingMenu.map((row) => row.rel).join(', ')}) — a note, not a failure`);
+  }
   if (problems.length === 0) {
     console.log('  ✅ nothing over threshold' + (options.maxTokens === null ? ' (no --max-tokens given, report only)' : ''));
   } else {
     console.log(`\n  ${options.strict ? '❌' : '⚠️'} ${problems.length} finding(s)${options.strict ? ':' : ' (report only):'}`);
     for (const p of problems) console.log(`     - ${p}`);
+  }
+  if (advisories.length) {
+    console.log(`\n  ℹ️  ${advisories.length} readability note(s) — never fatal, fix opportunistically:`);
+    for (const a of advisories) console.log(`     - ${a}`);
   }
   console.log('  fixes: 01-workflow-methodology/workflow-friction-audit.md (the audit),');
   console.log('         07-documentation/documentation-strategy.md (history → dated archives),');

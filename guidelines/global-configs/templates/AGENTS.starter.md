@@ -184,7 +184,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 ### Maintenance
 
-- **Quarterly:** re-extract outdated rules; measure the boot chain (`node _guidelines/global-configs/scripts/measure-boot-budget.js .`) — boot files over budget or >25% dated history get history relocated, not hand-trimmed (`--strict` only with an authoritative `--files` list). Run `npm run audit:friction` and work the ranked list.
+- **Quarterly:** re-extract outdated rules; measure the reading budget (`npm run docs:boot`) — the chain must fit the mode cap (`npm run docs:boot:strict`); files >25% dated history get history relocated, not hand-trimmed. Run `npm run audit:friction` and work the ranked list.
 - **When guidelines or stack change:** refresh extracted rules + Stack table; the central repo is the source of truth — re-sync `_guidelines/` (`npm run sync:drift` fails until you do).
 
 **Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`, `02-engineering-practices/bidirectional-design-principles.md` · Governance: `08-governance/design-system-governance.md`
