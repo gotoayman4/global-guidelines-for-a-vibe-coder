@@ -37,6 +37,12 @@
     "gitignoreEntry": "_guidelines/"
   },
 
+  "backups": {
+    "_comment": "Created by `sync-guidelines.ps1 -Backup` (New-DatedBackupDir). Declared unconditionally rather than only on a -Backup run: an ignore line for a directory that does not exist yet costs nothing, and a conditional entry is the one forgotten on the run that needs it. Before this section existed the entry lived nowhere, so a -Backup sync left an untracked directory — and the `clean-tree` step of the pre-push gate fails on an untracked directory.",
+    "destination": ".guidelines-backups",
+    "gitignoreEntry": ".guidelines-backups/"
+  },
+
   "starters": [
     {
       "template": "global-configs/templates/AGENTS.starter.md",

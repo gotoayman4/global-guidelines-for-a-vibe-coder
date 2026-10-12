@@ -206,6 +206,37 @@ function Install-ToolConfig([string]$projectPath, [string]$templateRelPath, [str
     }
 }
 
+function Get-ProjectGitignoreEntries {
+    # Every project-local path the sync writes that must not be tracked, derived from the manifest so
+    # the GUI and the CLI cannot drift — the manifest's own header requires identical project outputs.
+    # This file used to keep its own literals, which is how `.guidelines-backups/` came to be in no
+    # list at all: a `-Backup` run left an untracked directory, and the `clean-tree` step of the
+    # pre-push gate fails on an untracked directory.
+    if ($moduleImported -and (Get-Command Get-GitignoreEntries -ErrorAction SilentlyContinue)) {
+        return Get-GitignoreEntries
+    }
+    $manifestPath = Join-Path (Join-Path $syncContentDir "global-configs") "sync-manifest.json"
+    if (-not (Test-Path $manifestPath)) { return @() }
+    $manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    return @($manifest.PSObject.Properties.Value |
+        Where-Object { $_ -and $_.PSObject.Properties.Name -contains 'gitignoreEntry' } |
+        ForEach-Object { $_.gitignoreEntry } | Select-Object -Unique)
+}
+
+function Add-ProjectGitignoreEntries([string]$projectPath, $logBox) {
+    # Each entry is tested on its own: a project that already carries `_guidelines/` must still
+    # receive an entry added later. Testing the file once for the whole list is the second half of
+    # the same defect — the list could only ever grow for brand-new projects.
+    $entries = @(Get-ProjectGitignoreEntries)
+    if ($entries.Count -eq 0) { return }
+    $gitignore = Join-Path $projectPath ".gitignore"
+    $existing = if (Test-Path $gitignore) { Get-Content $gitignore -Raw -Encoding UTF8 } else { "" }
+    $missing = @($entries | Where-Object { $existing -notmatch "(?m)^$([regex]::Escape($_))" })
+    if ($missing.Count -eq 0) { return }
+    Add-Content -Path $gitignore -Value ("`n# mirrored from central guidelines repo`n" + ($missing -join "`n")) -Encoding UTF8
+    Append-Log $logBox "  Added to .gitignore: $($missing -join ', ')"
+}
+
 function Sync-SkillsInline([string]$projectPath, $logBox) {
     $skillsDir = Join-Path $syncContentDir "global-configs\skills"
     $targetSkillsDir = Join-Path $projectPath "_skills"
@@ -220,13 +251,7 @@ function Sync-SkillsInline([string]$projectPath, $logBox) {
         Copy-Item $file.FullName $targetFile -Force
         $count++
     }
-    $gitignore = Join-Path $projectPath ".gitignore"
-    $existing = ""
-    if (Test-Path $gitignore) { $existing = Get-Content $gitignore -Raw -Encoding UTF8 }
-    if ($existing -notmatch "(?m)^_skills/") {
-        Add-Content -Path $gitignore -Value "`n# synced skill files for AI agents`n_skills/" -Encoding UTF8
-        Append-Log $logBox "  Added _skills/ to .gitignore"
-    }
+    Add-ProjectGitignoreEntries $projectPath $logBox
     $agentsFile = Join-Path $projectPath "AGENTS.md"
     if (Test-Path $agentsFile) {
         $agentsContent = Get-Content $agentsFile -Raw -Encoding UTF8
@@ -266,13 +291,8 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
     }
     Append-Log $logBox "  _guidelines/ mirrored (robocopy: $($proc.ExitCode))."
 
-    # Step 2: .gitignore
-    $gitignore = Join-Path $projectPath ".gitignore"
-    $existing = if (Test-Path $gitignore) { Get-Content $gitignore -Raw -Encoding UTF8 } else { "" }
-    if ($existing -notmatch "(?m)^_guidelines/") {
-        Add-Content -Path $gitignore -Value "`n# mirrored from central guidelines repo`n_guidelines/" -Encoding UTF8
-        Append-Log $logBox "  Added _guidelines/ to .gitignore"
-    }
+    # Step 2: .gitignore — derived from the manifest, never a literal here (see Add-ProjectGitignoreEntries)
+    Add-ProjectGitignoreEntries $projectPath $logBox
 
     # Step 3: Starter files (from manifest)
     $statusLabel.Text = "Installing starter files ..."

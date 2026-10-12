@@ -24,6 +24,39 @@ function Read-Manifest {
     return $null
 }
 
+function Get-GitignoreEntries {
+    # Every project-local path the sync writes that must not be tracked, read from the manifest.
+    #
+    # WHY DERIVED. The manifest declares `gitignoreEntry` per section and its own header says both
+    # sync entry points "must produce identical project outputs" — but nothing read the field. Each
+    # writer kept its own literal instead, and the path that lived in NO list (`.guidelines-backups/`)
+    # is the one that shipped broken: a `-Backup` run left an untracked directory, and the
+    # `clean-tree` step of the pre-push gate fails on an untracked directory. Deriving the set here
+    # means a section added to the manifest is honoured by every writer without either being edited.
+    #
+    # Handles both shapes `Read-Manifest` can return: a hashtable (PowerShell 6+ `-AsHashtable`) and
+    # a PSCustomObject (the Windows PowerShell 5.1 fallback).
+    $manifest = Read-Manifest
+    if (-not $manifest) { return @() }
+
+    $sections = if ($manifest -is [System.Collections.IDictionary]) {
+        @($manifest.Values)
+    } else {
+        @($manifest.PSObject.Properties.Value)
+    }
+
+    $entries = foreach ($section in $sections) {
+        if ($null -eq $section) { continue }
+        if ($section -is [System.Collections.IDictionary]) {
+            if ($section.Contains('gitignoreEntry')) { $section['gitignoreEntry'] }
+        } elseif ($section.PSObject.Properties.Name -contains 'gitignoreEntry') {
+            $section.gitignoreEntry
+        }
+    }
+
+    return @($entries | Where-Object { $_ } | Select-Object -Unique)
+}
+
 function Get-BackupDir([string]$projectPath) {
     return Join-Path $projectPath ".guidelines-backups"
 }
@@ -281,13 +314,11 @@ function Sync-Skills {
         $count++
     }
 
-    # Add _skills/ to .gitignore
-    $gitignore = Join-Path $projectPath ".gitignore"
-    $existing = ""
-    if (Test-Path $gitignore) { $existing = Get-Content $gitignore -Raw -Encoding UTF8 }
-    if ($existing -notmatch "(?m)^_skills/") {
-        Add-Content -Path $gitignore -Value "`n# synced skill files for AI agents`n_skills/" -Encoding UTF8
-    }
+    # The entry comes from the manifest via `Get-GitignoreEntries`, never from a literal here. This
+    # block used to hardcode `_skills/` while the manifest declared the same entry, and that kind of
+    # duplication is what let `.guidelines-backups/` fall through every list. `Update-Gitignore` is
+    # idempotent, so a caller that already wrote the set pays nothing for this.
+    Update-Gitignore -projectPath $projectPath -entry (Get-GitignoreEntries)
 
     Write-Host "  Skills: $count synced to _skills/" -ForegroundColor Green
 
@@ -305,7 +336,7 @@ function Sync-Skills {
 function Update-Gitignore {
     param(
         [string]$projectPath,
-        [string]$entry,
+        [string[]]$entry,
         [switch]$DryRun
     )
 
@@ -313,20 +344,33 @@ function Update-Gitignore {
     $existing = ""
     if (Test-Path $gitignore) { $existing = Get-Content $gitignore -Raw -Encoding UTF8 }
 
+    # Each entry is tested on its own, so a project that already carries `_guidelines/` still
+    # receives an entry added later. Testing the file once for the whole list — or writing the list
+    # under one "already present" check — is how `.guidelines-backups/` stayed untracked in every
+    # project that had been synced before the entry existed. An untracked directory fails the
+    # `clean-tree` step of the pre-push gate, so the omission blocked a documented gate rather than
+    # merely leaving the tree untidy.
+    $missing = @($entry | Where-Object { $_ -and $existing -notmatch "(?m)^$([regex]::Escape($_))" })
+
     if ($DryRun) {
-        if ($existing -notmatch "(?m)^$([regex]::Escape($entry))") {
-            Write-Host "  [DRY-RUN] Would add '$entry' to .gitignore" -ForegroundColor Yellow
+        foreach ($item in $missing) {
+            Write-Host "  [DRY-RUN] Would add '$item' to .gitignore" -ForegroundColor Yellow
         }
         return
     }
 
-    if ($existing -notmatch "(?m)^$([regex]::Escape($entry))") {
-        Add-Content -Path $gitignore -Value "`n# mirrored from central guidelines repo`n$entry" -Encoding UTF8
-        Write-Host "  Added $entry to .gitignore" -ForegroundColor Green
+    if ($missing.Count -eq 0) {
+        Write-Host "  .gitignore already carries: $($entry -join ', ')" -ForegroundColor Gray
+        return
     }
+
+    # One header, and only the missing entries beneath it — so a second sync is a no-op.
+    $block = "`n# mirrored from central guidelines repo`n" + ($missing -join "`n")
+    Add-Content -Path $gitignore -Value $block -Encoding UTF8
+    Write-Host "  Added to .gitignore: $($missing -join ', ')" -ForegroundColor Green
 }
 
 Export-ModuleMember -Function Get-GuidelinesRepoRoot, Get-ManifestPath, Read-Manifest,
-    Get-BackupDir, New-DatedBackupDir, Restore-Backup,
+    Get-GitignoreEntries, Get-BackupDir, New-DatedBackupDir, Restore-Backup,
     Sync-MirrorDirectory, Install-StarterFile, Install-ToolConfigFile,
     Sync-Skills, Update-Gitignore

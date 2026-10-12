@@ -14,7 +14,8 @@
 #
 # What it does:
 #   1. Mirrors the central repo into _guidelines/ inside the project
-#   2. Adds _guidelines/ to .gitignore
+#   2. Adds each path in `$gitignoreEntries` (`_guidelines/`, `.guidelines-backups/`) to .gitignore,
+#      writing only the entries the project does not already carry
 #   3. Sets up global configs for: opencode, Windsurf, Cursor, Qoder, VS Code
 
 param(
@@ -62,6 +63,31 @@ $cursorUserRulesDir = "$env:USERPROFILE\.cursor\rules"
 $cursorGlobalGuidelines = "$cursorUserRulesDir\global-guidelines-from-central.mdc"
 $qoderSkillsDir = "$env:USERPROFILE\.qoder\skills"
 
+# ---------------------------------------------------------------------------
+# What this script writes INTO a project that must not be tracked
+# ---------------------------------------------------------------------------
+# Derived from `global-configs/sync-manifest.json`, which is the single home: every section that
+# declares a `gitignoreEntry` contributes one. Nothing is listed here, because a hand-kept list is a
+# second home — and the path that lived in NO list (`.guidelines-backups/`, created by `-Backup`) is
+# the one that shipped broken: a `-Backup` run left an untracked directory, and the `clean-tree`
+# step of the pre-push gate fails on an untracked directory. Adding a section to the manifest is now
+# enough, and neither writer is edited. `scripts/tests/sync-gitignore.test.js` holds the invariant.
+$gitignoreEntries = if (Get-Command Get-GitignoreEntries -ErrorAction SilentlyContinue) {
+    Get-GitignoreEntries
+} else {
+    # The module is optional for the mirror step, so the manifest is read directly. The fallback
+    # reads the same source rather than restating the entries — a fallback list would be the defect.
+    $manifestPath = Join-Path (Join-Path $guidelinesRepo "global-configs") "sync-manifest.json"
+    if (Test-Path $manifestPath) {
+        $manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        @($manifest.PSObject.Properties.Value |
+            Where-Object { $_ -and $_.PSObject.Properties.Name -contains 'gitignoreEntry' } |
+            ForEach-Object { $_.gitignoreEntry } | Select-Object -Unique)
+    } else {
+        @()
+    }
+}
+
 Write-Host "=== Sync Guidelines ===" -ForegroundColor Cyan
 Write-Host "Source: $guidelinesRepo" -ForegroundColor Gray
 Write-Host ""
@@ -102,9 +128,9 @@ if (-not $GlobalOnly) {
         Write-Host "  Complete: $((Get-ChildItem $guidelinesDir -Recurse -File | Measure-Object).Count) files mirrored" -ForegroundColor Green
     }
 
-    # Add _guidelines/ to .gitignore
+    # Add this script's project-local paths to .gitignore (see $gitignoreEntries above).
     if (Get-Command Update-Gitignore -ErrorAction SilentlyContinue) {
-        Update-Gitignore -projectPath $projectRoot -entry "_guidelines/" -DryRun:$DryRun
+        Update-Gitignore -projectPath $projectRoot -entry $gitignoreEntries -DryRun:$DryRun
     } else {
         if (-not $DryRun) {
             $gitignore = Join-Path $projectRoot ".gitignore"
@@ -112,11 +138,15 @@ if (-not $GlobalOnly) {
             if (Test-Path -LiteralPath $gitignore) {
                 $existing = Get-Content $gitignore -Raw -Encoding UTF8
             }
-            if ($existing -notmatch "(?m)^_guidelines/") {
-                Add-Content -Path $gitignore -Value "`n# mirrored from central guidelines repo`n_guidelines/" -Encoding UTF8
-                Write-Host "  Added _guidelines/ to .gitignore" -ForegroundColor Green
+            # Per entry, not per file: a project that already has `_guidelines/` must still receive
+            # an entry added later, or the list can only ever grow for brand-new projects.
+            $missing = @($gitignoreEntries | Where-Object { $existing -notmatch "(?m)^$([regex]::Escape($_))" })
+            if ($missing.Count -gt 0) {
+                $block = "`n# mirrored from central guidelines repo`n" + ($missing -join "`n")
+                Add-Content -Path $gitignore -Value $block -Encoding UTF8
+                Write-Host "  Added to .gitignore: $($missing -join ', ')" -ForegroundColor Green
             } else {
-                Write-Host "  _guidelines/ already in .gitignore" -ForegroundColor Gray
+                Write-Host "  .gitignore already carries: $($gitignoreEntries -join ', ')" -ForegroundColor Gray
             }
         }
     }
