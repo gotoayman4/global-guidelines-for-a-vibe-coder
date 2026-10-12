@@ -100,16 +100,7 @@ const DEFAULT_FILES = [
  * The declared per-mode reading caps, read from the file that owns them. Returns nulls when
  * the owner file is absent (a standalone project without the `_guidelines/` mirror).
  */
-function contextCaps() {
-  const file = path.join(__dirname, '..', '..', '01-workflow-methodology', 'speed-tiered-workflow.md');
-  const caps = { vibe: null, standard: null, guarded: null };
-  if (!fs.existsSync(file)) return caps;
-  const row = fs.readFileSync(file, 'utf8').split('\n').find((l) => /^\|\s*\*\*Context\*\*/.test(l));
-  if (!row) return caps;
-  const found = [...row.matchAll(/≤\s*(\d+)K/g)].map((m) => Number(m[1]) * 1000);
-  if (found.length === 3) [caps.vibe, caps.standard, caps.guarded] = found;
-  return caps;
-}
+const { contextCaps } = require('./lib/context-caps.js');
 
 /** A paragraph this long cannot be skimmed; wrap it at word boundaries. */
 const PARA_WARN = 500;

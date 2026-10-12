@@ -46,16 +46,10 @@ function usage(msg) {
 }
 
 /** The declared reading budget, read from the file that owns it (speed-tiered-workflow.md). */
-function contextCaps() {
-  const file = path.join(SOURCE, '01-workflow-methodology', 'speed-tiered-workflow.md');
-  const caps = { vibe: null, standard: null, guarded: null };
-  if (!fs.existsSync(file)) return caps;
-  const row = fs.readFileSync(file, 'utf8').split('\n').find((l) => /^\|\s*\*\*Context\*\*/.test(l));
-  if (!row) return caps;
-  const found = [...row.matchAll(/≤\s*(\d+)K/g)].map((m) => Number(m[1]) * 1000);
-  if (found.length === 3) [caps.vibe, caps.standard, caps.guarded] = found;
-  return caps;
-}
+// Owned by `lib/context-caps.js` — one reader for both instruments. A repo-root-relative path
+// here resolved to `<project>/guidelines`, which does not exist downstream, so every consuming
+// project was told "no cap found to compare against" while the check reported success.
+const { contextCaps } = require('./lib/context-caps.js');
 
 /** Boot-chain tokens, from the instrument that already owns the measurement. */
 function bootChain(root) {
@@ -104,12 +98,43 @@ function churn(root, commits = CHURN_COMMITS) {
 }
 
 /** Delivery: is this project's mirror the current rules? */
-function delivery(root) {
+/**
+ * Compare a project's mirror against the source it was delivered from.
+ *
+ * The source is the central repo, so this is only answerable from a central-side run; the
+ * `source` parameter exists so that fact is testable rather than assumed. From a project the
+ * mirror exists but the source does not, and the two states must not collapse: reporting "no
+ * `_guidelines/` mirror in this project" for a project that has one is a false statement the
+ * report then acts on.
+ */
+function delivery(root, source = SOURCE) {
   const mirror = path.join(root, '_guidelines');
-  if (!fs.existsSync(mirror) || !fs.existsSync(SOURCE)) return null;
+  if (!fs.existsSync(mirror)) return null;
   const theirs = hashTree(mirror);
-  const ours = hashTree(SOURCE);
-  return { inSync: theirs.hash === ours.hash, mirrorFiles: theirs.count, sourceFiles: ours.count };
+  if (!fs.existsSync(source)) {
+    return { comparable: false, inSync: null, mirrorFiles: theirs.count, sourceFiles: 0 };
+  }
+  const ours = hashTree(source);
+  return { comparable: true, inSync: theirs.hash === ours.hash, mirrorFiles: theirs.count, sourceFiles: ours.count };
+}
+
+/**
+ * A proposal names its control inline, as a bold label that starts with the word, or gives it
+ * a section of its own.
+ *
+ * CAVEAT: the proposal's *format* is not prescribed anywhere — `AGENTS.md` names the four
+ * things it must contain (event, preventing rule, target guideline, guard), not their markup.
+ * Matching only the literal `**Guard:**` reported real guards as absent in two different
+ * shapes: `**Guard that fails if the lesson is unlearned:**` and a `## The guard …` heading.
+ * All three now count. This is a heuristic for a report, never a gate.
+ */
+const GUARD_INLINE = /\*\*(?:Guard|Control)\b[^*]*:\*\*/i;
+/** The section form, e.g. `## The guard that fails if the lesson is unlearned`. */
+const GUARD_SECTION = /^#{2,6}\s+[^\n]*\bguard\b[^\n]*$/im;
+
+/** Does this proposal name the control that fails if the lesson is unlearned? */
+function namesGuard(content) {
+  return GUARD_INLINE.test(content) || GUARD_SECTION.test(content);
 }
 
 /** Lessons: proposals that name no control are wishes, not rules (S14). */
@@ -117,7 +142,7 @@ function proposals(root) {
   const dir = path.join(root, 'guidelines-proposals');
   if (!fs.existsSync(dir)) return null;
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.md')).sort();
-  const withoutGuard = files.filter((f) => !/\*\*(Guard|Control):\*\*/i.test(fs.readFileSync(path.join(dir, f), 'utf8')));
+  const withoutGuard = files.filter((f) => !namesGuard(fs.readFileSync(path.join(dir, f), 'utf8')));
   return { total: files.length, withoutGuard: withoutGuard.length, examples: withoutGuard.slice(0, 3) };
 }
 
@@ -168,6 +193,9 @@ function render(report) {
   lines.push('  Delivery (mirror vs source)');
   if (!d) {
     lines.push('    — no _guidelines/ mirror in this project');
+  } else if (!d.comparable) {
+    lines.push(`    mirror present (${d.mirrorFiles} files) — the source is the central repo, so this is`);
+    lines.push('      checked there, not here: `npm run sync:drift` in the central repo');
   } else if (d.inSync) {
     lines.push(`    ✅ mirror matches the source (${d.sourceFiles} files)`);
   } else {

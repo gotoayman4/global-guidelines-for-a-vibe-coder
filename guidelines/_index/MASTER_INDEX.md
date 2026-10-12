@@ -162,6 +162,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [render-index.js](../global-configs/scripts/render-index.js) | Script | Global | ~250 | `#script` `#render` `#index` `#single-source` `#drift-detection` |
 | [lib/run-sync.js](../global-configs/scripts/lib/run-sync.js) | Script | Global | ~250 | `#script` `#subprocess` `#portability` `#windows` `#ebusy` |
 | [lib/project-mode.js](../global-configs/scripts/lib/project-mode.js) | Script | Global | ~50 | `#script` `#mode` `#world-md` `#shared` `#single-source` |
+| [lib/context-caps.js](../global-configs/scripts/lib/context-caps.js) | Script | Global | ~50 | `#script` `#token-budget` `#shared` `#single-source` `#mirror-safe` |
 | [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 | [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |
