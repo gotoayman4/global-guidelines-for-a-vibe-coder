@@ -17,6 +17,7 @@
     "docs:census": "node guidelines/global-configs/scripts/check-doc-census.js",
     "guard:gate-wording": "node guidelines/global-configs/scripts/check-gate-wording.js",
     "guard:decisions": "node guidelines/global-configs/scripts/check-decision-index.js",
+    "guard:breadth": "node guidelines/global-configs/scripts/check-doc-breadth.js",
     "new:guideline": "node guidelines/global-configs/scripts/new-guideline.js",
     "new:project": "node guidelines/global-configs/scripts/new-project.js",
     "validate:fast": "npm run check-links && npm run check-index",

@@ -116,6 +116,8 @@ npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md --
 
 `npm run guard:decisions` (`check-decision-index.js`) is the control: it fails when an ADR file has no index row, when a row points at a file that does not exist, and when the same ADR is listed twice. An ADR whose decision is not yet in the log is a **warning** — work in flight must not fail the gate — and becomes a failure under `--strict` at a milestone exit.
 
+`npm run guard:breadth` (`check-doc-breadth.js`) is the control on the other side of §Record vs Ritual: a slice that changes product source may write only as many steering files as `WORLD.md`'s mode allows, and a commit that changes no source is a **ritual commit** and is exempt, because the full set is its job. The breadth and the file set are read from `documentation-strategy.md` §Trigger Table, so the guard follows an edit to the column instead of restating it — and a table it cannot read is reported as vacuous, never as a pass.
+
 `--duration <minutes>` records **intent → first running slice** in the entry (`**Intent→slice:** 42m`). `speed-tiered-workflow.md` §Absolute Rules 5 mandates the measurement and nothing captured it; an unmeasured slice records nothing rather than a fabricated `0m`.
 
 `--dry-run` prints the plan and writes nothing; `--decision` overrides the derived number when a concurrent session took it. **Prose stays human:** the acceptance body and the ADR's `--why`. Everything else is a fact the repository already knows — and a fact a machine writes cannot be forgotten, mistyped, or raced.

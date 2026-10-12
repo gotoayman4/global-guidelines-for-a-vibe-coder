@@ -72,7 +72,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~753 | `#ci-cd` `#pipelines` `#automation` |
 | [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~873 | `#environments` `#secrets` `#config` |
 | [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~749 | `#git` `#branching` `#commits` |
-| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~3444 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
+| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~3578 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
 
 ### 04 — Architecture
 
@@ -122,7 +122,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [adr-template.md](../07-documentation/adr-template.md) | Advisory | Global | ~355 | `#adr` `#decisions` `#template` |
-| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~5165 | `#documentation` `#strategy` `#maintenance` `#changelog-archives` `#single-source` `#line-length` |
+| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~5352 | `#documentation` `#strategy` `#maintenance` `#changelog-archives` `#single-source` `#line-length` |
 
 ### 08 — Governance
 
@@ -163,6 +163,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [lib/run-sync.js](../global-configs/scripts/lib/run-sync.js) | Script | Global | ~250 | `#script` `#subprocess` `#portability` `#windows` `#ebusy` |
 | [lib/project-mode.js](../global-configs/scripts/lib/project-mode.js) | Script | Global | ~50 | `#script` `#mode` `#world-md` `#shared` `#single-source` |
 | [lib/context-caps.js](../global-configs/scripts/lib/context-caps.js) | Script | Global | ~50 | `#script` `#token-budget` `#shared` `#single-source` `#mirror-safe` |
+| [lib/doc-breadth.js](../global-configs/scripts/lib/doc-breadth.js) | Script | Global | ~50 | `#script` `#breadth` `#steering-docs` `#shared` `#single-source` `#mirror-safe` |
 | [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 | [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |
@@ -174,6 +175,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [audit-friction.js](../global-configs/scripts/audit-friction.js) | Script | Global | ~450 | `#script` `#audit` `#friction` `#measurement` `#cadence` `#boot-budget` |
 | [check-gate-wording.js](../global-configs/scripts/check-gate-wording.js) | Script | Global | ~350 | `#script` `#gate` `#modes` `#single-source` `#guard` `#retired-wording` |
 | [check-decision-index.js](../global-configs/scripts/check-decision-index.js) | Script | Global | ~300 | `#script` `#adr` `#decisions` `#drift-detection` `#guard` `#coverage` |
+| [check-doc-breadth.js](../global-configs/scripts/check-doc-breadth.js) | Script | Global | ~200 | `#script` `#guard` `#breadth` `#modes` `#steering-docs` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
 
