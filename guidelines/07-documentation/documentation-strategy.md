@@ -2,6 +2,7 @@
 status: "Normative"
 scope: "Global"
 tags: [documentation, strategy, maintenance, changelog-archives, single-source, line-length]
+control: "guard:breadth"
 ---
 
 # Documentation Strategy — Knowledge Persistence for AI and Humans

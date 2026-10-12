@@ -43,6 +43,16 @@
     "gitignoreEntry": ".guidelines-backups/"
   },
 
+  "guards": {
+    "_comment": "The guard scripts a project must EXPOSE as an npm script. The mirror delivers the files, but a file nobody runs is a control that exists only in a directory listing — so this is the one home for 'which controls a project must have'. Declared rather than derived from the guards' own `@tier`, because a tier says WHEN a guard runs, not WHERE it is meaningful: `check-links.js` guards the guidelines tree and is meaningless in a project, while `check-doc-breadth.js` is a milestone obligation in every project. `check-sync-drift.js` verifies each project's package.json runs every file named here, by file and not by script name — the doctrine maps each step to the project's own names.",
+    "required": [
+      "check-guard-tiers.js",
+      "check-doc-breadth.js",
+      "check-doc-census.js",
+      "check-decision-index.js"
+    ]
+  },
+
   "starters": [
     {
       "template": "global-configs/templates/AGENTS.starter.md",

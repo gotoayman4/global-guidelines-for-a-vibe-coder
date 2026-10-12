@@ -15,6 +15,9 @@
  *
  * Exit code: always 0 (report-only).
  *
+ * @tier standard+ — a fleet report; it reads `sync-projects.json`, which the central gate does not
+ *   own, and it is report-only (exit code always 0).
+ *
  * Source: global-configs/scripts/check-project-freshness.js
  */
 

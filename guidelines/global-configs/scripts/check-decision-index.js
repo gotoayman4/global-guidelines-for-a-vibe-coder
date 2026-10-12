@@ -27,6 +27,9 @@
  * Exit codes: 0 = consistent (or warnings only); 1 = a violation (or a warning under --strict);
  *             2 = corpus error.
  *
+ * @tier standard+ — a contract over the decision record, which is written at a milestone; the
+ *   record never scales with the slice (`documentation-strategy.md` §Record vs Ritual).
+ *
  * Source: global-configs/scripts/check-decision-index.js
  */
 

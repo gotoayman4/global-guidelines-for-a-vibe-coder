@@ -72,7 +72,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~753 | `#ci-cd` `#pipelines` `#automation` |
 | [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~873 | `#environments` `#secrets` `#config` |
 | [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~749 | `#git` `#branching` `#commits` |
-| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~3729 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
+| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~3842 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
 
 ### 04 — Architecture
 
@@ -122,7 +122,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [adr-template.md](../07-documentation/adr-template.md) | Advisory | Global | ~355 | `#adr` `#decisions` `#template` |
-| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~5352 | `#documentation` `#strategy` `#maintenance` `#changelog-archives` `#single-source` `#line-length` |
+| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~5358 | `#documentation` `#strategy` `#maintenance` `#changelog-archives` `#single-source` `#line-length` |
 
 ### 08 — Governance
 
@@ -176,6 +176,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-gate-wording.js](../global-configs/scripts/check-gate-wording.js) | Script | Global | ~350 | `#script` `#gate` `#modes` `#single-source` `#guard` `#retired-wording` |
 | [check-decision-index.js](../global-configs/scripts/check-decision-index.js) | Script | Global | ~300 | `#script` `#adr` `#decisions` `#drift-detection` `#guard` `#coverage` |
 | [check-doc-breadth.js](../global-configs/scripts/check-doc-breadth.js) | Script | Global | ~200 | `#script` `#guard` `#breadth` `#modes` `#steering-docs` `#single-source` |
+| [check-guard-tiers.js](../global-configs/scripts/check-guard-tiers.js) | Script | Global | ~4,400 (run it; read it only to change it) | `#script` `#guard` `#tiers` `#gate` `#derived` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
 

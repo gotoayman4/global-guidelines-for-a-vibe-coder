@@ -16,6 +16,9 @@
  * Usage (any downstream project — this file has no dependencies):
  *   copy it into your project, then: node scripts/check-docs-freshness.js
  *
+ * @tier standard+ — a contract guard, and report-only by design (its exit code is always 0), so it
+ *   belongs in a milestone pass and must never become a blocking push step.
+ *
  * Source: global-configs/scripts/check-docs-freshness.js
  */
 

@@ -4,7 +4,7 @@ const { test } = require('node:test');
 
 // collect() resolves template paths against the guidelines/ root (the script's REPO_ROOT).
 const GUIDELINES_ROOT = path.resolve(__dirname, '../../..');
-const { census, collect, MANDATED_DOCS } = require('../check-doc-census.js');
+const { census, collect, namesGuards, MANDATED_DOCS } = require('../check-doc-census.js');
 
 const CLEAN = [
   { file: 'AGENTS.md', content: '# AGENTS\n\n### Stack (Pin exact versions — do NOT use ranges)\n\n### Build & Validation Commands\n\n### Forbidden Patterns Quick Scan\n' },
@@ -49,7 +49,60 @@ test('the repo\'s own templates satisfy the census', () => {
   const { docs, missing } = collect(GUIDELINES_ROOT, true);
   assert.deepEqual(missing, [], 'every mandated template must exist');
   assert.equal(docs.length, MANDATED_DOCS.length, 'every mandated doc is present');
-  const { violations, vacuous } = census(docs);
+  const { violations, vacuous } = census(docs, { templates: true });
   assert.deepEqual(violations, []);
   assert.deepEqual(vacuous, []);
+});
+
+// ─── The guard inventory — the fifth fact, and the only one that is a shape ───
+
+/** A document body that names guards the way a command block does. */
+const guardRow = (names) => names.map((name) => `\`npm run ${name}\``).join(', ');
+
+test('REVERSAL PROOF: a second document enumerating the guard set FAILS the census', () => {
+  // The inventory's home is the guards themselves (`npm run guard:tiers` derives it). AGENTS.md
+  // may name it; a second document naming it is how a hand-kept list comes back.
+  const docs = CLEAN.map((d) => ({ ...d }));
+  docs.find((d) => d.file === 'AGENTS.md').content += `\n${guardRow(['guard:breadth', 'guard:tiers'])}\n`;
+  docs.find((d) => d.file === 'README.md').content += `\n${guardRow(['guard:breadth', 'guard:decisions'])}\n`;
+  const { violations } = census(docs);
+  assert.equal(violations.length, 1, JSON.stringify(violations));
+  assert.match(violations[0], /guard-inventory/);
+  assert.match(violations[0], /README\.md/);
+});
+
+test('one incidental mention is not an inventory', () => {
+  // The threshold is the point: a single command quoted in a sentence is prose, and failing it
+  // would fail correct documentation.
+  const docs = CLEAN.map((d) => ({ ...d }));
+  docs.find((d) => d.file === 'AGENTS.md').content += `\nSee \`npm run guard:breadth\`.\n`;
+  docs.find((d) => d.file === 'README.md').content += `\nSee \`npm run guard:breadth\`.\n`;
+  const { violations } = census(docs);
+  assert.equal(violations.filter((v) => v.includes('guard-inventory')).length, 0);
+});
+
+test('the inventory matcher counts distinct scripts, not occurrences', () => {
+  assert.equal(namesGuards('`npm run guard:breadth` then `guard:breadth` again'), false);
+  assert.equal(namesGuards('`npm run guard:breadth` and `npm run guard:tiers`'), true);
+  assert.equal(namesGuards('no guards here'), false);
+});
+
+test('the guard inventory is skipped against the template corpus, and the skip is named', () => {
+  // The starter ships `[FILL]`s and names no guard, so the fact cannot be non-vacuous there.
+  // A silent skip would be indistinguishable from a fact nobody ever wired up.
+  const { docs } = collect(GUIDELINES_ROOT, true);
+  const { violations, vacuous, skipped, notes } = census(docs, { templates: true });
+  assert.deepEqual(violations, []);
+  assert.deepEqual(vacuous, []);
+  assert.ok(skipped.some((line) => line.includes('guard-inventory')), 'the skip must be named');
+  assert.deepEqual(notes, [], 'a skipped fact is not also a note');
+});
+
+test('the guard inventory absent from a project is reported, never failed', () => {
+  // A project may legitimately name no guard — the commands are `[FILL]`ed or absent. Absence is
+  // reported so it is visible; only a SECOND copy fails.
+  const { violations, vacuous, notes } = census(CLEAN);
+  assert.deepEqual(violations, []);
+  assert.deepEqual(vacuous, []);
+  assert.ok(notes.some((line) => line.includes('guard-inventory')), 'the absence must be named');
 });

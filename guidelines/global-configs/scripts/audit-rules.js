@@ -8,6 +8,14 @@
  *   - Rules referencing guidelines that no longer exist
  *   - Guidelines with new MUST/SHOULD statements not reflected in rules
  *   - Rules whose source guideline has been archived
+ *   - Guidelines whose `control:` names a guard that does not resolve
+ *
+ * A RULE CANNOT POINT AT A CONTROL THAT DOES NOT EXIST. The `control:` front-matter key names the
+ * npm script that enforces the rule, and this audit fails one that is named and unresolvable — a
+ * rule that reads as enforced and is not is worse than a rule with no control at all. An ABSENT
+ * key is allowed and counted: backfilling 60-odd guidelines in one pass is a change nobody can
+ * review, so the ratchet is deliberate. `npm run new:guideline` scaffolds the key, so a new rule
+ * cannot avoid the question.
  *
  * Usage:
  *   node global-configs/scripts/audit-rules.js
@@ -26,6 +34,9 @@ const path = require('path');
 // ─── Configuration ───────────────────────────────────────────────────────────
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
+// The repo root — three levels up: scripts → global-configs → guidelines → the repo. This is where
+// `package.json` lives, and it is the same depth centrally and inside a project's `_guidelines/`.
+const REPO = path.resolve(__dirname, '..', '..', '..');
 const GUIDELINE_DIRS = [
   '00-ai-fundamentals',
   '01-workflow-methodology',
@@ -143,6 +154,7 @@ function findGuidelineFiles(dirPath) {
  *   - Status (Normative/Advisory/Archived)
  *   - All MUST/MUST NOT/SHOULD/SHOULD NOT statements
  *   - Anti-pattern entries
+ *   - The optional `control:` front-matter key (the guard that enforces the rule)
  */
 function parseGuideline(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
@@ -151,6 +163,12 @@ function parseGuideline(filePath) {
   // Extract status
   const statusMatch = content.match(/\*\*Status:\*\*\s*(Normative|Advisory|Archived)/i);
   const status = statusMatch ? statusMatch[1] : 'Unknown';
+
+  // Extract the `control:` front-matter key. Absent means "not yet classified" and is allowed —
+  // the ratchet is deliberate (see `checkControl`); the field is not backfilled across the corpus.
+  const frontMatter = content.match(/^---\n([\s\S]*?)\n---\n/);
+  const controlMatch = frontMatter && frontMatter[1].match(/^control:\s*"?(.*?)"?\s*$/m);
+  const control = controlMatch && controlMatch[1].trim() ? controlMatch[1].trim() : null;
 
   // Extract normative statements (MUST / MUST NOT / SHOULD / SHOULD NOT / NEVER / FORBID)
   const imperativeRegex = /\b(MUST NOT|MUST|SHOULD NOT|SHOULD|NEVER|FORBID)\b/gi;
@@ -175,8 +193,43 @@ function parseGuideline(filePath) {
   return {
     path: relativePath,
     status,
+    control,
     imperativeLines,
   };
+}
+
+// ─── The control a rule names ────────────────────────────────────────────────
+
+/**
+ * Does the `control:` a guideline names actually exist?
+ *
+ * A rule that points at a control which was deleted is worse than a rule with no control at all:
+ * it reads as enforced. So the check is not "is the field filled in" but "does the thing it names
+ * exist" — the npm script is declared, and the file that script runs is on disk.
+ *
+ * @returns {{ok: boolean, why?: string, file?: string}}
+ */
+function checkControl(control, scripts) {
+  const name = String(control).replace(/^npm run\s+/, '').trim();
+  const command = scripts[name];
+  if (!command) return { ok: false, why: `\`${name}\` is not a script in package.json` };
+  const file = command.match(/([A-Za-z0-9_./-]+\.(?:js|mjs|cjs|ps1|sh))/);
+  if (!file) return { ok: false, why: `\`${name}\` runs no script file, so the control cannot be verified` };
+  if (!fs.existsSync(path.join(REPO, file[1]))) {
+    return { ok: false, why: `\`${name}\` runs \`${file[1]}\`, which does not exist` };
+  }
+  return { ok: true, file: file[1] };
+}
+
+/** The repo's npm scripts, or an empty set when there is no package.json to read. */
+function readScripts(repo = REPO) {
+  const pkg = path.join(repo, 'package.json');
+  if (!fs.existsSync(pkg)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(pkg, 'utf8')).scripts || {};
+  } catch {
+    return {};
+  }
 }
 
 // ─── Rule Parsing from Templates ─────────────────────────────────────────────
@@ -420,6 +473,34 @@ function audit() {
     }
   }
 
+  // 4b. A rule cannot point at a control that does not exist.
+  // The ratchet is deliberate: an ABSENT `control:` is allowed and counted, never failed, because
+  // backfilling 60-odd guidelines in one pass is a change nobody can review. What is failed is a
+  // control that is NAMED and does not resolve — a rule that reads as enforced and is not.
+  console.log('🔍 Checking declared controls...\n');
+  const scripts = readScripts();
+  const tally = { declared: 0, none: 0, absent: 0 };
+  for (const [guidelinePath, guideline] of Object.entries(guidelines)) {
+    if (!guideline.control) {
+      tally.absent += 1;
+      continue;
+    }
+    if (guideline.control === 'none') {
+      tally.none += 1;
+      continue;
+    }
+    tally.declared += 1;
+    const verdict = checkControl(guideline.control, scripts);
+    if (!verdict.ok) {
+      console.log(`❌ DANGLING CONTROL: ${guidelinePath}`);
+      console.log(`   Declares control: \`${guideline.control}\``);
+      console.log(`   ${verdict.why}`);
+      console.log('   Action: point it at a real guard, or set `control: none` if the rule is deliberately unguarded\n');
+      driftCount++;
+    }
+  }
+  console.log(`   ${tally.declared} declare a control · ${tally.none} declare \`none\` · ${tally.absent} unclassified (the ratchet)\n`);
+
   // 5. Cross-template consistency check
   // Pointer templates (copilot-instructions.starter.md) intentionally
   // contain no rules — they redirect to AGENTS.starter.md. Only compare templates that
@@ -509,4 +590,4 @@ if (require.main === module) {
   process.exit(exitCode);
 }
 
-module.exports = { audit, parseGuideline, parseTemplateRules };
+module.exports = { audit, parseGuideline, parseTemplateRules, checkControl, readScripts };

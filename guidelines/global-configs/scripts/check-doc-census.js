@@ -18,6 +18,18 @@
  * docs when a project path is given. Both are checked against the same fact table, so a
  * downstream project is held to the same rule as the templates it was built from.
  *
+ * TWO KINDS OF FACT. Most facts are a heading (`re`). `guard-inventory` is a SHAPE (`match`):
+ * two or more distinct `guard:*` scripts named in one document, which is an inventory rather than
+ * an incidental mention. Its one home is AGENTS.md, and the reason it exists is that the guard set
+ * already has a home — the guards themselves, derived by `npm run guard:tiers` — so a second
+ * document enumerating it is how a hand-kept list comes back.
+ *
+ * TWO ESCAPE HATCHES, both reported rather than silent. `templates: 'skip'` marks a fact the
+ * template corpus cannot carry (the starter ships `[FILL]`s and names no guard). `vacuous: 'warn'`
+ * marks a fact whose absence is legitimate in a real project too. Both print and neither fails —
+ * a census that failed a correct project would be deleted, which is the one outcome worse than an
+ * unguarded fact.
+ *
  * Non-vacuity: a fact whose designated home does not actually contain it is reported as
  * vacuous — a marker that appears nowhere proves nothing. The test suite additionally
  * proves a deliberately duplicated fixture FAILS.
@@ -27,6 +39,9 @@
  *   node check-doc-census.js <projectRoot>   # scan an installed project's docs
  *
  * Exit codes: 0 = one home per fact; 1 = a duplicated or vacuous fact; 2 = corpus error.
+ *
+ * @tier standard+ — a documentation contract. It governs the doc set rather than the code, so a
+ *   `vibe` slice must not pay for it; it belongs at a milestone exit.
  *
  * Source: global-configs/scripts/check-doc-census.js
  */
@@ -51,8 +66,23 @@ const MANDATED_DOCS = [
 ];
 
 /**
+ * A guard script named in prose, as `npm run guard:tiers` or `` `guard:tiers` ``. Counting
+ * DISTINCT names is what separates a list from an incidental mention: one command quoted inside a
+ * sentence is prose, two or more is an inventory.
+ */
+const GUARD_SCRIPT = /(?:npm run |`)(guard:[a-z][a-z-]*)`?/g;
+
+/** Does this document enumerate the guard set (two or more distinct `guard:*` scripts)? */
+function namesGuards(content) {
+  return new Set([...content.matchAll(GUARD_SCRIPT)].map((match) => match[1])).size >= 2;
+}
+
+/**
  * A canonical fact, its heading anchor, and the ONE file allowed to hold it.
  * `re` is matched against each document's text; the `m` flag makes `^` line-anchored.
+ * `match` overrides `re` when a fact is not a heading but a shape (see `guard-inventory`).
+ * `templates: 'skip'` marks a fact the template corpus cannot carry; `vacuous: 'warn'` marks one
+ * whose absence is legitimate — both are reported, never failed.
  */
 const CANONICAL_FACTS = [
   {
@@ -79,27 +109,53 @@ const CANONICAL_FACTS = [
     re: /^#{2,3}\s+How to Change Safely/m,
     home: 'docs/AI_ARCHITECTURE.md',
   },
+  {
+    // The inventory's real home is the guards themselves — `npm run guard:tiers` derives it from
+    // their `@tier` docblocks. AGENTS.md is the one document allowed to NAME it, and the reason
+    // this fact exists is that a second naming doc is how a hand-kept list comes back.
+    id: 'guard-inventory',
+    what: 'the guard inventory (the `guard:*` script set)',
+    match: namesGuards,
+    home: 'AGENTS.md',
+    // The starter template ships `[FILL]` placeholders and names no guard, so this fact cannot be
+    // non-vacuous there; a project that names none is not wrong either (the commands may be
+    // `[FILL]`ed or absent). Absence is therefore reported, and only a SECOND copy fails.
+    templates: 'skip',
+    vacuous: 'warn',
+  },
 ];
 
 /**
  * Pure census over an explicit corpus.
  * @param {Array<{file: string, content: string}>} docs
- * @returns {{violations: string[], vacuous: string[]}}
+ * @param {{templates?: boolean}} [opts] `templates` marks the central starter-template corpus.
+ * @returns {{violations: string[], vacuous: string[], notes: string[], skipped: string[]}}
  */
-function census(docs) {
+function census(docs, opts = {}) {
   const violations = [];
   const vacuous = [];
+  const notes = [];
+  const skipped = [];
   for (const fact of CANONICAL_FACTS) {
-    const holders = docs.filter((d) => fact.re.test(d.content)).map((d) => d.file);
+    if (opts.templates && fact.templates === 'skip') {
+      skipped.push(`${fact.id}: not enforced against the starter templates — ${fact.what} has no home in a template that ships [FILL]s`);
+      continue;
+    }
+    const hit = fact.match || ((content) => fact.re.test(content));
+    const holders = docs.filter((d) => hit(d.content)).map((d) => d.file);
     if (!holders.includes(fact.home)) {
-      vacuous.push(`${fact.id}: ${fact.home} does not contain ${fact.what} — this fact is unguarded`);
+      const line = `${fact.id}: ${fact.home} does not contain ${fact.what} — this fact is unguarded`;
+      // A fact whose absence is legitimate is reported, never failed: the alternative is a guard
+      // that fails a correct project, and a guard that fails correct work gets deleted.
+      if (fact.vacuous === 'warn') notes.push(line);
+      else vacuous.push(line);
       continue;
     }
     for (const stray of holders.filter((f) => f !== fact.home)) {
       violations.push(`${fact.id}: ${fact.what} also appears in ${stray} — its one home is ${fact.home}`);
     }
   }
-  return { violations, vacuous };
+  return { violations, vacuous, notes, skipped };
 }
 
 function collect(root, useTemplates) {
@@ -146,12 +202,15 @@ function main() {
     process.exit(2);
   }
 
-  const { violations, vacuous } = census(docs);
+  const { violations, vacuous, notes, skipped } = census(docs, { templates: useTemplates });
 
   for (const v of violations) console.log(`   ❌ ${v}`);
   for (const v of vacuous) console.log(`   ⚠️  ${v}`);
+  for (const n of notes) console.log(`   ℹ️  ${n}`);
+  for (const s of skipped) console.log(`   ⏭️  ${s}`);
   if (violations.length === 0 && vacuous.length === 0) {
-    console.log(`✅ ${CANONICAL_FACTS.length} canonical facts, each in exactly one of ${docs.length} docs`);
+    const enforced = CANONICAL_FACTS.length - skipped.length;
+    console.log(`✅ ${enforced} canonical facts, each in exactly one of ${docs.length} docs`);
   }
   if (missing.length > 0) console.log(`\n   (absent, skipped: ${missing.join(', ')})`);
   console.log();
@@ -161,4 +220,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { census, collect, CANONICAL_FACTS, MANDATED_DOCS };
+module.exports = { census, collect, namesGuards, CANONICAL_FACTS, MANDATED_DOCS };

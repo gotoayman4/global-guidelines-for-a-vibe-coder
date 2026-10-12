@@ -7,7 +7,7 @@ const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/check-sync-drift.js');
-const { hashTree, compareProjects } = require('../check-sync-drift.js');
+const { hashTree, compareProjects, requiredGuards, controlsOf } = require('../check-sync-drift.js');
 
 /** Build a source tree and N mirrors, so the comparison has something real to read. */
 function fixture(mirrorMode) {
@@ -123,4 +123,78 @@ test('CLI exits 2 when the registry is unreadable rather than reporting success'
   const result = runSync(process.execPath, [SCRIPT, '--record'], { cwd: REPO_ROOT });
   assert.equal(result.status, 2);
   assert.match(result.stderr, /--record requires a project path/);
+});
+
+// ─── Controls: the mirror answers "has it", this answers "does it run it" ─────
+
+/** A manifest that declares the guard files a project must expose. */
+function manifest(root, required) {
+  const file = path.join(root, 'sync-manifest.json');
+  fs.writeFileSync(file, JSON.stringify({ guards: { required } }, null, 2));
+  return file;
+}
+
+test('requiredGuards reads the declared set, and is null when none is declared', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-controls-'));
+  assert.equal(requiredGuards(path.join(root, 'absent.json')), null, 'a missing manifest declares nothing');
+  fs.writeFileSync(path.join(root, 'empty.json'), JSON.stringify({ guards: {} }));
+  assert.equal(requiredGuards(path.join(root, 'empty.json')), null);
+  fs.writeFileSync(path.join(root, 'none.json'), JSON.stringify({ guards: { required: [] } }));
+  assert.equal(requiredGuards(path.join(root, 'none.json')), null, 'an empty set is not a set');
+  assert.deepEqual(requiredGuards(manifest(root, ['a.js', 'b.js'])), ['a.js', 'b.js']);
+});
+
+test('REVERSAL PROOF: a current mirror whose guard is not wired is unwired', () => {
+  // The mirror is in sync and the guard file is present — and nothing ever runs it. That is the
+  // gap the mirror hash cannot see, and the reason this pass exists.
+  const ok = fixture('ok');
+  fs.writeFileSync(path.join(ok.project, 'package.json'), JSON.stringify({
+    scripts: { 'guard:breadth': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
+  }, null, 2));
+  const controls = controlsOf(ok.project, ['check-doc-breadth.js', 'check-guard-tiers.js']);
+  assert.equal(controls.state, 'unwired');
+  assert.deepEqual(controls.missing, ['check-guard-tiers.js']);
+});
+
+test('the control is matched by file, not by script name', () => {
+  // The doctrine maps each step to the project's own script names, so a name-agnostic match is the
+  // only one that does not impose a convention.
+  const ok = fixture('ok');
+  fs.writeFileSync(path.join(ok.project, 'package.json'), JSON.stringify({
+    scripts: { 'lint:guards': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
+  }, null, 2));
+  assert.equal(controlsOf(ok.project, ['check-doc-breadth.js']).state, 'wired');
+});
+
+test('a project with no package.json is reported, never failed', () => {
+  // Not every project is a Node project; one that is cannot expose npm scripts at all.
+  const ok = fixture('ok');
+  const controls = controlsOf(ok.project, ['check-doc-breadth.js']);
+  assert.equal(controls.state, 'not-a-node-project');
+  assert.deepEqual(controls.missing, []);
+});
+
+test('an unreadable package.json fails rather than passing silently', () => {
+  const ok = fixture('ok');
+  fs.writeFileSync(path.join(ok.project, 'package.json'), '{ this is not json');
+  assert.equal(controlsOf(ok.project, ['check-doc-breadth.js']).state, 'unreadable');
+});
+
+test('CLI exits 1 when the mirror is current but a required guard is unwired', () => {
+  const f = fixture('ok');
+  const registry = path.join(f.root, 'sync-projects.json');
+  fs.writeFileSync(registry, JSON.stringify([{ name: 'p', path: f.project }]));
+  const declared = manifest(f.root, ['check-doc-breadth.js']);
+  const run = () => runSync(process.execPath, [SCRIPT, '--quiet'], {
+    cwd: REPO_ROOT,
+    env: { ...process.env, SYNC_DRIFT_SOURCE: f.source, SYNC_DRIFT_REGISTRY: registry, SYNC_DRIFT_MANIFEST: declared },
+  });
+
+  fs.writeFileSync(path.join(f.project, 'package.json'), JSON.stringify({ scripts: { lint: 'eslint .' } }, null, 2));
+  assert.equal(run().status, 1, 'in sync, but the guard is never run');
+
+  fs.writeFileSync(path.join(f.project, 'package.json'), JSON.stringify({
+    scripts: { 'guard:breadth': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
+  }, null, 2));
+  assert.equal(run().status, 0, 'wired — the mirror is current and the guard runs');
 });

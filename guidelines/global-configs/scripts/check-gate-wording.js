@@ -30,6 +30,9 @@
  *
  * Exit codes: 0 = one description, mode-gated; 1 = retired wording present; 2 = corpus error.
  *
+ * @tier standard+ — a wording contract over the gate descriptions; a retired phrase reappears at
+ *   a milestone, not mid-slice.
+ *
  * Source: global-configs/scripts/check-gate-wording.js
  */
 

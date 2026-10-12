@@ -34,11 +34,10 @@
  * Exit codes: 0 = within breadth (or nothing judgeable); 1 = a work slice exceeded its breadth;
  *             2 = usage error.
  *
- * TIER: `standard+` — a contract guard, not a security control. It belongs on a `standard`/`guarded`
+ * @tier standard+ — a contract guard, not a security control. It belongs on a `standard`/`guarded`
  *   push and at a milestone exit, never in the `vibe` between-edit loop (`local-ci-strategy.md`
- *   §Guard Tiers). That section requires every guard to declare its tier in its own docblock; no
- *   other guard carries one yet and nothing derives the set from them (proposal A2), so the tier is
- *   recorded here in prose rather than assumed to be read.
+ *   §Guard Tiers). The declaration is machine-read: `check-guard-tiers.js` derives the gate set
+ *   from the guards' own docblocks, so this line is the control rather than a note about one.
  *
  * Source: global-configs/scripts/check-doc-breadth.js
  */

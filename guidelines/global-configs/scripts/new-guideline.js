@@ -53,6 +53,9 @@ function buildContent(title, category, slug) {
     'status: "Normative"',
     'scope: "Global"',
     `tags: [${tagsFor(slug).join(', ')}]`,
+    // A new rule must say what enforces it — `npm run <script>`, or `none` for a rule that is
+    // deliberately unguarded. `npm run audit` fails a control that is named and does not resolve.
+    'control: none',
     '---',
     '',
     `# ${title}`,

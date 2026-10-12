@@ -8,6 +8,9 @@
  *
  * Exit code: 0 = full coverage, 1 = files missing from index
  *
+ * @tier standard+ — an unindexed file is a structural hole in the guidelines index, which is a
+ *   central-repo artifact; a project checks it at a milestone, not on every push.
+ *
  * Source: global-configs/scripts/check-index-coverage.js
  * Last Updated: 2026-06-13
  */

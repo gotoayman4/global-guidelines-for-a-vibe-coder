@@ -2,6 +2,7 @@
 status: "Normative"
 scope: "Global"
 tags: [ci-cd, local-ci, pre-push, cost, husky, gate-receipt, path-aware]
+control: "guard:tiers"
 ---
 
 # Local CI Strategy — Free, Cloud-Independent Quality Gates
@@ -45,7 +46,7 @@ The gate's *construction* is fixed; **how much of it runs is the declared mode's
 
 ## Guard Tiers — a Guard Declares When It Must Run
 
-A suite whose every test runs on every push grows without bound, because its cost becomes a function of the repo's age rather than its risk. Give each guard a tier in its own file-level docblock, and let the gate derive the set from the guards themselves:
+A suite whose every test runs on every push grows without bound, because its cost becomes a function of the repo's age rather than its risk. Give each guard a tier in its own file-level docblock — `@tier always | standard+ | ship` — and let the gate derive the set from the guards themselves:
 
 | Tier | Runs | Belongs here |
 |---|---|---|
@@ -53,7 +54,7 @@ A suite whose every test runs on every push grows without bound, because its cos
 | `standard+` | `standard`/`guarded` pushes, plus any `vibe` slice whose mode escalated | contract and parity guards |
 | `ship` | the ship boundary, in every mode | critical-flow E2E, the deny matrix, the full suite |
 
-The mechanism is not new: it is the `@docs-guard` docblock the documentation gate already derives its set from, with the derivation key changed from *path* to *mode and tier*. **Derive the set from the guards themselves** — a list kept by hand in the hook is a list that goes stale, and it fails in the direction nobody notices.
+The tier is declared in the guard's own file-level docblock, and **`npm run guard:tiers` is the control**: it fails a guard with no `@tier`, a guard no npm script runs, an `always` guard the gate never reaches, and a `ship` guard the `vibe` chain reaches. A `standard+` guard the gate does not reach is *reported, never failed* — six guards in this repo are milestone- or fleet-scoped by design, and naming them is what makes that a decision instead of an accident. **Derive the set from the guards themselves** — a list kept by hand in the hook is a list that goes stale, and it fails in the direction nobody notices. Measured when the control was written (2026-10-12): 9 guards, 1 tier declared, 3 reached by the gate.
 
 ## Tier B — The Pre-Push Gate (Mandatory)
 

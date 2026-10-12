@@ -27,6 +27,7 @@ Every guideline file follows this structure:
 status: "Normative"          # Normative | Advisory | Archived
 scope: "Global"              # Global | Stack (Technology)
 tags: [topic, subtopic]      # inline list — MASTER_INDEX renders these
+control: "guard:breadth"     # the npm script that enforces this rule, or `none` if unguarded
 ---
 
 # Title — Short Descriptive Subtitle
@@ -62,6 +63,8 @@ This section is the "compact extract" — AI loads this when tokens are tight.
 ```
 
 **Two rules the tooling enforces.** (1) Front-matter is the only home for `status`/`scope`/`tags` — never repeat them as bold lines in the body. (2) The `## Cross-References` footer is the graph's only input; `npm run render:index` builds `_index/MASTER_INDEX.md` from front-matter + footer, and `npm run check-index-drift` fails the gate if the index was hand-edited. There is no `Last Updated` field — `git log` answers that.
+
+**A third, and it is the one that keeps the rest honest.** `control:` names the guard that enforces the rule. `npm run audit` fails a `control:` that does not resolve to a real script running a real file — a rule that reads as enforced and is not is worse than a rule with no control at all. An **absent** key is allowed and counted, because backfilling the whole corpus in one pass is a change nobody can review; `npm run new:guideline` scaffolds the key, so a new rule cannot avoid the question. A rule that is deliberately unguarded says `control: none`.
 
 ---
 

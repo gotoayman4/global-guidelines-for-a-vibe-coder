@@ -9,6 +9,10 @@
  *
  * Exit code: 0 = all links valid, 1 = broken links found
  *
+ * @tier standard+ — a broken link is a broken repo, but the tree it guards is the guidelines tree:
+ *   a project runs it at a milestone (`docs:links`), not on every push. `always` is reserved for a
+ *   control that is meaningful in every repo the file is mirrored into.
+ *
  * Source: global-guidelines-for-a-vibe-coder/global-configs/scripts/check-links.js
  * Last Updated: 2026-06-13
  */
