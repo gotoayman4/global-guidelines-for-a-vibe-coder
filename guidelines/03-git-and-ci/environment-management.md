@@ -24,7 +24,7 @@ tags: [environments, secrets, config]
 
 ## Setup Checklist (new project)
 
-.env.example committed · .env gitignored · agents blocked from .env · pre-push gate configured (lint/typecheck/test/build) · hooks run without real secrets · distinct keys per environment · staging DB isolated · pre-commit secret scan · AI tool dirs in .gitignore · clean-tree check in pre-push gate.
+.env.example committed · .env gitignored · agents blocked from .env · pre-push gate configured for the declared mode · hooks run without real secrets · distinct keys per environment · staging DB isolated · pre-commit secret scan · AI tool dirs in .gitignore · clean-tree check in pre-push gate.
 
 ## Anti-Patterns
 

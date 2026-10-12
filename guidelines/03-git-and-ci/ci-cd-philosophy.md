@@ -10,13 +10,21 @@ tags: [ci-cd, pipelines, automation]
 
 CI is the first reviewer of every AI-generated change — it catches what a quick eyeball misses and never gets tired. Every AI-generated PR passes automated gates before merge.
 
-**Execution is local by default.** The pipeline runs on the dev machine — pre-commit hooks for staged files, a mandatory pre-push gate for the full pipeline. No cloud CI provider or paid Actions minutes are required; see `local-ci-strategy.md`.
+**Execution is local by default.** The pipeline runs on the dev machine — pre-commit hooks for staged files, and a mandatory pre-push gate that runs **the declared mode's share of the pipeline** (`local-ci-strategy.md` §Which Gate Runs). No cloud CI provider or paid Actions minutes are required; see `local-ci-strategy.md`.
 
 ## The Minimum Pipeline (in order)
+
+The order below is fixed; **how much of it a push runs is the mode's decision**, and the ship boundary runs all of it in every mode.
 
 ```
 PUSH (pre-push gate, local) → LINT → TYPE CHECK → TEST → BUILD → SECURITY SCAN → CLEAN TREE → DEPLOY PREVIEW
 ```
+
+| Push scope | Runs |
+|---|---|
+| `vibe` per push | LINT → TYPE CHECK → TEST, plus every `always`-tier guard |
+| `standard` / `guarded` per push | the whole pipeline |
+| ship boundary (every mode) | the whole pipeline |
 
 | Gate | Command | Catches |
 |---|---|---|

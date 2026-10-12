@@ -15,7 +15,7 @@ CI does not require a cloud CI provider. Cloud Actions minutes are a paid quota 
 | Tier | When it runs | What it covers |
 |---|---|---|
 | **A — Pre-commit hooks** | Every commit | Staged-file lint, type check, format (`husky` + `lint-staged`) |
-| **B — Pre-push gate** | Before every push | The full Minimum Pipeline (see `ci-cd-philosophy.md`) |
+| **B — Pre-push gate** | Before every push | **The declared mode's** gate — see §Which Gate Runs. `ci-cd-philosophy.md` owns the full pipeline's *construction*; the mode decides how much of it a push runs |
 | **C — act (optional)** | On demand | Validates existing `.github/workflows` files locally via Docker |
 
 ## The Loop Inside Tier A and Tier B (Mandatory in Practice)
@@ -25,9 +25,10 @@ The two named tiers are the boundaries; almost all agent time is spent between t
 | Script | Contents | Cost | When |
 |---|---|---|---|
 | `gate:fast` | `lint` + `type-check` + `test -- --run --changed` (only tests touched by the diff) | seconds | After every edit batch, during the slice |
-| the pre-push hook | the full pipeline | minutes | Once, before the push — never replaced by `gate:fast` |
+| the pre-push hook | **the declared mode's gate** (§Which Gate Runs): `gate:fast` + the `always` guard tier in `vibe`; the full pipeline in `standard`/`guarded` | seconds (vibe) to minutes | Once, before the push |
 
 - The fast loop is a convenience, **never** a gate: it is not evidence, and a claim of "verified" MUST NOT cite it. Its whole purpose is to move the cheap failures earlier.
+- **`gate:fast` is the whole per-push gate in `vibe`, not merely a substitute for it.** What `vibe` defers — the full suite, the build, the ship-tier guards — it defers to the **ship boundary**, which runs the full pipeline in every mode. Nothing is skipped; it is *deferred to a named boundary*.
 - `--changed` trusts the diff to name the dependents. Anything a shared file can break without appearing in the diff (contracts, i18n parity, path-scoped suites) is exactly what the full gate is for.
 
 ## Which Gate Runs — the Mode Decides
@@ -58,11 +59,17 @@ The mechanism is not new: it is the `@docs-guard` docblock the documentation gat
 
 Before every push, run that mode's gate locally. This gate replaces the cloud CI gate: a push that has not passed it is a violation, the same as merging on a red pipeline.
 
-1. Install husky once per project: `npx husky init`, then define `.husky/pre-push`:
+1. Install husky once per project: `npx husky init`, then define `.husky/pre-push`. **The hook branches on the declared `mode`** — it is not the full pipeline unconditionally:
+
    ```sh
-   npm run lint && npm run typecheck && npm run test -- --run && npm run build
+   # mode = vibe      → the fast loop + the always tier
+   npm run gate:fast && npm run test -- --run
+   # mode = standard  → the full pipeline
+   npm run lint && npm run type-check && npm test -- --run && npm run build
+   # mode = guarded   → the full pipeline + the path-aware extras
    ```
-   Map each step to the project's actual script names (`[FILL]` in starter templates), and branch on the declared `mode`.
+
+   Map each step to the project's actual script names (`[FILL]` in starter templates). Read the mode from `WORLD.md` (the sole owner of the value) rather than hard-coding a second copy of it. **Writing the full pipeline unconditionally is the defect this branch exists to prevent:** it makes `vibe` pay `standard`'s cost on every push, and a project then "fixes" the slowness by skipping the gate — the one outcome that is forbidden.
 2. **The hook header comment is the normative list.** Write the step order once, as a `# Order: a → b → c` comment at the top of `.husky/pre-push`; the constitution restates it (and a guard compares the two token-for-token), every other document links to it. Measured in production: two hand-kept copies of one step list had already drifted apart.
 3. **The dependency audit runs through the project's own wrapper** (`npm run audit:gate`), never a bare `npm audit`. A bare `npm audit` that cannot reach the registry reports nothing and exits 0 — an unreachable registry MUST exit non-zero, never a silent pass.
    The wrapper owns the reasoned, expiring allowlist (each entry: why, what, review-by date) and the npm flags its sandbox needs: `npm audit` inside a lifecycle script needs script execution disabled, so pin that env var in the wrapper, not in the developer's shell.

@@ -65,7 +65,7 @@ The audit is a **scheduled act**, not a reflex: monthly, as an automation, writi
 
 ## Do Not
 
-- **Never fix friction by skipping or weakening a gate that guards critical stability** (security, honesty of evidence, ship-boundary critical-flow checks, the full pre-push pipeline). Optimize the gate, tier it, or scope it by path — a fast workflow you cannot trust at ship time is not fast, it is deferred.
+- **Never fix friction by skipping or weakening a gate that guards critical stability** (security, honesty of evidence, ship-boundary critical-flow checks, the ship boundary's full pipeline). Optimize the gate, tier it, or scope it by path — a fast workflow you cannot trust at ship time is not fast, it is deferred.
 - **Process steps that guard nothing at the current mode's risk tier MAY be deferred or dropped** — recorded as a one-line accepted risk in the mode's trade-offs table (`speed-tiered-workflow.md`). If nobody can name what the step protects *right now*, its cost is pure tax.
 - **Never bulk-rewrite history** to make a document smaller. Relocate it verbatim and prove the move against `git show HEAD:<path>`.
 - **Never add a fifth copy of a list** to "make it easier to find". The pointer is the copy.

@@ -43,8 +43,8 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [development-workflow.md](../01-workflow-methodology/development-workflow.md) | Normative | Global | ~1081 | `#workflow` `#process` `#lifecycle` |
 | [planning-and-scoping.md](../01-workflow-methodology/planning-and-scoping.md) | Normative | Global | ~645 | `#planning` `#scoping` `#prd` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~494 | `#refactoring` `#maintenance` `#technical-debt` |
-| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~2199 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#context-budget` `#escalation` |
-| [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2547 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
+| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~2383 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#context-budget` `#escalation` |
+| [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2549 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
 
 ### 02 — Engineering Practices
 
@@ -69,10 +69,10 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
-| [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~644 | `#ci-cd` `#pipelines` `#automation` |
-| [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~874 | `#environments` `#secrets` `#config` |
-| [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~709 | `#git` `#branching` `#commits` |
-| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~2756 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
+| [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~753 | `#ci-cd` `#pipelines` `#automation` |
+| [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~873 | `#environments` `#secrets` `#config` |
+| [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~749 | `#git` `#branching` `#commits` |
+| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~3037 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
 
 ### 04 — Architecture
 
@@ -170,6 +170,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [slice-close.js](../global-configs/scripts/slice-close.js) | Script | Global | ~450 | `#script` `#slice-close` `#changelog` `#decision-number` `#freshness` `#derived-facts` |
 | [check-sync-drift.js](../global-configs/scripts/check-sync-drift.js) | Script | Global | ~300 | `#script` `#sync` `#drift-detection` `#content-hash` `#gate` `#delivery` |
 | [audit-friction.js](../global-configs/scripts/audit-friction.js) | Script | Global | ~450 | `#script` `#audit` `#friction` `#measurement` `#cadence` `#boot-budget` |
+| [check-gate-wording.js](../global-configs/scripts/check-gate-wording.js) | Script | Global | ~350 | `#script` `#gate` `#modes` `#single-source` `#guard` `#retired-wording` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
 
@@ -185,7 +186,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [docx-per-paragraph-language.skill.md](../global-configs/skills/docx-per-paragraph-language.skill.md) | Advisory | Global (Task-Type Skill) | ~3482 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
 | [firebase-firestore-practices.skill.md](../global-configs/skills/firebase-firestore-practices.skill.md) | Advisory | Global (Task-Type Skill) | ~1614 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [firestore-cost-optimization.skill.md](../global-configs/skills/firestore-cost-optimization.skill.md) | Advisory — **with an enforced core.** The tactics below are judgment; the three bans named in | Global (Task-Type Skill) | ~2894 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
-| [first-project-setup.skill.md](../global-configs/skills/first-project-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~2317 | `#skill` `#setup` `#beginner` `#onboarding` |
+| [first-project-setup.skill.md](../global-configs/skills/first-project-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~2576 | `#skill` `#setup` `#beginner` `#onboarding` |
 | [implementation-plan.skill.md](../global-configs/skills/implementation-plan.skill.md) | Advisory | Global (Task-Type Skill) | ~2486 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup.skill.md](../global-configs/skills/inno-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~1470 | `#skill` `#inno-setup` `#installer` `#windows` |
 | [mui-design-system.skill.md](../global-configs/skills/mui-design-system.skill.md) | Advisory | Global (Task-Type Skill) | ~1437 | `#skill` `#mui` `#design-system` `#shared-components` |

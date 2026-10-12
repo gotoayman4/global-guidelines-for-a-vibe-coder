@@ -64,7 +64,8 @@ You are a project setup specialist. You guide users with zero coding experience 
    - **VS Code:** `.vscode/settings.json` — merge with existing, enable AGENTS.md support
 5c. **Create WORLD.md (optional):** If the project needs product intent guardrails, create `WORLD.md` from `global-configs/templates/WORLD.starter.md`
 5d. **Configure ESLint:** Add `max-lines` rule to the project's ESLint config: `"max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }]`. Plan new files for ~300 lines; a file reaching 400 MUST be refactored down to under 300. Run `npm run lint` to verify the config is valid.
-5e. **Configure local CI hooks (mandatory):** CI is local — no cloud CI scaffold. Run `npx husky init`; set `.husky/pre-commit` to lint-staged (ESLint, type-check, format) and `.husky/pre-push` to the full pipeline: `npm run lint && npm run type-check && npm test -- --run && npm run build` (map to the project's actual scripts), plus a `git status --porcelain` clean-tree check. Hooks must not require real secrets. See `03-git-and-ci/local-ci-strategy.md`.
+5e. **Configure local CI hooks (mandatory):** CI is local — no cloud CI scaffold. Run `npx husky init`; set `.husky/pre-commit` to lint-staged (ESLint, type-check, format), and make `.husky/pre-push` **branch on the declared mode** read from `WORLD.md` §Speed Mode: `vibe` runs `gate:fast` + the `always` guard tier and defers the full pipeline to the ship boundary; `standard`/`guarded` run the full pipeline. Map each step to the project's actual scripts. Both branches add the dependency-audit wrapper and a content-hashed clean-tree check. Hooks must not require real secrets. **A hook that runs the full pipeline unconditionally is the defect `local-ci-strategy.md` §Tier B names** — it makes `vibe` pay `standard`'s cost on every push, and the project then "fixes" it by skipping the gate. See `03-git-and-ci/local-ci-strategy.md`.
+5f. **Declare a tier on every guard (mandatory):** each guard states its own tier in a file-level docblock (`@tier always | standard+ | ship`), and the pre-push hook **derives the set it runs from the guards** — keyed on the declared mode — rather than listing steps by hand. `always` = security, honesty and structural invariants (every push, every mode); `standard+` = contract and parity guards; `ship` = critical-flow E2E and the deny matrix. A hand-kept step list is a list that goes stale, and it fails in the direction nobody notices. See `03-git-and-ci/local-ci-strategy.md` §Guard Tiers.
 6. **Run and verify:** Start dev server (`npm run dev`), confirm the app loads in the browser.
 7. **First commit with constitution:** `git add .`, `git commit -m "feat: add project constitution and configuration"`.
 8. **Connect remote:** Help user create a GitHub repository and push.
@@ -111,7 +112,7 @@ You are a project setup specialist. You guide users with zero coding experience 
 
 ### Local CI Hooks
 - [ ] husky installed; pre-commit hook runs lint-staged
-- [ ] pre-push hook runs full pipeline (lint → type-check → test → build)
+- [ ] pre-push hook branches on the declared mode (`vibe`: `gate:fast` + the `always` tier; `standard`/`guarded`: the full pipeline)
 - [ ] No real secrets required by hooks
 
 ### Git Initialized
