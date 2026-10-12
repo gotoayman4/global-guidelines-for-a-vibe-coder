@@ -7,7 +7,21 @@ const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/slice-close.js');
-const { quarterFile, nextDecision, deriveMode, updateFreshness, wrap } = require('../slice-close.js');
+const {
+  quarterFile,
+  nextDecision,
+  deriveMode,
+  updateFreshness,
+  wrap,
+  slugify,
+  adrNumber,
+  appendTableRow,
+  buildLiteAdr,
+  ADR_INDEX,
+} = require('../slice-close.js');
+
+const ADR_INDEX_HEADER = /^\|\s*ADR\s*\|\s*Decision\s*\|/;
+const DECISION_LOG_HEADER = /^\|\s*ID\s*\|\s*Decision\s*\|\s*Rationale\s*\|/;
 
 const today = () => new Date().toISOString().split('T')[0];
 
@@ -144,4 +158,138 @@ test('CLI rejects an unknown mode', () => {
   const result = run([makeProject(), '--title', 'x', '--mode', 'turbo']);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /--mode must be vibe \| standard \| guarded/);
+});
+
+// --- `--adr`: the decision's three derived sites -------------------------------------------
+
+/** A project carrying both index tables, so `--adr` has somewhere to write. */
+function makeAdrProject({ agents = '# AGENTS\n\nD7 is the last one.\n' } = {}) {
+  const dir = makeProject({ agents });
+  fs.mkdirSync(path.join(dir, 'docs/adr'), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, ADR_INDEX),
+    '# ADR index\n\n| ADR | Decision | Depth | Status |\n|---|---|---|---|\n| [007](007-old.md) | an earlier call (D7) | Lite | Accepted (2026-10-01) |\n',
+    'utf8',
+  );
+  fs.writeFileSync(
+    path.join(dir, 'docs/PRD.md'),
+    '# PRD\n\n# 24. Decisions Log\n\n| ID | Decision | Rationale |\n|---|---|---|\n| D7 | an earlier call | it had to be somewhere |\n',
+    'utf8',
+  );
+  return dir;
+}
+
+test('slugify is lowercase, hyphenated, and truncates at a word boundary', () => {
+  assert.equal(slugify('Add a Retry to the login form'), 'add-a-retry-to-the-login-form');
+  assert.equal(slugify('  Weird   --  punctuation!! '), 'weird-punctuation');
+  const long = slugify('one two three four five six seven eight nine ten eleven twelve thirteen');
+  assert.ok(long.length <= 48, `slug too long: ${long.length}`);
+  assert.ok(!long.endsWith('-'), 'a truncation never leaves a trailing hyphen');
+  assert.ok(long.startsWith('one-two-three'), 'the slug keeps its leading words');
+});
+
+test('adrNumber pads to three digits so file name and decision number are one scheme', () => {
+  assert.equal(adrNumber(7), '007');
+  assert.equal(adrNumber(45), '045');
+  assert.equal(adrNumber(1234), '1234');
+});
+
+test('appendTableRow adds to the matching table only, and reports a missing one', () => {
+  const doc = '| ADR | Decision |\n|---|---|\n| [001](001-a.md) | one |\n\n| Other | Table |\n|---|---|\n| x | y |\n';
+  const after = appendTableRow(doc, ADR_INDEX_HEADER, '| [002](002-b.md) | two |');
+  const lines = after.split('\n');
+  assert.equal(lines[3], '| [002](002-b.md) | two |', 'the row lands at the end of the ADR table');
+  assert.equal(lines[7], '| x | y |', 'the second table is untouched');
+  assert.equal(appendTableRow('no tables here', ADR_INDEX_HEADER, '| a | b |'), null, 'a missing table is reported, not created');
+});
+
+test('buildLiteAdr derives the header and keeps the authored body verbatim', () => {
+  const adr = buildLiteAdr({ number: '045', title: 'App Check cancelled', date: '2026-10-12', decision: 45, why: 'No attestation surface.' });
+  assert.match(adr, /^# ADR 045: App Check cancelled/);
+  assert.match(adr, /## Status: Accepted \(2026-10-12\) · \*\*Depth:\*\* lite · \*\*Decision:\*\* D45/);
+  assert.match(adr, /## Context \/ Decision\n\nNo attestation surface\./);
+});
+
+test('CLI --adr writes the decision\'s five sites from one invocation', () => {
+  const dir = makeAdrProject();
+  const result = run([
+    dir,
+    '--title',
+    'Add a Retry to the login form',
+    '--sha',
+    'abc1234',
+    '--adr',
+    '--why',
+    'The form had no recovery path after a transient network failure.',
+  ]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /D8 \(derived/);
+
+  const adr = fs.readFileSync(path.join(dir, 'docs/adr/008-add-a-retry-to-the-login-form.md'), 'utf8');
+  assert.match(adr, /## Context \/ Decision\n\nThe form had no recovery path/);
+
+  const index = fs.readFileSync(path.join(dir, ADR_INDEX), 'utf8');
+  assert.match(index, /\| \[008\]\(008-add-a-retry-to-the-login-form\.md\) \| Add a Retry to the login form \(D8\) \| Lite \| Accepted \(\d{4}-\d{2}-\d{2}\) \|/);
+  assert.equal(index.match(/^\| \[/gm).length, 2, 'the earlier row survives; the new one appends');
+
+  const log = fs.readFileSync(path.join(dir, 'docs/PRD.md'), 'utf8');
+  assert.match(log, /\| D8 \| Add a Retry to the login form \| The form had no recovery path after a transient network failure\. \|/);
+  assert.equal(log.match(/^\| D\d/gm).length, 2, 'the earlier decision row survives');
+});
+
+test('CLI --adr without --why is a usage error — the reasoning is never invented', () => {
+  const result = run([makeAdrProject(), '--title', 'no reason given', '--adr']);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /--adr requires --why/);
+});
+
+test('CLI --adr never overwrites a hand-authored ADR — it adds the rows only', () => {
+  const dir = makeAdrProject();
+  const authored = '# ADR 008: HAND AUTHORED\n\nA full-depth body the agent wrote.\n';
+  fs.writeFileSync(path.join(dir, 'docs/adr/008-hand.md'), authored, 'utf8');
+  const result = run([dir, '--title', 'hand written', '--sha', 'aaa', '--decision', '8', '--adr', '--adr-file', '008-hand.md', '--why', 'the row rationale']);
+  assert.equal(result.status, 0);
+  assert.equal(fs.readFileSync(path.join(dir, 'docs/adr/008-hand.md'), 'utf8'), authored, 'the file is byte-identical');
+  assert.match(result.stdout, /exists — left untouched/);
+  assert.match(fs.readFileSync(path.join(dir, ADR_INDEX), 'utf8'), /\[008\]\(008-hand\.md\)/);
+});
+
+test('CLI --adr reports a missing index instead of creating one', () => {
+  const dir = makeAdrProject();
+  fs.rmSync(path.join(dir, ADR_INDEX));
+  const result = run([dir, '--title', 'no index', '--sha', 'aaa', '--adr', '--why', 'a reason']);
+  assert.equal(result.status, 0, 'a missing optional doc is reported, not fatal');
+  assert.match(result.stdout, /is absent — no ADR-index row written/);
+  assert.ok(!fs.existsSync(path.join(dir, ADR_INDEX)), 'the script does not invent a table the project did not choose');
+});
+
+test('CLI --adr-depth full records the depth in the index row', () => {
+  const dir = makeAdrProject();
+  run([dir, '--title', 'an irreversible call', '--sha', 'aaa', '--adr', '--adr-depth', 'full', '--why', 'cannot be undone']);
+  assert.match(fs.readFileSync(path.join(dir, ADR_INDEX), 'utf8'), /\| an irreversible call \(D8\) \| Full \|/);
+});
+
+test('CLI rejects an unknown --adr-depth', () => {
+  const result = run([makeAdrProject(), '--title', 'x', '--adr', '--adr-depth', 'deep', '--why', 'y']);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /--adr-depth must be lite \| full/);
+});
+
+test('CLI --adr --dry-run writes nothing at all', () => {
+  const dir = makeAdrProject();
+  const result = run([dir, '--title', 'planned adr', '--adr', '--why', 'a reason', '--dry-run']);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /dry-run: nothing written/);
+  assert.ok(!fs.existsSync(path.join(dir, 'docs/adr/008-planned-adr.md')), 'no ADR file');
+  assert.ok(!fs.existsSync(path.join(dir, 'docs/changelog')), 'no archive');
+});
+
+test('a decisions log at docs/DECISIONS.md is found and written', () => {
+  const dir = makeAdrProject();
+  // The PRD loses its table; the standalone log carries it instead (the C1 split).
+  fs.writeFileSync(path.join(dir, 'docs/PRD.md'), '# PRD\n\n# 24. Decisions Log\n\nSee `docs/DECISIONS.md`.\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'docs/DECISIONS.md'), '# Decisions Log\n\n| ID | Decision | Rationale |\n|---|---|---|\n| D7 | an earlier call | it had to be somewhere |\n', 'utf8');
+  const result = run([dir, '--title', 'split log', '--sha', 'aaa', '--adr', '--why', 'a reason']);
+  assert.equal(result.status, 0);
+  assert.match(fs.readFileSync(path.join(dir, 'docs/DECISIONS.md'), 'utf8'), /\| D8 \| split log \| a reason \|/);
 });

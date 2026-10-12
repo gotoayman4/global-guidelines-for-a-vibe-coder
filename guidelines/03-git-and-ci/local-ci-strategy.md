@@ -104,7 +104,19 @@ npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md --
 | the next decision number, `D<max+1>` | the numbers already present in the docs **and** the archives — never a counter kept in a file |
 | the freshness line on `WORLD.md` / `docs/AI_ARCHITECTURE.md` | the same date and SHA, where the project carries one |
 
-`--dry-run` prints the plan and writes nothing; `--decision` overrides the derived number when a concurrent session took it. **Prose stays human:** the acceptance body and the ADR. Everything else is a fact the repository already knows — and a fact a machine writes cannot be forgotten, mistyped, or raced.
+**`--adr` adds the decision's three sites, because all three restate what the repository already knows:**
+
+| It writes | Derived from |
+|---|---|
+| `docs/adr/<NNN>-<slug>.md` — the lite ADR, header filled | the derived number, the date, `--title`; the **body is `--why`, authored by the caller** |
+| the row in `docs/adr/README.md`'s index table | the number, the file name, the title, the depth |
+| the row in the decisions log (`docs/PRD.md` §24, or `docs/DECISIONS.md`) | the number, the title, `--why` |
+
+`--why` is **required** with `--adr`: the reasoning is the one part this script must not invent, and a row without it is a placeholder. A **full-depth ADR is authored by the agent** and passed with `--adr-file` — the script then adds the two rows and leaves the file byte-identical. Measured motivation: a project recorded 50 decisions and hand-wrote 100 index rows, each of which is a copy of a fact already in the ADR (`GAMS_WORKFLOW_SPEED_ANALYSIS_2026-10-12.md` §2.4).
+
+`npm run guard:decisions` (`check-decision-index.js`) is the control: it fails when an ADR file has no index row, when a row points at a file that does not exist, and when the same ADR is listed twice. An ADR whose decision is not yet in the log is a **warning** — work in flight must not fail the gate — and becomes a failure under `--strict` at a milestone exit.
+
+`--dry-run` prints the plan and writes nothing; `--decision` overrides the derived number when a concurrent session took it. **Prose stays human:** the acceptance body and the ADR's `--why`. Everything else is a fact the repository already knows — and a fact a machine writes cannot be forgotten, mistyped, or raced.
 
 ## Tier C — act (Optional)
 
