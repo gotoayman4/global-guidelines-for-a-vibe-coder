@@ -1,17 +1,17 @@
 ---
 name: firestore-cost-optimization
 description: Activate when optimizing Firebase/Firestore costs, minimizing reads/writes/deletes, staying within free-tier quotas, or reducing hosting download volume
-status: "Advisory — **with an enforced core.** The tactics below are judgment; the three bans named in"
+status: "Advisory — with an enforced core"
 scope: "Global (Task-Type Skill)"
 tags: [skill, firestore, firebase, cost, quota]
 ---
 
 # Skill: Firestore Cost Optimization
 
-"Enforced by" are gate-checked in projects that adopted them. Name which kind a line is: an agent that
-cannot tell a wish from a wall will treat both as optional, and a skill whose trigger the session never
-fires constrains nothing at all (see "Enforced by", D201-class lesson).
----
+The tactics below are judgment; the three bans named in "Enforced by" are gate-checked in projects that
+adopted them. Name which kind a line is: an agent that cannot tell a wish from a wall will treat both as
+optional, and a skill whose trigger the session never fires constrains nothing at all (see "Enforced by",
+D201-class lesson).
 
 **Activation announcement:** When this skill activates, output in chat: `Skill: firestore-cost-optimization activated -- Source: _skills/firestore-cost-optimization.skill.md`
 
@@ -73,7 +73,56 @@ You are a Firebase cost engineer. **Every read, write, and delete is billed** �
    - **OPEN QUESTION, not an assertion:** whether a **Standard-edition** database (`freeTier: false` in some
      projects, `true` in others) bills the same allowances as the legacy free-tier figures above. Verify per
      project before quoting a percentage of a quota.
-4. **Hosting download:** verify cache-control headers on immutable assets (long `max-age`, `immutable`) and check bundle size — every byte shipped is billed download.
+4. **Hosting download — fonts first, because they are the most commonly mis-diagnosed byte:**
+   - **Whose bandwidth pays?** Google Fonts (`fonts.googleapis.com` / `fonts.gstatic.com`) is served by
+     Google's CDN. Those bytes are **never billed to Firebase Hosting**. So "self-host the fonts to cut
+     the hosting bill" is false reasoning: the browser downloads the font once either way and only the
+     origin changes — self-hosting *adds* bytes to your quota, it does not remove a download. What
+     self-hosting does buy is offline support (Electron), no third-party origin, and control of subsetting.
+   - **The lever is the cache header, not the origin.** Firebase Hosting's default for a static asset is a
+     **one-hour** cache — `Cache-Control: max-age=3600`, measured on both live sites 2026-10-12. It does
+     **not** infer `immutable` from a content-hashed filename, so even a Vite-hashed `index-<hash>.js` or
+     `cairo-<hash>.woff2` is re-fetched after an hour unless a `headers` block says otherwise. A font
+     dropped in `public/` keeps a plain name *and* the one-hour default: **that** is the real "extra
+     download per visit", and it is a missing header, not a self-hosting decision.
+   - **Verify the rule matches something before calling it optimization.** A `**/*.@(woff2|woff|ttf)`
+     block in a project that ships **no font file at all** is inert config — it protects nothing and reads
+     as work already done. Look for font files in the build output first; if there are none, say so rather
+     than counting the header as a win.
+   - **A `source` pattern matches the REQUEST path, not the rewritten one.** Measured: with an SPA rewrite
+     of `**` → `/index.html`, a `{"source": "index.html"}` block fires for a literal `/index.html`
+     request but **not** for `/`, which keeps the one-hour default. Naming `/` as well is still **not
+     enough** — it misses every deep route (`/jobs/123`, `/orders/9`), so the HTML shell stays
+     browser-cached and can serve a stale shell pointing at chunk hashes a deploy has deleted.
+     **The robust fix is a leading catch-all, not a list of routes:**
+     `{"source": "**", "headers": [{"key": "Cache-Control", "value": "no-store"}]}` declared **first**,
+     with the asset rules **after** it. Firebase applies matching rules **in declaration order**
+     (documented, and verified live), so the later, more specific asset rules override the catch-all.
+     Verified on both hosting targets of sharia-college 2026-10-12: `/`, `/index.html`, `/jobs/123` and an
+     arbitrary deep route all returned `no-store`, while `/assets/index-<hash>.js`, `/assets/*.css` and
+     root images kept `max-age=31536000, immutable` — the catch-all did **not** clobber them. Do not
+     hand-enumerate shell routes; you will miss one, and the failure is a white screen, not a slow load.
+   - **Scope `immutable` to the hashed output dir — never to `**/*.js`.** `immutable` promises the URL's
+     content will never change, so it may only be applied where the filename changes with the content.
+     A bundler's output dir (`**/assets/*`) qualifies. A **stable-named** file in `public/` does not:
+     a `**/*.@(js|css)` rule pins a `public/theme-init.js` for a year, and no deploy can ever correct it
+     for a returning visitor. Scope to `**/assets/*`, and route fonts through the bundler (`src/assets/`,
+     or `@fontsource`) so they land there hashed rather than in `public/fonts/`.
+   - **Then the bundle.** Every byte shipped is billed download, and the entry bundle usually dwarfs the
+     fonts: a 2 MB hashed bundle at `max-age=3600` costs a revalidation round-trip per returning visitor
+     per hour, and a full 2 MB on any cache miss; the same bundle at `immutable` costs nothing after the
+     first visit. Size and header are two separate levers — pull both.
+   - **Measure the slice before proposing to defer it.** A `manualChunks` rule that welds a whole vendor
+     family into one chunk (`id.includes('/firebase/')` → `vendor-firebase`) makes per-surface deferral
+     impossible: an eagerly-reachable `firebase/auth` drags a lazy-only `firebase/storage` onto the
+     critical path with it. Measured on sharia-college 2026-10-12 (esbuild minify → brotli, per surface):
+     Firestore 135 KB, auth 29 KB, storage 14 KB, app 7 KB — so "defer storage", the obvious idea, is
+     worth ~3% of a 493 KB critical path. Report the number before recommending the refactor. Route-level
+     `lazy()` splitting is usually already correct; a monolithic vendor layer is often monolithic
+     **because its two biggest surfaces are genuinely needed at first paint**, not because someone
+     forgot to split it. Do not sell a bundle refactor as a hosting-cost win.
+   - Paste-ready block set (security headers + shell + assets + fonts):
+     `global-configs/templates/firebase-hosting-headers.json.template`
 5. **Output the audit table** (below). State the estimated daily ops and verdict per flow.
 
 ---
@@ -114,6 +163,9 @@ You are a Firebase cost engineer. **Every read, write, and delete is billed** �
 - Do NOT run collection-wide queries without `limit`/filters
 - Do NOT re-query static data on every render — fetch once, cache locally
 - Do NOT ship unbundled assets without long `max-age` cache headers
+- Do NOT ship three font families at five weights each — it inflates client page weight and reduces no Firebase bill
+- Do NOT add a font `Cache-Control` block to a project that self-hosts no font file — inert config reads as a completed optimization
+- Do NOT claim a font decision changed the hosting bill without saying whose CDN serves the bytes
 - Do NOT optimize latency at the expense of reads without user approval — cost wins when tradeoffs are bearable
 
 ---
@@ -190,12 +242,18 @@ then delete them. A guard that has never been seen red is a rumor.
 5. Cost beats speed where the tradeoff is bearable — default to the free path.
 6. **A rule with no failing check is documentation.** Put the two or three bans that cover the biggest
    budgets on steps that already run (`lint`, `test`), and list in the same place what is still unguarded.
+7. **Fonts are the wrong suspect.** Google-served fonts cost the hosting quota nothing; the header on your
+   own hashed assets is what decides whether a returning visitor costs a byte. Check the origin before you
+   change it, and check that the header rule matches a file that exists before you call it optimized.
 
 ---
 
+## Cross-References
+
 - Cost philosophy: `02-engineering-practices/cost-optimization-strategy.md`
-- Why a declared control needs a failing check: `02-engineering-practices/security-engineering.md` (rule 17),
-  and where the checks run: `03-git-and-ci/local-ci-strategy.md`
+- Why a declared control needs a failing check: `02-engineering-practices/security-engineering.md` (rule 17)
+- Where the checks run: `03-git-and-ci/local-ci-strategy.md`
+- Paste-ready hosting header block: `global-configs/templates/firebase-hosting-headers.json.template`
 - SDK/query reference (progressive disclosure): `.agents/skills/firebase-firestore/`
 - Conflict resolution: `global-configs/skills/performance-audit.skill.md` (when cost and speed conflict, cost wins unless UX is measurably broken)
 - Skill design patterns: `../../docs/repo-meta/skill-design-patterns.md`

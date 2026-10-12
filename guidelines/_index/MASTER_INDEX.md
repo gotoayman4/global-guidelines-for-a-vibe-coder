@@ -153,6 +153,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~600 | `#template` `#devtools` `#gitignore` |
 | [README.starter.md](../global-configs/templates/README.starter.md) | Starter | Global | ~500 | `#template` `#readme` `#overview` `#single-source` |
 | [AI_ARCHITECTURE.starter.md](../global-configs/templates/AI_ARCHITECTURE.starter.md) | Starter | Global | ~800 | `#template` `#architecture` `#reference` |
+| [firebase-hosting-headers.json.template](../global-configs/templates/firebase-hosting-headers.json.template) | Template | Global | ~410 | `#template` `#firebase` `#hosting` `#cache-control` `#fonts` |
 | [audit-rules.js](../global-configs/scripts/audit-rules.js) | Script | Global | ~300 | `#script` `#automation` `#drift-detection` |
 | [sync-guidelines.ps1](../global-configs/scripts/sync-guidelines.ps1) | Script | Global | ~1,800 | `#script` `#sync` `#project-setup` |
 | [sync-all.js](../global-configs/scripts/sync-all.js) | Script | Global | ~150 | `#script` `#sync` `#batch` `#fleet` `#project-setup` |
@@ -191,7 +192,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [deploy-production.skill.md](../global-configs/skills/deploy-production.skill.md) | Advisory | Global (Task-Type Skill) | ~1581 | `#skill` `#deploy` `#production` `#hosting` |
 | [docx-per-paragraph-language.skill.md](../global-configs/skills/docx-per-paragraph-language.skill.md) | Advisory | Global (Task-Type Skill) | ~3482 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
 | [firebase-firestore-practices.skill.md](../global-configs/skills/firebase-firestore-practices.skill.md) | Advisory | Global (Task-Type Skill) | ~1614 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
-| [firestore-cost-optimization.skill.md](../global-configs/skills/firestore-cost-optimization.skill.md) | Advisory — **with an enforced core.** The tactics below are judgment; the three bans named in | Global (Task-Type Skill) | ~2894 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
+| [firestore-cost-optimization.skill.md](../global-configs/skills/firestore-cost-optimization.skill.md) | Advisory — with an enforced core | Global (Task-Type Skill) | ~4267 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
 | [first-project-setup.skill.md](../global-configs/skills/first-project-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~2576 | `#skill` `#setup` `#beginner` `#onboarding` |
 | [implementation-plan.skill.md](../global-configs/skills/implementation-plan.skill.md) | Advisory | Global (Task-Type Skill) | ~2486 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup.skill.md](../global-configs/skills/inno-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~1470 | `#skill` `#inno-setup` `#installer` `#windows` |
