@@ -293,3 +293,24 @@ test('a decisions log at docs/DECISIONS.md is found and written', () => {
   assert.equal(result.status, 0);
   assert.match(fs.readFileSync(path.join(dir, 'docs/DECISIONS.md'), 'utf8'), /\| D8 \| split log \| a reason \|/);
 });
+
+// --- `--duration`: speed is measured, not felt ----------------------------------------------
+
+test('CLI --duration records intent → first running slice in the entry', () => {
+  const dir = makeProject();
+  run([dir, '--title', 'a timed slice', '--sha', 'abc1234', '--duration', '42']);
+  const body = fs.readFileSync(path.join(dir, quarterFile(today())), 'utf8');
+  assert.match(body, /\*\*Intent→slice:\*\* 42m/);
+});
+
+test('CLI omits the measurement when it was not taken — never a fabricated zero', () => {
+  const dir = makeProject();
+  run([dir, '--title', 'untimed', '--sha', 'abc1234']);
+  const body = fs.readFileSync(path.join(dir, quarterFile(today())), 'utf8');
+  assert.ok(!body.includes('Intent→slice'), 'an unmeasured slice records nothing rather than 0m');
+});
+
+test('CLI rejects a non-numeric or negative --duration', () => {
+  assert.equal(run([makeProject(), '--title', 'x', '--duration', 'soon']).status, 2);
+  assert.equal(run([makeProject(), '--title', 'x', '--duration', '-1']).status, 2);
+});

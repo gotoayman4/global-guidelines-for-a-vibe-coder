@@ -69,7 +69,8 @@ function usage(msg) {
   console.error(
     'Usage: node slice-close.js [projectRoot] --title "<one line>" [--mode vibe|standard|guarded]\n' +
       '                            [--doc <file>] [--receipt <path>] [--decision <n>] [--sha <sha>] [--dry-run]\n' +
-      '                            [--adr [--why "<one paragraph>"] [--adr-file <name>] [--adr-depth lite|full]]',
+      '                            [--adr [--why "<one paragraph>"] [--adr-file <name>] [--adr-depth lite|full]]\n' +
+      '                            [--duration <minutes> — intent → first running slice]',
   );
   process.exit(2);
 }
@@ -88,6 +89,7 @@ function parseArgs(argv) {
     why: null,
     adrFile: null,
     adrDepth: 'lite',
+    duration: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -102,6 +104,7 @@ function parseArgs(argv) {
     else if (a === '--why') opts.why = argv[++i];
     else if (a === '--adr-file') opts.adrFile = argv[++i];
     else if (a === '--adr-depth') opts.adrDepth = argv[++i];
+    else if (a === '--duration') opts.duration = argv[++i];
     else if (a.startsWith('--')) usage(`unknown option: ${a}`);
     else if (opts.root === null) opts.root = a;
     else usage(`unexpected argument: ${a}`);
@@ -228,6 +231,9 @@ function main() {
     usage('--adr requires --why — the reasoning is authored, never invented, and a row without it is a placeholder');
   }
   if (!['lite', 'full'].includes(opts.adrDepth)) usage(`--adr-depth must be lite | full (got "${opts.adrDepth}")`);
+  if (opts.duration !== null && (!Number.isFinite(Number(opts.duration)) || Number(opts.duration) < 0)) {
+    usage(`--duration must be a non-negative number of minutes (got "${opts.duration}")`);
+  }
 
   const root = path.resolve(opts.root || process.cwd());
   if (!fs.existsSync(root)) usage(`project root does not exist: ${root}`);
@@ -253,6 +259,8 @@ function main() {
 
   const heading = `### ${date} — D${decision} · ${opts.title}`;
   const facts = [`**Mode:** ${mode}`, `**Commit:** \`${sha}\``];
+  // `speed-tiered-workflow.md` §Absolute Rules 5 mandates the measurement; this is where it lands.
+  if (opts.duration !== null) facts.push(`**Intent→slice:** ${Number(opts.duration)}m`);
   if (opts.doc) facts.push(`**Doc:** \`${opts.doc}\``);
   if (opts.receipt) facts.push(`**Receipt:** \`${opts.receipt}\``);
   const entry = `${heading}\n\n${wrap(`- ${facts.join(' · ')}`)}\n`;
