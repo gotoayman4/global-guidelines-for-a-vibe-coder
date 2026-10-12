@@ -233,7 +233,11 @@ function main() {
     if (controls.state === 'unwired') {
       drifted.add(row.name);
       if (!quiet) {
-        console.log(`  ❌ ${row.name}: mirror is current but ${controls.missing.length} guard(s) are not wired — ${controls.missing.join(', ')}`);
+        // "mirror is current" is only true when the mirror IS in sync. A project can fail both
+        // checks, and the first version of this line asserted the mirror was fine in that case —
+        // a report that contradicts the line above it is worse than a shorter one.
+        const lead = row.state === 'sync' ? 'mirror is current but' : 'and';
+        console.log(`  ❌ ${row.name}: ${lead} ${controls.missing.length} guard(s) are not wired — ${controls.missing.join(', ')}`);
         console.log('       → add an npm script that runs each file (`sync-manifest.json` §guards declares the set)');
       }
     } else if (controls.state === 'unreadable') {

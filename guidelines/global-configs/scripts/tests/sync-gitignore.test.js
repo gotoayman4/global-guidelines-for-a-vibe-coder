@@ -86,6 +86,53 @@ function secondHomes(sources, entries) {
   return hits;
 }
 
+/**
+ * The slice of a writer that merges VS Code settings — from the key it merges (or the change flag
+ * declared just above it) to the write below. Both ends matter: the flag is initialised before the
+ * first key is tested, so a block that starts at the key would miss the initialisation and report a
+ * correct writer as broken.
+ */
+function settingsBlock(text) {
+  const key = text.indexOf('chat.useAgentsMdFile');
+  if (key === -1) return null;
+  const flag = text.search(/\$\w*[Cc]hanged\s*=\s*\$false/);
+  const start = flag === -1 ? key : Math.min(flag, key);
+  return text.slice(start, start + 4000);
+}
+
+/**
+ * THE THIRD INVARIANT: a writer must not rewrite a file whose content it did not change.
+ *
+ * WHY IT EXISTS. The settings merge ran unconditionally, so every sync rewrote `.vscode/settings.json`
+ * even when every value was already correct — and under the Windows PowerShell 5.1 host the rewrite
+ * was also a reformat, because `ConvertTo-Json` 5.1 emits a BOM, a 4-space indent, `":  "` and no
+ * trailing newline while 7.x emits clean 2-space. Measured 2026-10-12 across the fleet: four projects
+ * showed a 24-line diff for a file whose values never changed, and `sync-all.js` spawns the 5.1 host,
+ * so the noise was guaranteed on every fleet run. A no-op sync must be a no-op.
+ *
+ * @returns {string[]} one line per writer that merges settings without guarding the write
+ */
+function settingsWriteIsGuarded(sources) {
+  const failures = [];
+  for (const [name, text] of Object.entries(sources)) {
+    const block = settingsBlock(text);
+    if (block === null) continue; // this writer does not touch VS Code settings
+    const guard = block.search(/if\s*\(\s*-not\s+\$\w*[Cc]hanged\s*\)/);
+    const write = block.search(/\[System\.IO\.File\]::WriteAllText/);
+    if (guard === -1) {
+      failures.push(`${name}: merges settings with no change guard — every sync rewrites the file`);
+      continue;
+    }
+    if (write === -1) {
+      failures.push(`${name}: merges settings but never writes them`);
+      continue;
+    }
+    if (!/\$\w*[Cc]hanged\s*=\s*\$false/.test(block)) failures.push(`${name}: the change flag is never initialised`);
+    if (write < guard) failures.push(`${name}: writes settings before testing whether anything changed`);
+  }
+  return failures;
+}
+
 const realSources = () => Object.fromEntries(Object.entries(WRITERS).map(([name, file]) => [name, read(file)]));
 
 test('the manifest declares every entry the sync writes, including the backup directory', () => {
@@ -173,4 +220,31 @@ test('the guard is not fooled by a path that only looks classified', () => {
   const result = coverage(sources, entries);
   assert.equal(result.ok, false);
   assert.ok(result.unclassified.includes('_guidelines'), JSON.stringify(result.unclassified));
+});
+
+test('every writer that merges VS Code settings guards the write behind a change check', () => {
+  const sources = realSources();
+  const failures = settingsWriteIsGuarded(sources);
+  assert.deepEqual(failures, [], failures.join('; '));
+});
+
+test('the settings check is not vacuous — it examines both writers that merge settings', () => {
+  const sources = realSources();
+  // If the block extraction stops matching, the check would pass over an empty set forever.
+  const examined = Object.entries(sources).filter(([, text]) => settingsBlock(text) !== null).map(([name]) => name);
+  assert.deepEqual(examined.sort(), ['sync-guidelines.ps1', 'sync-manager.ps1'], JSON.stringify(examined));
+});
+
+test('REVERSAL PROOF: an unguarded settings write is named', () => {
+  const sources = realSources();
+  assert.deepEqual(settingsWriteIsGuarded(sources), [], 'clean to begin with');
+
+  // The exact regression: the guard is dropped and the write runs unconditionally again.
+  const before = sources['sync-guidelines.ps1'];
+  sources['sync-guidelines.ps1'] = before.replace(/if\s*\(\s*-not\s+\$changed\s*\)/, 'if ($true)');
+  assert.notEqual(sources['sync-guidelines.ps1'], before, 'the mutation must actually remove the guard');
+
+  const failures = settingsWriteIsGuarded(sources);
+  assert.equal(failures.length, 1, failures.join('; '));
+  assert.match(failures[0], /sync-guidelines\.ps1: merges settings with no change guard/);
 });

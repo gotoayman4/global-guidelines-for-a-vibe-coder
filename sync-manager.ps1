@@ -339,8 +339,12 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
             } catch { $vscodeData = @{} }
         }
     }
-    if (-not $vscodeData.ContainsKey("chat.useAgentsMdFile"))       { $vscodeData["chat.useAgentsMdFile"] = $true }
-    if (-not $vscodeData.ContainsKey("chat.useNestedAgentsMdFiles")) { $vscodeData["chat.useNestedAgentsMdFiles"] = $true }
+    # `$vscodeChanged` gates the write, for the reason the CLI twin documents at length: a run that
+    # altered nothing must not produce a diff, and under the 5.1 host an unconditional write also
+    # reformatted the file. `sync-manifest.json` requires both writers to produce identical outputs.
+    $vscodeChanged = $false
+    if (-not $vscodeData.ContainsKey("chat.useAgentsMdFile"))       { $vscodeData["chat.useAgentsMdFile"] = $true; $vscodeChanged = $true }
+    if (-not $vscodeData.ContainsKey("chat.useNestedAgentsMdFiles")) { $vscodeData["chat.useNestedAgentsMdFiles"] = $true; $vscodeChanged = $true }
     $copilotKeys = @("github.copilot.chat.codeGeneration.instructions",
                       "github.copilot.chat.testGeneration.instructions",
                       "github.copilot.chat.commitMessageGeneration.instructions",
@@ -352,13 +356,18 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
         if ($val -is [array] -and $val.Count -gt 0 -and $val[0].file -eq "AGENTS.md") {
             $needsFix = $false
         }
-        if ($needsFix) { $vscodeData[$key] = $copilotInstructions }
+        if ($needsFix) { $vscodeData[$key] = $copilotInstructions; $vscodeChanged = $true }
     }
-    try {
-        $vscodeData | ConvertTo-Json -Depth 5 | Set-Content $vscodeSettings -Force -NoNewline -Encoding UTF8
-        Append-Log $logBox "  .vscode/settings.json updated"
-    } catch {
-        Append-Log $logBox "  WARNING: Could not write .vscode/settings.json"
+    if (-not $vscodeChanged) {
+        Append-Log $logBox "  .vscode/settings.json already carries the AI settings"
+    } else {
+        try {
+            $vscodeJson = ($vscodeData | ConvertTo-Json -Depth 5) + "`n"
+            [System.IO.File]::WriteAllText($vscodeSettings, $vscodeJson, (New-Object System.Text.UTF8Encoding($false)))
+            Append-Log $logBox "  .vscode/settings.json updated"
+        } catch {
+            Append-Log $logBox "  WARNING: Could not write .vscode/settings.json"
+        }
     }
 
     # Step 6: Skills

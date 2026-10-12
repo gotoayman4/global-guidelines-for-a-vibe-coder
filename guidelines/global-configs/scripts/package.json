@@ -1,0 +1,4 @@
+{
+  "_comment": "Pins this directory's module type. These guards are CommonJS (`require`), and Node resolves a .js file's type from the NEAREST package.json — without this file that is the host PROJECT's root, so a project with `\"type\": \"module\"` (any Vite/ESM app) makes every guard fail with `require is not defined`. Measured on Programs-and-courses-management-system, 2026-10-12. This file is mirrored with the guards, so they run regardless of the host project's own type; it also means a project no longer has to choose between `type: module` and being able to run its own gates. `package.json` is in check-index-coverage's SKIP_FILES, so this needs no index row.",
+  "type": "commonjs"
+}

@@ -276,12 +276,19 @@ Use absolute base path `$guidelinesRepo/` when loading files.
         } else {
             $vscodeSettings = @{}
         }
-        # Merge AI settings with _guidelines/ relative paths
+        # Merge AI settings with _guidelines/ relative paths.
+        # `$changed` gates the write. This block used to rewrite settings.json on EVERY sync, so a
+        # run that altered nothing still produced a diff — and under the Windows PowerShell 5.1 host
+        # that diff was also a reformat, because ConvertTo-Json 5.1 emits a BOM, a 4-space indent,
+        # `":  "` and no trailing newline, while 7.x emits clean 2-space. Measured 2026-10-12: four
+        # fleet projects showed a 24-line churn for a file whose values were already correct.
+        # A tool must not rewrite what it did not change.
+        $changed = $false
         if (-not $vscodeSettings.ContainsKey("chat.useAgentsMdFile")) {
-            $vscodeSettings["chat.useAgentsMdFile"] = $true
+            $vscodeSettings["chat.useAgentsMdFile"] = $true; $changed = $true
         }
         if (-not $vscodeSettings.ContainsKey("chat.useNestedAgentsMdFiles")) {
-            $vscodeSettings["chat.useNestedAgentsMdFiles"] = $true
+            $vscodeSettings["chat.useNestedAgentsMdFiles"] = $true; $changed = $true
         }
         $copilotKeys = @("github.copilot.chat.codeGeneration.instructions",
                           "github.copilot.chat.testGeneration.instructions",
@@ -294,14 +301,21 @@ Use absolute base path `$guidelinesRepo/` when loading files.
             if ($val -is [array] -and $val.Count -gt 0 -and $val[0].file -eq "AGENTS.md") {
                 $needsFix = $false
             }
-            if ($needsFix) { $vscodeSettings[$key] = $copilotInstructions }
+            if ($needsFix) { $vscodeSettings[$key] = $copilotInstructions; $changed = $true }
         }
-        $vscodeJson = $vscodeSettings | ConvertTo-Json -Depth 5
-        try {
-            Set-Content -Path $vscodeSettingsFile -Value $vscodeJson -NoNewline -Encoding UTF8 -ErrorAction Stop
-            Write-Host "    .vscode/settings.json updated" -ForegroundColor Green
-        } catch {
-            Write-Host "    WARNING: Could not write .vscode/settings.json (file locked)" -ForegroundColor Yellow
+        if (-not $changed) {
+            Write-Host "    .vscode/settings.json already carries the AI settings" -ForegroundColor DarkGray
+        } else {
+            # WriteAllText, not Set-Content: `-Encoding UTF8` means "UTF-8 with a BOM" on 5.1 and
+            # "without" on 7.x, and a BOM in a project file is a diff nobody asked for. This is
+            # identical on both hosts and keeps a trailing newline.
+            $vscodeJson = ($vscodeSettings | ConvertTo-Json -Depth 5) + "`n"
+            try {
+                [System.IO.File]::WriteAllText($vscodeSettingsFile, $vscodeJson, (New-Object System.Text.UTF8Encoding($false)))
+                Write-Host "    .vscode/settings.json updated" -ForegroundColor Green
+            } catch {
+                Write-Host "    WARNING: Could not write .vscode/settings.json (file locked)" -ForegroundColor Yellow
+            }
         }
     }
 
