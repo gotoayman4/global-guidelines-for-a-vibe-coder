@@ -46,4 +46,4 @@ Multiple distinct visual sections → sub-components · business logic beside re
 
 ## Cross-References
 
-`frontend-architecture.md` · `implementation-plan.skill.md`
+`frontend-architecture.md` · the `implementation-plan` skill

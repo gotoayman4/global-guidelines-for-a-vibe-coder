@@ -185,10 +185,16 @@ if (-not $SourceOnly) {
     if (-not (Test-Path -LiteralPath $opencodeSkillsDir)) {
         $null = New-Item -ItemType Directory -Path $opencodeSkillsDir -Force
     }
-    $skillFiles = Get-ChildItem "$guidelinesRepo\global-configs\skills\*.skill.md"
+    # The corpus is the Agent Skills standard layout: one directory per skill, each holding a
+    # SKILL.md. Enumerating `*/SKILL.md` (not `*.skill.md`) is what makes the pool conformant — a
+    # native loader scans for SKILL.md, and the flat file this used to link was invisible to every
+    # one of them. Kept in step with setup-global-references.ps1, which links the same pool.
+    $skillFiles = Get-ChildItem -Path "$guidelinesRepo\global-configs\skills" -Directory -ErrorAction SilentlyContinue |
+        ForEach-Object { Join-Path $_.FullName "SKILL.md" } |
+        Where-Object { Test-Path -LiteralPath $_ }
     $skillCount = 0
     foreach ($file in $skillFiles) {
-        $skillName = $file.BaseName -replace '\.skill$', ''
+        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
         $skillDir = Join-Path $opencodeSkillsDir $skillName
         $symlinkPath = Join-Path $skillDir "SKILL.md"
         if (-not (Test-Path -LiteralPath $skillDir)) {
@@ -200,9 +206,9 @@ if (-not $SourceOnly) {
         # Symlink needs elevation (or Developer Mode) on Windows; fall back to a
         # copy so an unelevated sync:all still lands the skill (D192 lesson).
         try {
-            $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file.FullName -Force -ErrorAction Stop
+            $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file -Force -ErrorAction Stop
         } catch {
-            Copy-Item -LiteralPath $file.FullName -Destination $symlinkPath -Force
+            Copy-Item -LiteralPath $file -Destination $symlinkPath -Force
         }
         $skillCount++
     }
@@ -218,7 +224,7 @@ if (-not $SourceOnly) {
         "1. If not already loaded via project ``opencode.json``, read ``_index/RETRIEVAL_RULES.md``",
         "2. Read ``_index/MASTER_INDEX.md`` to map task type to relevant files",
         "3. Load only files needed for the current task - never the whole repo",
-        "4. Skills live at ``global-configs/skills/<name>.skill.md`` - load when trigger matches",
+        "4. Skills live at ``global-configs/skills/<name>/SKILL.md`` - load when trigger matches",
         "",
         "## How to Load Guidelines",
         "",
@@ -226,7 +232,7 @@ if (-not $SourceOnly) {
         "- Compact extracts (Key Takeaways + Anti-Patterns) when context is small",
         "- Project AGENTS.md rules override these global defaults"
     )
-    Set-Content -Path $opencodeGlobalAgents -Value ($agentsLines -join "`r`n") -NoNewline -Encoding UTF8
+    Write-Utf8NoBom -Path $opencodeGlobalAgents -Content ($agentsLines -join "`r`n")
     Write-Host "    Skills: $skillCount linked | AGENTS.md updated" -ForegroundColor Green
 
     # --- Windsurf: global_rules.md ---
@@ -242,7 +248,7 @@ ALWAYS read `_index/MASTER_INDEX.md` from that path first.
 Then load only the files needed for the current task.
 Use absolute base path `$guidelinesRepo/` when loading files.
 "@
-    Set-Content -Path $windsurfGlobalRules -Value $windsurfContent -Encoding UTF8
+    Write-Utf8NoBom -Path $windsurfGlobalRules -Content ($windsurfContent + "`r`n")
     Write-Host "    global_rules.md created" -ForegroundColor Green
 
     # --- Cursor: user-level .mdc rule ---
@@ -258,7 +264,7 @@ Use absolute base path `$guidelinesRepo/` when loading files.
     $cursorTemplate = "$guidelinesRepo\global-configs\templates\cursor-global-guidelines.mdc.template"
     if (Test-Path -LiteralPath $cursorTemplate) {
         $cursorContent = (Get-Content $cursorTemplate -Raw -Encoding UTF8) -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
-        Set-Content -Path $cursorGlobalGuidelines -Value $cursorContent -NoNewline -Encoding UTF8
+        Write-Utf8NoBom -Path $cursorGlobalGuidelines -Content $cursorContent
     }
     Write-Host "    User rule created" -ForegroundColor Green
 
@@ -326,7 +332,7 @@ Use absolute base path `$guidelinesRepo/` when loading files.
     }
     $qoderSkillCount = 0
     foreach ($file in $skillFiles) {
-        $skillName = $file.BaseName -replace '\.skill$', ''
+        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
         $qoderSkillDir = Join-Path $qoderSkillsDir $skillName
         $qoderSymlink = Join-Path $qoderSkillDir "SKILL.md"
         if (-not (Test-Path -LiteralPath $qoderSkillDir)) {
@@ -336,9 +342,9 @@ Use absolute base path `$guidelinesRepo/` when loading files.
             Remove-Item -LiteralPath $qoderSymlink -Force
         }
         try {
-            $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file.FullName -Force -ErrorAction Stop
+            $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file -Force -ErrorAction Stop
         } catch {
-            Copy-Item -LiteralPath $file.FullName -Destination $qoderSymlink -Force
+            Copy-Item -LiteralPath $file -Destination $qoderSymlink -Force
         }
         $qoderSkillCount++
     }

@@ -27,6 +27,15 @@
  * It is matched by FILE and not by script name — the doctrine maps each step to the project's own
  * names, so requiring a name would impose a convention this check has no business imposing.
  *
+ * AND A THIRD ARTIFACT, ADDED 2026-10-12. `_skills/` is the one thing a project receives that
+ * INSTRUCTS the agent rather than informing it, and until this pass existed nothing verified it:
+ * the hash covered `_guidelines/` alone, `guards.required` named no skill-related guard, and
+ * `_skills/` is gitignored, so a missing or stale copy was invisible in every direction at once.
+ * The skills mirror is derived from the manifest (`§skills` names the source glob and the
+ * destination) for the same reason the ignore entries are: a second hand-kept list is the defect.
+ * Its verdict is the PLAN's, not a hash equality — `_skills/` is FILTERED by stack fit, so it is
+ * compared against `plan-skills.js`'s output rather than the whole corpus. See `compareSkills`.
+ *
  * Usage:
  *   node check-sync-drift.js                 # report every project in sync-projects.json
  *   node check-sync-drift.js --record <path> # record the current source hash for one project
@@ -44,6 +53,11 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+// The one home for "which skills this project receives". Imported, never re-implemented: a second
+// copy of the selection rule would drift from the first exactly on the project whose Stack table was
+// just edited — the case this guard exists to catch.
+const { planSkills } = require('./lib/plan-skills.js');
+const { SKILL_FILE, listSkills } = require('./lib/skill-files.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 // Overridable so the CLI's exit-code contract can be exercised against a fixture instead of
@@ -56,14 +70,22 @@ const MIRROR_NAME = '_guidelines';
 // never with the live manifest.
 const MANIFEST = process.env.SYNC_DRIFT_MANIFEST || path.join(REPO_ROOT, 'guidelines', 'global-configs', 'sync-manifest.json');
 
-/** sha256 over every file's normalised path + LF-normalised content, in sorted order. */
-function hashTree(root) {
+/**
+ * sha256 over every file's normalised path + LF-normalised content, in sorted order.
+ *
+ * `glob` restricts the walk to filenames ending in that suffix, and exists because a mirror is not
+ * always "the whole directory". `_skills/` receives only the skill files (the manifest's
+ * `skills.source` is a glob, not a directory), so hashing the source skills directory unfiltered
+ * would count `INDEX.md` — a file the sync deliberately does not copy — and report permanent drift.
+ * The filter is derived from the manifest, never typed here.
+ */
+function hashTree(root, glob = null) {
   const files = [];
   const walk = (dir) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
       const p = path.join(dir, e.name);
       if (e.isDirectory()) walk(p);
-      else files.push(p);
+      else if (!glob || e.name.endsWith(glob)) files.push(p);
     }
   };
   walk(root);
@@ -97,17 +119,142 @@ function writeRegistry(projects) {
 }
 
 /**
+ * The skills mirror a project is expected to carry, derived from the manifest that declares it.
+ *
+ * DERIVED, NEVER A LITERAL. `sync-manifest.json` §skills already names the source
+ * (`global-configs/skills/<name>/SKILL.md`), the destination (`_skills`) and the ignore entry. What did
+ * not exist until 2026-10-12 was anything that compared them: this guard hashed `_guidelines/` and
+ * nothing else, so a `_skills/` directory could be missing, half-written, or a year stale in every
+ * project while `npm run sync:drift` reported that all projects run the current rules. The skills
+ * were the only delivered artifact with no verification at all — and the only one that instructs the
+ * agent how to behave.
+ *
+ * The source resolves against the SOURCE tree, not the repo root, so pointing this check at a
+ * fixture (`SYNC_DRIFT_SOURCE`) points the skills comparison there too. Resolving against the repo
+ * root made the hermetic tests read the live skills directory — the exact dependence those tests
+ * exist to remove.
+ *
+ * @returns {{target: string, source: string, glob: string|null, hash: string, count: number}|null}
+ *          null when the manifest declares no skills, or the source does not exist. "There is
+ *          nothing to compare" is not drift, and failing it would fail a repo that ships no skills.
+ */
+function skillsMirror(sourceRoot, manifestPath = MANIFEST) {
+  if (!fs.existsSync(manifestPath)) return null;
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch {
+    return null;
+  }
+  const declaredSource = manifest?.skills?.source;
+  const target = manifest?.skills?.target;
+  if (!declaredSource || !target) return null;
+
+  const rel = String(declaredSource).replace(/\\/g, '/');
+  const base = path.basename(rel);
+  const star = base.indexOf('*');
+  // The suffix a copied file must end with, taken from the manifest's own glob — never typed here.
+  // `*.skill.md` → `.skill.md` (the legacy flat layout); `*/SKILL.md` → `SKILL.md` (the Agent Skills
+  // standard, where the star is in the DIRECTORY segment so the basename carries none); a bare
+  // directory name carries no extension and hashes everything. Without the no-star branch the
+  // standard layout would resolve to `null` and every project would report permanent drift, because
+  // the source's own `INDEX.md` — which no sync copies — would be counted on one side only.
+  const glob = star !== -1 ? base.slice(star + 1) : (base.includes('.') ? base : null);
+  // The directory the glob lives in: drop any segment that carries a star, so `skills/*/SKILL.md`
+  // resolves to `skills/` rather than to a literal `skills/*` path that exists nowhere. `path.dirname`
+  // alone left the star in place, so the whole skills comparison silently returned null for the
+  // standard layout — a control that reported "not declared" while the manifest declared it.
+  const relDir = path.dirname(rel).split('/').filter((seg) => !seg.includes('*')).join('/');
+  const source = path.join(sourceRoot, relDir);
+  if (!fs.existsSync(source)) return null;
+
+  const hashed = hashTree(source, glob);
+  return { target, source, glob, hash: hashed.hash, count: hashed.count };
+}
+
+/**
+ * Byte equality after EOL normalisation — the same rule `hashTree` applies, so a CRLF checkout is
+ * not mistaken for an edit.
+ */
+function sameContent(a, b) {
+  const read = (p) => fs.readFileSync(p).toString('utf8').replace(/\r\n/g, '\n');
+  return read(a) === read(b);
+}
+
+/**
+ * Compare one project's `_skills/` against what the selector says it must carry.
+ *
+ * THE CONTRACT IS THE PLAN, NOT AN EQUALITY WITH THE SOURCE. `_skills/` is a FILTERED mirror: the
+ * sync writes only the skills that fit this project's stack (12–16 of 20 on the fleet), so hashing
+ * the project's directory and comparing it to the source's whole-corpus hash is a contract no project
+ * can ever satisfy. Measured 2026-10-13: that equality reported all 7 projects as drifted the moment
+ * the filter was applied — while every one of them was in fact correct. A false red on the one
+ * control whose whole job is to be believed is worse than no control, because it teaches the operator
+ * to ignore it.
+ *
+ * So the expected set is DERIVED BY CALLING `plan-skills.js` — the one home for "which skills this
+ * project receives" — never by re-implementing the rule here. What is verified, file by file:
+ *
+ *   - MISSING      — a planned skill the project does not carry (an interrupted sync, a hand delete).
+ *   - STALE        — a planned skill whose bytes differ from the source (edited centrally, not
+ *                    re-synced), or one left in the legacy flat layout a conformant loader never reads.
+ *   - NOT SELECTED — a skill present that the plan does not name (a leftover from a changed stack).
+ *
+ * A project carrying exactly the planned files, byte for byte, is in sync — however many of the 20
+ * that is. The legacy flat name is caught for free: the plan always expects `<name>/SKILL.md`, so a
+ * `<name>.skill.md` on disk is reported NOT SELECTED while its standard counterpart reads MISSING —
+ * which is exactly the "this project has not been re-synced since the layout migration" verdict.
+ *
+ * @returns {{target: string, state: 'sync'|'drift'|'no-mirror', mirrorFiles?: number, expectedFiles?: number, missing?: string[], stale?: string[], extra?: string[]}|null}
+ */
+function compareSkills(projectPath, skills) {
+  if (!skills) return null;
+  const dir = path.join(projectPath, skills.target);
+  if (!fs.existsSync(dir)) return { target: skills.target, state: 'no-mirror' };
+
+  const plan = planSkills(projectPath, skills.source);
+  const expected = new Map(plan.copy.map((row) => [`${row.name}/${SKILL_FILE}`, path.join(skills.source, row.file)]));
+  const present = new Map(listSkills(dir).map((s) => [s.file, s.abs]));
+
+  const missing = [];
+  const stale = [];
+  for (const [rel, srcAbs] of expected) {
+    const destAbs = present.get(rel);
+    if (!destAbs) missing.push(rel);
+    else if (!sameContent(destAbs, srcAbs)) stale.push(rel);
+  }
+  const extra = [...present.keys()].filter((rel) => !expected.has(rel));
+
+  return {
+    target: skills.target,
+    state: missing.length || stale.length || extra.length ? 'drift' : 'sync',
+    mirrorFiles: present.size,
+    expectedFiles: expected.size,
+    missing,
+    stale,
+    extra,
+  };
+}
+
+/**
  * Compare each project's mirror against the source. Pure over its inputs, so the test can
  * drive it with fixtures instead of the live fleet.
- * @returns {Array<{name: string, state: 'sync'|'drift'|'no-mirror', mirrorHash?: string, mirrorFiles?: number, recorded: string, lastSynced?: string}>}
+ *
+ * `skills` is optional: a caller that passes nothing gets the guidelines verdict alone, which is
+ * what the tests that predate the skills pass assert. When it is passed, each row also carries a
+ * `skills` sub-verdict — a project can have a current `_guidelines/` mirror and a stale `_skills/`,
+ * and collapsing the two into one flag would hide exactly the case this pass was added for.
+ *
+ * @returns {Array<{name: string, state: 'sync'|'drift'|'no-mirror', mirrorHash?: string, mirrorFiles?: number, recorded: string, lastSynced?: string, skills?: object|null}>}
  */
-function compareProjects(sourceDir, source, projects) {
+function compareProjects(sourceDir, source, projects, skills = null) {
   return projects.map((project) => {
     const name = project.name || project.path;
     const mirror = path.join(project.path, MIRROR_NAME);
     const recorded = project.contentHash ? project.contentHash.slice(0, 12) : 'never recorded';
+    const skillsVerdict = compareSkills(project.path, skills);
     if (!fs.existsSync(mirror)) {
-      return { name, path: project.path, state: 'no-mirror', recorded, lastSynced: project.lastSynced };
+      return { name, path: project.path, state: 'no-mirror', recorded, lastSynced: project.lastSynced, skills: skillsVerdict };
     }
     const theirs = hashTree(mirror);
     return {
@@ -118,6 +265,7 @@ function compareProjects(sourceDir, source, projects) {
       mirrorFiles: theirs.count,
       recorded,
       lastSynced: project.lastSynced,
+      skills: skillsVerdict,
     };
   });
 }
@@ -176,6 +324,8 @@ function main() {
     process.exit(2);
   }
   const source = hashTree(SOURCE);
+  // Derived from the manifest; null when the manifest declares no skills or the source is absent.
+  const skills = skillsMirror(SOURCE);
   const projects = readRegistry();
 
   if (recordPath) {
@@ -187,8 +337,21 @@ function main() {
     }
     entry.contentHash = source.hash;
     entry.hashFiles = source.count;
+    // Recorded separately, and only here. A single hash covering both artifacts could not say WHICH
+    // one drifted, and the two have different refresh costs (the mirror is a tree, the skills are 20
+    // files) — one number would make the report name a project without naming the fix.
+    //
+    // NOTE: this is the SOURCE corpus hash, a "what the skills looked like when this project was last
+    // synced" marker. It is deliberately NOT compared against the project's `_skills/`, because that
+    // mirror is FILTERED by stack fit and so hashes differently in every project by design — the
+    // per-project verdict is the plan-based `compareSkills` above, not this number.
+    if (skills) {
+      entry.skillsHash = skills.hash;
+      entry.skillsFiles = skills.count;
+    }
     writeRegistry(projects);
-    console.log(`✅ recorded source hash ${source.hash.slice(0, 12)} (${source.count} files) for ${entry.name}`);
+    const skillNote = skills ? ` and ${skills.count} skill(s) ${skills.hash.slice(0, 12)}` : '';
+    console.log(`✅ recorded source hash ${source.hash.slice(0, 12)} (${source.count} files)${skillNote} for ${entry.name}`);
     process.exit(0);
   }
 
@@ -198,6 +361,7 @@ function main() {
     console.log('═══════════════════════════════════════════');
     console.log('  Sync Drift — mirror vs source of truth');
     console.log(`  source: ${source.hash.slice(0, 12)} · ${source.count} files`);
+    console.log(`  skills: ${skills ? `${skills.count} source skill(s) → ${skills.target}/ (filtered per project by stack fit)` : 'NOT DERIVED — the manifest declares no skills, or their source directory is absent'}`);
     console.log(`  controls: ${required ? `${required.length} guard file(s) every project must wire` : 'not declared'}`);
     console.log('═══════════════════════════════════════════\n');
   }
@@ -205,13 +369,11 @@ function main() {
   // A Set, not a counter: a project can fail both the mirror check and the controls check, and it
   // is still ONE project not running the current rules.
   const drifted = new Set();
-  for (const row of compareProjects(SOURCE, source, projects)) {
+  for (const row of compareProjects(SOURCE, source, projects, skills)) {
     if (row.state === 'no-mirror') {
       drifted.add(row.name);
       if (!quiet) console.log(`  ❌ ${row.name}: no ${MIRROR_NAME}/ mirror — the project has no rules at all`);
-      continue;
-    }
-    if (row.state === 'sync') {
+    } else if (row.state === 'sync') {
       if (!quiet) console.log(`  ✅ ${row.name}: in sync (${row.mirrorFiles} files)`);
     } else {
       drifted.add(row.name);
@@ -224,6 +386,39 @@ function main() {
         console.log('       → run `npm run sync:all` to refresh the mirror (`_guidelines/` is gitignored — nothing to commit)');
       }
     }
+
+    // The skills copy: the same question, asked of the artifact that INSTRUCTS the agent rather
+    // than the one it consults. A current mirror says the project has the current rules; it says
+    // nothing about whether the pointer in AGENTS.md resolves.
+    if (row.skills) {
+      const s = row.skills;
+      if (s.state === 'no-mirror') {
+        drifted.add(row.name);
+        if (!quiet) {
+          console.log(`  ❌ ${row.name}: no ${s.target}/ directory — the skills are missing entirely`);
+          console.log(`       → run \`npm run sync:all\`; the \`## Skills\` section in AGENTS.md points at nothing`);
+        }
+      } else if (s.state === 'drift') {
+        drifted.add(row.name);
+        if (!quiet) {
+          // Name what differs, not just the counts: "3 missing" tells the operator to re-sync, but
+          // "rtl-shadcn-setup/SKILL.md is not selected" tells them the stack filter changed.
+          const reasons = [];
+          if (s.missing.length) reasons.push(`${s.missing.length} missing`);
+          if (s.stale.length) reasons.push(`${s.stale.length} stale`);
+          if (s.extra.length) reasons.push(`${s.extra.length} not selected`);
+          console.log(`  ❌ ${row.name}: ${s.target}/ DRIFT — ${s.mirrorFiles} of ${s.expectedFiles} planned skill(s) (${reasons.join(', ')})`);
+          for (const file of [...s.missing, ...s.stale, ...s.extra].slice(0, 6)) console.log(`       ${file}`);
+          console.log('       → run `npm run sync:all`; the selector decides this set, and the sync writes it');
+        }
+      } else if (!quiet && row.state === 'sync') {
+        console.log(`       ✅ ${s.mirrorFiles} skill(s) in sync`);
+      }
+    }
+
+    // A project with no mirror at all has been reported once already; a second complaint about the
+    // same absence is how a report stops being read.
+    if (row.state === 'no-mirror') continue;
 
     // Controls travel with the mirror — but a guard file nobody runs is not a control. A mirror
     // that is in sync and a guard that is never invoked is exactly the gap this pass exists for:
@@ -260,4 +455,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { hashTree, compareProjects, requiredGuards, controlsOf, MIRROR_NAME };
+module.exports = { hashTree, compareProjects, compareSkills, skillsMirror, requiredGuards, controlsOf, MIRROR_NAME };

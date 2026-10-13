@@ -16,7 +16,7 @@ It is a **content distribution hub** — not an application. Its primary value i
 
 - **Development Guidelines** — Authoritative rules for AI-assisted coding across engineering, architecture, frontend, accessibility, RTL, testing, security, git, and methodology
 - **Starter Templates** — Fill-in-the-blank steering files (AGENTS.starter.md, WORLD.starter.md, etc.) that projects use as their own project constitutions
-- **AI Skills** — Specialized `.skill.md` files for code review, refactoring, security audit, test generation, deployment, and more
+- **AI Skills** — Specialized `<name>/SKILL.md` skill directories for code review, refactoring, security audit, test generation, deployment, and more
 - **Sync Tooling** — PowerShell GUI + CLI tools that mirror guidelines into projects and install starter files
 - **Stack-Specific Guides** — RTL architecture, MUI bidirectional setup, shadcn RTL, NestJS patterns, Supabase best practices
 

@@ -20,7 +20,7 @@ guidelines/
     templates/   — starter files for AGENTS.md, WORLD.md, README.md, tool configs
     fragments/   — single-source rule sections; rendered into templates/AGENTS.starter.md
     scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js, render-agents-starter.js, render-index.js, check-project-freshness.js, new-guideline.js, new-project.js, bump-freshness.js
-    skills/      — .skill.md files for code-review, refactoring, security-audit, etc.
+    skills/      — one <name>/SKILL.md directory per skill (code-review, refactoring, security-audit, …)
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
 .github/workflows/       — optional cloud workflows (CI is local by default — see 03-git-and-ci/local-ci-strategy.md)
 ```
@@ -141,5 +141,5 @@ every push via the local pre-push hook (`git config core.hooksPath .githooks`).
 
 - **Adding a guideline:** `npm run new:guideline <category> <slug>` (front-matter + `## Cross-References` are scaffolded and the index re-renders automatically) → update the matching fragment (and template) if normative → `npm run validate`
 - **Updating a guideline:** edit file → update matching fragment in `global-configs/fragments/` → `npm run render:starters` → `npm run render:index` (if front-matter or footers changed) → run `npm run validate`
-- **Adding a skill:** create `.skill.md` with front-matter → `npm run render:index` → verify the sync-manifest skills glob picks it up
+- **Adding a skill:** create `global-configs/skills/<name>/SKILL.md` with `name` + `description` front-matter (and `metadata.status`/`scope`/`tags`) → `npm run render:index` and `npm run render:skills` → `npm run validate` (the sync-manifest skills glob `skills/*/SKILL.md` picks it up)
 - **Changing templates:** edit fragments, never the generated `AGENTS.starter.md` → render → validate

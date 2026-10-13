@@ -161,6 +161,13 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [GuidelineSync.psm1](../global-configs/scripts/GuidelineSync.psm1) | Script | Global | ~1,400 | `#script` `#module` `#sync` `#shared` |
 | [render-agents-starter.js](../global-configs/scripts/render-agents-starter.js) | Script | Global | ~150 | `#script` `#render` `#single-source` `#drift-detection` `#token-budget` |
 | [render-index.js](../global-configs/scripts/render-index.js) | Script | Global | ~250 | `#script` `#render` `#index` `#single-source` `#drift-detection` |
+| [render-skills-index.js](../global-configs/scripts/render-skills-index.js) | Script | Global | ~2,100 (run it; read it only to change it) | `#script` `#render` `#skills` `#triggers` `#single-source` `#drift-detection` |
+| [inject-skills-block.js](../global-configs/scripts/inject-skills-block.js) | Script | Global | ~2,300 (run it; read it only to change it) | `#script` `#skills` `#inject` `#markers` `#generated-block` `#single-source` `#idempotent` |
+| [plan-skills.js](../global-configs/scripts/plan-skills.js) | Script | Global | ~2,000 (run it; read it only to change it) | `#script` `#skills` `#selection` `#stack` `#dry-run` `#fleet` |
+| [lib/front-matter.js](../global-configs/scripts/lib/front-matter.js) | Script | Global | ~800 (run it; read it only to change it) | `#script` `#front-matter` `#shared` `#single-source` `#mirror-safe` |
+| [lib/tech-tokens.js](../global-configs/scripts/lib/tech-tokens.js) | Script | Global | ~1,300 (run it; read it only to change it) | `#script` `#skills` `#vocabulary` `#shared` `#single-source` `#mirror-safe` |
+| [lib/stack-profile.js](../global-configs/scripts/lib/stack-profile.js) | Script | Global | ~3,700 (run it; read it only to change it) | `#script` `#skills` `#stack` `#declared-vs-measured` `#shared` `#mirror-safe` |
+| [lib/plan-skills.js](../global-configs/scripts/lib/plan-skills.js) | Script | Global | ~2,300 (run it; read it only to change it) | `#script` `#skills` `#selection` `#fit-rule` `#shared` `#mirror-safe` |
 | [lib/run-sync.js](../global-configs/scripts/lib/run-sync.js) | Script | Global | ~250 | `#script` `#subprocess` `#portability` `#windows` `#ebusy` |
 | [lib/project-mode.js](../global-configs/scripts/lib/project-mode.js) | Script | Global | ~50 | `#script` `#mode` `#world-md` `#shared` `#single-source` |
 | [lib/context-caps.js](../global-configs/scripts/lib/context-caps.js) | Script | Global | ~50 | `#script` `#token-budget` `#shared` `#single-source` `#mirror-safe` |
@@ -178,6 +185,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-decision-index.js](../global-configs/scripts/check-decision-index.js) | Script | Global | ~300 | `#script` `#adr` `#decisions` `#drift-detection` `#guard` `#coverage` |
 | [check-doc-breadth.js](../global-configs/scripts/check-doc-breadth.js) | Script | Global | ~200 | `#script` `#guard` `#breadth` `#modes` `#steering-docs` `#single-source` |
 | [check-guard-tiers.js](../global-configs/scripts/check-guard-tiers.js) | Script | Global | ~4,400 (run it; read it only to change it) | `#script` `#guard` `#tiers` `#gate` `#derived` `#single-source` |
+| [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
 
@@ -185,26 +193,26 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
-| [architect.skill.md](../global-configs/skills/architect.skill.md) | Advisory | Global (Task-Type Skill) | ~1870 | `#skill` `#architecture` `#design` `#stress-test` |
-| [bidirectional-docx-rtl.skill.md](../global-configs/skills/bidirectional-docx-rtl.skill.md) | Advisory | Global (Task-Type Skill) | ~3001 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
-| [code-review.skill.md](../global-configs/skills/code-review.skill.md) | Advisory | Global (Task-Type Skill) | ~1218 | `#skill` `#review` `#quality` |
-| [debug-without-code.skill.md](../global-configs/skills/debug-without-code.skill.md) | Advisory | Global (Task-Type Skill) | ~1272 | `#skill` `#debugging` `#noncoder` `#visual` |
-| [deploy-production.skill.md](../global-configs/skills/deploy-production.skill.md) | Advisory | Global (Task-Type Skill) | ~1581 | `#skill` `#deploy` `#production` `#hosting` |
-| [docx-per-paragraph-language.skill.md](../global-configs/skills/docx-per-paragraph-language.skill.md) | Advisory | Global (Task-Type Skill) | ~3482 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
-| [firebase-firestore-practices.skill.md](../global-configs/skills/firebase-firestore-practices.skill.md) | Advisory | Global (Task-Type Skill) | ~1614 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
-| [firestore-cost-optimization.skill.md](../global-configs/skills/firestore-cost-optimization.skill.md) | Advisory — with an enforced core | Global (Task-Type Skill) | ~4267 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
-| [first-project-setup.skill.md](../global-configs/skills/first-project-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~2576 | `#skill` `#setup` `#beginner` `#onboarding` |
-| [implementation-plan.skill.md](../global-configs/skills/implementation-plan.skill.md) | Advisory | Global (Task-Type Skill) | ~2486 | `#skill` `#planning` `#execution` `#checklist` |
-| [inno-setup.skill.md](../global-configs/skills/inno-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~1470 | `#skill` `#inno-setup` `#installer` `#windows` |
-| [mui-design-system.skill.md](../global-configs/skills/mui-design-system.skill.md) | Advisory | Global (Task-Type Skill) | ~1437 | `#skill` `#mui` `#design-system` `#shared-components` |
-| [performance-audit.skill.md](../global-configs/skills/performance-audit.skill.md) | Advisory | Global (Task-Type Skill) | ~1245 | `#skill` `#performance` `#optimization` |
-| [refactoring.skill.md](../global-configs/skills/refactoring.skill.md) | Advisory | Global (Task-Type Skill) | ~957 | `#skill` `#refactoring` `#maintenance` |
-| [rtl-shadcn-setup.skill.md](../global-configs/skills/rtl-shadcn-setup.skill.md) | Advisory | Global (Task-Type Skill) | ~2085 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
-| [security-audit.skill.md](../global-configs/skills/security-audit.skill.md) | Advisory | Global (Task-Type Skill) | ~1330 | `#skill` `#security` `#owasp` |
-| [shadcn-design-system.skill.md](../global-configs/skills/shadcn-design-system.skill.md) | Advisory | Global (Task-Type Skill) | ~1506 | `#skill` `#shadcn` `#design-system` `#shared-components` |
-| [test-generation.skill.md](../global-configs/skills/test-generation.skill.md) | Advisory | Global (Task-Type Skill) | ~1013 | `#skill` `#testing` `#generation` |
-| [tiptap-tailwind-reset.skill.md](../global-configs/skills/tiptap-tailwind-reset.skill.md) | Advisory | Global (Task-Type Skill) | ~1841 | `#skill` `#tiptap` `#tailwind` `#rich-text` `#css` |
-| [unsaved-changes-protection.skill.md](../global-configs/skills/unsaved-changes-protection.skill.md) | Advisory | Global (Task-Type Skill) | ~1353 | `#skill` `#forms` `#ux` `#dirty-state` |
+| [architect/SKILL.md](../global-configs/skills/architect/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1928 | `#skill` `#architecture` `#design` `#stress-test` |
+| [bidirectional-docx-rtl/SKILL.md](../global-configs/skills/bidirectional-docx-rtl/SKILL.md) | Advisory | Global (Task-Type Skill) | ~3071 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
+| [code-review/SKILL.md](../global-configs/skills/code-review/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1259 | `#skill` `#review` `#quality` |
+| [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1336 | `#skill` `#debugging` `#noncoder` `#visual` |
+| [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1635 | `#skill` `#deploy` `#production` `#hosting` |
+| [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | ~3559 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
+| [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1658 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
+| [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory — with an enforced core | Global (Task-Type Skill) | ~3848 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
+| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2625 | `#skill` `#setup` `#beginner` `#onboarding` |
+| [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2545 | `#skill` `#planning` `#execution` `#checklist` |
+| [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1537 | `#skill` `#inno-setup` `#installer` `#windows` |
+| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1520 | `#skill` `#mui` `#design-system` `#shared-components` |
+| [performance-audit/SKILL.md](../global-configs/skills/performance-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1309 | `#skill` `#performance` `#optimization` |
+| [refactoring/SKILL.md](../global-configs/skills/refactoring/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1008 | `#skill` `#refactoring` `#maintenance` |
+| [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2139 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
+| [security-audit/SKILL.md](../global-configs/skills/security-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1392 | `#skill` `#security` `#owasp` |
+| [shadcn-design-system/SKILL.md](../global-configs/skills/shadcn-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1561 | `#skill` `#shadcn` `#design-system` `#shared-components` |
+| [test-generation/SKILL.md](../global-configs/skills/test-generation/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1060 | `#skill` `#testing` `#generation` |
+| [tiptap-tailwind-reset/SKILL.md](../global-configs/skills/tiptap-tailwind-reset/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1901 | `#skill` `#tiptap` `#tailwind` `#rich-text` `#css` |
+| [unsaved-changes-protection/SKILL.md](../global-configs/skills/unsaved-changes-protection/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1406 | `#skill` `#forms` `#ux` `#dirty-state` |
 
 <!-- /GENERATED -->
 
@@ -256,17 +264,17 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | **Performance optimization** | performance-optimization, react-performance | testing-patterns |
 | **Form-heavy UI** | form-patterns, react-architecture, ux-design-principles | notification-patterns, dialog-patterns |
 | **Security audit** | security-engineering, ai-security-governance | error-handling-philosophy |
-| **Firestore cost optimization** | firestore-cost-optimization.skill.md, cost-optimization-strategy | performance-optimization (conflict: cost wins) |
-| **Firebase/Firestore development** | firebase-firestore-practices.skill.md, security-engineering | firestore-cost-optimization.skill.md, testing-philosophy |
+| **Firestore cost optimization** | firestore-cost-optimization (skill), cost-optimization-strategy | performance-optimization (conflict: cost wins) |
+| **Firebase/Firestore development** | firebase-firestore-practices (skill), security-engineering | firestore-cost-optimization (skill), testing-philosophy |
 | **AI governance setup** | ai-governance-framework | design-system-governance |
 | **New project bootstrap** | planning-and-scoping, speed-tiered-workflow, frontend-architecture, backend-architecture, git-workflow-strategy, bidirectional-design-principles, design-system-governance | monorepo-strategy, environment-management |
 | **Choose speed mode / scale ceremony** | speed-tiered-workflow | development-workflow, testing-philosophy, agent-verification-loop, documentation-strategy |
 | **Milestone / ship prep** | speed-tiered-workflow, agent-verification-loop | testing-philosophy, local-ci-strategy |
 | **Rules file setup** | AGENTS.starter.md, ai-governance-framework | — |
-| **Skill installation** | code-review.skill.md, test-generation.skill.md, refactoring.skill.md | security-audit.skill.md, performance-audit.skill.md |
-| **Windows installer** | inno-setup.skill | security-engineering, cost-optimization-strategy |
-| **Production deployment** | deploy-production.skill, git-workflow-strategy | ci-cd-philosophy, local-ci-strategy, environment-management |
-| **First project setup** | first-project-setup.skill | planning-and-scoping, git-workflow-strategy, design-system-governance |
+| **Skill installation** | code-review (skill), test-generation (skill), refactoring (skill) | security-audit (skill), performance-audit (skill) |
+| **Windows installer** | inno-setup (skill) | security-engineering, cost-optimization-strategy |
+| **Production deployment** | deploy-production (skill), git-workflow-strategy | ci-cd-philosophy, local-ci-strategy, environment-management |
+| **First project setup** | first-project-setup (skill) | planning-and-scoping, git-workflow-strategy, design-system-governance |
 | **Cost optimization** | cost-optimization-strategy, context-management-strategy | — |
 | **RTL/Arabic setup** | rtl-tech-stack, bidirectional-design-principles, accessibility-standards | mui-rtl-bidirectional only when MUI is selected; shadcn-rtl-bidirectional only when shadcn/ui is selected |
 | **Multi-tool setup** | multi-tool-workflows, ai-agent-orchestration | — |
@@ -307,7 +315,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 - `planning-and-scoping.md` → see also: `development-workflow.md`, `ai-collaboration-mindset.md`, `frontend-architecture.md`, `backend-architecture.md`
 - `refactoring-strategy.md` → see also: `development-workflow.md`, `testing-patterns.md`, `file-organization.md`, `code-duplication-prevention.md`
 - `speed-tiered-workflow.md` → depends on: `development-workflow.md`, `documentation-strategy.md`, `context-management-strategy.md` · extended by: `testing-philosophy.md`, `agent-verification-loop.md` · applied by: `workflow-friction-audit.md`, `local-ci-strategy.md`, `ai-collaboration-mindset.md`
-- `workflow-friction-audit.md` → depends on: `development-workflow.md`, `speed-tiered-workflow.md`, `context-management-strategy.md` · extended by: `documentation-strategy.md`, `local-ci-strategy.md` · applied by: `performance-audit.skill.md`
+- `workflow-friction-audit.md` → depends on: `development-workflow.md`, `speed-tiered-workflow.md`, `context-management-strategy.md` · extended by: `documentation-strategy.md`, `local-ci-strategy.md`
 
 ### 02-engineering-practices
 - `accessibility-standards.md` → see also: `icon-usage.md`, `form-patterns.md`, `playwright-e2e.md`
@@ -317,7 +325,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 - `code-duplication-prevention.md` → governed by: `file-organization.md` · applied by: `ai-collaboration-mindset.md`
 - `cost-optimization-strategy.md` → see also: `context-management-strategy.md`, `multi-tool-workflows.md`, `local-ci-strategy.md`
 - `error-handling-philosophy.md` → depends on: `api-design-standards.md` · applied by: `ai-security-governance.md`, `debugging-with-ai.md`, `security-engineering.md`
-- `file-organization.md` → see also: `frontend-architecture.md`, `implementation-plan.skill.md`
+- `file-organization.md` → see also: `frontend-architecture.md`
 - `file-upload-security.md` → depends on: `security-engineering.md`, `error-handling-philosophy.md` · applied by: `api-design-standards.md`
 - `performance-optimization.md` → see also: `react-performance.md`, `testing-patterns.md`
 - `security-engineering.md` → depends on: `ai-security-governance.md`, `error-handling-philosophy.md` · applied by: `code-review-workflow.md`, `api-design-standards.md`

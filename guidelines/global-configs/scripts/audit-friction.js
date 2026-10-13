@@ -30,6 +30,9 @@ const fs = require('fs');
 const path = require('path');
 const { runSync } = require('./lib/run-sync.js');
 const { hashTree } = require('./check-sync-drift.js');
+const { parseFrontMatter, meta } = require('./lib/front-matter.js');
+const { skillScope } = require('./lib/plan-skills.js');
+const { listSkills } = require('./lib/skill-files.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const SOURCE = path.join(REPO_ROOT, 'guidelines');
@@ -119,6 +122,56 @@ function delivery(root, source = SOURCE) {
 }
 
 /**
+ * Skills: the one delivered artifact that INSTRUCTS the agent rather than informing it.
+ *
+ * WHAT THIS CAN AND CANNOT SEE, stated because the difference is the whole point. Whether an agent
+ * actually loaded a skill is recorded nowhere in a repository — a session transcript is not an
+ * artifact this repo holds, and inventing a number for it would be worse than reporting nothing.
+ * What IS measurable is whether a skill COULD be loaded and whether its scope is DECLARED: a skill
+ * with no `description` cannot be activated by any loader (the description is the field they read to
+ * decide), and a skill whose scope is inferred from `tags` is one whose selection rule lives in a
+ * taxonomy field rather than in the field the selector is documented to read.
+ *
+ * The `inferred` count is the debt this instrument exists to make visible: it is the number of
+ * skills whose placement in a project is decided by a fallback. It is allowed — the ratchet counts an
+ * absent declaration rather than failing it — but it must be countable, or the fallback quietly
+ * becomes the rule. Measured centrally 2026-10-12: 1 of 20 declared, 8 inferred, 11 stack-agnostic.
+ */
+function skills(root) {
+  const dir = path.join(root, '_skills');
+  if (!fs.existsSync(dir)) return null;
+  const files = listSkills(dir);
+  if (files.length === 0) return null;
+
+  const triggerless = [];
+  const inferred = [];
+  const unresolved = [];
+  let declared = 0;
+  let agnostic = 0;
+  for (const skill of files) {
+    const fm = parseFrontMatter(fs.readFileSync(skill.abs, 'utf8'));
+    const description = meta(fm, 'description');
+    if (!description || String(description).trim() === '') triggerless.push(skill.file);
+    const scope = skillScope(fm);
+    if (scope.declared) declared += 1;
+    else if (scope.tokens.length) inferred.push(skill.file);
+    else agnostic += 1;
+    if (scope.unknown.length) unresolved.push(`${skill.file} (${scope.unknown.join(', ')})`);
+  }
+  return {
+    total: files.length,
+    triggerless: triggerless.length,
+    declared,
+    inferred: inferred.length,
+    agnostic,
+    unresolved: unresolved.length,
+    examples: triggerless.slice(0, 3),
+    inferredExamples: inferred.slice(0, 3),
+    unresolvedExamples: unresolved.slice(0, 3),
+  };
+}
+
+/**
  * A proposal names its control inline, as a bold label that starts with the word, or gives it
  * a section of its own.
  *
@@ -158,7 +211,7 @@ function lastArtifact(root) {
 }
 
 function render(report) {
-  const { root, boot, churn: c, delivery: d, proposals: p, caps, last } = report;
+  const { root, boot, churn: c, delivery: d, skills: k, proposals: p, caps, last } = report;
   const lines = [];
   lines.push('═══════════════════════════════════════════');
   lines.push(`  Workflow Friction — ${root}`);
@@ -204,6 +257,30 @@ function render(report) {
   }
   lines.push('');
 
+  lines.push('  Skills (readiness — whether a skill LOADED is not observable from the repo)');
+  if (!k) {
+    lines.push('    — no _skills/ directory in this project');
+  } else {
+    lines.push(`    ${k.total} skill(s) mirrored`);
+    lines.push(k.triggerless === 0
+      ? '    ✅ every skill declares a trigger'
+      : `    ⚠️  ${k.triggerless} skill(s) declare no trigger — no loader can activate them`);
+    for (const e of k.examples) lines.push(`       ${e}`);
+    lines.push(`    scope: ${k.declared} declared (appliesTo) · ${k.inferred} inferred from tags · ${k.agnostic} stack-agnostic`);
+    if (k.inferred > 0) {
+      lines.push(`    ℹ️  ${k.inferred} skill(s) rely on INFERRED scope — declaring appliesTo makes the`);
+      lines.push('       selector\'s rule explicit instead of a fallback');
+      for (const e of k.inferredExamples) lines.push(`       ${e}`);
+    }
+    if (k.unresolved > 0) {
+      lines.push(`    ⚠️  ${k.unresolved} skill(s) declare an appliesTo value the vocabulary cannot resolve`);
+      lines.push('       — an unresolvable value is inert, so the skill reads as unscoped and is copied');
+      lines.push('       to every project. See `npm run audit`.');
+      for (const e of k.unresolvedExamples) lines.push(`       ${e}`);
+    }
+  }
+  lines.push('');
+
   lines.push('  Lessons (guidelines-proposals)');
   if (!p) {
     lines.push('    — none');
@@ -243,6 +320,7 @@ function main() {
     boot: bootChain(root),
     churn: churn(root),
     delivery: delivery(root),
+    skills: skills(root),
     proposals: proposals(root),
     last: lastArtifact(root),
   };
@@ -275,4 +353,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { contextCaps, bootChain, churn, delivery, proposals, lastArtifact, CADENCE_DAYS };
+module.exports = { contextCaps, bootChain, churn, delivery, skills, proposals, lastArtifact, CADENCE_DAYS };

@@ -12,7 +12,7 @@
 This is **not** an application project. It is a centralized development guidelines repository that:
 - Houses ~80 guideline files organized into domain directories (`guidelines/00-*` through `guidelines/08-*`)
 - Provides templates for steering files (AGENTS.starter.md, WORLD.starter.md, etc.)
-- Ships 20 `.skill.md` files for specialized AI coding workflows
+- Ships 20 skills, each a `<name>/SKILL.md` directory, for specialized AI coding workflows
 - Includes sync tooling (`sync-manager.ps1`, `setup-global-references.ps1`) to distribute guidelines to downstream projects
 - Is consumed by projects via a `_guidelines/` mirror and inline rule extraction
 
@@ -44,8 +44,32 @@ This is **not** an application project. It is a centralized development guidelin
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
 
 ### Skill File Standards
-- Each `.skill.md` file in `guidelines/global-configs/skills/` MUST carry YAML front-matter and a `## Cross-References` footer — `npm run render:index` lists it in `MASTER_INDEX.md`
-- Skills must include: name, description, trigger conditions, and full instructions
+- Each skill in `guidelines/global-configs/skills/` is a DIRECTORY containing `SKILL.md` — the Agent Skills standard layout (`<name>/SKILL.md`), which is what a native loader scans for. The front-matter `name` MUST equal the directory name (1–64 chars, lowercase `a-z`/`0-9`/hyphens, no leading/trailing/doubled hyphen) — `npm run audit` fails a mismatch as NON-CONFORMANT
+- A skill MUST carry YAML front-matter and a `## Cross-References` footer — `npm run render:index` lists it in `MASTER_INDEX.md`
+- `name` and `description` are the standard's two keys, at the top level; the repo's own `status` / `scope` / `tags` / `appliesTo` live under a `metadata:` map. `name` and `description` are REQUIRED, not stylistic: a loader reads `description` to decide when to activate a skill, so a skill without one exists and can never fire. `npm run audit` fails it as an UNLOADABLE SKILL. Write it as a condition ("Activate when …")
+- Long excerpts and helper scripts belong beside the skill (`references/`, `scripts/`, `assets/`) and load ON DEMAND — never inline everything a skill might need, because the body is paid for on every activation
+- `appliesTo` names the stack a skill assumes. It exists because a global skill pool is offered to every project regardless of stack; a skill that assumes Tailwind contradicts the constitution of an MUI project
+- `guidelines/global-configs/skills/INDEX.md` is GENERATED — the trigger inventory, rendered from the skills' own front-matter by `npm run render:skills`. NEVER hand-edit inside its `GENERATED` markers (`npm run check-skills-drift` fails validate on divergence). Adding a skill adds a row with no edit there
+- The sync WRITES the standard layout whatever the source shape is: a legacy flat `<name>.skill.md` in a project's `_skills/` is pruned, never delivered beside its replacement directory
+
+---
+
+## Skills (Always Load)
+
+The 20 skills in `guidelines/global-configs/skills/` are **task-activated**: they load only when their
+trigger matches, which is why the trigger has to be visible *before* the file is opened.
+
+- **The inventory is `skills/INDEX.md`** — a `Skill → Load when → Applies to` table generated from
+  each skill's front-matter. Read it when a task starts, not the whole directory.
+- **When a row matches, load the skill and announce it** in chat as `Skill: <name> activated`. The
+  announcement is the only thing that makes activation visible: no file in this repo can record
+  whether a skill was loaded.
+- **A skill never outranks `AGENTS.md`.** Where the two disagree, this file wins.
+- **Check `Applies to` before the trigger.** A skill written for a stack this project forbids will
+  contradict the constitution if followed; `—` means no stack was declared, so verify before use.
+- **Delivery:** a project receives the skills at `_skills/` (gitignored, synced) and the same
+  generated block under `## Skills` in its own `AGENTS.md`. `npm run sync:drift` verifies the
+  `_skills/` copy against this source — a skill edited here is not the skill a project loads.
 
 ---
 
@@ -60,11 +84,14 @@ npm run check-index-drift # Fail if MASTER_INDEX.md was hand-edited — regenera
 npm run docs:census     # Fail if a canonical fact appears in >1 mandated project doc (one home per fact)
 npm run render:starters # Regenerate AGENTS.starter.md from global-configs/fragments/
 npm run render:index    # Regenerate the MASTER_INDEX tables + graph from front-matter and footers
+npm run render:skills   # Regenerate skills/INDEX.md — the trigger inventory, from skill front-matter
+npm run check-skills-drift # Fail if skills/INDEX.md was hand-edited — regenerate it instead
+npm run plan:skills     # Print which skills belong in which project, and why (no arg = the whole fleet; --apply to write)
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
-npm run sync:drift      # Fail if a project's _guidelines/ mirror is not the current source (content hash, not a date)
+npm run sync:drift      # Fail if a project's _guidelines/ mirror or _skills/ copy is not the current source (content hash, not a date)
 npm run slice:close     # Derive the changelog entry, the decision number and the freshness line for a slice
-npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, untriaged lessons
-npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + docs:census + test:scripts
+npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness, untriaged lessons
+npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + docs:census + guard:tiers + test:scripts
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.

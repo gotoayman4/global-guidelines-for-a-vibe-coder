@@ -30,6 +30,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const { parseFrontMatter, meta, asList } = require('./lib/front-matter.js');
+const { listSkills } = require('./lib/skill-files.js');
 
 const SCRIPT_DIR = __dirname;
 const GUIDELINES = path.resolve(SCRIPT_DIR, '..', '..');
@@ -60,26 +62,11 @@ function fail(msg) {
   process.exit(1);
 }
 
-/** Minimal YAML front-matter reader: scalars and inline `[a, b]` sequences. */
-function parseFrontMatter(text) {
-  const match = text.match(/^---\n([\s\S]*?)\n---\n/);
-  if (!match) return null;
-  const fm = {};
-  for (const line of match[1].split('\n')) {
-    const kv = line.match(/^([\w-]+):\s*(.*)$/);
-    if (!kv) continue;
-    const raw = kv[2].trim();
-    if (raw.startsWith('[') && raw.endsWith(']')) {
-      fm[kv[1]] = raw.slice(1, -1).split(',').map((s) => s.trim()).filter(Boolean);
-    } else if (raw.startsWith('"') && raw.endsWith('"')) {
-      fm[kv[1]] = raw.slice(1, -1);
-    } else {
-      fm[kv[1]] = raw;
-    }
-  }
-  return fm;
-}
-
+/**
+ * Minimal YAML front-matter reader — the shared one. It used to be a private copy here, which the
+ * `front-matter.js` docblock already names as the drift it exists to prevent; keeping the copy is
+ * how a skill's `metadata:` block would parse in one reader and vanish in the other.
+ */
 const tokensOf = (text) => Math.ceil(text.length / 4);
 
 /** Relative link from _index/ to a file under guidelines/. */
@@ -87,9 +74,8 @@ const linkFrom = (abs) => `../${path.relative(GUIDELINES, abs).replace(/\\/g, '/
 
 const tagCell = (tags) => (tags && tags.length ? tags.map((t) => `\`#${t}\``).join(' ') : '—');
 
-function row(abs, fm) {
-  const name = path.basename(abs);
-  return `| [${name}](${linkFrom(abs)}) | ${fm.status} | ${fm.scope} | ~${tokensOf(fs.readFileSync(abs, 'utf8'))} | ${tagCell(fm.tags)} |`;
+function row(abs, fm, display = path.basename(abs)) {
+  return `| [${display}](${linkFrom(abs)}) | ${meta(fm, 'status')} | ${meta(fm, 'scope')} | ~${tokensOf(fs.readFileSync(abs, 'utf8'))} | ${tagCell(asList(meta(fm, 'tags')))} |`;
 }
 
 const TABLE_HEADER = ['| File | Status | Scope | Tokens | Tags |', '|---|---|---|---|---|'];
@@ -115,10 +101,13 @@ function collect() {
   }
   if (categories.length === 0) fail('no guideline category directories found — corpus is empty');
 
-  const skills = fs.readdirSync(SKILLS_DIR).filter((f) => f.endsWith('.skill.md')).sort()
-    .map((f) => ({ abs: path.join(SKILLS_DIR, f), fm: parseFrontMatter(fs.readFileSync(path.join(SKILLS_DIR, f), 'utf8')) }));
-  const badSkills = skills.filter((s) => !s.fm || !s.fm.status || !s.fm.scope);
-  if (badSkills.length) fail(`skill front-matter missing status/scope in: ${badSkills.map((b) => path.basename(b.abs)).join(', ')}`);
+  const skills = listSkills(SKILLS_DIR).map((s) => ({
+    abs: s.abs,
+    display: s.file,
+    fm: parseFrontMatter(fs.readFileSync(s.abs, 'utf8')),
+  }));
+  const badSkills = skills.filter((s) => !s.fm || !meta(s.fm, 'status') || !meta(s.fm, 'scope'));
+  if (badSkills.length) fail(`skill front-matter missing status/scope in: ${badSkills.map((b) => b.display).join(', ')}`);
 
   return { categories, skills };
 }
@@ -153,7 +142,7 @@ function renderTables(categories) {
 }
 
 function renderSkills(skills) {
-  return ['### Skills — Task-Activated', '', ...TABLE_HEADER, ...skills.map((s) => row(s.abs, s.fm))].join('\n');
+  return ['### Skills — Task-Activated', '', ...TABLE_HEADER, ...skills.map((s) => row(s.abs, s.fm, s.display))].join('\n');
 }
 
 function renderGraph(categories) {

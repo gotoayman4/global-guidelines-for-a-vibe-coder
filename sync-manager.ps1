@@ -3,6 +3,16 @@
 # Also: run repo validation scripts and machine setup.
 # Double-click sync-manager.cmd to launch.
 
+# --- UTF-8 without BOM ---
+# Same helper as GuidelineSync.psm1: `Set-Content -Encoding UTF8` writes a BOM on Windows
+# PowerShell 5.1, and a BOM in a project file is diff noise. Defined here too so the inline
+# fallbacks below stay correct even when the module import fails. Guarded by tests/sync-gitignore.test.js.
+$script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+function Write-Utf8NoBom {
+    param([string]$Path, [string]$Content)
+    [System.IO.File]::WriteAllText($Path, $Content, $script:Utf8NoBom)
+}
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -48,7 +58,7 @@ function Test-Project([string]$path) {
 }
 
 function Save-ProjectList([array]$list) {
-    $list | ConvertTo-Json -Depth 3 | Set-Content $projectsFile -Force -Encoding UTF8
+    Write-Utf8NoBom -Path $projectsFile -Content ($list | ConvertTo-Json -Depth 3)
 }
 
 function Load-ProjectList() {
@@ -138,7 +148,7 @@ function Update-StarterFile([string]$projectPath, [string]$templateRelPath, [str
             if ($headerMatches.Count -gt 1) {
                 $firstCopyEnd = $headerMatches[1].Index
                 $deduped = $cleanedContent.Substring(0, $firstCopyEnd).TrimEnd()
-                Set-Content -Path $targetPath -Value $deduped -NoNewline -Encoding UTF8
+                Write-Utf8NoBom -Path $targetPath -Content $deduped
                 Append-Log $logBox "  Deduplicated $targetRelPath (removed $($headerMatches.Count - 1) duplicates)"
                 return
             }
@@ -148,7 +158,7 @@ function Update-StarterFile([string]$projectPath, [string]$templateRelPath, [str
             if ($bodyMatches.Count -gt 1) {
                 $firstCopyEnd = $bodyMatches[1].Index
                 $deduped = $cleanedContent.Substring(0, $firstCopyEnd).TrimEnd()
-                Set-Content -Path $targetPath -Value $deduped -NoNewline -Encoding UTF8
+                Write-Utf8NoBom -Path $targetPath -Content $deduped
                 Append-Log $logBox "  Deduplicated $targetRelPath (body marker)"
                 return
             }
@@ -156,22 +166,22 @@ function Update-StarterFile([string]$projectPath, [string]$templateRelPath, [str
         if (-not [string]::IsNullOrEmpty($headerCheck) -and $cleanedContent -notmatch $escapedHeader) {
             $newContent = $starterContent.TrimEnd() + "`r`n`r`n" + $cleanedContent.TrimStart()
             if ($cleanedContent.Trim() -eq "") {
-                Set-Content -Path $targetPath -Value $starterContent -NoNewline -Encoding UTF8
+                Write-Utf8NoBom -Path $targetPath -Content $starterContent
                 Append-Log $logBox "  Updated $targetRelPath (was pure redirect)"
             } else {
-                Set-Content -Path $targetPath -Value $newContent -NoNewline -Encoding UTF8
+                Write-Utf8NoBom -Path $targetPath -Content $newContent
                 Append-Log $logBox "  Updated $targetRelPath (starter prepended)"
             }
         } else {
             if ($cleanedContent -ne $existingContent) {
-                Set-Content -Path $targetPath -Value $cleanedContent -NoNewline -Encoding UTF8
+                Write-Utf8NoBom -Path $targetPath -Content $cleanedContent
                 Append-Log $logBox "  Cleaned $targetRelPath (removed -> Source: lines)"
             } else {
                 Append-Log $logBox "  OK $targetRelPath (up to date)"
             }
         }
     } else {
-        Set-Content -Path $targetPath -Value $starterContent -NoNewline -Encoding UTF8
+        Write-Utf8NoBom -Path $targetPath -Content $starterContent
         Append-Log $logBox "  Created $targetRelPath from starter template"
     }
 }
@@ -195,13 +205,13 @@ function Install-ToolConfig([string]$projectPath, [string]$templateRelPath, [str
     if (Test-Path $targetPath) {
         $existing = Get-Content $targetPath -Raw -Encoding UTF8
         if ($existing -match '\{\{GUIDELINES_ROOT\}\}' -or $existing -match 'D:\\WebApps\\global-guidelines') {
-            Set-Content -Path $targetPath -Value $content -NoNewline -Encoding UTF8
+            Write-Utf8NoBom -Path $targetPath -Content $content
             Append-Log $logBox "  Updated $targetRelPath (replaced absolute paths)"
         } else {
             Append-Log $logBox "  OK $targetRelPath (already relative)"
         }
     } else {
-        Set-Content -Path $targetPath -Value $content -NoNewline -Encoding UTF8
+        Write-Utf8NoBom -Path $targetPath -Content $content
         Append-Log $logBox "  Created $targetRelPath"
     }
 }
@@ -238,32 +248,53 @@ function Add-ProjectGitignoreEntries([string]$projectPath, $logBox) {
 }
 
 function Sync-SkillsInline([string]$projectPath, $logBox) {
+    # The GUI's fallback when `GuidelineSync.psm1` is not importable. It must produce the SAME
+    # `_skills/` as the module (the manifest header states both entry points must agree), so it
+    # delegates the decision to the same `plan-skills.js` rather than copying everything — the
+    # copy-everything loop that used to live here is the defect the selector removes.
     $skillsDir = Join-Path $syncContentDir "global-configs\skills"
-    $targetSkillsDir = Join-Path $projectPath "_skills"
     if (-not (Test-Path $skillsDir)) { return }
-    if (-not (Test-Path $targetSkillsDir)) {
-        $null = New-Item -ItemType Directory -Path $targetSkillsDir -Force
+
+    $planner = Join-Path $syncContentDir "global-configs\scripts\plan-skills.js"
+    if (-not (Test-Path $planner)) {
+        Append-Log $logBox "  ERROR: plan-skills.js not found at $planner -- skills NOT synced."
+        return
     }
-    $skillFiles = Get-ChildItem "$skillsDir\*.skill.md"
-    $count = 0
-    foreach ($file in $skillFiles) {
-        $targetFile = Join-Path $targetSkillsDir $file.Name
-        Copy-Item $file.FullName $targetFile -Force
-        $count++
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Append-Log $logBox "  ERROR: node.js not found -- skill selection needs plan-skills.js; skills NOT synced."
+        return
     }
+
     Add-ProjectGitignoreEntries $projectPath $logBox
-    $agentsFile = Join-Path $projectPath "AGENTS.md"
-    if (Test-Path $agentsFile) {
-        $agentsContent = Get-Content $agentsFile -Raw -Encoding UTF8
-        if ($agentsContent -notmatch "(?m)^## Skills") {
-            $agentsContent = $agentsContent.TrimEnd() + "`r`n`r`n---`r`n`r`n## Skills`r`n`r`nSkill files live at `_skills/<name>.skill.md`. Load when the trigger matches."
-            Set-Content -Path $agentsFile -Value $agentsContent -NoNewline -Encoding UTF8
-            Append-Log $logBox "  Added _skills/ section to AGENTS.md"
-        } else {
-            Append-Log $logBox "  OK ## Skills section already present"
-        }
+
+    # No `--dry-run` here on purpose: the GUI has no dry-run mode, and a switch no caller can pass is
+    # dead configuration. The CLI path (`sync-guidelines.ps1` -> `Sync-Skills`) is where dry runs live.
+    $output = & node $planner $projectPath --quiet --apply 2>&1
+    $exitCode = $LASTEXITCODE
+    foreach ($line in $output) { Append-Log $logBox "  $line" }
+    if ($exitCode -ne 0) {
+        Append-Log $logBox "  ERROR: skill selection failed (plan-skills.js exit $exitCode) -- _skills/ left unchanged."
+        return
     }
-    Append-Log $logBox "  Skills: $count synced to _skills/"
+
+    # The `## Skills` block is written by ONE script — the same one the module's `Sync-Skills` calls,
+    # so the two entry points cannot disagree (see the manifest header). `inject-skills-block.js`
+    # renders the inventory from THIS project's `_skills/`, wraps it in markers, and REFRESHES its own
+    # marked region on a later sync; a hand-written `## Skills` section is left alone.
+    $injector = Join-Path $syncContentDir "global-configs\scripts\inject-skills-block.js"
+    if (-not (Test-Path $injector)) {
+        Append-Log $logBox "  WARNING: inject-skills-block.js not found -- ## Skills section NOT written."
+        return
+    }
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Append-Log $logBox "  WARNING: node.js not found -- ## Skills section NOT written."
+        return
+    }
+    $output = & node $injector $projectPath 2>&1
+    foreach ($line in $output) { Append-Log $logBox "  $line" }
+    if ($LASTEXITCODE -ne 0) {
+        Append-Log $logBox "  WARNING: ## Skills section not written (inject-skills-block.js exit $LASTEXITCODE)"
+    }
 }
 
 # --- Sync-Project ---

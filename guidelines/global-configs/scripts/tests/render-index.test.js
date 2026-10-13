@@ -66,7 +66,7 @@ test('rendered regions are non-empty and cover the corpus (non-vacuity)', () => 
   assert.ok((tables.match(/^\| \[/gm) || []).length >= 60, 'category tables must list every guideline file');
 
   const skills = region(rendered, 'GENERATED:index-skills');
-  assert.equal((skills.match(/\.skill\.md\)/g) || []).length, 20, 'every skill must be listed');
+  assert.equal((skills.match(/\/SKILL\.md\)/g) || []).length, 20, 'every skill must be listed');
 
   const graph = region(rendered, 'GENERATED:index-graph');
   assert.match(graph, /### 08-governance/);

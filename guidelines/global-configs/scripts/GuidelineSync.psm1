@@ -2,6 +2,19 @@
 # Both must produce identical project outputs.
 # Import: Import-Module "$PSScriptRoot\GuidelineSync.psm1" -Force
 
+# --- UTF-8 without BOM ---
+# `Set-Content -Encoding UTF8` means "UTF-8 WITH a BOM" on Windows PowerShell 5.1 — the host
+# `sync-all.js` spawns — and "without" on 7.x, so the same sync wrote different bytes per host.
+# A BOM in a project file is a diff nobody asked for, and before a `---` it makes a front-matter
+# parser read "no front-matter at all". Every file this module writes goes through Write-Utf8NoBom
+# so the output is byte-identical on both hosts — the same reason the `.vscode/settings.json` merge
+# below uses WriteAllText. Guarded by tests/sync-gitignore.test.js.
+$script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+function Write-Utf8NoBom {
+    param([string]$Path, [string]$Content)
+    [System.IO.File]::WriteAllText($Path, $Content, $script:Utf8NoBom)
+}
+
 function Get-GuidelinesRepoRoot {
     return (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 }
@@ -191,7 +204,7 @@ function Install-StarterFile {
             $entry = @{ relativePath = $relativePath; backupName = $safeName }
             $existing = if (Test-Path $manifestFile) { Get-Content $manifestFile -Raw -Encoding UTF8 | ConvertFrom-Json } else { @() }
             $updated = @($existing) + $entry
-            $updated | ConvertTo-Json -Depth 3 | Set-Content $manifestFile -Encoding UTF8
+            Write-Utf8NoBom -Path $manifestFile -Content ($updated | ConvertTo-Json -Depth 3)
         } elseif ($backupDir) {
             Copy-Item $targetPath (Join-Path $backupDir (Split-Path $targetPath -Leaf)) -Force
         }
@@ -211,12 +224,12 @@ function Install-StarterFile {
         }
         if ($escapedHeader -and $cleanedContent -notmatch $escapedHeader) {
             $newContent = $starterContent.TrimEnd() + "`r`n`r`n" + $cleanedContent.TrimStart()
-            Set-Content -Path $targetPath -Value $newContent -NoNewline -Encoding UTF8
+            Write-Utf8NoBom -Path $targetPath -Content $newContent
             Write-Host "  Updated $((Split-Path $targetPath -Leaf)) (starter prepended)" -ForegroundColor Green
         } elseif (-not $escapedHeader) {
             # No header marker — always overwrite (covers WORLD.example.md / always-overwrite mode)
             if ($mode -eq "always-overwrite") {
-                Set-Content -Path $targetPath -Value $starterContent -NoNewline -Encoding UTF8
+                Write-Utf8NoBom -Path $targetPath -Content $starterContent
                 Write-Host "  Overwritten $((Split-Path $targetPath -Leaf)) (always-overwrite)" -ForegroundColor Green
             } else {
                 Write-Host "  OK $((Split-Path $targetPath -Leaf)) (no header marker, skipping)" -ForegroundColor Gray
@@ -225,7 +238,7 @@ function Install-StarterFile {
             Write-Host "  OK $((Split-Path $targetPath -Leaf)) (up to date)" -ForegroundColor Gray
         }
     } else {
-        Set-Content -Path $targetPath -Value $starterContent -NoNewline -Encoding UTF8
+        Write-Utf8NoBom -Path $targetPath -Content $starterContent
         Write-Host "  Created $((Split-Path $targetPath -Leaf)) from template" -ForegroundColor Green
     }
 }
@@ -271,13 +284,13 @@ function Install-ToolConfigFile {
         $existing = Get-Content $targetPath -Raw -Encoding UTF8
         # Reinstall only when the target is stale: unresolved token or a legacy hardcoded central path.
         if ($existing -match '\{\{GUIDELINES_ROOT\}\}' -or $existing -match 'D:\\WebApps\\global-guidelines') {
-            Set-Content -Path $targetPath -Value $content -NoNewline -Encoding UTF8
+            Write-Utf8NoBom -Path $targetPath -Content $content
             Write-Host "  Updated $targetRelPath (replaced absolute paths)" -ForegroundColor Green
         } else {
             Write-Host "  OK $targetRelPath (already relative)" -ForegroundColor Gray
         }
     } else {
-        Set-Content -Path $targetPath -Value $content -NoNewline -Encoding UTF8
+        Write-Utf8NoBom -Path $targetPath -Content $content
         Write-Host "  Created $targetRelPath" -ForegroundColor Green
     }
 }
@@ -289,47 +302,82 @@ function Sync-Skills {
         [switch]$DryRun
     )
 
-    $skillsDir = Join-Path $guidelinesRepo "global-configs\skills"
-    $targetSkillsDir = Join-Path $projectPath "_skills"
+    # WHICH skills a project receives is decided by `plan-skills.js`, never here.
+    #
+    # INTENT: this function used to copy every `*.skill.md` unconditionally, which put
+    # `rtl-shadcn-setup` into MUI projects and `mui-design-system` into Tailwind ones — documents that
+    # contradict the project's own constitution, sitting in a directory the `## Skills` index tells the
+    # agent to load from. The selector reads the project's declared `### Stack` table, its
+    # `### Forbidden …` list and its `package.json`, and copies only what fits. Measured on the fleet
+    # 2026-10-12: no project receives all 20 and none receives zero (12–16 each).
+    #
+    # WHY THE RULE IS NOT RE-IMPLEMENTED HERE. A second implementation would be a second home for the
+    # same decision, and the two would drift exactly where it matters — on the project whose
+    # `appliesTo` or Stack table was just edited. The node script owns the rule and is unit-tested;
+    # this function owns the delivery, the gitignore entry and the `## Skills` section.
+    #
+    # WHY FAILURE IS LOUD AND NOT A FALLBACK TO COPY-ALL. Copying everything is the defect being
+    # removed, so a silent fallback would restore it precisely when nobody is watching. On failure the
+    # step reports the reason and the remedy, and any existing `_skills/` is left untouched.
+    #
+    # `--apply` makes the node script materialise the plan AND prune what no longer fits: `_skills/` is
+    # a generated mirror, so the planned set is the whole set. Without the prune, a project that
+    # changes stack keeps the skill it no longer matches, and the stale one is still loadable.
 
+    $skillsDir = Join-Path $guidelinesRepo "global-configs\skills"
     if (-not (Test-Path $skillsDir)) { return }
 
-    if ($DryRun) {
-        $skillFiles = Get-ChildItem "$skillsDir\*.skill.md"
-        foreach ($file in $skillFiles) {
-            Write-Host "  [DRY-RUN] Skill: $($file.Name) → _skills/" -ForegroundColor Yellow
-        }
+    $planner = Join-Path $guidelinesRepo "global-configs\scripts\plan-skills.js"
+    if (-not (Test-Path $planner)) {
+        Write-Host "  ERROR: plan-skills.js not found at $planner -- skills NOT synced." -ForegroundColor Red
+        return
+    }
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Write-Host "  ERROR: node.js not found -- skill selection needs plan-skills.js; skills NOT synced." -ForegroundColor Red
         return
     }
 
-    if (-not (Test-Path $targetSkillsDir)) {
-        $null = New-Item -ItemType Directory -Path $targetSkillsDir -Force
-    }
-
-    $skillFiles = Get-ChildItem "$skillsDir\*.skill.md"
-    $count = 0
-    foreach ($file in $skillFiles) {
-        $targetFile = Join-Path $targetSkillsDir $file.Name
-        Copy-Item $file.FullName $targetFile -Force
-        $count++
-    }
-
-    # The entry comes from the manifest via `Get-GitignoreEntries`, never from a literal here. This
-    # block used to hardcode `_skills/` while the manifest declared the same entry, and that kind of
-    # duplication is what let `.guidelines-backups/` fall through every list. `Update-Gitignore` is
-    # idempotent, so a caller that already wrote the set pays nothing for this.
+    # The ignore entry is written BEFORE anything lands, so an interrupted run cannot leave a
+    # generated directory untracked -- which is what fails the `clean-tree` step of the pre-push gate.
+    # The entry comes from the manifest via `Get-GitignoreEntries`, never from a literal here.
     Update-Gitignore -projectPath $projectPath -entry (Get-GitignoreEntries)
 
-    Write-Host "  Skills: $count synced to _skills/" -ForegroundColor Green
+    $plannerArgs = @($planner, $projectPath, '--quiet')
+    if (-not $DryRun) { $plannerArgs += '--apply' }
 
-    $agentsFile = Join-Path $projectPath "AGENTS.md"
-    if (Test-Path $agentsFile) {
-        $agentsContent = Get-Content $agentsFile -Raw -Encoding UTF8
-        if ($agentsContent -notmatch '(?m)^## Skills') {
-            $skillsSection = "`r`n`r`n---`r`n`r`n## Skills`r`n`r`nSkill files live at ``_skills/<name>.skill.md``. Load when the trigger matches the current task."
-            Set-Content -Path $agentsFile -Value ($agentsContent.TrimEnd() + $skillsSection) -NoNewline -Encoding UTF8
-            Write-Host "  Added ## Skills section to AGENTS.md" -ForegroundColor Green
-        }
+    $output = & node @plannerArgs 2>&1
+    $exitCode = $LASTEXITCODE
+    foreach ($line in $output) { Write-Host "  $line" }
+    if ($exitCode -ne 0) {
+        Write-Host "  ERROR: skill selection failed (plan-skills.js exit $exitCode) -- _skills/ left unchanged." -ForegroundColor Red
+        return
+    }
+
+    # The `## Skills` block is written by ONE script — the same one the GUI's `Sync-SkillsInline`
+    # calls, so the two entry points cannot disagree. `inject-skills-block.js` renders the inventory
+    # from THIS project's `_skills/` (so every row's link resolves), wraps it in markers, and
+    # REFRESHES its own marked region on a later sync. It leaves a hand-written `## Skills` section
+    # alone: a generated index that overwrote a project's own rule would be worse than a stale one.
+    #
+    # WHY NOT INLINE, AS BEFORE. The old code appended only when the project had no `## Skills`
+    # (`-notmatch '(?m)^## Skills'`) and could never touch it again — so a layout change or a new
+    # skill stranded the block forever, which is exactly what happened to five fleet projects on
+    # 2026-10-13. It also duplicated the block's fallback text and ran the renderer against the
+    # CENTRAL corpus, producing links to skills the project does not receive. All three move into the
+    # one script, where a test can drive them.
+    $injector = Join-Path $guidelinesRepo "global-configs\scripts\inject-skills-block.js"
+    if (-not (Test-Path $injector)) {
+        Write-Host "  WARNING: inject-skills-block.js not found -- ## Skills section NOT written." -ForegroundColor Yellow
+        return
+    }
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Write-Host "  WARNING: node.js not found -- ## Skills section NOT written." -ForegroundColor Yellow
+        return
+    }
+    $output = & node $injector $projectPath 2>&1
+    foreach ($line in $output) { Write-Host "  $line" }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  WARNING: ## Skills section not written (inject-skills-block.js exit $LASTEXITCODE)" -ForegroundColor Yellow
     }
 }
 
@@ -373,4 +421,4 @@ function Update-Gitignore {
 Export-ModuleMember -Function Get-GuidelinesRepoRoot, Get-ManifestPath, Read-Manifest,
     Get-GitignoreEntries, Get-BackupDir, New-DatedBackupDir, Restore-Backup,
     Sync-MirrorDirectory, Install-StarterFile, Install-ToolConfigFile,
-    Sync-Skills, Update-Gitignore
+    Sync-Skills, Update-Gitignore, Write-Utf8NoBom

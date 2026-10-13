@@ -97,4 +97,4 @@ The audit is a **scheduled act**, not a reflex: monthly, as an automation, writi
 
 - **Depends on:** `development-workflow.md` — the workflow being audited, `speed-tiered-workflow.md` — mode and speed metric, `context-management-strategy.md` — token budgets
 - **Extended by:** `documentation-strategy.md` — the document-hygiene fixes, `local-ci-strategy.md` — the gate-tier and receipt fixes
-- **Applied by:** `performance-audit.skill.md` (code performance is the sibling audit — different subject, same method)
+- **Applied by:** the `performance-audit` skill (code performance is the sibling audit — different subject, same method)

@@ -7,7 +7,7 @@ const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/check-sync-drift.js');
-const { hashTree, compareProjects, requiredGuards, controlsOf } = require('../check-sync-drift.js');
+const { hashTree, compareProjects, compareSkills, skillsMirror, requiredGuards, controlsOf } = require('../check-sync-drift.js');
 
 /** Build a source tree and N mirrors, so the comparison has something real to read. */
 function fixture(mirrorMode) {
@@ -123,6 +123,197 @@ test('CLI exits 2 when the registry is unreadable rather than reporting success'
   const result = runSync(process.execPath, [SCRIPT, '--record'], { cwd: REPO_ROOT });
   assert.equal(result.status, 2);
   assert.match(result.stderr, /--record requires a project path/);
+});
+
+// ─── The skills copy: the artifact that instructs the agent, not the one it consults ─────
+
+const SKILL_BODY = '---\nname: a\ndescription: Activate for a\n---\n';
+/** A generated file that lives in the skills directory and that the sync deliberately never copies. */
+const NOT_A_SKILL = '# generated index — the sync copies SKILL.md files only, never this\n';
+
+/**
+ * A source tree that carries skills, a project whose `_guidelines/` mirror is current, and a
+ * `_skills/` directory in the given state. Built so the two verdicts can be told apart: a project
+ * can have a current mirror and a stale skills copy, which is the case this pass was added for.
+ *
+ * BOTH SIDES USE THE STANDARD LAYOUT (`<name>/SKILL.md`), because that is what the sync writes and
+ * what the plan expects. A fixture on the legacy flat layout would exercise a shape the fleet no
+ * longer produces, and would make the plan-based comparison look like it disagrees with the sync.
+ */
+function skillsFixture(skillsMode) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-skills-'));
+  const source = path.join(root, 'guidelines');
+  const sourceSkills = path.join(source, 'global-configs', 'skills');
+  fs.mkdirSync(path.join(sourceSkills, 'a'), { recursive: true });
+  fs.writeFileSync(path.join(sourceSkills, 'a', 'SKILL.md'), SKILL_BODY);
+  fs.writeFileSync(path.join(sourceSkills, 'INDEX.md'), NOT_A_SKILL);
+
+  const project = path.join(root, 'project');
+  const mirrorSkills = path.join(project, '_guidelines', 'global-configs', 'skills');
+  fs.mkdirSync(path.join(mirrorSkills, 'a'), { recursive: true });
+  fs.writeFileSync(path.join(mirrorSkills, 'a', 'SKILL.md'), SKILL_BODY);
+  fs.writeFileSync(path.join(mirrorSkills, 'INDEX.md'), NOT_A_SKILL);
+
+  if (skillsMode !== 'missing') {
+    const skills = path.join(project, '_skills');
+    fs.mkdirSync(path.join(skills, 'a'), { recursive: true });
+    fs.writeFileSync(
+      path.join(skills, 'a', 'SKILL.md'),
+      skillsMode === 'edited' ? SKILL_BODY.replace('Activate for a', 'Activate for something else') : SKILL_BODY
+    );
+    if (skillsMode === 'extra') {
+      fs.mkdirSync(path.join(skills, 'stale'), { recursive: true });
+      fs.writeFileSync(path.join(skills, 'stale', 'SKILL.md'), '---\nname: stale\n---\n');
+    }
+  }
+
+  const manifest = path.join(root, 'sync-manifest.json');
+  fs.writeFileSync(manifest, JSON.stringify({
+    skills: { source: 'global-configs/skills/*/SKILL.md', target: '_skills' },
+  }, null, 2));
+  return { root, source, project, manifest };
+}
+
+test('hashTree with a glob keeps only the files the sync actually copies', () => {
+  const f = skillsFixture('ok');
+  const dir = path.join(f.source, 'global-configs', 'skills');
+  assert.equal(hashTree(dir).count, 2, 'the directory holds the skill and the generated index');
+  assert.equal(hashTree(dir, 'SKILL.md').count, 1, 'only SKILL.md travels to a project');
+});
+
+test('skillsMirror derives the target, the source and the glob from the manifest', () => {
+  const f = skillsFixture('ok');
+  const mirror = skillsMirror(f.source, f.manifest);
+  assert.equal(mirror.target, '_skills');
+  assert.equal(mirror.glob, 'SKILL.md');
+  assert.equal(mirror.count, 1, 'INDEX.md is excluded — counting it would report permanent drift');
+});
+
+test('skillsMirror is null when nothing declares skills, or the source has none', () => {
+  const f = skillsFixture('ok');
+  assert.equal(skillsMirror(f.source, path.join(f.root, 'absent.json')), null, 'no manifest, nothing declared');
+  const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-bare-'));
+  assert.equal(skillsMirror(bare, f.manifest), null, 'a repo with no skills tree is not drift');
+});
+
+test('skillsMirror derives the directory from a manifest whose glob is a DIRECTORY segment', () => {
+  // THE BUG THIS CLOSES. With `skills/*/SKILL.md` the glob star sits in the DIRECTORY segment, and
+  // `path.dirname` left it in place — so the source resolved to a literal `skills/*` that exists
+  // nowhere, `skillsMirror` returned null, and the entire `_skills/` comparison went silently
+  // vacuous for the fleet while the header read "not declared by the manifest". The legacy fixture
+  // above never caught it because `*.skill.md` keeps the star in the BASENAME.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-skills-std-'));
+  const source = path.join(root, 'guidelines');
+  const dir = path.join(source, 'global-configs', 'skills');
+  for (const name of ['alpha', 'beta']) {
+    fs.mkdirSync(path.join(dir, name), { recursive: true });
+    fs.writeFileSync(path.join(dir, name, 'SKILL.md'), SKILL_BODY);
+  }
+  fs.writeFileSync(path.join(dir, 'INDEX.md'), NOT_A_SKILL);
+  const manifest = path.join(root, 'sync-manifest.json');
+  fs.writeFileSync(manifest, JSON.stringify({
+    skills: { source: 'global-configs/skills/*/SKILL.md', target: '_skills' },
+  }));
+
+  const mirror = skillsMirror(source, manifest);
+  assert.ok(mirror, 'the standard layout MUST resolve — null here means the control is vacuous');
+  assert.equal(mirror.glob, 'SKILL.md');
+  assert.equal(mirror.count, 2, 'both SKILL.md files, and not the INDEX.md beside them');
+});
+
+test('compareSkills separates sync, drift and a missing directory', () => {
+  const ok = skillsFixture('ok');
+  assert.equal(compareSkills(ok.project, skillsMirror(ok.source, ok.manifest)).state, 'sync');
+
+  const edited = skillsFixture('edited');
+  assert.equal(compareSkills(edited.project, skillsMirror(edited.source, edited.manifest)).state, 'drift');
+
+  const missing = skillsFixture('missing');
+  assert.equal(compareSkills(missing.project, skillsMirror(missing.source, missing.manifest)).state, 'no-mirror');
+
+  assert.equal(compareSkills(ok.project, null), null, 'no declaration, no verdict');
+});
+
+test('compareSkills compares against the PLAN, not the whole source corpus — the false-drift fix', () => {
+  // THE BUG THIS CLOSES. `_skills/` is a FILTERED mirror: the sync writes only the skills that fit
+  // the project's stack (12–16 of 20 on the fleet). Comparing its hash to the source's whole-corpus
+  // hash reported every project as drifted the moment the filter was applied — while every one of
+  // them was correct. The verdict must come from `plan-skills.js`, the one home for the decision.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-skills-filter-'));
+  const source = path.join(root, 'guidelines');
+  const sourceSkills = path.join(source, 'global-configs', 'skills');
+  const AGNOSTIC = '---\nname: always\ndescription: Applies to every project\n---\n';
+  const MUI_SKILL = '---\nname: mui-skill\ndescription: For MUI projects\nmetadata:\n  appliesTo: mui\n---\n';
+  for (const [name, body] of [['always', AGNOSTIC], ['mui-skill', MUI_SKILL]]) {
+    fs.mkdirSync(path.join(sourceSkills, name), { recursive: true });
+    fs.writeFileSync(path.join(sourceSkills, name, 'SKILL.md'), body);
+  }
+
+  const project = path.join(root, 'project');
+  // A Tailwind project: the mui skill does not overlap its stack, so the plan skips it.
+  fs.mkdirSync(project, { recursive: true });
+  fs.writeFileSync(path.join(project, 'AGENTS.md'), '# p\n\n### Stack\n\n| Tech | Version |\n| --- | --- |\n| Tailwind | 3 |\n');
+  fs.mkdirSync(path.join(project, '_skills', 'always'), { recursive: true });
+  fs.writeFileSync(path.join(project, '_skills', 'always', 'SKILL.md'), AGNOSTIC);
+
+  const manifest = path.join(root, 'sync-manifest.json');
+  fs.writeFileSync(manifest, JSON.stringify({ skills: { source: 'global-configs/skills/*/SKILL.md', target: '_skills' } }));
+
+  const verdict = compareSkills(project, skillsMirror(source, manifest));
+  assert.equal(verdict.expectedFiles, 1, 'the plan selects one of the two source skills for this project');
+  assert.equal(verdict.mirrorFiles, 1);
+  assert.equal(verdict.state, 'sync', 'one of two source skills, matching the plan, is NOT drift');
+
+  // And a planned skill the project does not carry IS drift.
+  fs.rmSync(path.join(project, '_skills', 'always'), { recursive: true });
+  const missing = compareSkills(project, skillsMirror(source, manifest));
+  assert.equal(missing.state, 'drift');
+  assert.deepEqual(missing.missing, ['always/SKILL.md']);
+});
+
+test('a legacy flat copy in _skills/ is drift — the standard layout is what the sync writes', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-skills-legacy-'));
+  const source = path.join(root, 'guidelines');
+  const sourceSkills = path.join(source, 'global-configs', 'skills');
+  fs.mkdirSync(path.join(sourceSkills, 'a'), { recursive: true });
+  fs.writeFileSync(path.join(sourceSkills, 'a', 'SKILL.md'), SKILL_BODY);
+
+  const project = path.join(root, 'project');
+  fs.mkdirSync(path.join(project, '_skills'), { recursive: true });
+  fs.writeFileSync(path.join(project, '_skills', 'a.skill.md'), SKILL_BODY); // the pre-migration shape
+
+  const manifest = path.join(root, 'sync-manifest.json');
+  fs.writeFileSync(manifest, JSON.stringify({ skills: { source: 'global-configs/skills/*/SKILL.md', target: '_skills' } }));
+
+  const verdict = compareSkills(project, skillsMirror(source, manifest));
+  assert.equal(verdict.state, 'drift', 'a flat file a conformant loader never reads is not the delivered skill');
+  assert.deepEqual(verdict.missing, ['a/SKILL.md']);
+  assert.deepEqual(verdict.extra, ['a.skill.md']);
+});
+
+test('REVERSAL PROOF: a current mirror with a stale skills copy is drift', () => {
+  // THE HOLE THIS PASS CLOSES. Before 2026-10-12 the hash covered `_guidelines/` alone, so this
+  // project reported "in sync" while the skills its agent was told to load were out of date.
+  const f = skillsFixture('edited');
+  const rows = compareProjects(f.source, hashTree(f.source), [{ name: 'p', path: f.project }], skillsMirror(f.source, f.manifest));
+  assert.equal(rows[0].state, 'sync', 'the guidelines mirror really is current');
+  assert.equal(rows[0].skills.state, 'drift', 'and the stale skills copy is caught anyway');
+});
+
+test('CLI exits 1 for a stale, missing or left-behind skills copy', () => {
+  const run = (skillsMode) => {
+    const f = skillsFixture(skillsMode);
+    const registry = path.join(f.root, 'sync-projects.json');
+    fs.writeFileSync(registry, JSON.stringify([{ name: 'p', path: f.project }]));
+    return runSync(process.execPath, [SCRIPT, '--quiet'], {
+      cwd: REPO_ROOT,
+      env: { ...process.env, SYNC_DRIFT_SOURCE: f.source, SYNC_DRIFT_REGISTRY: registry, SYNC_DRIFT_MANIFEST: f.manifest },
+    });
+  };
+  assert.equal(run('ok').status, 0, 'both artifacts current');
+  assert.equal(run('edited').status, 1, 'a skill edited centrally is not the skill the project loads');
+  assert.equal(run('missing').status, 1, 'a missing _skills/ means the AGENTS.md pointer resolves to nothing');
+  assert.equal(run('extra').status, 1, 'a skill left behind is a stale skill, not a match');
 });
 
 // ─── Controls: the mirror answers "has it", this answers "does it run it" ─────

@@ -30,6 +30,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { parseFrontMatter, missingKeys, meta, asList } = require('./lib/front-matter.js');
+const { isToken, TOKEN_NAMES } = require('./lib/tech-tokens.js');
+const { SKILL_FILE, SKILL_EXT, listSkills } = require('./lib/skill-files.js');
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -109,26 +112,100 @@ const EXTRACTION_DOCS = new Set([
   'guideline-authoring-standards.md',
   'skill-design-patterns.md',
 ]);
-const SKILL_FILES = [
-  'global-configs/skills/architect.skill.md',
-  'global-configs/skills/bidirectional-docx-rtl.skill.md',
-  'global-configs/skills/code-review.skill.md',
-  'global-configs/skills/debug-without-code.skill.md',
-  'global-configs/skills/deploy-production.skill.md',
-  'global-configs/skills/docx-per-paragraph-language.skill.md',
-  'global-configs/skills/first-project-setup.skill.md',
-  'global-configs/skills/implementation-plan.skill.md',
-  'global-configs/skills/inno-setup.skill.md',
-  'global-configs/skills/mui-design-system.skill.md',
-  'global-configs/skills/performance-audit.skill.md',
-  'global-configs/skills/refactoring.skill.md',
-  'global-configs/skills/rtl-shadcn-setup.skill.md',
-  'global-configs/skills/security-audit.skill.md',
-  'global-configs/skills/shadcn-design-system.skill.md',
-  'global-configs/skills/test-generation.skill.md',
-  'global-configs/skills/tiptap-tailwind-reset.skill.md',
-  'global-configs/skills/unsaved-changes-protection.skill.md',
-];
+const SKILLS_DIR = 'global-configs/skills';
+
+/**
+ * The front-matter keys a skill MUST declare to be loadable at all.
+ *
+ * `description` is not documentation — it is the field a native skill loader reads to decide when to
+ * activate the skill (Claude Code's docs say it outright: the description "helps Claude decide when
+ * to load the skill automatically"). A skill without one exists and can never fire, which is the
+ * failure mode a directory listing cannot show. `name` is what the loader registers the skill as.
+ */
+const SKILL_CONTRACT = ['name', 'description'];
+
+/** The Agent Skills standard's name rule: 1–64 chars, `a-z 0-9 -`, no leading/trailing/consecutive hyphen. */
+const SKILL_NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+/** The standard caps `description` at 1024 characters. */
+const SKILL_DESCRIPTION_MAX = 1024;
+
+/**
+ * Every skill on disk, derived — never a hand-typed list.
+ *
+ * This WAS an array of 18 literal paths. By 2026-10-12 the corpus held 20: adding
+ * `firebase-firestore-practices` and `firestore-cost-optimization` grew the directory and left the
+ * list behind, so two skills were never audited for dangling guideline references while the report
+ * said the skills had been checked. A hand-kept list of files fails the same way a hand-kept list of
+ * anything fails — in the direction nobody notices.
+ */
+function findSkillFiles(repo = REPO_ROOT) {
+  const dir = path.join(repo, SKILLS_DIR);
+  return listSkills(dir).map((s) => `${SKILLS_DIR}/${s.file}`);
+}
+
+/**
+ * Every way a skill departs from the Agent Skills standard, as a list of human-readable reasons.
+ *
+ * INTENT: the standard is not decoration — a skill that violates the name rule, ships an empty or
+ * over-long `description`, or is not a `<name>/SKILL.md` directory cannot be loaded by a conformant
+ * agent, and the failure is invisible from a directory listing. Each rule here is one the standard
+ * states explicitly, and the check is a pure function so it can be reversal-proved on a mutation.
+ *
+ * @param {string} relPath the skill path relative to the repo root, `/`-separated
+ * @param {Record<string, unknown>|null} fm
+ * @returns {string[]}
+ */
+function skillConformance(relPath, fm) {
+  const problems = [];
+  const name = fm && typeof fm.name === 'string' ? fm.name : null;
+  const description = fm && typeof fm.description === 'string' ? fm.description : '';
+
+  // 1. Layout — a directory containing SKILL.md, so the skill name matches its parent directory.
+  const dirName = relPath.split('/').slice(-2)[0];
+  const base = relPath.split('/').pop();
+  if (base !== SKILL_FILE) {
+    problems.push(`not a <name>/SKILL.md layout (found ${base})`);
+  } else if (name && dirName && name !== dirName) {
+    problems.push(`front-matter name "${name}" does not match its directory "${dirName}"`);
+  }
+
+  // 2. `name` — required, 1–64 chars, lowercase alphanumerics and single hyphens.
+  if (!name) {
+    problems.push('no name declared');
+  } else if (name.length > 64) {
+    problems.push(`name is ${name.length} chars (max 64)`);
+  } else if (!SKILL_NAME_RE.test(name)) {
+    problems.push(`name "${name}" must be lowercase a-z/0-9/hyphen, with no leading, trailing or doubled hyphen`);
+  }
+
+  // 3. `description` — required, non-empty, at most 1024 characters.
+  if (!description.trim()) {
+    problems.push('no description declared (no loader can activate it)');
+  } else if (description.length > SKILL_DESCRIPTION_MAX) {
+    problems.push(`description is ${description.length} chars (max ${SKILL_DESCRIPTION_MAX})`);
+  }
+
+  return problems;
+}
+
+/** The contract keys this skill's front-matter is missing or has left blank. */
+function skillContract(fm) {
+  return missingKeys(fm, SKILL_CONTRACT);
+}
+
+/**
+ * `appliesTo` values the technology vocabulary cannot resolve.
+ *
+ * INTENT: `appliesTo` is the declaration the skill selector intersects against a project's stack, so
+ * an unresolvable value is silently inert — `appliesTo: [mooi]` reads as "no scope", which makes the
+ * skill universal and copies it into every project, including the ones it was declared to avoid. The
+ * failure is invisible from every direction: the skill looks scoped, the plan looks confident, and
+ * the only symptom is a skill in the wrong repository. Checking the value against the vocabulary that
+ * actually consumes it is the one place the mistake can be caught.
+ */
+function unresolvedAppliesTo(fm) {
+  return asList(meta(fm, 'appliesTo')).filter((t) => !isToken(t));
+}
 
 // ─── Guideline Parsing ───────────────────────────────────────────────────────
 
@@ -366,7 +443,7 @@ function audit() {
   console.log(`   Total: ${allRules.length} rules\n`);
 
   const KNOWN_NON_GUIDELINE_FILES = new Set([
-    'skill.md', 'README.md', 'CHANGELOG.md', 'AGENTS.md', 'CLAUDE.md', 'WORLD.md',
+    'skill.md', 'SKILL.md', 'README.md', 'CHANGELOG.md', 'AGENTS.md', 'CLAUDE.md', 'WORLD.md',
     'DEVTOOLS.md', 'GEMINI.md', 'GEMINI.md.template',
     'instructions.md', 'copilot-instructions.md', 'copilot-instructions.starter.md',
     'global-guidelines.md', 'cursor-global-guidelines.md', 'windsurf-global-guidelines.md',
@@ -376,8 +453,9 @@ function audit() {
 
   // 2b. Parse all skill files for guideline references
   console.log('📖 Parsing skill files...');
-  let skillRefs = 0;
-  for (const skill of SKILL_FILES) {
+  const skillPaths = findSkillFiles();
+  let totalSkillRefs = 0;
+  for (const skill of skillPaths) {
     const skillPath = path.join(REPO_ROOT, skill);
     if (!fs.existsSync(skillPath)) {
       console.log(`   ⚠️  Skill not found: ${skill}`);
@@ -385,6 +463,25 @@ function audit() {
     }
     const content = fs.readFileSync(skillPath, 'utf8');
     const relativePath = path.relative(REPO_ROOT, skillPath).replace(/\\/g, '/');
+
+    // 2b-i. The loadability contract and the Agent Skills standard's rules. A skill that violates
+    // either cannot be loaded by a conformant agent, and the defect is invisible from a listing.
+    const fm = parseFrontMatter(content);
+    const missing = skillContract(fm);
+    if (missing.length) {
+      console.log(`   ❌ UNLOADABLE SKILL: ${relativePath} is missing ${missing.join(', ')}`);
+      driftCount++;
+    }
+    // The two missing-key cases are already reported above; do not double-count them.
+    for (const problem of skillConformance(relativePath, fm).filter((p) => !/^no (name|description) declared/.test(p))) {
+      console.log(`   ❌ NON-CONFORMANT SKILL: ${relativePath}: ${problem}`);
+      driftCount++;
+    }
+
+    // Per file, not cumulative: the counter used to accumulate across the whole loop, so the last
+    // skill printed the corpus total and every skill before it printed a running sum. A per-file
+    // count is the only reading that answers "how many references does THIS skill carry".
+    let fileRefs = 0;
     // Extract guideline references from skills (lines like "- `guideline-file.md`")
     // Exclude .skill.md self-references and common false positives
     const guidelineRefRegex = /[`\[]?((?:\d{2}-[\w-]+\/)?[\w-]+\.md)[`\]]?/g;
@@ -393,6 +490,11 @@ function audit() {
       const ref = match[1];
       // Skip self-references and non-guideline .md files
       if (ref.endsWith('.skill.md') || KNOWN_NON_GUIDELINE_FILES.has(ref) || KNOWN_NON_GUIDELINE_FILES.has(path.basename(ref))) continue;
+      // A file bundled INSIDE the skill is part of the skill, not a guideline reference — the Agent
+      // Skills standard's progressive-disclosure layout (`references/guard-snippet.md`). The regex
+      // captures only the basename, so both the skill root and its `references/` are probed.
+      const skillDir = path.dirname(skillPath);
+      if (fs.existsSync(path.join(skillDir, ref)) || fs.existsSync(path.join(skillDir, 'references', ref))) continue;
       // Check if the referenced guideline exists
       let found = false;
       for (const guidelinePath of Object.keys(guidelines)) {
@@ -410,11 +512,12 @@ function audit() {
         console.log(`   ⚠️  Skill ${relativePath} references unknown guideline: ${ref}`);
         driftCount++;
       }
-      skillRefs++;
+      fileRefs++;
     }
-    console.log(`   ${relativePath}: ${skillRefs} guideline references`);
+    totalSkillRefs += fileRefs;
+    console.log(`   ${relativePath}: ${fileRefs} guideline references`);
   }
-  console.log();
+  console.log(`   ${skillPaths.length} skills scanned, ${totalSkillRefs} guideline references total\n`);
 
   // 3. Audit: rules without source guidelines
   console.log('🔍 Checking rule source references...\n');
@@ -500,6 +603,54 @@ function audit() {
     }
   }
   console.log(`   ${tally.declared} declare a control · ${tally.none} declare \`none\` · ${tally.absent} unclassified (the ratchet)\n`);
+
+  // 4c. A skill cannot be activated without the fields a loader reads.
+  // Measured 2026-10-12: `mui-design-system.skill.md` declared neither `name` nor `description`, so
+  // no loader could surface it and no index could render its trigger — a skill that exists and
+  // cannot fire. Nothing caught it, because the only thing that read the skills was the reference
+  // scan above, which cares about what a skill POINTS AT, never whether it can be loaded.
+  console.log('🔍 Checking the skill front-matter contract...\n');
+  const contractSkills = findSkillFiles();
+  if (contractSkills.length === 0) {
+    // Non-vacuity: an empty corpus makes the loop below pass over nothing and prove nothing.
+    console.log(`❌ no ${SKILL_EXT} files found under ${SKILLS_DIR}/ — the contract cannot be checked\n`);
+    driftCount += 1;
+  }
+  let contractOk = 0;
+  let scopedOk = 0;
+  for (const skill of contractSkills) {
+    const abs = path.join(REPO_ROOT, skill);
+    const fm = parseFrontMatter(fs.readFileSync(abs, 'utf8'));
+    const missing = skillContract(fm);
+    const unresolved = unresolvedAppliesTo(fm);
+    if (missing.length === 0) contractOk += 1;
+    if (unresolved.length === 0) scopedOk += 1;
+    if (missing.length === 0 && unresolved.length === 0) continue;
+
+    if (missing.length) {
+      console.log(`❌ UNLOADABLE SKILL: ${skill}`);
+      console.log(`   Missing front-matter: ${missing.join(', ')}`);
+      console.log('   `description` is the field a loader reads to decide when to activate the skill, so');
+      console.log('   without it the skill can never fire. `name` is what the loader registers it as.');
+      console.log('   Action: declare both in the front-matter — the contract is in `skill-design-patterns.md`\n');
+      driftCount += 1;
+    }
+
+    if (unresolved.length) {
+      console.log(`❌ UNRESOLVABLE appliesTo: ${skill}`);
+      console.log(`   Values the vocabulary does not know: ${unresolved.join(', ')}`);
+      console.log("   The skill selector intersects `appliesTo` against a project's stack tokens, so an");
+      console.log('   unresolvable value is inert: the skill reads as unscoped and is copied to EVERY');
+      console.log('   project, including the ones it was declared to avoid.');
+      console.log(`   Known tokens: ${TOKEN_NAMES.join(', ')}`);
+      console.log('   Action: use a known token, or drop the value and let `tags` infer the scope.\n');
+      driftCount += 1;
+    }
+  }
+  if (contractSkills.length > 0) {
+    console.log(`   ${contractOk}/${contractSkills.length} skills declare ${SKILL_CONTRACT.join(' + ')}`);
+    console.log(`   ${scopedOk}/${contractSkills.length} skills have a resolvable appliesTo (declared or absent)\n`);
+  }
 
   // 5. Cross-template consistency check
   // Pointer templates (copilot-instructions.starter.md) intentionally
@@ -590,4 +741,4 @@ if (require.main === module) {
   process.exit(exitCode);
 }
 
-module.exports = { audit, parseGuideline, parseTemplateRules, checkControl, readScripts };
+module.exports = { audit, parseGuideline, parseTemplateRules, checkControl, readScripts, findSkillFiles, skillContract, skillConformance, unresolvedAppliesTo, SKILL_CONTRACT, SKILL_NAME_RE, SKILL_DESCRIPTION_MAX, SKILL_FILE, SKILL_EXT, SKILLS_DIR };

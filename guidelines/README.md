@@ -28,7 +28,7 @@ entire directory as `_guidelines/` in their project root.
 | `07-documentation/` | Documentation strategy, authoring standards, ADR template |
 | `08-governance/` | AI governance, rule extraction, classification, design-system governance |
 | `global-configs/templates/` | Starter files for AGENTS.md, CLAUDE.md, WORLD.md, tool configs |
-| `global-configs/skills/` | `.skill.md` files installed to project `_skills/` |
+| `global-configs/skills/` | `<name>/SKILL.md` skill directories installed to project `_skills/` |
 | `global-configs/scripts/` | Sync tooling and validation scripts |
 
 ## For AI Agents in Downstream Projects

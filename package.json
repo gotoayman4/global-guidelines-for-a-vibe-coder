@@ -11,6 +11,9 @@
     "render:index": "node guidelines/global-configs/scripts/render-index.js",
     "check-drift": "node guidelines/global-configs/scripts/render-agents-starter.js --check",
     "check-index-drift": "node guidelines/global-configs/scripts/render-index.js --check",
+    "render:skills": "node guidelines/global-configs/scripts/render-skills-index.js",
+    "check-skills-drift": "node guidelines/global-configs/scripts/render-skills-index.js --check",
+    "plan:skills": "node guidelines/global-configs/scripts/plan-skills.js",
     "status:projects": "node guidelines/global-configs/scripts/check-project-freshness.js",
     "sync:all": "node guidelines/global-configs/scripts/sync-all.js",
     "docs:check": "node guidelines/global-configs/scripts/check-docs-freshness.js",
@@ -23,7 +26,7 @@
     "new:project": "node guidelines/global-configs/scripts/new-project.js",
     "validate:fast": "npm run check-links && npm run check-index",
     "test:scripts": "node --test guidelines/global-configs/scripts/tests/*.test.js",
-    "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run check-index-drift && npm run docs:census && npm run guard:tiers && npm run test:scripts",
+    "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run check-index-drift && npm run check-skills-drift && npm run docs:census && npm run guard:tiers && npm run test:scripts",
     "slice:close": "node guidelines/global-configs/scripts/slice-close.js",
     "sync:drift": "node guidelines/global-configs/scripts/check-sync-drift.js",
     "audit:friction": "node guidelines/global-configs/scripts/audit-friction.js"

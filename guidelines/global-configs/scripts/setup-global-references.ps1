@@ -49,11 +49,16 @@ Write-Host "[1] opencode" -ForegroundColor Yellow
 if (-not (Test-Path -LiteralPath $opencodeSkillsDir)) {
     $null = New-Item -ItemType Directory -Path $opencodeSkillsDir -Force
 }
-$skillFiles = Get-ChildItem "$guidelinesRepo\global-configs\skills\*.skill.md"
+# The corpus is the Agent Skills standard layout: one directory per skill, each holding a SKILL.md.
+# Enumerating `*/SKILL.md` (not `*.skill.md`) is what makes the pool conformant — a native loader
+# scans for SKILL.md, and the flat file it used to link was invisible to every one of them.
+$skillFiles = Get-ChildItem -Path "$guidelinesRepo\global-configs\skills" -Directory -ErrorAction SilentlyContinue |
+    ForEach-Object { Join-Path $_.FullName "SKILL.md" } |
+    Where-Object { Test-Path -LiteralPath $_ }
 $skillCount = 0
 if ($isAdmin) {
     foreach ($file in $skillFiles) {
-        $skillName = $file.BaseName -replace '\.skill$', ''
+        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
         $skillDir = Join-Path $opencodeSkillsDir $skillName
         $symlinkPath = Join-Path $skillDir "SKILL.md"
         if (-not (Test-Path -LiteralPath $skillDir)) {
@@ -62,7 +67,7 @@ if ($isAdmin) {
         if (Test-Path -LiteralPath $symlinkPath) {
             Remove-Item -LiteralPath $symlinkPath -Force
         }
-        $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file.FullName -Force
+        $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file -Force
         $skillCount++
     }
 } else {
@@ -81,7 +86,7 @@ This machine has a shared guidelines repository at:
 1. If not already loaded via project opencode.json, read ``$guidelinesRepo\_index\RETRIEVAL_RULES.md``
 2. Read ``$guidelinesRepo\_index\MASTER_INDEX.md`` to map task type to relevant files
 3. Load only files needed for the current task - never the whole repo
-4. Skills live at ``$guidelinesRepo\global-configs\skills\<name>.skill.md`` - load when trigger matches
+4. Skills live at ``$guidelinesRepo\global-configs\skills\<name>\SKILL.md`` - load when trigger matches
 
 ## How to Load Guidelines
 
@@ -146,7 +151,7 @@ if (-not (Test-Path -LiteralPath $qoderSkillsDir)) {
 if ($isAdmin) {
     $qoderCount = 0
     foreach ($file in $skillFiles) {
-        $skillName = $file.BaseName -replace '\.skill$', ''
+        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
         $qoderDir = Join-Path $qoderSkillsDir $skillName
         $qoderSymlink = Join-Path $qoderDir "SKILL.md"
         if (-not (Test-Path -LiteralPath $qoderDir)) {
@@ -155,7 +160,7 @@ if ($isAdmin) {
         if (Test-Path -LiteralPath $qoderSymlink) {
             Remove-Item -LiteralPath $qoderSymlink -Force
         }
-        $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file.FullName -Force
+        $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file -Force
         $qoderCount++
     }
     Write-Host "  Skills: $qoderCount linked to $qoderSkillsDir" -ForegroundColor Green

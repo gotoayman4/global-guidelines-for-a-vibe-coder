@@ -248,3 +248,57 @@ test('REVERSAL PROOF: an unguarded settings write is named', () => {
   assert.equal(failures.length, 1, failures.join('; '));
   assert.match(failures[0], /sync-guidelines\.ps1: merges settings with no change guard/);
 });
+
+/**
+ * THE FOURTH INVARIANT: a writer must not put a BOM in a project file.
+ *
+ * WHY IT EXISTS. `Set-Content -Encoding UTF8` means "UTF-8 WITH a BOM" on Windows PowerShell 5.1 —
+ * the host `sync-all.js` spawns — and "without" on 7.x, so the same sync wrote different bytes per
+ * host. Every starter and tool-config file the sync produced (AGENTS.md, README.md,
+ * `.github/copilot-instructions.md`, ...) therefore carried a BOM on the fleet host. Measured
+ * 2026-10-13: five of six projects shipped a BOM'd `.github/copilot-instructions.md`, while its own
+ * template is 445 bytes with none — the generated copy did not match its source. A BOM is diff
+ * noise, and before a `---` it makes a front-matter parser read "no front-matter at all". The
+ * `.vscode/settings.json` merge had already been fixed to `WriteAllText` for exactly this reason;
+ * this extends that fix to every project-file write through one `Write-Utf8NoBom` helper.
+ *
+ * @returns {string[]} one line per project-file write that still uses the BOM-emitting idiom
+ */
+function bomProjectWrites(sources) {
+  const failures = [];
+  for (const [name, text] of Object.entries(sources)) {
+    const hits = text.match(/Set-Content\s+-Path\s+\$targetPath[^\r\n]*-Encoding\s+UTF8/g) || [];
+    for (const h of hits) failures.push(`${name}: ${h.trim()}`);
+  }
+  return failures;
+}
+
+test('no writer writes a project file with the BOM-emitting Set-Content idiom', () => {
+  const failures = bomProjectWrites(realSources());
+  assert.deepEqual(failures, [], failures.join('; '));
+});
+
+test('the BOM check is not vacuous — the writers still write project files, via the no-BOM helper', () => {
+  const sources = realSources();
+  const helper = /Write-Utf8NoBom\s+-Path\s+\$targetPath/g;
+  // If the writes were deleted rather than rerouted, the check above would pass over nothing.
+  assert.ok(
+    (sources['GuidelineSync.psm1'].match(helper) || []).length >= 5,
+    'GuidelineSync.psm1 no longer routes its project writes through Write-Utf8NoBom'
+  );
+  assert.ok(
+    (sources['sync-manager.ps1'].match(helper) || []).length >= 8,
+    'sync-manager.ps1 no longer routes its project writes through Write-Utf8NoBom'
+  );
+});
+
+test('REVERSAL PROOF: a reintroduced BOM write is named', () => {
+  const sources = realSources();
+  assert.deepEqual(bomProjectWrites(sources), [], 'clean to begin with');
+
+  // The exact regression: someone reaches for the familiar Set-Content again.
+  sources['GuidelineSync.psm1'] += '\nSet-Content -Path $targetPath -Value "x" -NoNewline -Encoding UTF8\n';
+  const failures = bomProjectWrites(sources);
+  assert.equal(failures.length, 1, failures.join('; '));
+  assert.match(failures[0], /GuidelineSync\.psm1: Set-Content -Path \$targetPath/);
+});
