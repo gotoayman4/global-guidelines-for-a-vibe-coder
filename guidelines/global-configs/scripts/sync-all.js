@@ -19,12 +19,16 @@
  * (check-sync-drift.js). A date without a hash is how a project ran 19-day-old
  * rules while the registry reported it `synced`.
  *
- * CAVEAT: sync-guidelines.ps1 writes global tool configs under the user
- * profile as well as the project mirror; concurrent runs are not supported.
+ * CAVEAT: sync-guidelines.ps1 can also write global tool configs under the user profile
+ * (opencode/Qoder/Windsurf/Cursor/VS Code). That step is OPT-IN here:
+ * `--with-global-configs` (or `SYNC_WITH_GLOBAL_CONFIGS=1`). It is the same content for every
+ * project on the machine — writing it seven times per fleet sync is redundant — and it is the one
+ * step a sandboxed host cannot complete, which used to fail every project in the batch. The
+ * project-side sync (`-SourceOnly`) is what `check-sync-drift.js` verifies, so it is the default.
  *
  * Usage:
  *   npm run sync:all
- *   node guidelines/global-configs/scripts/sync-all.js [--dry-run]
+ *   node guidelines/global-configs/scripts/sync-all.js [--dry-run] [--with-global-configs]
  *
  * Source: global-configs/scripts/sync-all.js
  */
@@ -39,6 +43,11 @@ const PROJECTS_PATH = path.join(REPO_ROOT, 'sync-projects.json');
 const SOURCE = path.join(REPO_ROOT, 'guidelines');
 const SYNC_PS1 = path.join(__dirname, 'sync-guidelines.ps1');
 const dryRun = process.argv.includes('--dry-run');
+// Machine-global configs are opt-in: they are identical for every project, are skipped on
+// restricted hosts, and are not what the drift checker verifies. See the docblock.
+const withGlobalConfigs =
+  process.argv.includes('--with-global-configs') ||
+  process.env.SYNC_WITH_GLOBAL_CONFIGS === '1';
 
 function stamp() {
   const d = new Date();
@@ -72,6 +81,7 @@ function syncProject(project, options = {}) {
     run = runSync,
     now = stamp(),
     dryRunFlag = false,
+    withGlobalConfigs = false,
   } = options;
 
   const name = project.name || project.path;
@@ -92,19 +102,21 @@ function syncProject(project, options = {}) {
     return { ok: true, failed: 0, project: { ...project, status: 'synced' } };
   }
 
-  const result = run(
-    'powershell.exe',
-    [
-      '-NoProfile',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-File',
-      syncScript,
-      '-ProjectPath',
-      projectPath,
-    ],
-    { windowsHide: true },
-  );
+  const args = [
+    '-NoProfile',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-File',
+    syncScript,
+    '-ProjectPath',
+    projectPath,
+  ];
+  // Default to the project-side sync. The machine-global step (user profile configs) is identical
+  // for every project, cannot complete on a restricted host, and is not what the drift checker
+  // verifies — so it runs only when the caller explicitly asks for it.
+  if (!withGlobalConfigs) args.push('-SourceOnly');
+
+  const result = run('powershell.exe', args, { windowsHide: true });
 
   if (result.status === 0) {
     const source = hashTree(sourceRoot);
@@ -138,6 +150,7 @@ function runBatchSync(projects, options = {}) {
     syncScript = SYNC_PS1,
     projectRegistry = PROJECTS_PATH,
     dryRunFlag = false,
+    withGlobalConfigs = false,
     run = runSync,
   } = options;
 
@@ -153,6 +166,7 @@ function runBatchSync(projects, options = {}) {
       run,
       now,
       dryRunFlag,
+      withGlobalConfigs,
     });
     failed += outcome.failed;
   }
@@ -179,11 +193,16 @@ function main() {
   }
 
   console.log(`sync:all — ${projects.length} project(s)${dryRun ? ' [dry-run]' : ''}`);
+  // Printed in dry-run too: the dry run is what an operator reads before committing to a mode.
+  console.log(
+    `mode: project-side only (mirror + starters + skills)${withGlobalConfigs ? ' + machine-global configs' : ' — pass --with-global-configs for the user-profile tool configs'}`
+  );
   const result = runBatchSync(projects, {
     sourceRoot: SOURCE,
     syncScript: SYNC_PS1,
     projectRegistry: PROJECTS_PATH,
     dryRunFlag: dryRun,
+    withGlobalConfigs,
   });
 
   if (result.failed > 0) {

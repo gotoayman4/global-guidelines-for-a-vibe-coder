@@ -1,4 +1,4 @@
-# sync-guidelines.ps1
+﻿# sync-guidelines.ps1
 # Syncs the central guidelines repo into a project and sets up global tool configs.
 # Run from any project directory, or pass -ProjectPath.
 #
@@ -30,6 +30,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = $null  # set only when -GlobalOnly is not active
+# Initialised here, not in the mirror step: `-GlobalOnly` skips that step, and an unassigned variable
+# is `$null` — which `-not` reads as a failure, turning a deliberate skip into a false red.
+$mirrorOk = $true
 
 # Import shared module
 $modulePath = Join-Path $PSScriptRoot "GuidelineSync.psm1"
@@ -109,9 +112,19 @@ if (-not $GlobalOnly) {
         }
     }
 
-    # Use module function if available, otherwise fall back to inline robocopy
+    # Use module function if available, otherwise fall back to inline robocopy.
+    #
+    # BOTH paths must report the robocopy exit code. Robocopy signals failure through its exit code
+    # alone — a partial copy writes nothing to stderr — so a summary printed without reading it is a
+    # claim about a copy nobody checked. This step used to print a green
+    # `Complete: N files mirrored` unconditionally, counting whatever happened to land: a failed
+    # mirror read as a successful one. Measured 2026-10-13: the GUI had already been fixed for this
+    # (B7 in IMPLEMENTATION_AUDIT_AND_ENHANCEMENT_PLAN_2026-06-13.md) while this CLI — the path
+    # `sync-all.js` drives for all seven fleet projects — had not.
+    $mirrorOk = $true
     if (Get-Command Sync-MirrorDirectory -ErrorAction SilentlyContinue) {
-        Sync-MirrorDirectory -sourceDir $guidelinesRepo -targetDir $guidelinesDir -DryRun:$DryRun -NoMirrorDelete:$NoMirrorDelete
+        $mirrorResult = Sync-MirrorDirectory -sourceDir $guidelinesRepo -targetDir $guidelinesDir -DryRun:$DryRun -NoMirrorDelete:$NoMirrorDelete
+        if ($null -ne $mirrorResult -and $mirrorResult.Success -eq $false) { $mirrorOk = $false }
     } else {
         if ($DryRun) {
             Write-Host "  [DRY-RUN] robocopy $guidelinesRepo → $guidelinesDir" -ForegroundColor Yellow
@@ -120,12 +133,23 @@ if (-not $GlobalOnly) {
             if ($NoMirrorDelete) { $robocopyArgs += "/E" } else { $robocopyArgs += "/MIR" }
             $robocopyArgs += @("/NJH", "/NJS", "/NDL", "/NP", "/R:1", "/W:1",
                                "/XD", ".git", ".github")
-            robocopy @robocopyArgs
+            # The same 0–7 success / 8+ failure contract the module applies. `robocopy @args` as a bare
+            # command was the other half of the defect: `$ErrorActionPreference = "Stop"` does not stop
+            # it, because robocopy reports a failed copy through its exit code, not the error stream.
+            $proc = Start-Process -FilePath "robocopy" -ArgumentList $robocopyArgs -Wait -NoNewWindow -PassThru
+            if ($proc.ExitCode -gt 7) {
+                Write-Host "  ERROR: robocopy failed (exit code $($proc.ExitCode)) — the mirror is INCOMPLETE." -ForegroundColor Red
+                $mirrorOk = $false
+            }
         }
     }
 
-    if (-not $DryRun) {
+    if ($DryRun) {
+        # Nothing landed, so there is no count worth printing.
+    } elseif ($mirrorOk) {
         Write-Host "  Complete: $((Get-ChildItem $guidelinesDir -Recurse -File | Measure-Object).Count) files mirrored" -ForegroundColor Green
+    } else {
+        Write-Host "  FAILED: _guidelines/ is incomplete — see the robocopy error above." -ForegroundColor Red
     }
 
     # Add this script's project-local paths to .gitignore (see $gitignoreEntries above).
@@ -179,9 +203,18 @@ if (-not $GlobalOnly -and $projectRoot -ne $null) {
 # ---------------------------------------------------------------------------
 if (-not $SourceOnly) {
     Write-Host "[2/3] Syncing global tool configs..." -ForegroundColor Yellow
+    # Machine-global configs live under the user profile, which some hosts deny (sandboxes, CI,
+    # locked-down machines). They are best-effort BY DESIGN: the deliverable of a sync is the project
+    # mirror, starters and skills — step 1 — and `check-sync-drift.js` verifies exactly that. Before
+    # this guard existed, one denied `Remove-Item` under `$ErrorActionPreference = "Stop"` aborted
+    # the whole run, so a fully-synced project was reported failed (measured 2026-10-13: every
+    # `npm run sync:all` died in this step on `architect\SKILL.md`). A skip is counted and named,
+    # never silent — a green run that quietly delivered nothing would be the original defect again.
+    $globalSkips = @()
 
     # --- opencode: symlink skills + global AGENTS.md ---
     Write-Host "  opencode ..." -ForegroundColor Gray
+    try {
     if (-not (Test-Path -LiteralPath $opencodeSkillsDir)) {
         $null = New-Item -ItemType Directory -Path $opencodeSkillsDir -Force
     }
@@ -193,24 +226,38 @@ if (-not $SourceOnly) {
         ForEach-Object { Join-Path $_.FullName "SKILL.md" } |
         Where-Object { Test-Path -LiteralPath $_ }
     $skillCount = 0
+    $skillSkips = 0
     foreach ($file in $skillFiles) {
-        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
+        # No -LiteralPath on this split: -LiteralPath binds to its own parameter set that
+        # excludes -Parent, so `Split-Path -LiteralPath $file -Parent` throws
+        # AmbiguousParameterSet on every host that runs these scripts (measured 2026-10-13
+        # on 5.1.26100 and 7.6 — all seven fleet syncs died here). The positional form is
+        # portable, and $file holds no wildcard characters: it is built from Join-Path over
+        # enumerated directory names plus the literal "SKILL.md".
+        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
         $skillDir = Join-Path $opencodeSkillsDir $skillName
         $symlinkPath = Join-Path $skillDir "SKILL.md"
-        if (-not (Test-Path -LiteralPath $skillDir)) {
-            $null = New-Item -ItemType Directory -Path $skillDir -Force
-        }
-        if (Test-Path -LiteralPath $symlinkPath) {
-            Remove-Item -LiteralPath $symlinkPath -Force
-        }
-        # Symlink needs elevation (or Developer Mode) on Windows; fall back to a
-        # copy so an unelevated sync:all still lands the skill (D192 lesson).
         try {
-            $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file -Force -ErrorAction Stop
+            if (-not (Test-Path -LiteralPath $skillDir)) {
+                $null = New-Item -ItemType Directory -Path $skillDir -Force
+            }
+            if (Test-Path -LiteralPath $symlinkPath) {
+                Remove-Item -LiteralPath $symlinkPath -Force
+            }
+            # Symlink needs elevation (or Developer Mode) on Windows; fall back to a
+            # copy so an unelevated sync:all still lands the skill (D192 lesson).
+            try {
+                $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file -Force -ErrorAction Stop
+            } catch {
+                Copy-Item -LiteralPath $file -Destination $symlinkPath -Force
+            }
+            $skillCount++
         } catch {
-            Copy-Item -LiteralPath $file -Destination $symlinkPath -Force
+            # One denied path (sandbox, read-only copy, ACL) must not take the other nineteen
+            # skills — or the project sync — down with it.
+            Write-Host "    SKIP $skillName`: $($_.Exception.Message)" -ForegroundColor Yellow
+            $skillSkips++
         }
-        $skillCount++
     }
     # Global AGENTS.md for opencode
     $agentsLines = @(
@@ -233,10 +280,15 @@ if (-not $SourceOnly) {
         "- Project AGENTS.md rules override these global defaults"
     )
     Write-Utf8NoBom -Path $opencodeGlobalAgents -Content ($agentsLines -join "`r`n")
-    Write-Host "    Skills: $skillCount linked | AGENTS.md updated" -ForegroundColor Green
+    Write-Host "    Skills: $skillCount linked, $skillSkips skipped | AGENTS.md updated" -ForegroundColor Green
+    } catch {
+        Write-Host "    SKIPPED opencode: $($_.Exception.Message)" -ForegroundColor Yellow
+        $globalSkips += "opencode"
+    }
 
     # --- Windsurf: global_rules.md ---
     Write-Host "  Windsurf ..." -ForegroundColor Gray
+    try {
     if (-not (Test-Path -LiteralPath $windsurfMemoriesDir)) {
         $null = New-Item -ItemType Directory -Path $windsurfMemoriesDir -Force
     }
@@ -250,9 +302,14 @@ Use absolute base path `$guidelinesRepo/` when loading files.
 "@
     Write-Utf8NoBom -Path $windsurfGlobalRules -Content ($windsurfContent + "`r`n")
     Write-Host "    global_rules.md created" -ForegroundColor Green
+    } catch {
+        Write-Host "    SKIPPED Windsurf: $($_.Exception.Message)" -ForegroundColor Yellow
+        $globalSkips += "Windsurf"
+    }
 
     # --- Cursor: user-level .mdc rule ---
     Write-Host "  Cursor ..." -ForegroundColor Gray
+    try {
     if (-not (Test-Path -LiteralPath $cursorUserRulesDir)) {
         $null = New-Item -ItemType Directory -Path $cursorUserRulesDir -Force
     }
@@ -267,10 +324,15 @@ Use absolute base path `$guidelinesRepo/` when loading files.
         Write-Utf8NoBom -Path $cursorGlobalGuidelines -Content $cursorContent
     }
     Write-Host "    User rule created" -ForegroundColor Green
+    } catch {
+        Write-Host "    SKIPPED Cursor: $($_.Exception.Message)" -ForegroundColor Yellow
+        $globalSkips += "Cursor"
+    }
 
     # --- VS Code: per-project .vscode/settings.json ---
     if (-not $GlobalOnly -and $projectRoot -ne $null) {
         Write-Host "  VS Code ..." -ForegroundColor Gray
+        try {
         $vscodeDir = Join-Path $projectRoot ".vscode"
         if (-not (Test-Path -LiteralPath $vscodeDir)) {
             $null = New-Item -ItemType Directory -Path $vscodeDir -Force
@@ -323,33 +385,55 @@ Use absolute base path `$guidelinesRepo/` when loading files.
                 Write-Host "    WARNING: Could not write .vscode/settings.json (file locked)" -ForegroundColor Yellow
             }
         }
+        } catch {
+            Write-Host "    SKIPPED VS Code: $($_.Exception.Message)" -ForegroundColor Yellow
+            $globalSkips += "VS Code"
+        }
     }
 
     # --- Qoder: global skills symlink ---
     Write-Host "  Qoder ..." -ForegroundColor Gray
+    try {
     if (-not (Test-Path -LiteralPath $qoderSkillsDir)) {
         $null = New-Item -ItemType Directory -Path $qoderSkillsDir -Force
     }
     $qoderSkillCount = 0
+    $qoderSkillSkips = 0
     foreach ($file in $skillFiles) {
-        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
+        # Position-only split — see the skill-name split in the opencode block for why.
+        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
         $qoderSkillDir = Join-Path $qoderSkillsDir $skillName
         $qoderSymlink = Join-Path $qoderSkillDir "SKILL.md"
-        if (-not (Test-Path -LiteralPath $qoderSkillDir)) {
-            $null = New-Item -ItemType Directory -Path $qoderSkillDir -Force
-        }
-        if (Test-Path -LiteralPath $qoderSymlink) {
-            Remove-Item -LiteralPath $qoderSymlink -Force
-        }
         try {
-            $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file -Force -ErrorAction Stop
+            if (-not (Test-Path -LiteralPath $qoderSkillDir)) {
+                $null = New-Item -ItemType Directory -Path $qoderSkillDir -Force
+            }
+            if (Test-Path -LiteralPath $qoderSymlink) {
+                Remove-Item -LiteralPath $qoderSymlink -Force
+            }
+            try {
+                $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file -Force -ErrorAction Stop
+            } catch {
+                Copy-Item -LiteralPath $file -Destination $qoderSymlink -Force
+            }
+            $qoderSkillCount++
         } catch {
-            Copy-Item -LiteralPath $file -Destination $qoderSymlink -Force
+            Write-Host "    SKIP $skillName`: $($_.Exception.Message)" -ForegroundColor Yellow
+            $qoderSkillSkips++
         }
-        $qoderSkillCount++
     }
-    Write-Host "    Skills: $qoderSkillCount linked" -ForegroundColor Green
+    Write-Host "    Skills: $qoderSkillCount linked, $qoderSkillSkips skipped" -ForegroundColor Green
+    } catch {
+        Write-Host "    SKIPPED Qoder: $($_.Exception.Message)" -ForegroundColor Yellow
+        $globalSkips += "Qoder"
+    }
 
+    if ($globalSkips.Count -gt 0) {
+        Write-Host ""
+        Write-Host "  WARNING: machine-global config skipped for: $($globalSkips -join ', ')" -ForegroundColor Yellow
+        Write-Host "  The project mirror, starters and skills are complete; these tool configs are" -ForegroundColor Yellow
+        Write-Host "  best-effort (they live under the user profile, which this host restricts)." -ForegroundColor Yellow
+    }
 } else {
     Write-Host "[2/3] Skipping global tool configs (SourceOnly)" -ForegroundColor Gray
 }
@@ -358,6 +442,17 @@ Use absolute base path `$guidelinesRepo/` when loading files.
 # Summary
 # ---------------------------------------------------------------------------
 Write-Host ""
+# A failed mirror exits NON-ZERO. The exit code is the contract `sync-all.js` reads — it marks the
+# project failed and refuses to stamp `lastSynced` — and a manual CLI run has no hash check to fall
+# back on, so this is the only signal that reaches a caller. Printing a completion banner and exiting
+# 0 over an incomplete `_guidelines/` is how a broken mirror became a green fleet report.
+if (-not $mirrorOk) {
+    Write-Host "=== Sync FAILED ===" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "  The _guidelines/ mirror did not complete — _guidelines/ is INCOMPLETE and must not be trusted." -ForegroundColor Red
+    Write-Host "  Fix the robocopy error reported above, then re-run this sync." -ForegroundColor Red
+    exit 1
+}
 Write-Host "=== Sync Complete ===" -ForegroundColor Cyan
 Write-Host ""
 if (-not $GlobalOnly) {
@@ -365,11 +460,35 @@ if (-not $GlobalOnly) {
     Write-Host "  Update AGENTS.md to reference: _guidelines/_index/MASTER_INDEX.md"
 }
 if (-not $SourceOnly) {
-    Write-Host "  opencode:  $skillCount skills + global AGENTS.md"
-    Write-Host "  Windsurf:  global_rules.md installed"
-    Write-Host "  Cursor:    user rule installed"
-    Write-Host "  Qoder:     $qoderSkillCount skills linked"
-    Write-Host "  VS Code:   .vscode/settings.json instructions added"
+    # Report what actually landed, per tool. A tool whose block was skipped names itself as skipped
+    # rather than inheriting the success of its neighbours — the summary is the last thing a reader
+    # sees, and "installed" over a directory nothing was written to is the defect this whole file
+    # family exists to kill.
+    if ($globalSkips -contains "opencode") {
+        Write-Host "  opencode:  SKIPPED (see the warning above)"
+    } else {
+        Write-Host "  opencode:  $skillCount skills + global AGENTS.md ($skillSkips skill links skipped)"
+    }
+    if ($globalSkips -contains "Windsurf") {
+        Write-Host "  Windsurf:  SKIPPED (see the warning above)"
+    } else {
+        Write-Host "  Windsurf:  global_rules.md installed"
+    }
+    if ($globalSkips -contains "Cursor") {
+        Write-Host "  Cursor:    SKIPPED (see the warning above)"
+    } else {
+        Write-Host "  Cursor:    user rule installed"
+    }
+    if ($globalSkips -contains "Qoder") {
+        Write-Host "  Qoder:     SKIPPED (see the warning above)"
+    } else {
+        Write-Host "  Qoder:     $qoderSkillCount skills linked ($qoderSkillSkips skipped)"
+    }
+    if ($globalSkips -contains "VS Code") {
+        Write-Host "  VS Code:   SKIPPED (see the warning above)"
+    } else {
+        Write-Host "  VS Code:   .vscode/settings.json instructions added"
+    }
 }
 Write-Host ""
 Write-Host "Next: When AGENTS.md references _guidelines/ paths, agents can read"

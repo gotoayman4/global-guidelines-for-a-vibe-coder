@@ -19,7 +19,10 @@ guidelines/
   global-configs/
     templates/   — starter files for AGENTS.md, WORLD.md, README.md, tool configs
     fragments/   — single-source rule sections; rendered into templates/AGENTS.starter.md
-    scripts/     — setup-global-references.ps1, sync-guidelines.ps1, audit-rules.js, render-agents-starter.js, render-index.js, check-project-freshness.js, new-guideline.js, new-project.js, bump-freshness.js
+    scripts/     — sync writers (GuidelineSync.psm1, sync-guidelines.ps1, sync-all.js), guards
+                   (check-*.js, audit-*.js), generators (render-*.js, plan-skills.js,
+                   inject-skills-block.js), scaffolders (new-*.js, slice-close.js), and
+                   setup-global-references.ps1 — run `npm run` with no argument for the full list
     skills/      — one <name>/SKILL.md directory per skill (code-review, refactoring, security-audit, …)
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
 .github/workflows/       — optional cloud workflows (CI is local by default — see 03-git-and-ci/local-ci-strategy.md)
@@ -40,18 +43,33 @@ powershell -File sync-manager.cmd
 ```
 GUI tool — browse to project, click Sync. Mirrors `_guidelines/`, installs starter files, tool configs, and skills.
 
-**CLI (mirrors `_guidelines/` + global tool configs only):**
+**CLI (the same setup as the GUI, scriptable):**
 ```
-powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guidelines.ps1
+powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath <project>
 ```
-> **Note:** The CLI does not install starter files (`AGENTS.md`, `WORLD.md`, etc.) or project skills.
-> Use `sync-manager.cmd` (GUI) for a full project setup.
+The CLI performs the **same project setup as the GUI** — it mirrors `_guidelines/`, installs the
+starter files (`AGENTS.md`, `WORLD.md`, …), installs tool configs and the stack-filtered skills, and
+updates the global tool configs. Two switches narrow it; neither is the default:
+
+| Switch | Effect |
+|---|---|
+| `-SourceOnly` | Skip the **global** tool configs (opencode, Windsurf, Cursor, Qoder, VS Code) — project setup only |
+| `-GlobalOnly` | Skip everything **project-local** — the mirror, starter files and skills — and write only the global tool configs |
+
+Also available: `-DryRun` (preview, write nothing), `-Backup` (dated backup before overwriting),
+`-NoMirrorDelete` (copy without deleting), `-RestoreBackup <timestamp>`.
+
+> **Note:** `npm run sync:all` drives this CLI for every project in `sync-projects.json`, non-interactively.
+> It stamps `lastSynced` only after the CLI exits 0 **and** the delivered mirror hashes equal to the
+> source, and it exits 1 if any project fails. The batch runs the **project-side** sync (`-SourceOnly`) —
+> the machine-global configs are identical for every project and are not what `check-sync-drift.js`
+> verifies. Pass `--with-global-configs` (or set `SYNC_WITH_GLOBAL_CONFIGS=1`) to include them.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + docs:census + test:scripts. Runs on every push (local pre-push hook). |
+| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + docs:census + guard:tiers + test:scripts. Runs on every push (local pre-push hook). The authoritative list is `AGENTS.md` §Commands and `package.json` §scripts — this row restates it. |
 | `npm run audit` | Verifies extracted rules in starter templates still match their source guideline files. |
 | `npm run check-links` | Checks internal links across all `.md` files. |
 | `npm run check-index` | Verifies every file is registered in `guidelines/_index/MASTER_INDEX.md`. |
@@ -59,9 +77,13 @@ powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guideline
 | `npm run render:index` | Regenerates the `MASTER_INDEX.md` category tables, skills table, and cross-reference graph from each file's front-matter + `## Cross-References` footer. |
 | `npm run check-drift` | Fails if `AGENTS.starter.md` was hand-edited or exceeds its token budget. |
 | `npm run check-index-drift` | Fails if `MASTER_INDEX.md` was hand-edited — regenerate it instead. |
+| `npm run render:skills` | Regenerates `global-configs/skills/INDEX.md` — the `Skill → Load when → Applies to` trigger inventory — from each skill's front-matter. |
+| `npm run check-skills-drift` | Fails if `skills/INDEX.md` was hand-edited — regenerate it instead. |
+| `npm run plan:skills` | Prints which skills belong in which project and why, from each project's stack profile (no argument = the whole fleet; `--apply` writes). |
 | `npm run docs:census` | Fails if a canonical fact (stack table, commands block, forbidden-pattern list, "How to Change Safely") appears in more than one mandated project doc — one home per fact. |
+| `npm run guard:tiers` | Reads every guard's `@tier` docblock and reports the gate set — an `always` guard the gate never reaches is a failure. |
 | `npm run status:projects` | Reports which rules each synced project's `AGENTS.md` is missing (informational, never fails). |
-| `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; updates `lastSynced` only on successful delivery; exits 1 if any fail). |
+| `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; project-side only — `--with-global-configs` adds the machine-global tool configs; updates `lastSynced` only on verified delivery; exits 1 if any fail). |
 | `npm run validate:fast` | Quick integrity pass (`check-links` + `check-index` only). |
 | `npm run test:scripts` | Runs the Node test suite for `global-configs/scripts` helpers. |
 | `npm run new:guideline` | Scaffolds a guideline file (front-matter + `## Cross-References`) and re-renders `MASTER_INDEX.md` (use `-- --dry-run` first). |

@@ -5,6 +5,9 @@ const path = require('node:path');
 const { test } = require('node:test');
 
 const { syncProject, loadProjectsFromFile } = require('../sync-all.js');
+const { runSync } = require('../lib/run-sync.js');
+
+const SYNC_ALL = path.join(__dirname, '..', 'sync-all.js');
 
 function buildFixture({ mirrorState = 'match' } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-all-'));
@@ -69,4 +72,56 @@ test('loadProjectsFromFile rejects malformed sync registry JSON', () => {
   fs.writeFileSync(file, '{bad json}', 'utf8');
 
   assert.throws(() => loadProjectsFromFile(file), /not valid JSON/);
+});
+
+// --- machine-global opt-in (2026-10-13) -----------------------------------------------
+// `npm run sync:all` used to spawn sync-guidelines.ps1 WITHOUT -SourceOnly, so the step that
+// writes the user's machine-global tool configs ran for all seven projects. That step cannot
+// complete on a restricted host — measured: every fleet sync died on an access-denied
+// Remove-Item in the opencode block — and it is not what check-sync-drift.js verifies. The
+// default is now the project-side sync; machine-global configs are opt-in.
+
+test('syncProject defaults to the project-side sync by passing -SourceOnly', () => {
+  const { sourceRoot, projectPath } = buildFixture({ mirrorState: 'match' });
+  let args;
+  syncProject({ name: 'demo', path: projectPath }, {
+    sourceRoot,
+    syncScript: 'C:/temp/sync-guidelines.ps1',
+    run: (...captured) => {
+      args = captured[1];
+      return { status: 0, stdout: '', stderr: '' };
+    },
+    dryRunFlag: false,
+  });
+  assert.ok(args.includes('-SourceOnly'), `expected -SourceOnly in the spawned arguments, got: ${args.join(' ')}`);
+});
+
+test('syncProject omits -SourceOnly only when machine-global configs are requested', () => {
+  const { sourceRoot, projectPath } = buildFixture({ mirrorState: 'match' });
+  let args;
+  syncProject({ name: 'demo', path: projectPath }, {
+    sourceRoot,
+    syncScript: 'C:/temp/sync-guidelines.ps1',
+    withGlobalConfigs: true,
+    run: (...captured) => {
+      args = captured[1];
+      return { status: 0, stdout: '', stderr: '' };
+    },
+    dryRunFlag: false,
+  });
+  assert.ok(!args.includes('-SourceOnly'), `expected no -SourceOnly when opted in, got: ${args.join(' ')}`);
+});
+
+test('the CLI banner states which mode a run uses', () => {
+  // The banner is the only place a caller learns the default changed, so it is part of the
+  // contract. A dry run spawns no PowerShell, so this is safe and read-only.
+  const defaults = runSync(process.execPath, [SYNC_ALL, '--dry-run']);
+  assert.equal(defaults.status, 0, `dry-run exited ${defaults.status}: ${defaults.stderr}`);
+  assert.match(defaults.stdout, /project-side only/);
+  assert.match(defaults.stdout, /--with-global-configs/);
+
+  const optedIn = runSync(process.execPath, [SYNC_ALL, '--dry-run', '--with-global-configs']);
+  assert.equal(optedIn.status, 0, `dry-run exited ${optedIn.status}: ${optedIn.stderr}`);
+  assert.match(optedIn.stdout, /machine-global configs/);
+  assert.doesNotMatch(optedIn.stdout, /pass --with-global-configs/);
 });

@@ -25,6 +25,7 @@
     "new:guideline": "node guidelines/global-configs/scripts/new-guideline.js",
     "new:project": "node guidelines/global-configs/scripts/new-project.js",
     "validate:fast": "npm run check-links && npm run check-index",
+    "validate:standard": "npm run guard:gate-wording && npm run guard:decisions && npm run guard:breadth && npm run docs:check",
     "test:scripts": "node --test guidelines/global-configs/scripts/tests/*.test.js",
     "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run check-index-drift && npm run check-skills-drift && npm run docs:census && npm run guard:tiers && npm run test:scripts",
     "slice:close": "node guidelines/global-configs/scripts/slice-close.js",

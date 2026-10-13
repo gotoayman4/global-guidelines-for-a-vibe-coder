@@ -1,39 +1,10 @@
 {
-  "_comment": "Sync manifest — drives both sync-manager.ps1 (GUI) and sync-guidelines.ps1 (CLI). Both must produce identical project outputs.",
+  "_comment": "Sync manifest — the single home for what a sync delivers: the starter files, the tool configs, the skills corpus and destination, the guard files a project must wire, and the project-local paths to ignore. Read by BOTH entry points — sync-manager.ps1 (GUI) and sync-guidelines.ps1 (CLI) — which must produce identical project outputs. WHICH skills fit a given project is NOT decided here: plan-skills.js owns that, and this file only names the corpus and the destination.",
   "version": "1.0",
 
   "mirror": {
+    "_comment": "The mirror is a WHOLE-TREE copy of `guidelines/` into a project's `_guidelines/` — robocopy /MIR, excluding `.git` and `.github` — and check-sync-drift.js hashes the whole tree on both sides. This section used to declare `include` and `exclude` lists that NO script ever read, and the live mirrors contradicted `include` outright: they carry global-configs/fragments, global-configs/scripts and sync-manifest.json, none of which the list named. Half of `exclude` named repo-root paths (`docs`, `sync-manager.ps1`, `sync-projects.json`, `node_modules`) that are not inside the copy source at all, so it could never have applied. Configuration that asserts authority nothing honours is worse than none — it reads as a policy while being a comment. The two exclusions that ARE honoured live in the robocopy call in GuidelineSync.psm1, which is the one implementation both entry points now share.",
     "destination": "_guidelines",
-    "include": [
-      "_index",
-      "00-ai-fundamentals",
-      "01-workflow-methodology",
-      "02-engineering-practices",
-      "03-git-and-ci",
-      "04-architecture",
-      "05-stack-guides",
-      "06-frontend-patterns",
-      "07-documentation",
-      "08-governance",
-      "global-configs/templates",
-      "global-configs/skills",
-      "README.md"
-    ],
-    "exclude": [
-      ".git",
-      ".github",
-      ".zed",
-      ".vscode",
-      "docs",
-      "sync-projects.json",
-      "sync-manager.ps1",
-      "sync-manager.cmd",
-      "%USERPROFILE%",
-      "node_modules",
-      "REPO_AUDIT_REPORT_*.md",
-      "*.log",
-      "*.tmp"
-    ],
     "gitignoreEntry": "_guidelines/"
   },
 

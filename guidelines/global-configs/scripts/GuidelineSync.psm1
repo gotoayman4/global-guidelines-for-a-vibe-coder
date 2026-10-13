@@ -120,6 +120,28 @@ function Restore-Backup([string]$projectPath, [string]$timestamp) {
 }
 
 function Sync-MirrorDirectory {
+    <#
+    .SYNOPSIS
+        Mirror the guidelines tree into a project's `_guidelines/`, reporting whether it worked.
+
+    .DESCRIPTION
+        Returns an object with `Success`, `ExitCode` and `DryRun`. Robocopy signals through its EXIT
+        CODE, not through the console or the error stream: 0–7 mean success (files copied, skipped, or
+        extras present), 8 and above mean a real failure (copy error, access denied, path too long).
+        A partial copy writes nothing to stderr, so the exit code is the ONLY signal a failed mirror
+        produces.
+
+        This function used to discard the `-PassThru` object into `$null` and return nothing, so a
+        failed mirror returned normally and `sync-guidelines.ps1` printed a green
+        `Complete: N files mirrored` summary over a half-written `_guidelines/`. Measured 2026-10-13:
+        the GUI had already been fixed for this — filed as B7 in
+        `IMPLEMENTATION_AUDIT_AND_ENHANCEMENT_PLAN_2026-06-13.md` — and this shared function had not.
+        The un-fixed half is the one that matters most, because `sync-all.js` drives the CLI for all
+        seven fleet projects and `check-sync-drift.js` is not part of a manual CLI run.
+
+    .OUTPUTS
+        [pscustomobject] Success (bool), ExitCode (int), DryRun (bool)
+    #>
     param(
         [string]$sourceDir,
         [string]$targetDir,
@@ -159,10 +181,18 @@ function Sync-MirrorDirectory {
     if ($DryRun) {
         Write-Host "  [DRY-RUN] robocopy $sourceDir → $targetDir" -ForegroundColor Yellow
         Write-Host "  [DRY-RUN] Args: $($robocopyArgs -join ' ')" -ForegroundColor Yellow
-        return
+        return [pscustomobject]@{ Success = $true; ExitCode = 0; DryRun = $true }
     }
 
-    $null = Start-Process -FilePath "robocopy" -ArgumentList $robocopyArgs -Wait -NoNewWindow -PassThru
+    # Keep the process object: it is the only place the exit code lives. `-PassThru` into `$null` is
+    # what made a failed mirror indistinguishable from a clean one.
+    $proc = Start-Process -FilePath "robocopy" -ArgumentList $robocopyArgs -Wait -NoNewWindow -PassThru
+    $exitCode = $proc.ExitCode
+    $success = $proc.ExitCode -le 7
+    if (-not $success) {
+        Write-Host "  ERROR: robocopy failed (exit code $exitCode) — the mirror is INCOMPLETE." -ForegroundColor Red
+    }
+    return [pscustomobject]@{ Success = $success; ExitCode = $exitCode; DryRun = $false }
 }
 
 function Install-StarterFile {

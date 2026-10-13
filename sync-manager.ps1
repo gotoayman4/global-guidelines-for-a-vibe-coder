@@ -1,4 +1,4 @@
-# sync-manager.ps1
+﻿# sync-manager.ps1
 # GUI tool to sync guidelines, starters, tool configs, and skills into projects.
 # Also: run repo validation scripts and machine setup.
 # Double-click sync-manager.cmd to launch.
@@ -141,7 +141,14 @@ function Update-StarterFile([string]$projectPath, [string]$templateRelPath, [str
     }
     if (Test-Path $targetPath) {
         $existingContent = Get-Content $targetPath -Raw -Encoding UTF8
-        $cleanedContent = $existingContent -replace '(?m)^.*-> Source:.*\n?', ''
+        # The marker is `-> Source:` here and `→ Source:` in GuidelineSync.psm1 -- the module's form is
+        # the one that exists. Every fragment under `global-configs/fragments/` writes
+        # `→ Source: \`path\``, `audit-rules.js` parses that arrow (`/→\s*(?:Source|Guideline):/`), and
+        # a repo-wide search finds `-> Source:` in NO file. So this regex could never match, and the
+        # GUI's legacy-marker cleanup silently did nothing -- while the CLI cleaned the same lines.
+        # The arrow is safe to write here only because this file now carries a UTF-8 BOM; without one
+        # PowerShell 5.1 decodes the arrow's bytes as a smart quote and the script will not parse.
+        $cleanedContent = $existingContent -replace '(?m)^.*→ Source:.*\n?', ''
         if (-not [string]::IsNullOrEmpty($headerCheck)) {
             $escapedHeader = '(?m)^' + [regex]::Escape($headerCheck)
             $headerMatches = [regex]::Matches($cleanedContent, $escapedHeader)
@@ -175,7 +182,7 @@ function Update-StarterFile([string]$projectPath, [string]$templateRelPath, [str
         } else {
             if ($cleanedContent -ne $existingContent) {
                 Write-Utf8NoBom -Path $targetPath -Content $cleanedContent
-                Append-Log $logBox "  Cleaned $targetRelPath (removed -> Source: lines)"
+                Append-Log $logBox "  Cleaned $targetRelPath (removed source-reference lines)"
             } else {
                 Append-Log $logBox "  OK $targetRelPath (up to date)"
             }
@@ -312,15 +319,39 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
     $statusLabel.Text = "Mirroring _guidelines/ ..."
     Append-Log $logBox "Step 1: Mirroring _guidelines/ ..."
     if (-not (Test-Path $guidelinesDir)) { $null = New-Item -ItemType Directory -Path $guidelinesDir -Force }
-    $proc = Start-Process -FilePath "robocopy" `
-        -ArgumentList @($syncContentDir, $guidelinesDir, "/MIR", "/NJH", "/NJS", "/NDL", "/NP",
-                        "/R:0", "/W:0", "/XD", ".git", ".github") `
-        -Wait -NoNewWindow -PassThru
-    if ($proc.ExitCode -gt 7) {
-        Append-Log $logBox "  ERROR: robocopy failed (exit code $($proc.ExitCode)). Check permissions."
-        return "error"
+
+    # Mirror through the SHARED function, not through a second copy of the step.
+    #
+    # This used to run its own robocopy with the same /MIR flags but WITHOUT the stale-`.github` prune
+    # `Sync-MirrorDirectory` performs. `/XD` stops robocopy DELETING an excluded directory, so a
+    # GUI-only sync could leave a `_guidelines/.github/` the source no longer carries — and every
+    # subsequent `npm run sync:drift` would report that project as drifted, with no cause visible from
+    # either side. That is precisely the failure the prune was written for (see the module's comment),
+    # and it survived here because each entry point owned a private copy of the same step.
+    #
+    # The manifest header states both writers "must produce identical project outputs". One
+    # implementation is the only way that stays true: two copies drift exactly where it matters, on
+    # the flag or the fix that only one of them received.
+    if ($moduleImported -and (Get-Command Sync-MirrorDirectory -ErrorAction SilentlyContinue)) {
+        $mirror = Sync-MirrorDirectory -sourceDir $syncContentDir -targetDir $guidelinesDir
+        if ($mirror.Success -eq $false) {
+            Append-Log $logBox "  ERROR: robocopy failed (exit code $($mirror.ExitCode)). Mirror is INCOMPLETE."
+            return "error"
+        }
+        Append-Log $logBox "  _guidelines/ mirrored (robocopy: $($mirror.ExitCode))."
+    } else {
+        # Fallback for a machine where the module could not be imported. Same 0-7 success / 8+ failure
+        # contract, but it cannot prune — the module path is the one that converges a mirror.
+        $proc = Start-Process -FilePath "robocopy" `
+            -ArgumentList @($syncContentDir, $guidelinesDir, "/MIR", "/NJH", "/NJS", "/NDL", "/NP",
+                            "/R:0", "/W:0", "/XD", ".git", ".github") `
+            -Wait -NoNewWindow -PassThru
+        if ($proc.ExitCode -gt 7) {
+            Append-Log $logBox "  ERROR: robocopy failed (exit code $($proc.ExitCode)). Check permissions."
+            return "error"
+        }
+        Append-Log $logBox "  _guidelines/ mirrored (robocopy: $($proc.ExitCode))."
     }
-    Append-Log $logBox "  _guidelines/ mirrored (robocopy: $($proc.ExitCode))."
 
     # Step 2: .gitignore — derived from the manifest, never a literal here (see Add-ProjectGitignoreEntries)
     Add-ProjectGitignoreEntries $projectPath $logBox
@@ -466,6 +497,60 @@ function Run-NodeScript([string]$scriptPath, $logBox, $statusLabel, $resultLabel
             $resultLabel.ForeColor = if ($passed) { [Drawing.Color]::Green } else { [Drawing.Color]::Red }
         }
         $statusLabel.Text = if ($passed) { "✅ Passed" } else { "❌ Failed" }
+        return $passed
+    } catch {
+        Append-Log $logBox "ERROR: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+# --- Run-NpmGate ---
+#
+# `npm run validate` is the ONE definition of the gate — `package.json` §scripts owns it and
+# `AGENTS.md` §Commands documents it. The "Run All Checks" button used to run three scripts of its own
+# choosing (rules audit, links, index coverage) and label the outcome "All checks". It was not: the
+# real gate also runs check-drift, check-index-drift, check-skills-drift, docs:census, guard:tiers and
+# the whole test suite. Six controls and the entire test suite were silently outside a button that
+# said "all" — which is worse than a shorter button, because the operator stops looking for the rest.
+# A second, weaker definition of "all checks" is also how the GUI and the pre-push hook drift apart
+# again, so this now invokes the same command the hook runs.
+function Run-NpmGate($logBox, $statusLabel, $resultLabel) {
+    if (-not $npmAvailable) {
+        Append-Log $logBox "ERROR: npm not found. Install Node.js 18+ to run the validation gate."
+        return $false
+    }
+    $statusLabel.Text = "Running npm run validate ..."
+    Append-Log $logBox "--- Running: npm run validate (the full gate) ---"
+    try {
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        # `cmd.exe /c` rather than FileName = "npm": with `UseShellExecute = $false` there is no
+        # PATHEXT resolution, so the name `npm` never finds `npm.cmd` and the gate would fail to start
+        # on every Windows host. Resolving through cmd is the one form that works on both hosts.
+        $psi.FileName = "cmd.exe"
+        $psi.Arguments = "/c npm run validate"
+        $psi.WorkingDirectory = $guidelinesRepo
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $psi.UseShellExecute = $false
+        $psi.CreateNoWindow = $true
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $stdout = $proc.StandardOutput.ReadToEnd()
+        $stderr = $proc.StandardError.ReadToEnd()
+        $proc.WaitForExit()
+        foreach ($line in ($stdout -split "`n")) {
+            if ($line.Trim()) { Append-Log $logBox "  $($line.TrimEnd())" }
+        }
+        foreach ($line in ($stderr -split "`n")) {
+            if ($line.Trim()) { Append-Log $logBox "  ERR: $($line.TrimEnd())" }
+        }
+        $passed = $proc.ExitCode -eq 0
+        if ($resultLabel) {
+            $ts = [DateTime]::Now.ToString("yyyy-MM-dd HH:mm")
+            $icon = if ($passed) { "✅" } else { "❌" }
+            $resultLabel.Text = "Last run: $ts  Result: $icon npm run validate"
+            $resultLabel.ForeColor = if ($passed) { [Drawing.Color]::Green } else { [Drawing.Color]::Red }
+        }
+        $statusLabel.Text = if ($passed) { "✅ Gate passed" } else { "❌ Gate failed" }
         return $passed
     } catch {
         Append-Log $logBox "ERROR: $($_.Exception.Message)"
@@ -894,17 +979,8 @@ $listView.Add_DoubleClick({
 # --- Repo Tools event handlers ---
 
 $btnValidateAll.Add_Click({
-    $auditScript = Join-Path $syncContentDir "global-configs\scripts\audit-rules.js"
-    $linksScript = Join-Path $syncContentDir "global-configs\scripts\check-links.js"
-    $indexScript = Join-Path $syncContentDir "global-configs\scripts\check-index-coverage.js"
-    $allPass = $true
-    $allPass = (Run-NodeScript $auditScript $logBox $validationStatusLabel $null) -and $allPass
-    $allPass = (Run-NodeScript $linksScript $logBox $validationStatusLabel $null) -and $allPass
-    $allPass = (Run-NodeScript $indexScript $logBox $validationStatusLabel $null) -and $allPass
-    $ts = [DateTime]::Now.ToString("yyyy-MM-dd HH:mm")
-    $icon = if ($allPass) { "✅" } else { "❌" }
-    $validationStatusLabel.Text = "Last run: $ts  Result: $icon All checks"
-    $validationStatusLabel.ForeColor = if ($allPass) { [Drawing.Color]::Green } else { [Drawing.Color]::Red }
+    # The full gate, not a hand-picked three of its nine steps — see Run-NpmGate.
+    Run-NpmGate $logBox $validationStatusLabel $validationStatusLabel | Out-Null
 })
 
 $btnAuditRules.Add_Click({

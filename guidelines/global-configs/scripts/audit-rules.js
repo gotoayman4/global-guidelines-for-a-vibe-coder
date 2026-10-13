@@ -226,6 +226,9 @@ function findGuidelineFiles(dirPath) {
   return files;
 }
 
+/** The three statuses the corpus uses, canonicalised — the old regex was case-insensitive. */
+const CANONICAL_STATUS = { normative: 'Normative', advisory: 'Advisory', archived: 'Archived' };
+
 /**
  * Parse a guideline file and extract:
  *   - Status (Normative/Advisory/Archived)
@@ -237,15 +240,31 @@ function parseGuideline(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const relativePath = path.relative(REPO_ROOT, filePath).replace(/\\/g, '/');
 
-  // Extract status
-  const statusMatch = content.match(/\*\*Status:\*\*\s*(Normative|Advisory|Archived)/i);
-  const status = statusMatch ? statusMatch[1] : 'Unknown';
+  // Status comes from the YAML front-matter, which is the ONE home for it.
+  //
+  // This read the retired body line (`**Status:** Normative`) until 2026-10-13. That convention was
+  // removed in the front-matter migration — the corpus declares `status:` at the top of the file
+  // (62 Normative / 5 Advisory), `render-index.js` reads it there, and `new-guideline.test.js`
+  // ASSERTS the scaffold never emits the body block again. Nothing migrated this reader, so `status`
+  // was 'Unknown' for all 67 files and every status-dependent check below was inert: the UNCOVERED
+  // NORMATIVE warning, the archived-source warning, the Advisory skip, and the `📊 Coverage` figure
+  // — which printed `0/0` on every run while the gate reported green. A control that cannot fire is
+  // indistinguishable from a corpus with nothing to report, which is why this went unnoticed.
+  //
+  // The body line is still honoured as a FALLBACK, so a file caught mid-migration reads correctly
+  // instead of silently becoming 'Unknown'.
+  const fm = parseFrontMatter(content);
+  const declared = meta(fm, 'status');
+  const bodyMatch = content.match(/\*\*Status:\*\*\s*(Normative|Advisory|Archived)/i);
+  const rawStatus = declared ? String(declared).trim() : (bodyMatch ? bodyMatch[1] : '');
+  const status = CANONICAL_STATUS[rawStatus.toLowerCase()] || 'Unknown';
 
   // Extract the `control:` front-matter key. Absent means "not yet classified" and is allowed —
   // the ratchet is deliberate (see `checkControl`); the field is not backfilled across the corpus.
-  const frontMatter = content.match(/^---\n([\s\S]*?)\n---\n/);
-  const controlMatch = frontMatter && frontMatter[1].match(/^control:\s*"?(.*?)"?\s*$/m);
-  const control = controlMatch && controlMatch[1].trim() ? controlMatch[1].trim() : null;
+  // Read through the shared front-matter parser rather than a local regex: the local one was LF-only,
+  // so a CRLF checkout reported "no front-matter" and made every declared control look absent.
+  const controlValue = meta(fm, 'control');
+  const control = controlValue && String(controlValue).trim() ? String(controlValue).trim() : null;
 
   // Extract normative statements (MUST / MUST NOT / SHOULD / SHOULD NOT / NEVER / FORBID)
   const imperativeRegex = /\b(MUST NOT|MUST|SHOULD NOT|SHOULD|NEVER|FORBID)\b/gi;
@@ -649,7 +668,18 @@ function audit() {
   }
   if (contractSkills.length > 0) {
     console.log(`   ${contractOk}/${contractSkills.length} skills declare ${SKILL_CONTRACT.join(' + ')}`);
-    console.log(`   ${scopedOk}/${contractSkills.length} skills have a resolvable appliesTo (declared or absent)\n`);
+    // State exactly what is measured. This line used to read
+    // "N/N skills have a resolvable appliesTo (declared or absent)", and the parenthetical invited
+    // the reading "absent is fine, every skill is properly scoped" — which is not what the check
+    // tests and not what the system does. It tests ONE thing: no skill declares an `appliesTo` value
+    // the vocabulary cannot resolve, because such a value is inert and makes the skill universal
+    // (`skillScope` in plan-skills.js). An ABSENT `appliesTo` is a different case: the scope is then
+    // INFERRED from the skill's `tags`, which is a deliberate fallback with its own debt counter.
+    // The audit says only what it checked and points at the instrument that owns the debt, so a green
+    // line here is not mistaken for "every skill declares its scope".
+    console.log(`   ${scopedOk}/${contractSkills.length} skills declare no UNRESOLVABLE appliesTo value`);
+    console.log('   (an absent `appliesTo` is not covered here — the scope falls back to tag inference,');
+    console.log('    and `npm run audit:friction` counts the skills still relying on it)\n');
   }
 
   // 5. Cross-template consistency check

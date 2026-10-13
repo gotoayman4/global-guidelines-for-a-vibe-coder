@@ -1,4 +1,4 @@
-# setup-global-references.ps1
+﻿# setup-global-references.ps1
 # One-time setup: installs global AGENTS.md, skills, global_rules, and settings for all supported tools.
 # Run from PowerShell 7+ as the local user.
 # Re-run after updating the guidelines repo to refresh global configs.
@@ -58,7 +58,13 @@ $skillFiles = Get-ChildItem -Path "$guidelinesRepo\global-configs\skills" -Direc
 $skillCount = 0
 if ($isAdmin) {
     foreach ($file in $skillFiles) {
-        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
+        # No -LiteralPath on this split: -LiteralPath binds to its own parameter set that
+        # excludes -Parent, so `Split-Path -LiteralPath $file -Parent` throws
+        # AmbiguousParameterSet on every host that runs these scripts (measured 2026-10-13
+        # on 5.1.26100 and 7.6 — all seven fleet syncs died here). The positional form is
+        # portable, and $file holds no wildcard characters: it is built from Join-Path over
+        # enumerated directory names plus the literal "SKILL.md".
+        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
         $skillDir = Join-Path $opencodeSkillsDir $skillName
         $symlinkPath = Join-Path $skillDir "SKILL.md"
         if (-not (Test-Path -LiteralPath $skillDir)) {
@@ -151,7 +157,8 @@ if (-not (Test-Path -LiteralPath $qoderSkillsDir)) {
 if ($isAdmin) {
     $qoderCount = 0
     foreach ($file in $skillFiles) {
-        $skillName = Split-Path (Split-Path -LiteralPath $file -Parent) -Leaf
+        # Position-only split — see the skill-name split in the opencode block for why.
+        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
         $qoderDir = Join-Path $qoderSkillsDir $skillName
         $qoderSymlink = Join-Path $qoderDir "SKILL.md"
         if (-not (Test-Path -LiteralPath $qoderDir)) {

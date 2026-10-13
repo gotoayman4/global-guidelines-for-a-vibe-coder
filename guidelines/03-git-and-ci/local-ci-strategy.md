@@ -56,6 +56,17 @@ A suite whose every test runs on every push grows without bound, because its cos
 
 The tier is declared in the guard's own file-level docblock, and **`npm run guard:tiers` is the control**: it fails a guard with no `@tier`, a guard no npm script runs, an `always` guard the gate never reaches, and a `ship` guard the `vibe` chain reaches. A `standard+` guard the gate does not reach is *reported, never failed* — six guards in this repo are milestone- or fleet-scoped by design, and naming them is what makes that a decision instead of an accident. **Derive the set from the guards themselves** — a list kept by hand in the hook is a list that goes stale, and it fails in the direction nobody notices. Measured when the control was written (2026-10-12): 9 guards, 1 tier declared, 3 reached by the gate.
 
+**The `standard+` tier needs a command, or it is a tier nobody can enter.** `npm run validate` is the `always` gate — every push, in every mode. A repo whose only two commands are `validate:fast` and `validate` has no way to run its `standard+` guards at all: they pass `guard:tiers` (which reports them, as designed), they run in downstream projects, and they never once execute against this repo's own corpus. That is not a tier, it is a directory listing. `npm run validate:standard` closes it — it runs the four `standard+` guards in this repo:
+
+| Guard | What it checks here |
+|---|---|
+| `guard:gate-wording` | the retired gate phrasings are absent and the canonical statements present, across the corpus |
+| `guard:decisions` | the ADR index agrees with the ADR files — reports "not applicable" where a repo keeps no `docs/adr/`, and exits 0 |
+| `guard:breadth` | a commit that changed product source wrote no more steering files than the mode allows; a source-free commit is exempt |
+| `docs:check` | a trigger-like change landed alongside its steering doc — warn-only, never fails |
+
+Measured 2026-10-13 before the command existed: all four passed against this repo, so the gap was reachability rather than a hidden failure. Run it before a milestone exit, or whenever a change touches the decision record, the steering-doc set, or gate wording. It is deliberately **not** part of `validate`: folding it in would make `always` and `standard+` the same tier and delete the distinction the `@tier` field exists to express.
+
 ## Tier B — The Pre-Push Gate (Mandatory)
 
 Before every push, run that mode's gate locally. This gate replaces the cloud CI gate: a push that has not passed it is a violation, the same as merging on a red pipeline.
