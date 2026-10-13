@@ -61,12 +61,11 @@ powershell -File <path-to-repo>\guidelines\global-configs\scripts\sync-guideline
 | `npm run check-index-drift` | Fails if `MASTER_INDEX.md` was hand-edited — regenerate it instead. |
 | `npm run docs:census` | Fails if a canonical fact (stack table, commands block, forbidden-pattern list, "How to Change Safely") appears in more than one mandated project doc — one home per fact. |
 | `npm run status:projects` | Reports which rules each synced project's `AGENTS.md` is missing (informational, never fails). |
-| `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; updates `lastSynced`; exits 1 if any fail). |
-| `npm run validate:fast` | Quick integrity pass (audit + check-index + check-drift; skips full link crawl). |
+| `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; updates `lastSynced` only on successful delivery; exits 1 if any fail). |
+| `npm run validate:fast` | Quick integrity pass (`check-links` + `check-index` only). |
 | `npm run test:scripts` | Runs the Node test suite for `global-configs/scripts` helpers. |
 | `npm run new:guideline` | Scaffolds a guideline file (front-matter + `## Cross-References`) and re-renders `MASTER_INDEX.md` (use `-- --dry-run` first). |
 | `npm run new:project` | Bootstraps starter files into a project path (`-- <path> [--mode vibe\|standard\|guarded]`). |
-| `npm run bump:freshness` | Refreshes `Last Updated:` headers on steering docs only (`-- --check` to report staleness only). |
 
 ## Speed Modes
 

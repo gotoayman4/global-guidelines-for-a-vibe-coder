@@ -53,7 +53,7 @@ npm run lint:rtl                    # CI gate — logical-properties ESLint rule
 | Physical CSS properties | Logical properties exclusively |
 | Accidental numeral mixing | Per-context numeral policy via Intl |
 | Hardcoded direction | Single state applied pre-render |
-|| No RTL testing | Dual-direction E2E per mode — lint always-on; both directions at commit (standard/guarded) or milestone (vibe) |
+| No RTL testing | Dual-direction E2E per mode — lint always-on; both directions at commit (standard/guarded) or milestone (vibe) |
 | Latin-only font stack | Arabic fallbacks included |
 | Flipping non-directional icons | Directional only |
 | Manual date/number formatting | Intl formatters |

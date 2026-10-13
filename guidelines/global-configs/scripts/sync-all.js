@@ -105,17 +105,20 @@ function main() {
     );
 
     if (result.status === 0) {
-      project.status = 'synced';
-      project.lastSynced = now;
       const source = hashTree(SOURCE);
       const mirrorPath = path.join(projectPath, '_guidelines');
       const delivered = fs.existsSync(mirrorPath) ? hashTree(mirrorPath) : null;
-      project.contentHash = source.hash;
-      project.hashFiles = source.count;
+
       if (delivered && delivered.hash === source.hash) {
+        project.status = 'synced';
+        project.lastSynced = now;
+        project.contentHash = source.hash;
+        project.hashFiles = source.count;
         console.log(`  OK   ${name}`);
       } else {
         failed += 1;
+        project.status = 'failed';
+        project.lastSynced = project.lastSynced || null;
         console.error(`  FAIL ${name}: sync exited 0 but the mirror does not match the source — verify manually`);
       }
     } else {

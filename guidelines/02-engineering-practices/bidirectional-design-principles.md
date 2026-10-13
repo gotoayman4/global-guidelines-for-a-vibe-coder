@@ -35,7 +35,7 @@ New projects: all principles from initialization (`pnpm dlx shadcn@latest init -
 | `tracking-*` / opacity on Arabic | Zero spacing, opaque tokens |
 | Fixed-width text containers | min/max constraints |
 | Portal whose direction must differ from the document (or context-only stack) without `dir` | Explicit `dir` where the mechanism requires it; document-driven stacks inherit from `<html>` |
-|| Testing only in LTR | Dual-direction per mode — lint always-on, E2E dual-direction at commit (standard/guarded) or milestone (vibe) |
+| Testing only in LTR | Dual-direction per mode — lint always-on, E2E dual-direction at commit (standard/guarded) or milestone (vibe) |
 
 ## Cross-References
 

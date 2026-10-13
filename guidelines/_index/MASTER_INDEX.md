@@ -53,7 +53,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [accessibility-standards.md](../02-engineering-practices/accessibility-standards.md) | Normative | Global | ~563 | `#a11y` `#wcag` `#aria` |
 | [agent-verification-loop.md](../02-engineering-practices/agent-verification-loop.md) | Normative | Global | ~2507 | `#verification` `#agent` `#testing` `#evidence` `#done-criteria` `#cost-control` |
 | [ai-code-documentation.md](../02-engineering-practices/ai-code-documentation.md) | Normative | Global | ~803 | `#documentation` `#comments` `#ai-context` `#icdc` |
-| [bidirectional-design-principles.md](../02-engineering-practices/bidirectional-design-principles.md) | Normative | Global — All Projects (Bilingual by Default) | ~1222 | `#rtl` `#bidirectional` `#arabic` `#design` |
+| [bidirectional-design-principles.md](../02-engineering-practices/bidirectional-design-principles.md) | Normative | Global — All Projects (Bilingual by Default) | ~1221 | `#rtl` `#bidirectional` `#arabic` `#design` |
 | [code-duplication-prevention.md](../02-engineering-practices/code-duplication-prevention.md) | Normative | Global | ~985 | `#deduplication` `#dry` `#code-smells` `#ai` |
 | [cost-optimization-strategy.md](../02-engineering-practices/cost-optimization-strategy.md) | Normative | Global | ~900 | `#cost` `#hosting` `#tokens` `#free-tier` |
 | [error-handling-philosophy.md](../02-engineering-practices/error-handling-philosophy.md) | Normative | Global | ~711 | `#error` `#contracts` `#recovery` |
