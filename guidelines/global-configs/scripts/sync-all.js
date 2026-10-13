@@ -46,11 +46,125 @@ function stamp() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-function main() {
-  if (!fs.existsSync(PROJECTS_PATH)) {
-    console.error(`sync:all cannot read ${PROJECTS_PATH}`);
-    process.exit(1);
+function loadProjectsFromFile(projectsPath) {
+  if (!fs.existsSync(projectsPath)) {
+    throw new Error(`sync:all cannot read ${projectsPath}`);
   }
+
+  let projects;
+  try {
+    projects = JSON.parse(fs.readFileSync(projectsPath, 'utf8'));
+  } catch (err) {
+    throw new Error(`sync:all: sync-projects.json is not valid JSON: ${err.message}`);
+  }
+
+  if (!Array.isArray(projects) || projects.length === 0) {
+    throw new Error('sync:all: sync-projects.json has no projects');
+  }
+
+  return projects;
+}
+
+function syncProject(project, options = {}) {
+  const {
+    sourceRoot = SOURCE,
+    syncScript = SYNC_PS1,
+    run = runSync,
+    now = stamp(),
+    dryRunFlag = false,
+  } = options;
+
+  const name = project.name || project.path;
+  const projectPath = project.path;
+
+  if (!projectPath) {
+    console.error(`  FAIL ${name}: entry has no path`);
+    return { ok: false, failed: 1, project: { ...project, status: 'failed' } };
+  }
+
+  if (!fs.existsSync(projectPath)) {
+    console.error(`  FAIL ${name}: path missing (${projectPath})`);
+    return { ok: false, failed: 1, project: { ...project, status: 'failed' } };
+  }
+
+  if (dryRunFlag) {
+    console.log(`  OK   ${name}: would sync → ${projectPath}`);
+    return { ok: true, failed: 0, project: { ...project, status: 'synced' } };
+  }
+
+  const result = run(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      syncScript,
+      '-ProjectPath',
+      projectPath,
+    ],
+    { windowsHide: true },
+  );
+
+  if (result.status === 0) {
+    const source = hashTree(sourceRoot);
+    const mirrorPath = path.join(projectPath, '_guidelines');
+    const delivered = fs.existsSync(mirrorPath) ? hashTree(mirrorPath) : null;
+
+    if (delivered && delivered.hash === source.hash) {
+      project.status = 'synced';
+      project.lastSynced = now;
+      project.contentHash = source.hash;
+      project.hashFiles = source.count;
+      console.log(`  OK   ${name}`);
+      return { ok: true, failed: 0, project };
+    }
+
+    project.status = 'failed';
+    project.lastSynced = project.lastSynced || null;
+    console.error(`  FAIL ${name}: sync exited 0 but the mirror does not match the source — verify manually`);
+    return { ok: false, failed: 1, project };
+  }
+
+  project.status = 'failed';
+  const tail = (result.stderr || result.stdout || '').trim().split('\n').slice(-3).join(' | ');
+  console.error(`  FAIL ${name} (exit ${result.status}): ${tail}`);
+  return { ok: false, failed: 1, project };
+}
+
+function runBatchSync(projects, options = {}) {
+  const {
+    sourceRoot = SOURCE,
+    syncScript = SYNC_PS1,
+    projectRegistry = PROJECTS_PATH,
+    dryRunFlag = false,
+    run = runSync,
+  } = options;
+
+  const now = stamp();
+  let failed = 0;
+
+  const list = Array.isArray(projects) ? projects : loadProjectsFromFile(projectRegistry);
+
+  for (const project of list) {
+    const outcome = syncProject(project, {
+      sourceRoot,
+      syncScript,
+      run,
+      now,
+      dryRunFlag,
+    });
+    failed += outcome.failed;
+  }
+
+  if (!dryRunFlag) {
+    fs.writeFileSync(projectRegistry, `${JSON.stringify(list, null, 4)}\n`, 'utf8');
+  }
+
+  return { failed, projects: list };
+}
+
+function main() {
   if (!fs.existsSync(SYNC_PS1)) {
     console.error(`sync:all cannot find ${SYNC_PS1}`);
     process.exit(1);
@@ -58,86 +172,39 @@ function main() {
 
   let projects;
   try {
-    projects = JSON.parse(fs.readFileSync(PROJECTS_PATH, 'utf8'));
+    projects = loadProjectsFromFile(PROJECTS_PATH);
   } catch (err) {
-    console.error(`sync:all: sync-projects.json is not valid JSON: ${err.message}`);
-    process.exit(1);
-  }
-  if (!Array.isArray(projects) || projects.length === 0) {
-    console.error('sync:all: sync-projects.json has no projects');
+    console.error(err.message);
     process.exit(1);
   }
 
   console.log(`sync:all — ${projects.length} project(s)${dryRun ? ' [dry-run]' : ''}`);
-  let failed = 0;
-  const now = stamp();
+  const result = runBatchSync(projects, {
+    sourceRoot: SOURCE,
+    syncScript: SYNC_PS1,
+    projectRegistry: PROJECTS_PATH,
+    dryRunFlag: dryRun,
+  });
 
-  for (const project of projects) {
-    const name = project.name || project.path;
-    const projectPath = project.path;
-    if (!projectPath) {
-      console.error(`  FAIL ${name}: entry has no path`);
-      failed += 1;
-      continue;
-    }
-    if (!fs.existsSync(projectPath)) {
-      console.error(`  FAIL ${name}: path missing (${projectPath})`);
-      failed += 1;
-      continue;
-    }
-    if (dryRun) {
-      console.log(`  OK   ${name}: would sync → ${projectPath}`);
-      continue;
-    }
-
-    const result = runSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-File',
-        SYNC_PS1,
-        '-ProjectPath',
-        projectPath,
-      ],
-      { windowsHide: true },
-    );
-
-    if (result.status === 0) {
-      const source = hashTree(SOURCE);
-      const mirrorPath = path.join(projectPath, '_guidelines');
-      const delivered = fs.existsSync(mirrorPath) ? hashTree(mirrorPath) : null;
-
-      if (delivered && delivered.hash === source.hash) {
-        project.status = 'synced';
-        project.lastSynced = now;
-        project.contentHash = source.hash;
-        project.hashFiles = source.count;
-        console.log(`  OK   ${name}`);
-      } else {
-        failed += 1;
-        project.status = 'failed';
-        project.lastSynced = project.lastSynced || null;
-        console.error(`  FAIL ${name}: sync exited 0 but the mirror does not match the source — verify manually`);
-      }
-    } else {
-      failed += 1;
-      project.status = 'failed';
-      const tail = (result.stderr || result.stdout || '').trim().split('\n').slice(-3).join(' | ');
-      console.error(`  FAIL ${name} (exit ${result.status}): ${tail}`);
-    }
-  }
-
-  if (!dryRun) {
-    fs.writeFileSync(PROJECTS_PATH, `${JSON.stringify(projects, null, 4)}\n`, 'utf8');
-  }
-
-  if (failed > 0) {
-    console.error(`sync:all DONE with ${failed} failure(s)`);
+  if (result.failed > 0) {
+    console.error(`sync:all DONE with ${result.failed} failure(s)`);
     process.exit(1);
   }
   console.log(dryRun ? 'sync:all dry-run complete' : 'sync:all complete — all projects synced');
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  REPO_ROOT,
+  PROJECTS_PATH,
+  SOURCE,
+  SYNC_PS1,
+  loadProjectsFromFile,
+  syncProject,
+  runBatchSync,
+  main,
+  stamp,
+};

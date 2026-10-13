@@ -1,5 +1,8 @@
 # Skills Best-Practice Conformance Review — Are the Mirrored Skills Conformant and Current?
 
+> Historical record — this review was written for the 2026-10-13 repo snapshot and reflects the
+> pre-migration state. The current source-of-truth repo is the generated `guidelines/global-configs/skills/<name>/SKILL.md` layout and the generated `skills/INDEX.md`; this document is not the active implementation contract.
+
 **Date:** 2026-10-13 · **Scope:** the 20 skills in `guidelines/global-configs/skills/` and the
 `_skills/` mirror they are copied into · **Baseline:** the Agent Skills open standard
 (`agentskills.io/specification`) + Anthropic's Agent Skills engineering guidance

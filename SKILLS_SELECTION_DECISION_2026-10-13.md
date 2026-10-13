@@ -1,5 +1,7 @@
 # Skills Selection Decision — Should Every Skill Be Mirrored to Every Project?
 
+> Historical record — this decision note captures the 2026-10-13 selection design during the transition to the generated skill inventory. It is not a current operational source; the live implementation is the generated `guidelines/global-configs/skills/INDEX.md` plus the sync logic in `plan-skills.js` and `sync-guidelines.ps1`.
+
 **Date:** 2026-10-13
 **Scope:** how `plan-skills.js` decides which of the 20 `.skill.md` files a project receives, and
 why the answer is not "all of them".
