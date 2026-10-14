@@ -199,7 +199,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1336 | `#skill` `#debugging` `#noncoder` `#visual` |
 | [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1635 | `#skill` `#deploy` `#production` `#hosting` |
 | [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | ~3559 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
-| [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1942 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` |
+| [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1972 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` |
 | [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1658 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory — with an enforced core | Global (Task-Type Skill) | ~3848 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
 | [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2625 | `#skill` `#setup` `#beginner` `#onboarding` |
@@ -221,7 +221,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
-| [sync-manager.ps1](../../sync-manager.ps1) | Script | Global | ~1,200 | `#script` `#sync` `#gui` `#project-setup` |
+| `sync-manager.ps1` — central repo root, **not mirrored** (named, never linked: a `../../` path escapes `_guidelines/` in every downstream project) | Script | Global | ~1,200 | `#script` `#sync` `#gui` `#project-setup` |
 | [sync-manifest.json](../global-configs/sync-manifest.json) | Config | Global | ~300 | `#config` `#sync` `#manifest` |
 
 ### Tool Config Templates

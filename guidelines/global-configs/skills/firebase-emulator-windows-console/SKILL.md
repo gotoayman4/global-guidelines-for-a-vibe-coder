@@ -84,4 +84,4 @@ Apply that configuration in the preloader's patched `childProcess.spawn()` call 
 
 - **Depends on:** [firebase-firestore-practices/SKILL.md](../firebase-firestore-practices/SKILL.md)
 - **Depends on:** [testing-philosophy.md](../../../02-engineering-practices/testing-philosophy.md)
-- **Follows:** [skill-design-patterns.md](../../../../docs/repo-meta/skill-design-patterns.md)
+- **Follows:** `skill-design-patterns.md` — central repo `docs/repo-meta/`, **not mirrored**, so it is named rather than linked (a `../../../../` path escapes `_guidelines/` and breaks every project's link check)
