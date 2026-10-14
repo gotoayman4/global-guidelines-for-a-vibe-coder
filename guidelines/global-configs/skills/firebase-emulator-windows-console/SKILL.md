@@ -45,6 +45,14 @@ Keep the hook narrowly scoped:
 - Verify that `javaw.exe` is available from the same configured JDK. If it is missing, do not silently fall back to hiding all process output or install/change Java; explain the blocker and ask before choosing another approach.
 - Wrap the existing emulator command in a project-local Node launcher if the package-script shell cannot safely provide the preload environment. Inherit stdio, report launch errors, and propagate the Firebase CLI's exit code. Do not rewrite the suite command or make failures success-shaped.
 
+## Route Every Emulator Invocation Through the Hook
+
+The preload affects only Node processes that receive it. A package script that starts the Firebase CLI with the preload does not change a separate, manually typed `firebase emulators:exec` command. **Every emulator test invocation on Windows—including one-off probes and filename-filtered runs—MUST use the hooked project launcher, or explicitly add the project preload to that Firebase CLI invocation.** Otherwise Java still launches normally and may open the console popup.
+
+Keep the caller's requested test scope intact: forward its existing Vitest filename filters or other supported test arguments through the launcher. Do not remove a filter, substitute a different test, or broaden a focused probe just to use the hook. If the project launcher cannot forward the requested arguments, extend that launcher safely and test the argument handling; do not fall back silently to raw `firebase emulators:exec`.
+
+When direct CLI invocation is necessary, add the project-owned preload to that command's environment only, preserving existing `NODE_OPTIONS` and encoding the preload path with `pathToFileURL()`. Never set a global Node option just to cover manual emulator runs.
+
 The project-local preload should implement the following decision and preserve the unmodified options object:
 
 ```js
