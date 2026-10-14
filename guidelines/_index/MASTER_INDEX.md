@@ -199,6 +199,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1336 | `#skill` `#debugging` `#noncoder` `#visual` |
 | [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1635 | `#skill` `#deploy` `#production` `#hosting` |
 | [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | ~3559 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
+| [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1633 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` |
 | [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1658 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory — with an enforced core | Global (Task-Type Skill) | ~3848 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
 | [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2625 | `#skill` `#setup` `#beginner` `#onboarding` |

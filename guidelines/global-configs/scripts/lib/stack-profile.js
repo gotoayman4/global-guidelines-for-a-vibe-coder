@@ -7,7 +7,7 @@
  * registered projects: 6 declare a `### Stack` table, 6 declare a `### Forbidden …` list, 6 have a
  * root `package.json`, and alsael1 has only its own prose. No source covers the fleet alone, and a
  * reader that trusted the Stack table alone would treat the one project that lacks it as empty and
- * hand it all 20 skills.
+ *      hand it all 21 skills.
  *
  * (An earlier reading of this same fleet said "2 of 7 declare a Stack table". That was wrong, and
  * the way it was wrong is worth keeping: the heading survey was piped through `head -20`, which cut
