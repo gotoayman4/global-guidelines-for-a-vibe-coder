@@ -3,24 +3,50 @@
 /**
  * check-links.js — Validates all internal links in guideline .md files.
  *
- * Usage:
- *   node global-configs/scripts/check-links.js          # check all .md files
- *   node global-configs/scripts/check-links.js --fix     # report only, no exit code
+ * TWO DEFECT CLASSES, BECAUSE THEY HAVE DIFFERENT OWNERS.
+ *   1. BROKEN — the target does not exist anywhere the checker can find it. The file's author fixes it.
+ *   2. MIRROR ESCAPE — a relative link inside the mirrored subtree resolves OUTSIDE that subtree. The
+ *      target usually exists (in this repo), so class 1 never sees it; but this file is delivered to a
+ *      project as `_guidelines/`, where the same `../../` lands in the project's own root or above it.
+ *      A project cannot fix it and its own link check goes permanently red on content it may not edit —
+ *      measured twice: `_index/MASTER_INDEX.md` → repo-root `sync-manager.ps1` (recorded 2026-10-11) and
+ *      the emulator skill → `docs/repo-meta/skill-design-patterns.md` (added 2026-10-12, unnoticed until
+ *      a project's count went from one known red to two). A link that survives being mirrored is written
+ *      as a name plus its central location; only a link that resolves inside the mirror is written as a
+ *      path. `documentation-strategy.md` §Delivery states the rule; this is the instrument.
  *
- * Exit code: 0 = all links valid, 1 = broken links found
+ * Usage:
+ *   node global-configs/scripts/check-links.js          # check the mirrored subtree this script lives in
+ *   node global-configs/scripts/check-links.js --fix    # report only, no exit code
+ *
+ * THE PATH ARGUMENT IS DELIBERATELY IGNORED, and the scanned root is printed so a caller can see it
+ * rather than infer it. Measured 2026-10-15 against all seven registered projects: honouring a project
+ * root as the scanned tree reports 430–625 "broken links" per repo (GAMS 504, `gs-coordinator-helper`
+ * 599, `property-management-app` 570). Those are not 500 link-rot defects — the two fallback resolvers
+ * below (path-from-scan-root, then bare-basename index) are conventions OF THIS CORPUS, and applied to
+ * a project's own `docs/`, `AGENTS.md` and `.github/instructions/` they mis-resolve almost everything.
+ * Widening the scan is therefore not a switch this script can flip honestly; a project that wants its
+ * own doc set link-checked needs a checker whose resolution rules are the project's. Claiming
+ * `docs:links` covers "the doc set" from a project root is the false statement this note replaces.
+ *
+ * Exit code: 0 = all links valid and none escaping, 1 = broken links or mirror escapes found
  *
  * @tier standard+ — a broken link is a broken repo, but the tree it guards is the guidelines tree:
  *   a project runs it at a milestone (`docs:links`), not on every push. `always` is reserved for a
  *   control that is meaningful in every repo the file is mirrored into.
  *
  * Source: global-guidelines-for-a-vibe-coder/global-configs/scripts/check-links.js
- * Last Updated: 2026-06-13
+ * Last Updated: 2026-10-15
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..');
+// The scanned tree is the mirrored subtree this script lives in — always. `CHECK_LINKS_MIRROR` re-anchors
+// it for a hermetic test fixture; it is not how a project widens its own check (see the header for the
+// measurement that decided this).
+const MIRROR_ROOT = path.resolve(process.env.CHECK_LINKS_MIRROR || path.join(__dirname, '..', '..'));
+const REPO_ROOT = MIRROR_ROOT;
 const SKIP_DIRS = ['.git', 'node_modules'];
 const SKIP_FILES = [/^REPO_AUDIT_REPORT_\d{4}-\d{2}-\d{2}\.md$/];
 
@@ -96,12 +122,36 @@ function resolveLink(href, sourceFile) {
   return resolved;
 }
 
+/**
+ * Does this link belong to the mirrored subtree, and does it leave it?
+ *
+ * Only a relative path with a separator can escape: an in-file anchor, a URL, an absolute path and a
+ * bare filename (which every resolver here may satisfy from anywhere) are not this defect class.
+ *
+ * @param {string} href raw link target
+ * @param {string} sourceFile absolute path of the file carrying the link
+ * @param {string} [root] the mirror root to test against
+ * @returns {{escaping: boolean, resolved: string|null}}
+ */
+function escapingLink(href, sourceFile, root = MIRROR_ROOT) {
+  const noAnchor = String(href).split('#')[0];
+  if (noAnchor === '' || /^(https?:|mailto:|file:)/i.test(noAnchor)) return { escaping: false, resolved: null };
+  if (path.isAbsolute(noAnchor) || /^[A-Za-z]:[\\/]/.test(noAnchor)) return { escaping: false, resolved: null };
+  if (!noAnchor.includes('/') && !noAnchor.includes('\\')) return { escaping: false, resolved: null };
+  const resolved = path.resolve(path.dirname(sourceFile), noAnchor);
+  const inside = resolved === root || resolved.startsWith(root + path.sep);
+  return { escaping: !inside, resolved };
+}
+
 function main() {
   const isFix = process.argv.includes('--fix');
   console.log('═══════════════════════════════════════════');
   console.log('  Internal Link Checker');
   console.log(`  ${new Date().toISOString().split('T')[0]}`);
   console.log('═══════════════════════════════════════════\n');
+  // Stated, not assumed: the scope is the tree this script lives in, whatever a caller passed as an
+  // argument. A project that reads "No broken links" must be able to see WHICH tree that covers.
+  console.log(`🔍 Scanned root (the mirrored subtree): ${MIRROR_ROOT}\n`);
 
   const mdFiles = findMdFiles(REPO_ROOT);
   console.log(`📖 Found ${mdFiles.length} .md files to check\n`);
@@ -115,6 +165,8 @@ function main() {
   }
 
   let brokenCount = 0;
+  let escapeCount = 0;
+  let mirrorLinkCount = 0;
   let checkedCount = 0;
   let skippedBareCount = 0;
 
@@ -125,6 +177,22 @@ function main() {
     const links = extractLinks(content, file);
 
     for (const link of links) {
+      // Class 2 is tested FIRST, and independently of existence: an escaping link whose target exists
+      // (in this repo) is exactly the case class 1 cannot see — both recorded instances resolved fine
+      // centrally, which is why they were invisible until a project's link check turned red. Every
+      // scanned file lives inside the mirror by construction (the scanned root IS the mirror), so the
+      // rule needs no "is this file mirrored?" test — that is the point of anchoring the scan to it.
+      mirrorLinkCount++;
+      const esc = escapingLink(link.href, file);
+      if (esc.escaping) {
+        escapeCount++;
+        console.log(`🚫 MIRROR ESCAPE: ${path.relative(MIRROR_ROOT, file)}`);
+        console.log(`   Link: ${link.href}`);
+        console.log(`   Resolves outside the mirrored subtree to: ${esc.resolved}`);
+        console.log(`   Context: "${link.line}"\n`);
+        continue;
+      }
+
       let resolved = resolveLink(link.href, file);
 
       // Primary check: resolve relative to source file's directory
@@ -163,6 +231,9 @@ function main() {
   }
 
   console.log(`✅ ${checkedCount} links verified`);
+  // Non-vacuity, printed always: an escape check that inspected no link is an escape check that passed
+  // for nothing, and a reader cannot tell the two apart from a green line.
+  console.log(`🔎 ${mirrorLinkCount} link(s) inside the mirrored subtree judged against it (${escapeCount} escaping)`);
   if (skippedBareCount > 0) {
     console.log(`ℹ️  ${skippedBareCount} bare filename refs skipped (conceptual references, not broken links)`);
   }
@@ -171,9 +242,17 @@ function main() {
   } else {
     console.log('✅ No broken links');
   }
+  if (escapeCount > 0) {
+    console.log(
+      `🚫 ${escapeCount} link(s) escape the mirrored subtree — a defect of THIS repo's content, not of the` +
+        ' project that mirrors it. Write the name and its central location, not a path.'
+    );
+  }
   console.log('═══════════════════════════════════════════\n');
 
-  if (!isFix && brokenCount > 0) process.exit(1);
+  if (!isFix && brokenCount + escapeCount > 0) process.exit(1);
 }
 
-main();
+module.exports = { escapingLink, findMdFiles, extractLinks, MIRROR_ROOT };
+
+if (require.main === module) main();

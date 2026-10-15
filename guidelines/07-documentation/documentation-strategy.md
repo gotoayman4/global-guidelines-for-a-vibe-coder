@@ -32,6 +32,15 @@ A project consumes this doc set through a `_guidelines/` mirror. A mirror is a c
 - **Compare content, not dates.** `npm run sync:drift` hashes the mirror against the source and fails on any difference; `npm run sync:all` records the source hash it delivered. A `lastSynced` timestamp says when someone *tried*; the hash says what *arrived*. Only the sync writes a hash — a hash written by anything else stops meaning "this content was delivered".
 - **"Skip if the mirror exists" is not a rule.** An existing mirror is precisely the thing that needs checking; it is the stale one.
 - **A missing mandated document is a failure, not a note.** An instrument that reports an absent `README.md` while the build stays green is telling you the doc set can silently lose a member.
+- **A mirrored file may not link outside the mirror.** `../../x.md` resolves here and lands in the project's own
+  root there: the link is legal in the source and dead in every copy, and the project cannot fix content it does
+  not own. Write the name and its central location; write a path only when it resolves inside the mirror.
+  `check-links.js` fails the run on it (`MIRROR ESCAPE`, printing how many mirrored links it judged so a green
+  line cannot be vacuous). The class recurred twice before the guard existed — `_index/MASTER_INDEX.md` →
+  repo-root `sync-manager.ps1` (recorded 2026-10-11), then a skill → `docs/repo-meta/skill-design-patterns.md`
+  (added 2026-10-12, unnoticed until one project's known-red count became two). The same arithmetic applies to
+  the **second** delivery, `_skills/`: a skill is copied flat there, so a mirror-relative cross-reference is dead
+  in that placement too, even while it is valid in `_guidelines/`.
 
 ## Required Documentation Files
 

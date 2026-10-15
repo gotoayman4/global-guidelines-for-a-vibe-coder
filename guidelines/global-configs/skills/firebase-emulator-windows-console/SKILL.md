@@ -83,5 +83,5 @@ Apply that configuration in the preloader's patched `childProcess.spawn()` call 
 ## Cross-References
 
 - **Depends on:** [firebase-firestore-practices/SKILL.md](../firebase-firestore-practices/SKILL.md)
-- **Depends on:** [testing-philosophy.md](../../../02-engineering-practices/testing-philosophy.md)
+- **Depends on:** `testing-philosophy.md` — under `02-engineering-practices/` in the mirror. Named, not linked: this file is also copied flat to `_skills/<name>/`, where a mirror-relative path lands above the project root and dies.
 - **Follows:** `skill-design-patterns.md` — central repo `docs/repo-meta/`, **not mirrored**, so it is named rather than linked (a `../../../../` path escapes `_guidelines/` and breaks every project's link check)

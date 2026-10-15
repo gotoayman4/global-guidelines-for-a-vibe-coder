@@ -36,6 +36,16 @@
 
 /**
  * A scalar value: an inline `[a, b]` sequence, a quoted string, or the raw text.
+ *
+ * **CONSTRAINT — a double-quoted scalar is UNESCAPED, not just unwrapped.** YAML writes an inner
+ * quote as `\"`, so a parser that strips the outer quotes only has removed the envelope. Measured
+ * 2026-10-15: the emulator skill's `description` (a double-quoted YAML scalar whose trigger words are
+ * themselves quoted) arrived in every generated table as `\"popup\"`, and the row injected into a
+ * project's `AGENTS.md` — a generated region no project may hand-edit — carried the backslashes. The
+ * escape set is deliberately the two this corpus uses: `\"` and `\\`. Any other sequence (`\t`, `\n`,
+ * `\uXXXX`) is left as the author wrote it, on the same rule as the rest of this file — a parser that
+ * invents structure is worse than one that reports nothing.
+ *
  * @param {string} raw
  * @returns {string|string[]}
  */
@@ -43,7 +53,10 @@ function scalarValue(raw) {
   if (raw.startsWith('[') && raw.endsWith(']')) {
     return raw.slice(1, -1).split(',').map((s) => s.trim()).filter(Boolean);
   }
-  if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+  if (raw.startsWith('"') && raw.endsWith('"') && raw.length > 1) {
+    return raw.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+  }
+  if (raw.startsWith("'") && raw.endsWith("'") && raw.length > 1) {
     return raw.slice(1, -1);
   }
   return raw;
