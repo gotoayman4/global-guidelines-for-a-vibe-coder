@@ -19,6 +19,15 @@
  * (check-sync-drift.js). A date without a hash is how a project ran 19-day-old
  * rules while the registry reported it `synced`.
  *
+ * THE `status` FIELD WAS RENAMED TO `lastSyncOutcome` (2026-10-19). It recorded how the last sync
+ * attempt ended, and the name said something stronger than that: a reader scanning
+ * `sync-projects.json` saw `"status": "synced"` on every project while the mirrors had drifted from
+ * the source and `npm run sync:drift` was failing seven of seven. A field whose name reads like a
+ * current-state claim but holds a historical one is a claim the registry cannot keep. The new name
+ * says what it holds — the outcome of the last attempt — and the CURRENT state is the verdict
+ * `npm run sync:drift` prints, never the registry. The recorded hashes still say what content was
+ * delivered, and when.
+ *
  * CAVEAT: sync-guidelines.ps1 can also write global tool configs under the user profile
  * (opencode/Qoder/Windsurf/Cursor/VS Code). That step is OPT-IN here:
  * `--with-global-configs` (or `SYNC_WITH_GLOBAL_CONFIGS=1`). It is the same content for every
@@ -90,17 +99,17 @@ function syncProject(project, options = {}) {
 
   if (!projectPath) {
     console.error(`  FAIL ${name}: entry has no path`);
-    return { ok: false, failed: 1, project: { ...project, status: 'failed' } };
+    return { ok: false, failed: 1, project: { ...project, lastSyncOutcome: 'failed' } };
   }
 
   if (!fs.existsSync(projectPath)) {
     console.error(`  FAIL ${name}: path missing (${projectPath})`);
-    return { ok: false, failed: 1, project: { ...project, status: 'failed' } };
+    return { ok: false, failed: 1, project: { ...project, lastSyncOutcome: 'failed' } };
   }
 
   if (dryRunFlag) {
     console.log(`  OK   ${name}: would sync → ${projectPath}`);
-    return { ok: true, failed: 0, project: { ...project, status: 'synced' } };
+    return { ok: true, failed: 0, project: { ...project, lastSyncOutcome: 'synced' } };
   }
 
   const args = [
@@ -125,7 +134,7 @@ function syncProject(project, options = {}) {
     const delivered = fs.existsSync(mirrorPath) ? hashTree(mirrorPath) : null;
 
     if (delivered && delivered.hash === source.hash) {
-      project.status = 'synced';
+      project.lastSyncOutcome = 'synced';
       project.lastSynced = now;
       project.contentHash = source.hash;
       project.hashFiles = source.count;
@@ -140,13 +149,13 @@ function syncProject(project, options = {}) {
       return { ok: true, failed: 0, project };
     }
 
-    project.status = 'failed';
+    project.lastSyncOutcome = 'failed';
     project.lastSynced = project.lastSynced || null;
     console.error(`  FAIL ${name}: sync exited 0 but the mirror does not match the source — verify manually`);
     return { ok: false, failed: 1, project };
   }
 
-  project.status = 'failed';
+  project.lastSyncOutcome = 'failed';
   const tail = (result.stderr || result.stdout || '').trim().split('\n').slice(-3).join(' | ');
   console.error(`  FAIL ${name} (exit ${result.status}): ${tail}`);
   return { ok: false, failed: 1, project };

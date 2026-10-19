@@ -27,8 +27,18 @@ apply the skill anywhere.
 
 **Every skill here is task-activated.** Before starting a task, scan the `Load when`
 column. When a row matches, open that skill and follow it, and announce it in chat as
-`Skill: <name> activated` — the announcement is the only thing that makes activation
-visible, because no file in the repo can record whether a skill was loaded.
+`Skill: <name> activated`.
+
+**Record the activation.** The chat announcement is what the human sees; it is not evidence.
+When you open a skill, append one line to `docs/skill-activations.log` in this project:
+`<ISO-8601 timestamp> | <skill-name> | <the task that triggered it>`. A receipt naming a
+skill this project does not carry is a false receipt, so the log is validated against the
+delivered set.
+
+**Where the files live.** `_skills/<name>/SKILL.md` is the synced mirror this project reads:
+present after a sync, absent in a fresh clone until one runs. The canonical source is the
+central steering repo's `guidelines/global-configs/skills/` — the mirror is a copy of it,
+and only the skills that fit this project's stack are copied.
 
 A skill never outranks `AGENTS.md`: where the two disagree, `AGENTS.md` wins. And a row whose
 `Applies to` does not cover this project's stack is **not applicable** — skip it rather than
@@ -51,7 +61,7 @@ never filled the table in.
 | [debug-without-code](debug-without-code/SKILL.md) | Behavioural debugging for people who cannot read code. Use when something is visually broken or misbehaving and the user needs a plain-language diagnosis from screenshots and DevTools Console errors. Triggers on "something's broken", "it's not working", "help me debug". | — | Advisory |
 | [deploy-production](deploy-production/SKILL.md) | Production deployment to free-tier hosting (Vercel, Netlify, Cloudflare Pages). Use when shipping, releasing or going live, including the pre-deploy checklist and the post-deploy smoke test. Triggers on "deploy", "ship to production", "go live", "publish". | — | Advisory |
 | [docx-per-paragraph-language](docx-per-paragraph-language/SKILL.md) | Per-paragraph and per-run proofing language (OOXML w:lang) for bilingual DOCX. Use when Word spell-check flags the wrong language, when Arabic is marked misspelled inside an English document, or when setting run-level language options. Triggers on "DOCX spell-check wrong language", "OOXML w:lang", "run-level language". | `docx` | Advisory |
-| [firebase-emulator-windows-console](firebase-emulator-windows-console/SKILL.md) | Activate when Firebase Local Emulator Suite tests on Windows open a Java/JDK terminal or console popup, or when making emulator tests run without that popup while preserving test output and behavior. Triggers on "Firebase emulator popup", "Java terminal during tests", "hide emulator console", "firebase emulators:exec window". | `firebase` | Advisory |
+| [firebase-emulator-windows-console](firebase-emulator-windows-console/SKILL.md) | Activate when Firebase Local Emulator Suite tests on Windows open a Java/JDK terminal, a Node/Functions-runtime console, or any other emulator console popup, or when making emulator tests run without that popup while preserving test output and behavior. Triggers on "Firebase emulator popup", "Java terminal during tests", "node.exe popup during emulator tests", "Functions runtime console", "hide emulator console", "firebase emulators:exec window". | `firebase` | Advisory |
 | [firebase-firestore-practices](firebase-firestore-practices/SKILL.md) | Firebase and Cloud Firestore engineering practices — data modelling, modular SDK usage, queries and indexes, least-privilege security rules, Cloud Functions triggers, and emulator testing. Use when writing or reviewing any Firestore data layer, rules file or trigger. | `firebase` `firestore` | Advisory |
 | [firestore-cost-optimization](firestore-cost-optimization/SKILL.md) | Firestore and Firebase Hosting cost control — minimising reads, writes and deletes, staying inside the free tier, and cutting hosting download volume. Use when a backend bills per operation, when setting up or deploying a Firebase project, or when a bill or a quota is a concern. | `firebase` `firestore` | Advisory — with an enforced core |
 | [first-project-setup](first-project-setup/SKILL.md) | Zero-to-running project bootstrap for a first-time vibecoder. Use when starting a new project from scratch or when the user asks how to begin. Covers scaffolding, Git, the constitution files, the local CI hooks, and the first feature. | — | Advisory |

@@ -7,7 +7,7 @@ const { runSync } = require('../lib/run-sync.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/check-sync-drift.js');
-const { hashTree, compareProjects, compareSkills, skillsMirror, requiredGuards, controlsOf } = require('../check-sync-drift.js');
+const { hashTree, compareProjects, compareSkills, skillsMirror, requiredGuards, controlsOf, skillsBlockVerdict, competingStores } = require('../check-sync-drift.js');
 
 /** Build a source tree and N mirrors, so the comparison has something real to read. */
 function fixture(mirrorMode) {
@@ -202,6 +202,14 @@ function skillsFixture(skillsMode) {
   fs.writeFileSync(manifest, JSON.stringify({
     skills: { source: 'global-configs/skills/*/SKILL.md', target: '_skills' },
   }, null, 2));
+
+  // The inventory the agent actually reads. The guard now checks that the `## Skills` section
+  // NAMES every delivered skill — a fixture carrying skills but no inventory is a fixture that
+  // SHOULD fail, so the happy-path fixture carries one that names the skill it was delivered.
+  fs.writeFileSync(
+    path.join(project, 'AGENTS.md'),
+    '# p\n\n## Skills\n\n| Skill | Load when |\n|---|---|\n| `a` | always |\n'
+  );
   return { root, source, project, manifest };
 }
 
@@ -435,4 +443,80 @@ test('CLI exits 1 when the mirror is current but a required guard is unwired', (
     scripts: { 'guard:breadth': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
   }, null, 2));
   assert.equal(run().status, 0, 'wired — the mirror is current and the guard runs');
+});
+
+// ─── The inventory verdict ───────────────────────────────────────────────────
+
+/** A project with a delivered skill and a chosen `## Skills` section. */
+function inventoryProject(section) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-inventory-'));
+  fs.mkdirSync(path.join(root, '_skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '_skills', 'alpha', 'SKILL.md'), '---\nname: alpha\n---\n');
+  if (section !== null) {
+    fs.writeFileSync(path.join(root, 'AGENTS.md'), `# P\n\n${section}\n`);
+  }
+  return root;
+}
+
+test('skillsBlockVerdict separates a project with skills and no inventory from one with none', () => {
+  const noSkills = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-inventory-'));
+  fs.writeFileSync(path.join(noSkills, 'AGENTS.md'), '# P\n\nNo skills here.\n');
+  assert.equal(skillsBlockVerdict(noSkills, { target: '_skills' }).state, 'not-required',
+    'a project with no delivered skills has no inventory to fail');
+
+  const root = inventoryProject(null);
+  assert.equal(skillsBlockVerdict(root, { target: '_skills' }).state, 'no-agents',
+    'a project that HAS skills and no AGENTS.md at all is a different case');
+});
+
+test('skillsBlockVerdict calls a hand-written section that omits a delivered skill incomplete', () => {
+  const root = inventoryProject('## Skills\n\nHand-written rule.\n');
+  const verdict = skillsBlockVerdict(root, { target: '_skills' });
+  assert.equal(verdict.state, 'unmanaged-incomplete');
+  assert.deepEqual(verdict.missing, ['alpha']);
+});
+
+test('skillsBlockVerdict calls a hand-written section that names every delivered skill complete', () => {
+  const root = inventoryProject('## Skills\n\nUse `alpha` for alpha work.\n');
+  const verdict = skillsBlockVerdict(root, { target: '_skills' });
+  assert.equal(verdict.state, 'unmanaged-complete');
+  assert.deepEqual(verdict.missing, []);
+});
+
+test('skillsBlockVerdict names a project that has skills but no section at all', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-inventory-'));
+  fs.mkdirSync(path.join(root, '_skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '_skills', 'alpha', 'SKILL.md'), '---\nname: alpha\n---\n');
+  fs.writeFileSync(path.join(root, 'AGENTS.md'), '# P\n\nNo skills section here.\n');
+  assert.equal(skillsBlockVerdict(root, { target: '_skills' }).state, 'missing');
+});
+
+// ─── Competing stores ────────────────────────────────────────────────────────
+
+test('competingStores reports a second store and flags the skills whose content differs', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-stores-'));
+  fs.mkdirSync(path.join(root, '_skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '_skills', 'alpha', 'SKILL.md'), '---\nname: alpha\n---\n\nupstream\n');
+  fs.mkdirSync(path.join(root, '.agents', 'skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.agents', 'skills', 'alpha', 'SKILL.md'), '---\nname: alpha\n---\n\nFORK\n');
+
+  const stores = competingStores(root, '_skills');
+  const agents = stores.find((s) => s.path === '.agents/skills');
+  assert.ok(agents, 'the native store is found');
+  assert.deepEqual(agents.collisions, ['alpha'], 'the same-named skill is reported');
+  assert.deepEqual(agents.divergent, ['alpha'], 'and the differing CONTENT is reported, not just the name');
+});
+
+test('competingStores reports a store that holds no colliding skill without claiming a divergence', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-stores-'));
+  fs.mkdirSync(path.join(root, '_skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '_skills', 'alpha', 'SKILL.md'), '---\nname: alpha\n---\n');
+  fs.mkdirSync(path.join(root, '.qoder', 'skills', 'local'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.qoder', 'skills', 'local', 'SKILL.md'), '---\nname: local\n---\n');
+
+  const stores = competingStores(root, '_skills');
+  const qoder = stores.find((s) => s.path === '.qoder/skills');
+  assert.ok(qoder);
+  assert.deepEqual(qoder.collisions, [], 'a project-local skill is not a collision');
+  assert.deepEqual(qoder.divergent, []);
 });

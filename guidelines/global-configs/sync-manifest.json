@@ -134,7 +134,23 @@
     "target": "_skills",
     "gitignoreEntry": "_skills/",
     "agentsMdSectionHeader": "## Skills",
-    "agentsMdSectionBody": "Skill files live at `_skills/<name>/SKILL.md` — the Agent Skills standard layout. Only the skills that fit THIS project's stack are copied; load one when its trigger matches the current task."
+    "agentsMdSectionBody": "Skill files live at `_skills/<name>/SKILL.md` — the Agent Skills standard layout. Only the skills that fit THIS project's stack are copied; load one when its trigger matches the current task.",
+    "deliveryDecision": "WHY `_skills/` STAYS GITIGNORED — recorded 2026-10-19, and it was a choice, not an oversight. `AGENTS.md` is committed and links to `_skills/<name>/SKILL.md`, which is not; so in a fresh clone every link in the inventory 404s, and an agent told the project carries twelve skills finds none of them. The two honest resolutions are `commit the skills` and `stop advertising them as if they were there`. Committing was NOT taken, for two reasons about this fleet rather than about taste: (1) the delivery model is explicit — the `_guidelines/` mirror is gitignored too, so the steering corpus is local by design and the sync is the mechanism that brings it in; a project repo carries its own constitution, not a copy of the central corpus. (2) All seven registered projects run a `clean-tree` pre-push step that fails on ANY dirty or untracked file, so tracking `_skills/` would turn every upstream skill edit into a blocked push across seven repositories until each change was committed and reviewed. The branch taken instead makes the inventory honest about the mirror's lifecycle — the block says `_skills/` is a synced mirror, present after a sync and absent in a fresh clone until one runs, and names the canonical source it was copied from — and lets `check-sync-drift.js` fail a project that has no `_skills/` at all. Reversing this is a one-line change here plus a `git add` in each project; it is a recorded owner decision because it changes what a project repository contains."
+  },
+
+  "registry": {
+    "_comment": "sync-projects.json is the registry of target projects: WHERE the fleet is, and WHAT was delivered to it WHEN. It is not a statement about the present. The field that read `\"status\": \"synced\"` recorded how the last sync attempt ended and was named as though it meant the current state; measured 2026-10-19 the registry read `synced` for all seven projects while `npm run sync:drift` was failing seven of seven. A registry whose fields read like current-state claims WILL be believed, so the field was renamed to say what it actually holds. The current state is the verdict `npm run sync:drift` prints. The recorded hashes say what content was delivered, and when — and nothing but the sync itself may write a hash, because that is what makes the record mean `this content was delivered`.",
+    "file": "sync-projects.json",
+    "fields": {
+      "path": "absolute path to the project directory",
+      "name": "display name",
+      "lastSyncOutcome": "synced | failed — the OUTCOME OF THE LAST SYNC ATTEMPT, not the current state",
+      "lastSynced": "when the last successful sync ran",
+      "contentHash": "hash of the guidelines source at that moment — written only by the sync, never by a check",
+      "hashFiles": "file count behind that hash",
+      "skillsHash": "hash of the skills corpus at that moment",
+      "skillsFiles": "skill count behind that hash"
+    }
   },
 
   "vscodeCopilotInstructions": {

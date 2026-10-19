@@ -163,6 +163,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [render-index.js](../global-configs/scripts/render-index.js) | Script | Global | ~250 | `#script` `#render` `#index` `#single-source` `#drift-detection` |
 | [render-skills-index.js](../global-configs/scripts/render-skills-index.js) | Script | Global | ~2,100 (run it; read it only to change it) | `#script` `#render` `#skills` `#triggers` `#single-source` `#drift-detection` |
 | [inject-skills-block.js](../global-configs/scripts/inject-skills-block.js) | Script | Global | ~2,300 (run it; read it only to change it) | `#script` `#skills` `#inject` `#markers` `#generated-block` `#single-source` `#idempotent` |
+| [patch-tool-configs.js](../global-configs/scripts/patch-tool-configs.js) | Script | Global | ~4,500 (run it; read it only to change it) | `#script` `#sync` `#tool-config` `#entry-point` `#markers` `#idempotent` `#single-source` |
 | [plan-skills.js](../global-configs/scripts/plan-skills.js) | Script | Global | ~2,000 (run it; read it only to change it) | `#script` `#skills` `#selection` `#stack` `#dry-run` `#fleet` |
 | [lib/front-matter.js](../global-configs/scripts/lib/front-matter.js) | Script | Global | ~800 (run it; read it only to change it) | `#script` `#front-matter` `#shared` `#single-source` `#mirror-safe` |
 | [lib/tech-tokens.js](../global-configs/scripts/lib/tech-tokens.js) | Script | Global | ~1,300 (run it; read it only to change it) | `#script` `#skills` `#vocabulary` `#shared` `#single-source` `#mirror-safe` |
@@ -185,35 +186,42 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-decision-index.js](../global-configs/scripts/check-decision-index.js) | Script | Global | ~300 | `#script` `#adr` `#decisions` `#drift-detection` `#guard` `#coverage` |
 | [check-doc-breadth.js](../global-configs/scripts/check-doc-breadth.js) | Script | Global | ~200 | `#script` `#guard` `#breadth` `#modes` `#steering-docs` `#single-source` |
 | [check-guard-tiers.js](../global-configs/scripts/check-guard-tiers.js) | Script | Global | ~4,400 (run it; read it only to change it) | `#script` `#guard` `#tiers` `#gate` `#derived` `#single-source` |
+| [check-skill-activations.js](../global-configs/scripts/check-skill-activations.js) | Script | Global | ~2,800 (run it; read it only to change it) | `#script` `#guard` `#skills` `#activation` `#receipt` |
 | [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
 
 ### Skills — Task-Activated
 
-| File | Status | Scope | Tokens | Tags |
-|---|---|---|---|---|
-| [architect/SKILL.md](../global-configs/skills/architect/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1928 | `#skill` `#architecture` `#design` `#stress-test` |
-| [bidirectional-docx-rtl/SKILL.md](../global-configs/skills/bidirectional-docx-rtl/SKILL.md) | Advisory | Global (Task-Type Skill) | ~3071 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
-| [code-review/SKILL.md](../global-configs/skills/code-review/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1403 | `#skill` `#review` `#quality` |
-| [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1336 | `#skill` `#debugging` `#noncoder` `#visual` |
-| [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1635 | `#skill` `#deploy` `#production` `#hosting` |
-| [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | ~3559 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
-| [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1983 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` |
-| [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1658 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
-| [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory — with an enforced core | Global (Task-Type Skill) | ~3848 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
-| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2642 | `#skill` `#setup` `#beginner` `#onboarding` |
-| [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2545 | `#skill` `#planning` `#execution` `#checklist` |
-| [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1537 | `#skill` `#inno-setup` `#installer` `#windows` |
-| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1520 | `#skill` `#mui` `#design-system` `#shared-components` |
-| [performance-audit/SKILL.md](../global-configs/skills/performance-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1309 | `#skill` `#performance` `#optimization` |
-| [refactoring/SKILL.md](../global-configs/skills/refactoring/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1008 | `#skill` `#refactoring` `#maintenance` |
-| [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | ~2139 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
-| [security-audit/SKILL.md](../global-configs/skills/security-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1392 | `#skill` `#security` `#owasp` |
-| [shadcn-design-system/SKILL.md](../global-configs/skills/shadcn-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1561 | `#skill` `#shadcn` `#design-system` `#shared-components` |
-| [test-generation/SKILL.md](../global-configs/skills/test-generation/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1060 | `#skill` `#testing` `#generation` |
-| [tiptap-tailwind-reset/SKILL.md](../global-configs/skills/tiptap-tailwind-reset/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1901 | `#skill` `#tiptap` `#tailwind` `#rich-text` `#css` |
-| [unsaved-changes-protection/SKILL.md](../global-configs/skills/unsaved-changes-protection/SKILL.md) | Advisory | Global (Task-Type Skill) | ~1406 | `#skill` `#forms` `#ux` `#dirty-state` |
+> **This table is the upstream corpus, not a project's skill set.** A project receives only the
+> skills that fit its stack; the authoritative inventory for a project is the `## Skills` block in
+> its own `AGENTS.md`, which names every skill it was delivered and the trigger for each. A row
+> whose `Applies to` does not cover the project's stack is **not applicable** — skip it rather
+> than adapting it.
+
+| File | Status | Scope | Applies to | Tokens | Tags |
+|---|---|---|---|---|---|
+| [architect/SKILL.md](../global-configs/skills/architect/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1928 | `#skill` `#architecture` `#design` `#stress-test` |
+| [bidirectional-docx-rtl/SKILL.md](../global-configs/skills/bidirectional-docx-rtl/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3071 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
+| [code-review/SKILL.md](../global-configs/skills/code-review/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1403 | `#skill` `#review` `#quality` |
+| [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1336 | `#skill` `#debugging` `#noncoder` `#visual` |
+| [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1635 | `#skill` `#deploy` `#production` `#hosting` |
+| [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3559 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
+| [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` | ~2776 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` `#node` `#console` |
+| [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1658 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
+| [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory — with an enforced core | Global (Task-Type Skill) | `firebase` `firestore` | ~3848 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
+| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2642 | `#skill` `#setup` `#beginner` `#onboarding` |
+| [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2545 | `#skill` `#planning` `#execution` `#checklist` |
+| [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1537 | `#skill` `#inno-setup` `#installer` `#windows` |
+| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~1520 | `#skill` `#mui` `#design-system` `#shared-components` |
+| [performance-audit/SKILL.md](../global-configs/skills/performance-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1309 | `#skill` `#performance` `#optimization` |
+| [refactoring/SKILL.md](../global-configs/skills/refactoring/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1008 | `#skill` `#refactoring` `#maintenance` |
+| [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` `tailwind` | ~2139 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
+| [security-audit/SKILL.md](../global-configs/skills/security-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1392 | `#skill` `#security` `#owasp` |
+| [shadcn-design-system/SKILL.md](../global-configs/skills/shadcn-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` | ~1561 | `#skill` `#shadcn` `#design-system` `#shared-components` |
+| [test-generation/SKILL.md](../global-configs/skills/test-generation/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1060 | `#skill` `#testing` `#generation` |
+| [tiptap-tailwind-reset/SKILL.md](../global-configs/skills/tiptap-tailwind-reset/SKILL.md) | Advisory | Global (Task-Type Skill) | `tailwind` `tiptap` | ~1901 | `#skill` `#tiptap` `#tailwind` `#rich-text` `#css` |
+| [unsaved-changes-protection/SKILL.md](../global-configs/skills/unsaved-changes-protection/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1406 | `#skill` `#forms` `#ux` `#dirty-state` |
 
 <!-- /GENERATED -->
 

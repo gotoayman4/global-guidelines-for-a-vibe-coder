@@ -70,7 +70,14 @@ const path = require('path');
 // copy of the selection rule would drift from the first exactly on the project whose Stack table was
 // just edited — the case this guard exists to catch.
 const { planSkills } = require('./lib/plan-skills.js');
-const { skillPayload, listFiles } = require('./lib/skill-files.js');
+const { skillPayload, listFiles, listSkills } = require('./lib/skill-files.js');
+// The inventory verifier lives with the writer that produces the inventory, so the guard and the
+// sync cannot disagree about what "the block names every delivered skill" means. Importing the
+// injector is safe: it runs `main()` only when it IS the entry point.
+const { verifyInventory, skillsSectionBody, markedSpan } = require('./inject-skills-block.js');
+// The receipt validator. Same reason as above: the guard and the rule must agree on what a valid
+// receipt is, so the drift report and the standalone check cannot disagree about the same file.
+const { readActivations, validateActivations } = require('./check-skill-activations.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 // Overridable so the CLI's exit-code contract can be exercised against a fixture instead of
@@ -261,6 +268,141 @@ function compareSkills(projectPath, skills) {
 }
 
 /**
+ * Does the project's `## Skills` section NAME every skill it was delivered?
+ *
+ * THE THIRD QUESTION, and the one that was missing. The guard already asked whether the delivered
+ * bytes are current. It did not ask whether the INVENTORY that points the agent at those bytes
+ * mentions them — and the two can diverge completely, because the inventory is written into
+ * `AGENTS.md`, which is the project's own file, and the sync refuses to overwrite a hand-written
+ * `## Skills` section.
+ *
+ * WHY THAT REFUSAL IS RIGHT AND WHY IT NEEDED A COMPANION. `AGENTS.md` is the project's
+ * constitution; a generator that overwrote a project's own rule would be worse than a stale one.
+ * But the refusal had no companion check, so the state it created was indistinguishable from
+ * "up to date". Measured 2026-10-19 across the seven registered projects: three carry a hand-written
+ * section, and two of them named at most five of the twelve-to-seventeen skills they had been
+ * delivered — an agent following those sections was told to "load a skill when its trigger matches"
+ * while being given almost no triggers, and no control anywhere said so.
+ *
+ * The verdict therefore has SIX states, and the two that matter are the ones that used to be
+ * invisible:
+ *   - `managed-complete`    — the generated block, and it names everything.
+ *   - `unmanaged-complete`  — a hand-written block that names everything. Allowed: it is the
+ *                             project's own constitution, and the sync will not touch it.
+ *   - `unmanaged-incomplete`— a hand-written block that omits delivered skills. This is the defect
+ *                             this pass exists to name.
+ *
+ * @returns {{state: string, delivered: number, referenced: number, missing: string[]}}
+ */
+function skillsBlockVerdict(projectPath, skills) {
+  const agentsPath = path.join(projectPath, 'AGENTS.md');
+  const dir = path.join(projectPath, skills ? skills.target : '_skills');
+  // A project that was delivered NO skills has no inventory to write, so a missing `## Skills`
+  // section is not a defect for it — the absence of skills is the mirror check's business, not
+  // this one's. Only a project that HAS skills can have an inventory that fails to reach them.
+  const delivered = listSkills(dir);
+  if (!delivered.length) return { state: 'not-required', delivered: 0, referenced: 0, missing: [] };
+  if (!fs.existsSync(agentsPath)) return { state: 'no-agents', delivered: delivered.length, referenced: 0, missing: [] };
+  const doc = fs.readFileSync(agentsPath, 'utf8');
+  const body = skillsSectionBody(doc);
+  if (!body.trim()) return { state: 'missing', delivered: delivered.length, referenced: 0, missing: [] };
+  const managed = Boolean(markedSpan(doc.replace(/\r\n/g, '\n')));
+  const inventory = verifyInventory(body, dir);
+  const complete = inventory.state !== 'incomplete';
+  return {
+    state: `${managed ? 'managed' : 'unmanaged'}-${complete ? 'complete' : 'incomplete'}`,
+    managed,
+    delivered: inventory.delivered,
+    referenced: inventory.referenced,
+    missing: inventory.missing,
+  };
+}
+
+/**
+ * The skill stores a project carries OTHER than the one the sync delivers to.
+ *
+ * WHY THIS IS REPORTED AND NOT RESOLVED. A native Agent Skills loader scans a known set of
+ * directories (`.agents/skills`, `.claude/skills`, `.cursor/skills`, `.qoder/skills`, …). When a
+ * project keeps its skills in one of those, the upstream mirror delivered to `_skills/` is a SECOND
+ * copy — and the same skill name can exist in both with different content. Measured 2026-10-19:
+ * alsael1 carries `firebase-firestore-practices` and `firestore-cost-optimization` in `.agents/skills/`
+ * whose bytes differ from the upstream corpus, and PCMS declares `.qoder/skills/` its "canonical
+ * skill store" while the sync keeps delivering thirteen skills to `_skills/`, eleven of which exist
+ * nowhere else.
+ *
+ * Which copy an agent opens is decided by path priority, not by policy — so the collision is
+ * reported here, by name, instead of being resolved by guessing which store the project meant.
+ * Deleting a project's own skills to make one store win would be a destructive act taken on an
+ * inference; this pass makes the situation visible and leaves the decision to the owner.
+ *
+ * @returns {Array<{path: string, skills: number, collisions: string[], divergent: string[]}>}
+ */
+const NATIVE_SKILL_STORES = [
+  '.agents/skills',
+  '.claude/skills',
+  '.cursor/skills',
+  '.github/skills',
+  '.opencode/skill',
+  '.opencode/skills',
+  '.qoder/skills',
+  '.kiro/skills',
+];
+
+function competingStores(projectPath, skillsTarget = '_skills') {
+  const out = [];
+  const deliveredDir = path.join(projectPath, skillsTarget);
+  const delivered = new Map(listSkills(deliveredDir).map((s) => [s.name, s.abs]));
+  for (const rel of NATIVE_SKILL_STORES) {
+    const dir = path.join(projectPath, rel);
+    const found = listSkills(dir);
+    if (!found.length) continue;
+    const collisions = [];
+    const divergent = [];
+    for (const skill of found) {
+      const upstream = delivered.get(skill.name);
+      if (!upstream) continue;
+      collisions.push(skill.name);
+      if (!sameContent(upstream, skill.abs)) divergent.push(skill.name);
+    }
+    out.push({ path: rel, skills: found.length, collisions, divergent });
+  }
+  return out;
+}
+
+/**
+ * The activation receipt: what the project claims it has loaded, and whether the claim is true.
+ *
+ * WHY THIS IS THE ANSWER TO "WAS A SKILL EVER USED". The upstream constitution said the chat
+ * announcement was "the only thing that makes activation visible, because no file in the repo can
+ * record whether a skill was loaded" — which is true, and is the problem: a claim with no artifact
+ * behind it cannot be checked, so nothing could ever tell a steering repo that its skills were
+ * being ignored. The receipt is that artifact: an agent appends a line to
+ * `docs/skill-activations.log` when it opens a skill, and this reads it.
+ *
+ * WHAT IT PROVES, and what it does not. It proves the project's bookkeeping is well-formed and
+ * names skills the project can actually open. It does NOT prove a skill was read, or that reading
+ * it helped — a receipt is a record of an assertion, not a witness. A project that never opens a
+ * skill writes no receipts and is not failing anything here; the value is that a project that
+ * CLAIMS twenty activations has twenty checkable lines, and one naming a skill it does not carry
+ * is caught.
+ *
+ * @returns {{state: 'none'|'valid'|'invalid', total: number, distinctSkills: number,
+ *            lastActivatedAt: string|null, errors: Array<{lineNumber: number, reason: string}>}}
+ */
+function activationVerdict(projectPath) {
+  const { exists, entries } = readActivations(projectPath);
+  if (!exists) return { state: 'none', total: 0, distinctSkills: 0, lastActivatedAt: null, errors: [] };
+  const { errors, total, distinctSkills, lastActivatedAt } = validateActivations(projectPath, entries);
+  return {
+    state: errors.length ? 'invalid' : 'valid',
+    total,
+    distinctSkills,
+    lastActivatedAt,
+    errors,
+  };
+}
+
+/**
  * Compare each project's mirror against the source. Pure over its inputs, so the test can
  * drive it with fixtures instead of the live fleet.
  *
@@ -277,8 +419,11 @@ function compareProjects(sourceDir, source, projects, skills = null) {
     const mirror = path.join(project.path, MIRROR_NAME);
     const recorded = project.contentHash ? project.contentHash.slice(0, 12) : 'never recorded';
     const skillsVerdict = compareSkills(project.path, skills);
+    const blockVerdict = skillsBlockVerdict(project.path, skills);
+    const stores = competingStores(project.path, skills ? skills.target : '_skills');
+    const activations = activationVerdict(project.path);
     if (!fs.existsSync(mirror)) {
-      return { name, path: project.path, state: 'no-mirror', recorded, lastSynced: project.lastSynced, skills: skillsVerdict };
+      return { name, path: project.path, state: 'no-mirror', recorded, lastSynced: project.lastSynced, skills: skillsVerdict, skillsBlock: blockVerdict, competingStores: stores, activations };
     }
     const theirs = hashTree(mirror);
     return {
@@ -290,6 +435,9 @@ function compareProjects(sourceDir, source, projects, skills = null) {
       recorded,
       lastSynced: project.lastSynced,
       skills: skillsVerdict,
+      skillsBlock: blockVerdict,
+      competingStores: stores,
+      activations,
     };
   });
 }
@@ -447,6 +595,63 @@ function main() {
       }
     }
 
+    // THE INVENTORY VERDICT. The bytes above are current; this asks whether the agent is even told
+    // they exist. A hand-written `## Skills` section is the project's own constitution and the sync
+    // will not overwrite it — but it used to be reported as "up to date" while naming a fraction of
+    // the skills the project had been delivered.
+    if (row.skillsBlock) {
+      const b = row.skillsBlock;
+      if (b.state === 'unmanaged-incomplete') {
+        drifted.add(row.name);
+        if (!quiet) {
+          console.log(`  ❌ ${row.name}: the hand-written ## Skills section names ${b.referenced} of ${b.delivered} delivered skill(s) — ${b.missing.length} missing`);
+          console.log(`       missing: ${b.missing.slice(0, 8).join(', ')}${b.missing.length > 8 ? ', …' : ''}`);
+          console.log('       → add the missing skills to the section, or let the sync manage it (the section is hand-written, so the sync leaves it alone)');
+        }
+      } else if (b.state === 'missing' || b.state === 'no-agents') {
+        drifted.add(row.name);
+        if (!quiet) {
+          console.log(`  ❌ ${row.name}: no ## Skills section in AGENTS.md — the delivered skills are unreachable`);
+          console.log('       → run `npm run sync:all`; the sync writes the inventory the agent needs');
+        }
+      } else if (!quiet && b.state !== 'not-required') {
+        const note = b.managed ? 'generated' : 'hand-written';
+        console.log(`       ✅ ## Skills section is ${note} and names ${b.referenced}/${b.delivered} skill(s)`);
+      }
+    }
+
+    // THE RECEIPT. What the project claims it has loaded, and whether the claim holds.
+    if (row.activations && row.activations.state !== 'none') {
+      const a = row.activations;
+      if (a.state === 'invalid') {
+        drifted.add(row.name);
+        if (!quiet) {
+          console.log(`  ❌ ${row.name}: the skill-activation receipt has ${a.errors.length} invalid line(s)`);
+          for (const error of a.errors.slice(0, 5)) {
+            console.log(`       line ${error.lineNumber}: ${error.reason}`);
+          }
+          if (a.errors.length > 5) console.log(`       … and ${a.errors.length - 5} more`);
+          console.log('       → `docs/skill-activations.log` must name skills this project actually carries');
+        }
+      } else if (!quiet) {
+        console.log(`       ✅ ${a.total} skill activation(s) recorded across ${a.distinctSkills} skill(s)`);
+      }
+    }
+
+    // A SECOND COPY of the same skill is a decision nobody made on purpose. Report the collision by
+    // name; do not resolve it by deleting a project's own store.
+    if (row.competingStores && row.competingStores.length) {
+      for (const store of row.competingStores) {
+        if (!quiet) {
+          const detail = store.collisions.length
+            ? `${store.collisions.length} same-named skill(s)${store.divergent.length ? `, ${store.divergent.length} with DIFFERENT content (${store.divergent.slice(0, 4).join(', ')})` : ''}`
+            : 'no name collisions with the delivered set';
+          console.log(`  ⚠️  ${row.name}: also carries a skill store at ${store.path}/ — ${store.skills} skill(s), ${detail}`);
+        }
+        if (store.divergent.length) drifted.add(row.name);
+      }
+    }
+
     // A project with no mirror at all has been reported once already; a second complaint about the
     // same absence is how a report stops being read.
     if (row.state === 'no-mirror') continue;
@@ -495,6 +700,7 @@ function main() {
       console.log(`   controls: ${parts.join('; ')}.`);
       console.log('   execution: NOT VERIFIED — a referenced guard may never have run; see `docs/gate-receipts/`.');
     }
+    console.log('   skills: every project carries a `## Skills` inventory that names the skills it was delivered.');
     console.log('');
   }
   process.exit(0);
@@ -502,4 +708,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { hashTree, compareProjects, compareSkills, skillsMirror, requiredGuards, controlsOf, MIRROR_NAME };
+module.exports = { hashTree, compareProjects, compareSkills, skillsMirror, requiredGuards, controlsOf, skillsBlockVerdict, competingStores, NATIVE_SKILL_STORES, MIRROR_NAME };

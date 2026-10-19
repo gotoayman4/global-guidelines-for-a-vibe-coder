@@ -61,15 +61,20 @@ trigger matches, which is why the trigger has to be visible *before* the file is
 
 - **The inventory is `skills/INDEX.md`** — a `Skill → Load when → Applies to` table generated from
   each skill's front-matter. Read it when a task starts, not the whole directory.
-- **When a row matches, load the skill and announce it** in chat as `Skill: <name> activated`. The
-  announcement is the only thing that makes activation visible: no file in this repo can record
-  whether a skill was loaded.
+- **When a row matches, load the skill and announce it** in chat as `Skill: <name> activated`, then
+  record it: append one line to the project's `docs/skill-activations.log` as
+  `<ISO-8601 timestamp> | <skill-name> | <the task that triggered it>`. The chat announcement is
+  what the human sees; the log is the only thing a guard can read. `npm run skills:activations`
+  checks it — a receipt naming a skill the project does not carry is a false receipt and fails.
 - **A skill never outranks `AGENTS.md`.** Where the two disagree, this file wins.
 - **Check `Applies to` before the trigger.** A skill written for a stack this project forbids will
   contradict the constitution if followed; `—` means no stack was declared, so verify before use.
 - **Delivery:** a project receives the skills at `_skills/` (gitignored, synced) and the same
-  generated block under `## Skills` in its own `AGENTS.md`. `npm run sync:drift` verifies the
-  `_skills/` copy against this source — a skill edited here is not the skill a project loads.
+  generated block under `## Skills` in its own `AGENTS.md`. The delivered tool configs must name
+  `AGENTS.md` as the entry point — a config that points at `_guidelines/_index/MASTER_INDEX.md`
+  never reaches the inventory that says when to open a skill. `npm run sync:drift` verifies the
+  `_skills/` copy against this source — a skill edited here is not the skill a project loads — and
+  reports whether the project's inventory names every skill it was delivered.
 
 ---
 
@@ -89,6 +94,7 @@ npm run check-skills-drift # Fail if skills/INDEX.md was hand-edited — regener
 npm run plan:skills     # Print which skills belong in which project, and why (no arg = the whole fleet; --apply to write)
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
 npm run sync:drift      # Fail if a project's _guidelines/ mirror or _skills/ copy is not the current source (content hash, not a date)
+npm run skills:activations # Check a project's skill-activation receipt — a receipt naming a skill it does not carry is false
 npm run slice:close     # Derive the changelog entry, the decision number and the freshness line for a slice
 npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness, untriaged lessons
 npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + docs:census + guard:tiers + test:scripts

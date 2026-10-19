@@ -362,12 +362,79 @@ function Install-ToolConfigFile {
     }
 }
 
+function Update-ToolConfigEntryPoint {
+    <#
+    .SYNOPSIS
+        Point a project's delivered AI-tool configs at its own AGENTS.md.
+
+    .DESCRIPTION
+        The tool configs are installed `create-if-missing` (see `Install-ToolConfigFile`), so a
+        template edit never reaches a project that already has the file: `opencode.json` keeps
+        pointing at `_guidelines/_index/MASTER_INDEX.md` forever. That is not a cosmetic difference —
+        the `## Skills` inventory, the table that says WHEN to open each skill, is injected into the
+        project's own `AGENTS.md`, so an agent that boots from a tool config never reaches it at all.
+        Measured 2026-10-19: 6 of the 7 registered projects were affected.
+
+        `patch-tool-configs.js` is the one writer for that repair. It reads the (template, target)
+        pairs from the manifest, patches the DELIVERED file in place, and never rewrites
+        project-authored text: a marked region is refreshed, an unmarked one gets the region
+        inserted, and a JSON `instructions` array is made to begin with the template's entries.
+
+        `--check` in a preview, exactly as `inject-skills-block.js` is called below: the patcher
+        writes by default, and a dry run that writes is a dry run that lies.
+    #>
+    param(
+        [string]$guidelinesRepo,
+        [string]$projectPath,
+        [switch]$DryRun
+    )
+
+    $patcher = Join-Path $guidelinesRepo "global-configs\scripts\patch-tool-configs.js"
+    if (-not (Test-Path $patcher)) {
+        Write-Host "  WARNING: patch-tool-configs.js not found -- tool configs NOT updated." -ForegroundColor Yellow
+        return
+    }
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+        Write-Host "  WARNING: node.js not found -- tool configs NOT updated." -ForegroundColor Yellow
+        return
+    }
+
+    $patcherArgs = @($patcher, $projectPath)
+    if ($DryRun) { $patcherArgs += '--check' }
+    $output = & node @patcherArgs 2>&1
+    $patcherExit = $LASTEXITCODE
+    foreach ($line in $output) { Write-Host "  $line" }
+    if ($DryRun) {
+        if ($patcherExit -eq 1) {
+            Write-Host "  [DRY-RUN] Would point the tool configs at AGENTS.md" -ForegroundColor Yellow
+        } elseif ($patcherExit -ne 0) {
+            Write-Host "  WARNING: tool-config preview failed (patch-tool-configs.js exit $patcherExit)" -ForegroundColor Yellow
+        }
+    } elseif ($patcherExit -ne 0) {
+        Write-Host "  WARNING: tool configs NOT updated (patch-tool-configs.js exit $patcherExit)" -ForegroundColor Yellow
+    }
+}
+
 function Sync-Skills {
     param(
         [string]$guidelinesRepo,
         [string]$projectPath,
         [switch]$DryRun
     )
+
+    # The delivered tool configs must name `AGENTS.md` -- the project's own constitution, and the
+    # place the `## Skills` inventory is injected -- not `_guidelines/_index/MASTER_INDEX.md`.
+    #
+    # WHY IT RUNS HERE. This function is the ONE module-level step both entry points run, once per
+    # project: the GUI calls it as its skills step, the CLI as its `1c` step. It also runs AFTER the
+    # GUI's tool-config install (step 4), so one call site keeps the two entry points producing
+    # identical project output -- which the manifest header requires and two copies of this call
+    # would break.
+    #
+    # It is called FIRST in the function on purpose. The skills steps below return early (no
+    # `_skills/` source, no planner, no node), and a repair that depends on an unrelated step is a
+    # repair that silently does not happen.
+    Update-ToolConfigEntryPoint -guidelinesRepo $guidelinesRepo -projectPath $projectPath -DryRun:$DryRun
 
     # WHICH skills a project receives is decided by `plan-skills.js`, never here.
     #
@@ -613,5 +680,5 @@ function Update-Gitignore {
 
 Export-ModuleMember -Function Get-GuidelinesRepoRoot, Get-ManifestPath, Read-Manifest,
     Read-JsonObject, Get-GitignoreEntries, Get-BackupDir, New-DatedBackupDir, Restore-Backup,
-    Sync-MirrorDirectory, Install-StarterFile, Install-ToolConfigFile,
+    Sync-MirrorDirectory, Install-StarterFile, Install-ToolConfigFile, Update-ToolConfigEntryPoint,
     Sync-Skills, Sync-SkillPool, Update-Gitignore, Write-Utf8NoBom

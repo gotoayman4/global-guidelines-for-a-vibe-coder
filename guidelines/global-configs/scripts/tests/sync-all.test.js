@@ -57,7 +57,7 @@ test('syncProject leaves the recorded skills hash untouched when the sync fails'
     dryRunFlag: false,
   });
 
-  assert.equal(project.status, 'failed');
+  assert.equal(project.lastSyncOutcome, 'failed');
   assert.equal(project.skillsHash, 'previous');
   assert.equal(project.skillsFiles, 20);
 });
@@ -74,7 +74,7 @@ test('syncProject keeps a project failed when the delivered mirror hash differs'
   });
 
   assert.equal(outcome.failed, 1);
-  assert.equal(project.status, 'failed');
+  assert.equal(project.lastSyncOutcome, 'failed');
   assert.equal(project.lastSynced, null);
 });
 

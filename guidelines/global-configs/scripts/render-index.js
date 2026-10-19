@@ -32,6 +32,9 @@ const fs = require('fs');
 const path = require('path');
 const { parseFrontMatter, meta, asList } = require('./lib/front-matter.js');
 const { listSkills } = require('./lib/skill-files.js');
+// The scope reader the SELECTOR uses. The table must not re-derive applicability on its own: a
+// second derivation would drift from the rule that actually decides which skills a project gets.
+const { skillScope } = require('./lib/plan-skills.js');
 
 const SCRIPT_DIR = __dirname;
 const GUIDELINES = path.resolve(SCRIPT_DIR, '..', '..');
@@ -141,8 +144,65 @@ function renderTables(categories) {
   return lines.join('\n').replace(/\n+$/, '');
 }
 
+/**
+ * The skills table row.
+ *
+ * WHY IT IS NOT THE GUIDELINE ROW. The guideline table's columns are `File | Status | Scope | Tokens |
+ * Tags`, and a skill's `scope` says which projects the skill ASSUMES — not which skills a given
+ * project receives. That distinction was load-bearing and invisible: the table is inside the
+ * `_guidelines/` mirror, and every delivered tool config (Cursor, Windsurf, Trae, Gemini, Qoder,
+ * Kilo) points the agent at `_guidelines/_index/MASTER_INDEX.md`. Measured 2026-10-19: an agent
+ * working in a MUI project could follow that table straight to `rtl-shadcn-setup`,
+ * `shadcn-design-system` and `tiptap-tailwind-reset` — the three skills `plan-skills.js` excludes
+ * from that project precisely because they contradict its constitution. The filter was real, and the
+ * table that outranked it had no applicability column to check.
+ *
+ * So the skills table carries `Applies to`, read through `skillScope()` — the SAME function
+ * `plan-skills.js` decides with, not a private re-read of `appliesTo`. That distinction is load-
+ * bearing: only one skill in the corpus declares `appliesTo`, and the selector infers the rest from
+ * their `tags`. A table that read `appliesTo` directly would print `—` for `rtl-shadcn-setup` —
+ * the very skill a MUI project must not load — and tell the agent "no stack declared" about the
+ * one row whose applicability matters most. An inferred scope is marked `(inferred)` so the reader
+ * can see which rows are declared and which the selector derived.
+ *
+ * @param {string} abs the skill's `SKILL.md`
+ * @param {object} fm its parsed front-matter
+ * @param {string} display the link label
+ */
+function skillRow(abs, fm, display) {
+  const scope = skillScope(fm);
+  const applies = scope.tokens.length
+    ? scope.tokens.map((t) => `\`${t}\``).join(' ') + (scope.declared ? '' : ' (inferred)')
+    : '— *stack-agnostic*';
+  return `| [${display}](${linkFrom(abs)}) | ${meta(fm, 'status')} | ${meta(fm, 'scope')} | ${applies} | ~${tokensOf(fs.readFileSync(abs, 'utf8'))} | ${tagCell(asList(meta(fm, 'tags')))} |`;
+}
+
+const SKILLS_TABLE_HEADER = ['| File | Status | Scope | Applies to | Tokens | Tags |', '|---|---|---|---|---|---|'];
+
+/**
+ * The banner above the skills table.
+ *
+ * It says three things an agent needs before it opens anything: this table is the UPSTREAM CORPUS,
+ * a project receives a filtered subset of it, and the project's own `AGENTS.md` `## Skills` block is
+ * the authoritative inventory for that project.
+ */
+const SKILLS_TABLE_BANNER = [
+  '> **This table is the upstream corpus, not a project\'s skill set.** A project receives only the',
+  '> skills that fit its stack; the authoritative inventory for a project is the `## Skills` block in',
+  '> its own `AGENTS.md`, which names every skill it was delivered and the trigger for each. A row',
+  '> whose `Applies to` does not cover the project\'s stack is **not applicable** — skip it rather',
+  '> than adapting it.',
+  '',
+].join('\n');
+
 function renderSkills(skills) {
-  return ['### Skills — Task-Activated', '', ...TABLE_HEADER, ...skills.map((s) => row(s.abs, s.fm, s.display))].join('\n');
+  return [
+    '### Skills — Task-Activated',
+    '',
+    SKILLS_TABLE_BANNER,
+    ...SKILLS_TABLE_HEADER,
+    ...skills.map((s) => skillRow(s.abs, s.fm, s.display)),
+  ].join('\n');
 }
 
 function renderGraph(categories) {
