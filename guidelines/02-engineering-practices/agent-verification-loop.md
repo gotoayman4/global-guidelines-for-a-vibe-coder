@@ -65,7 +65,7 @@ Never as routine per-change verification. Never loop captures — one capture, o
 
 1. **Implement** the requested change.
 2. **Execute** the minimum verification from the table above at the CHEAPEST sufficient tier (see Cost Tiering) and the depth required by the project's mode. Tier 0 changes stop after lint/type-check. Run the commands yourself — do not assume they pass.
-3. **On failure:** fix and re-run. If the same failure persists after 2 fix attempts, STOP and report honestly (see `escalation rules` below).
+3. **On failure:** fix and re-run — a failing check on a sound approach is repaired, not reverted. Stop after **2 attempts**: if the same failure persists, or fixes keep landing on new breakage, revert or stash and regenerate from a clearer constraint set (`speed-tiered-workflow.md` Absolute Rule 4), then report what the red run showed. Never a third blind attempt.
 3a. **Docs-Decision (triggers only):** if the change matches a row in the Trigger table in `documentation-strategy.md`, update steering docs + freshness headers NOW, same iteration, and report `Docs: updated <files>`. Non-trigger changes require no Docs line and no `N/A` justification — silence is the correct non-trigger response.
 4. **Report with evidence:** state WHAT was verified, HOW (exact command or check), and the RESULT. Example: "Ran `npm test` — 14 passed, 0 failed. Loaded `/login` via headless e2e — form submits, error message shows on empty submit." Tier 0: one line suffices. Vibe mode: one line + anything NOT verified. standard/guarded: full block + Docs line when triggered.
 5. **State what was NOT verified** if any part of the table could not be run (e.g., no dev server available). Never silently omit it.
@@ -74,7 +74,7 @@ Never as routine per-change verification. Never loop captures — one capture, o
 
 - NEVER claim tests pass without running them.
 - NEVER describe expected behavior as observed behavior.
-- If verification is impossible in the current environment, say so explicitly and list exactly what the user should check manually.
+- If verification is impossible in the current environment, say so explicitly and name the AI-runnable or command-runnable check that would close the gap. Do not hand a code review to the owner: the owner cannot read code.
 - A partial result reported truthfully beats a full claim reported falsely.
 
 ## Anti-Patterns
@@ -87,7 +87,7 @@ Never as routine per-change verification. Never loop captures — one capture, o
 | "Tests should pass" / "This will work" | Prediction presented as evidence |
 | Running only the happy path | Most bugs live in error/empty states |
 | Skipping RTL check on UI work | RTL regressions are invisible in LTR and are the #1 bilingual-app defect |
-| Fixing forward silently after failure | User loses track of what changed during debugging |
+| Debugging forward past the second failed fix | The approach is the problem; a revert plus better constraints beats a third blind attempt |
 | Screenshot/vision checks as routine per-change verification | Most expensive, slowest instrument; deterministic tests are stronger evidence (see Cost Tiering) |
 | Verifying data/logic state through the screen when a DB query or test can assert it directly | Wastes tokens and time; indirect observation is also less reliable |
 | Gate exit code read from a pipeline tail (`… \| Select-Object`; `$LASTEXITCODE` is the formatter's) | Run unpiped; redirect to a log and echo `$LASTEXITCODE` / `$?` |

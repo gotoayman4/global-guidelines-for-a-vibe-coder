@@ -19,7 +19,7 @@
   → Source: `03-git-and-ci/environment-management.md`
 - **Input Validation.** ALL user input MUST be validated at system boundaries (API controllers, DTOs). Trust no client-side validation.
   → Source: `02-engineering-practices/error-handling-philosophy.md`
-- **Authentication Code Review.** Auth code gets the highest scrutiny in EVERY mode: AI self-review + an automated auth-flow test at each milestone. Security never relaxes; no human reviewer is required.
+- **Authentication Code Review.** Auth code gets the highest scrutiny in EVERY mode: AI self-review + an automated auth-flow test at each milestone, plus an independent fresh-session AI review before shipping any auth change. Security never relaxes; no human reviewer is required.
   → Source: `02-engineering-practices/security-engineering.md`
 - **Dependency Audit and Version Pinning.** AI-suggested package names/versions are unverified — before installing any NEW dep or major bump, verify latest stable via web/npm (skip re-search for versions already verified here). Pin older majors only with an ADR.
   → Source: `00-ai-fundamentals/ai-security-governance.md`
@@ -33,7 +33,7 @@
 
 - **Mode Sets Test Depth.** vibe: smoke per iteration + regression only when the same path bites twice or at milestone — no suite. standard: behavioral tests on critical/high-risk code, regression every fix, integration at boundaries. guarded: full pyramid + critical-flow E2E before ship. Ship boundary (ALL modes): login/payments/permissions/persistence verified by automated E2E against the deployed target, LTR and RTL. Full matrix: `speed-tiered-workflow.md`.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. standard/guarded: written first for critical features, same-iteration otherwise, never deferred past a sprint; a regression test with every fix. vibe exempt until milestone/second-bite.
+- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. standard/guarded: written first for critical features, same-iteration otherwise, never deferred past a sprint; a regression test with every fix.
   → Source: `02-engineering-practices/testing-philosophy.md`
 - **No Code Without Verification + Evidence Before "Done".** Every change is unverified until exercised — "it compiled" is false; NEVER claim tests pass without running them, or present predictions as observations. Tiers: 0 trivial = lint + one line; 1 default = tests/type-check/lint/parity; 2 milestone = headless E2E on DOM/data/DB (no screenshots); 3 rare = visual, sign-off or untestable layout only. Report WHAT/HOW/RESULT + anything NOT verified. Detail: `agent-verification-loop.md`.
   → Source: `02-engineering-practices/agent-verification-loop.md`
@@ -42,7 +42,7 @@
 
 ## Git (Load for All Code Changes)
 
-- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work, never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope — one sentence or split it. Checkpoint-commit before major multi-file AI operations. Revert broken AI output immediately — regenerate with better constraints, never debug-in-place.
+- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work, never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope — one sentence or split it. Checkpoint-commit before major multi-file AI operations. Revert broken AI output (a wrong approach, not a failing check) and regenerate with better constraints; stop after two failed fixes.
 - **No Branch Mandate; Protect Main.** Single-agent work stays on the current branch (parallel agents get their own; merge sequentially with self-review between merges). Main MUST stay deployable: branch protection, no force-push, green local gate before merge. Env files never committed — `.env` gitignored, `.env.example` committed.
 
 ## Architecture (Load for New Features)
@@ -53,7 +53,7 @@
   → Source: `04-architecture/backend-architecture.md`
 - **Pagination for Lists.** Every list endpoint MUST support pagination — no exceptions past 50 items.
   → Source: `04-architecture/api-design-standards.md`
-- **AI-Readable Code Documentation (ICDC).** Every file starts with a file-level context comment; every exported symbol has JSDoc/TSDoc. Non-trivial code carries INTENT / CONSTRAINT / DECISION / CAVEAT. NEVER restate what the code does — comments add CONTEXT only.
+- **AI-Readable Code Documentation (ICDC).** Headers and JSDoc/TSDoc only where purpose, constraints, or a public contract are not inferable from the name or signature. Non-trivial code carries INTENT / CONSTRAINT / DECISION / CAVEAT. NEVER restate what the code does — comments add CONTEXT only.
   → Source: `02-engineering-practices/ai-code-documentation.md`
 - **One Source of Truth Per State Type.** Server state in the data-fetching library (React Query / SWR), form state in the form library — NEVER duplicate across stores. Query keys are raw tuples `['entity', params] as const` — never stringified JSON or path strings; centralize key constants.
   → Source: `04-architecture/state-management.md`
@@ -75,11 +75,11 @@
 
 ## AI Collaboration (Load for Every Session)
 
-- **AI Output is Draft, Not Final.** Treat first AI output as a draft; iterate WHEN it misses acceptance criteria — a correct first output needs no second pass.
+- **AI Output is Draft, Not Final.** Treat first AI output as a draft; iterate WHEN it misses acceptance criteria.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Speed Is a Metric, Not a Vibe.** Record intent → first running slice each iteration. Correct-but-slow is a defect like fast-and-broken-auth — scale ceremony with WORLD.md mode; never scale security or honesty.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Acceptance Criteria + Pattern References.** Every prompt states "correct when [verifiable conditions]" (vibe MAY compress to 3 bullets for small work) and points at 2–3 existing files as pattern templates — without references, AI invents inconsistent patterns.
+- **Acceptance Criteria + Pattern References.** Every prompt states "correct when [verifiable conditions]" (vibe MAY compress to 3 bullets for small work) and points at 2–3 existing files as pattern templates.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Fresh Session Per Feature.** One fresh session per feature — 100-message threads produce constraint-violating output. Transfer via a 3-sentence handoff, not chat history.
   → Source: `00-ai-fundamentals/context-management-strategy.md`
@@ -96,7 +96,7 @@
 - **Reference Machine Output, Never Transcribe.** Verification numbers go into artifacts (`docs/gate-receipts/…`) and are cited by path — hand-copied figures decay silently.
   → Source: `07-documentation/documentation-strategy.md`
 - **Globalize Lessons.** A mistake worth never repeating becomes a proposal in `guidelines-proposals/YYYY-MM-DD-<slug>.md` naming the event, the preventing rule, the target guideline, **and the guard that fails if the lesson is unlearned** — a lesson with no failing check is a wish, not a control.
-  → Source: `01-workflow-methodology/development-workflow.md`
+  → Source: `07-documentation/documentation-strategy.md`
 
 ## RTL & Arabic (Always Active — All Projects Are Bilingual)
 
@@ -125,7 +125,7 @@
 1. Read this AGENTS.md — always
 2. Read WORLD.md — note `mode`; it scales how much you read, how many steering files a trigger writes, and what the per-push gate runs
 3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md`
-4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load the primary files for the task
+4. Need a file you cannot name? Look up the task type in `_guidelines/_index/MASTER_INDEX.md`
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -166,8 +166,8 @@ npm run lint         # ESLint
 npm run type-check   # TypeScript check
 npm test             # unit tests
 npm run test:e2e     # E2E tests
-npm run gate:fast    # lint + type-check + changed tests — the loop between edits, NOT evidence
-npm run gate:receipt # full gate → docs/gate-receipts/<UTC-stamp>.md (cited by path, never copied)
+npm run gate:fast    # lint + type-check + changed tests — edit loop; the pre-push gate in vibe
+# gate receipt: full-gate output → docs/gate-receipts/<UTC-stamp>.md (a real run; cite the path)
 ```
 
 Before suggesting any code change, verify it would pass `lint` and `type-check`.
@@ -180,7 +180,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 1. **Mirror** the guidelines into `_guidelines/` — `npm run sync:all` (or `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` from the central repo). **An existing mirror is never assumed current:** `npm run sync:drift` compares the mirror against the source hash and fails on drift. "Skip if the mirror exists" is how a project runs last month's rules.
 2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
-3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD, narrow, or retire rules; only a MAJOR change to AGENTS.md (removing/editing a global baseline rule, or the security section) needs human approval.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD, narrow, or retire rules; only a MAJOR change to AGENTS.md (removing/editing a global baseline rule, or the security section) needs an explicit recorded owner decision — governance, not code review.
 
 ### Maintenance
 

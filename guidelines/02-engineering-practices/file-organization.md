@@ -16,7 +16,7 @@ AI produces better output in small focused files and degrades in monolithic ones
 |---|---|---|
 | Planning | ≤300 lines per file | Forces early decomposition (25% buffer) |
 | Enforcement | ≤400 lines per file | Hard limit via ESLint `max-lines` |
-| Post-implementation | >400 lines → REFACTOR down to <300 immediately, verify before next task |
+| Post-implementation | >400 lines → split to the 400 lint bound before proceeding; at 400, record the <300 refactor as debt and split before the NEXT feature touches the file (or a scheduled pass) | Never stall the current change mid-slice; the hard 400 bound stays enforced by ESLint |
 
 **Source code only** (.ts/.tsx/.js/.jsx/.css/…). Excluded: docs (.md), config (.json/.yaml), generated/code-gen output, declarative data files (routing tables, locale data, seeds), CI configs.
 

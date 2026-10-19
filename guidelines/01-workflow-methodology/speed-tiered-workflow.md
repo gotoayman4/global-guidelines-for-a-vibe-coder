@@ -55,7 +55,7 @@ The hook reads the declared `mode`, so a project escalates its gate by escalatin
 1. **Security never relaxes.** SQLi prevention, secrets, input validation, auth review, CORS, security headers, and magic-byte upload checks apply identically in every mode.
 2. **No fake evidence.** NEVER claim tests pass without running them; NEVER present predictions as observations.
 3. **Ship boundary hardens quality.** Before any release or milestone exit: critical-flow checks (login, payments, data persistence) verified in both LTR and RTL, and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A vibe loop may be loose; a ship may not.
-4. **Revert broken output.** Debugging in place is forbidden in every mode — revert or stash, then regenerate with better constraints.
+4. **Fix the change; revert the approach.** A failing check on a sound change is fixed and re-run (two attempts — `agent-verification-loop.md`). Wrong output — the approach itself is broken, or fixes keep landing on new breakage — is reverted or stashed and regenerated with better constraints. Never debug forward past the second failed fix.
 5. **Speed is measured.** Record intent → first running slice (minutes) per iteration (see `workflow-friction-audit.md` buckets). A mode that feels fast but measures slow is misconfigured.
 
 ## Mode Transitions

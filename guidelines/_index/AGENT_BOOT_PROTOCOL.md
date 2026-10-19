@@ -81,7 +81,7 @@ Using the task-type table in MASTER_INDEX.md:
 - Do NOT skip MASTER_INDEX.md — you don't know what you don't know
 - Do NOT guess file names — consult the index
 - Do NOT load full files when context is tight — use compact extracts
-- **Who May Change What in AGENTS.md.** AI MAY freely ADD, narrow, or retire project-specific rules. The ONE human gate: a **MAJOR** change to AGENTS.md — removing or editing an existing **global/baseline** rule, or changing the security section — requires explicit human approval. Adding or narrowing rules never does.
+- **Who May Change What in AGENTS.md.** AI MAY freely ADD, narrow, or retire project-specific rules. The ONE governance gate: a **MAJOR** change to AGENTS.md — removing or editing an existing **global/baseline** rule, or changing the security section — requires an explicit, recorded owner decision. This is a governance choice, not a code review; the owner does not read the diff, and no human reviewer is required. Adding or narrowing rules never triggers the gate.
 
 ---
 

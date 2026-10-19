@@ -19,7 +19,7 @@ tags: [security, governance, owasp]
 5. **MCP least privilege by environment:** development = full local access · staging = read-only DB · **production = read-only logs/metrics, never write**. Whitelist tools per agent (`--allowedTools` / permission settings) — never "all tools". Review each MCP call: right tool? correct scoped parameters? side effects?
 6. **Agent secrets isolation:** block agents from `.env`/`credentials/` via ignore files; separate MCP credentials per environment (dev creds never match production); no shared sessions across environments.
 7. **Git hygiene:** pre-commit secret scanning (git-secrets/talisman) + CI commit scanning; a committed secret is ROTATED immediately, not just deleted from history.
-8. **Security review checklist applies to every AI-generated change before merge** (see consolidated checklist in `security-engineering.md`).
+8. **The security checklist is run by an AI reviewer on every AI-generated change before merge** (see consolidated checklist in `security-engineering.md`). No human security reviewer exists or is required; for auth and permission changes the independent fresh-session review in `code-review-workflow.md` is mandatory.
 9. **AI security fixes get the same scrutiny too** — AI can introduce new vulnerabilities while fixing old ones; re-run the security checklist on every fix.
 
 ## Anti-Patterns

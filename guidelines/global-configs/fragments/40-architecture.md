@@ -6,7 +6,7 @@
   → Source: `04-architecture/backend-architecture.md`
 - **Pagination for Lists.** Every list endpoint MUST support pagination — no exceptions past 50 items.
   → Source: `04-architecture/api-design-standards.md`
-- **AI-Readable Code Documentation (ICDC).** Every file starts with a file-level context comment; every exported symbol has JSDoc/TSDoc. Non-trivial code carries INTENT / CONSTRAINT / DECISION / CAVEAT. NEVER restate what the code does — comments add CONTEXT only.
+- **AI-Readable Code Documentation (ICDC).** Headers and JSDoc/TSDoc only where purpose, constraints, or a public contract are not inferable from the name or signature. Non-trivial code carries INTENT / CONSTRAINT / DECISION / CAVEAT. NEVER restate what the code does — comments add CONTEXT only.
   → Source: `02-engineering-practices/ai-code-documentation.md`
 - **One Source of Truth Per State Type.** Server state in the data-fetching library (React Query / SWR), form state in the form library — NEVER duplicate across stores. Query keys are raw tuples `['entity', params] as const` — never stringified JSON or path strings; centralize key constants.
   → Source: `04-architecture/state-management.md`

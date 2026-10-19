@@ -87,7 +87,7 @@ A project consumes this doc set through a `_guidelines/` mirror. A mirror is a c
 1. **One archive per quarter, not one per document:** `docs/changelog/<YYYY>-Q<n>.md`, newest file holding the newest entries. A new quarter starts a new file; old files are never edited.
    A per-document archive (`prd-2026-Q4.md`, `roadmap-2026-Q4.md`, `agents-2026-Q4.md`) writes one event four times — the "one canonical copy" violation this document outlaws for *rules*, applied to *events*. The event names its doc in a `**Doc:**` column instead.
 2. **The live file keeps a pointer heading** that preserves the section's old anchor (`## 4. …` stays `## 4. …`), states the archive path as a literal repo-relative path, and stops. Nothing else lives there.
-3. **Entry format:** one `### YYYY-MM-DD — D<n> · <title>` heading, then one bullet carrying the derived facts — `**Mode:** … · **Doc:** … · **Commit:** … · **Receipt:** …`. `npm run slice:close` writes the whole entry. A human adds prose only for a reversal or an incident, and only in addition to the derived line.
+3. **Entry format:** one `### YYYY-MM-DD — D<n> · <title>` heading, then one bullet carrying the derived facts — `**Mode:** … · **Doc:** … · **Commit:** … · **Receipt:** …`. `npm run slice:close` writes the whole entry. Prose is added only for a reversal or an incident, and only in addition to the derived line.
    **Wrap every entry:** no line over 400 characters. A single-line bullet is unreadable in a diff, an editor, and a screen reader.
 4. **Relocation is a move, not a rewrite.** Proves out: extract every dated row from the pre-change version (`git show HEAD:<path>`) and assert each one still appears verbatim in the union of live doc + archives. A "tidied up" history is a destroyed history — the rows are the record of decisions, and the append-only rule exists so a reversal can be cited.
 5. **Measure before acting:** `node _guidelines/global-configs/scripts/measure-boot-budget.js . --history-warn 25` prints tokens per boot file, the share of each that is dated history, and the longest paragraph and longest table row. Act on >25%, not on a feeling.
@@ -106,7 +106,7 @@ A project consumes this doc set through a `_guidelines/` mirror. A mirror is a c
 
 ## Trigger Table (When Steering MUST Change)
 
-Each row names **exactly one file per mode** — the cheapest home that keeps the fact findable. The row is the *trigger*; the declared mode decides how much of it is written. A change that appears to need two writes *in the same mode* means one document is repeating a fact it should link to; fix the duplication, never do the double write.
+Each row names the **one home** that keeps the fact findable in that mode; higher modes add the supporting site the column names, never a second copy of the same fact. A change that appears to need two equally authoritative writes in one mode means one document is repeating a fact it should link to; fix the duplication, never do the double write.
 
 | Trigger | vibe — 1 write | standard — 2 writes | guarded |
 |---|---|---|---|
@@ -138,7 +138,7 @@ A mode that removes the **record** is not fast, it is amnesiac. A mode that keep
 
 ## Freshness — Written, Never Typed
 
-`WORLD.md` and `docs/AI_ARCHITECTURE.md` carry `**Last Updated:** YYYY-MM-DD | **Commit:** short SHA | **Change:** one line` **because a machine writes it**. `npm run slice:close` derives all three facts from the repository — the date, the short SHA, the slice title — and rewrites the line in place. A human typing a derived fact is the exact failure mode this document exists to prevent: the referenced project ran a header-bumping script that wrote `**Commit:** nosha` for months, and nothing failed.
+`WORLD.md` and `docs/AI_ARCHITECTURE.md` carry `**Last Updated:** YYYY-MM-DD | **Commit:** short SHA | **Change:** one line` **because a machine writes it**. `npm run slice:close` derives all three facts from the repository — the date, the short SHA, the slice title — and rewrites the line in place **only when the slice names that document with `--doc`**. Bumping every freshness doc on every slice would make the line mean "some slice closed", not "this document changed". Typing a derived fact by hand is the exact failure mode this document exists to prevent: the referenced project ran a header-bumping script that wrote `**Commit:** nosha` for months, and nothing failed.
 
 `AGENTS.md` and `README.md` carry none — they change only on a trigger and git already dates them. A freshness line that no script writes is worse than no line at all: it reads as checked.
 

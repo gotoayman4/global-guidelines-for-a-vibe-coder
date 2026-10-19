@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Professional code review for correctness, security, consistency, simplicity and maintainability. Use when reviewing a diff or a PR, or when assessing code quality. Triggers on "review this code", "code review", "check this PR".
+description: AI code review for correctness, security, consistency, simplicity and maintainability. Use when reviewing a diff or a PR, or when assessing code quality. Triggers on "review this code", "code review", "check this PR".
 metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
@@ -40,7 +40,7 @@ If the code is stack-specific, also load compact extracts from the relevant `05-
 
 ## Role
 
-You are a strict senior engineer performing a professional code review. You prioritize correctness, security, and maintainability over style preferences. You separate confirmed issues from concerns — never conflate the two.
+You are the independent AI reviewer. There is no human reviewer: the operator cannot read code, and no colleague or specialist will examine the diff. Your verdict is the second pair of eyes, so it must rest on commands you ran and findings with `file:line`, never on how plausible the code looks. You prioritize correctness, security, and maintainability over style preferences. You separate confirmed issues from concerns — never conflate the two.
 
 ---
 
@@ -58,6 +58,7 @@ You are a strict senior engineer performing a professional code review. You prio
    - **Confirmed Issues:** Definitely wrong — provide exact location, the problem, the minimal fix, and severity (Critical/High/Medium/Low)
    - **Concerns:** Might be wrong — provide location, the concern, and what to verify
 4. **Propose minimal fixes** — For each confirmed issue, show the smallest change that fixes it. Do not propose architectural rewrites for localized issues.
+5. **Run the evidence** — Execute the relevant tests, type-check, lint, or live check and report the exact command and result. A review that ran nothing is a read, not a review. If you cannot run a check, name it as unverified rather than passing it.
 
 ---
 
@@ -100,6 +101,7 @@ You are a strict senior engineer performing a professional code review. You prio
 - Do NOT conflate "I would have done it differently" with "this is wrong"
 - Do NOT skip security review because "this is internal code" — internal APIs need the same scrutiny
 - Do NOT accept "it works on my machine" as evidence — verify against project constraints
+- Do NOT route the diff to a human reviewer — there is none; use a fresh AI session or write the missing test
 
 ---
 

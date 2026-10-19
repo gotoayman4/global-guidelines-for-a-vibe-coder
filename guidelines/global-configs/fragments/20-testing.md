@@ -2,7 +2,7 @@
 
 - **Mode Sets Test Depth.** vibe: smoke per iteration + regression only when the same path bites twice or at milestone — no suite. standard: behavioral tests on critical/high-risk code, regression every fix, integration at boundaries. guarded: full pyramid + critical-flow E2E before ship. Ship boundary (ALL modes): login/payments/permissions/persistence verified by automated E2E against the deployed target, LTR and RTL. Full matrix: `speed-tiered-workflow.md`.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. standard/guarded: written first for critical features, same-iteration otherwise, never deferred past a sprint; a regression test with every fix. vibe exempt until milestone/second-bite.
+- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. standard/guarded: written first for critical features, same-iteration otherwise, never deferred past a sprint; a regression test with every fix.
   → Source: `02-engineering-practices/testing-philosophy.md`
 - **No Code Without Verification + Evidence Before "Done".** Every change is unverified until exercised — "it compiled" is false; NEVER claim tests pass without running them, or present predictions as observations. Tiers: 0 trivial = lint + one line; 1 default = tests/type-check/lint/parity; 2 milestone = headless E2E on DOM/data/DB (no screenshots); 3 rare = visual, sign-off or untestable layout only. Report WHAT/HOW/RESULT + anything NOT verified. Detail: `agent-verification-loop.md`.
   → Source: `02-engineering-practices/agent-verification-loop.md`

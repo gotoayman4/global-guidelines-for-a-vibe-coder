@@ -17,7 +17,7 @@ Define how AI coding assistants should discover, prioritize, and load guideline 
 ## Core Principles
 
 1. **Load only what the task requires.** Never load the entire knowledge base.
-2. **Start with MASTER_INDEX.md.** Always read it first to understand what's available.
+2. **Use `MASTER_INDEX.md` as the map, not the required first read.** The project's `AGENTS.md` is the always-loaded floor; open the index only to discover files the task needs.
 3. **Match by tags, not by guessing.** Use the tag system to find relevant guidelines.
 4. **Load primary before secondary.** Primary files are mandatory for the task; secondary are supporting.
 5. **Prefer compact extracts when context is tight.** Use the rule-extraction pattern to derive compact versions.
@@ -87,7 +87,7 @@ For each primary file, check the "Cross-Reference Graph" section of MASTER_INDEX
 ### Step 5: Progressive Disclosure
 
 If unsure about task scope:
-1. Load MASTER_INDEX.md (~500 tokens) — always
+1. Load `MASTER_INDEX.md` once at session start — it is a navigation index, not a guideline, and its size grows with the repo; do not re-read it per task
 2. Load the top 1-2 primary files
 3. If more detail needed, load dependencies and secondary files
 4. If context runs low, switch to compact extracts
@@ -102,7 +102,7 @@ If unsure about task scope:
 | Guessing file names without consulting index | May load wrong version or miss critical dependencies |
 | Loading only stack-specific files | May miss universal engineering patterns that apply |
 | Loading full versions when context is tight | Compact extracts exist for this exact reason |
-| Skipping MASTER_INDEX.md | You don't know what you don't know |
+| Treating `MASTER_INDEX.md` as required reading | It is a map, not guidance; a self-contained `AGENTS.md` may already answer the task — open the index only to discover files |
 
 ---
 
@@ -111,7 +111,7 @@ If unsure about task scope:
 ### Beginner Mode (Non-Coder)
 When the user has zero coding experience:
 1. Load `beginner-vibe-coder-guide.md` (~1,400 tokens)
-2. Load `MASTER_INDEX.md` (~500 tokens)
+2. Load `MASTER_INDEX.md`
 3. Load `WORLD.md` (project-specific product intent)
 4. Expand to `development-workflow.md` and `cost-optimization-strategy.md` as needed
 
@@ -129,7 +129,7 @@ When the project uses multiple AI tools simultaneously:
 When context is tight, use this rule-extraction pattern to derive compact versions:
 
 1. Take the full guideline
-2. Extract only: **Core Principles** (numbered list) + **Anti-Patterns** (table)
+2. Extract only: the file's **Key Takeaways** (or its numbered core principles, where that is the heading) + **Anti-Patterns** (table)
 3. Skip: Purpose, Detailed Guidance, Decision Framework, Examples, Cross-References
 4. Target: 200-500 tokens per file
 

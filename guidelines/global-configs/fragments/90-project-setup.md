@@ -7,7 +7,7 @@
 1. Read this AGENTS.md — always
 2. Read WORLD.md — note `mode`; it scales how much you read, how many steering files a trigger writes, and what the per-push gate runs
 3. UI/UX work: also load `_guidelines/02-engineering-practices/bidirectional-design-principles.md`
-4. Look up task type in `_guidelines/_index/MASTER_INDEX.md`; load the primary files for the task
+4. Need a file you cannot name? Look up the task type in `_guidelines/_index/MASTER_INDEX.md`
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -48,8 +48,8 @@ npm run lint         # ESLint
 npm run type-check   # TypeScript check
 npm test             # unit tests
 npm run test:e2e     # E2E tests
-npm run gate:fast    # lint + type-check + changed tests — the loop between edits, NOT evidence
-npm run gate:receipt # full gate → docs/gate-receipts/<UTC-stamp>.md (cited by path, never copied)
+npm run gate:fast    # lint + type-check + changed tests — edit loop; the pre-push gate in vibe
+# gate receipt: full-gate output → docs/gate-receipts/<UTC-stamp>.md (a real run; cite the path)
 ```
 
 Before suggesting any code change, verify it would pass `lint` and `type-check`.
@@ -62,7 +62,7 @@ Before suggesting any code change, verify it would pass `lint` and `type-check`.
 
 1. **Mirror** the guidelines into `_guidelines/` — `npm run sync:all` (or `pwsh -File guidelines\global-configs\scripts\sync-guidelines.ps1 -ProjectPath .` from the central repo). **An existing mirror is never assumed current:** `npm run sync:drift` compares the mirror against the source hash and fails on drift. "Skip if the mirror exists" is how a project runs last month's rules.
 2. **Create** as `AGENTS.md` in the project root; **search `[FILL]`** and replace ALL; set `mode` in WORLD.md.
-3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD, narrow, or retire rules; only a MAJOR change to AGENTS.md (removing/editing a global baseline rule, or the security section) needs human approval.
+3. **Review** global rules — remove any that don't apply; add project mandates. **Commit.** AI may freely ADD, narrow, or retire rules; only a MAJOR change to AGENTS.md (removing/editing a global baseline rule, or the security section) needs an explicit recorded owner decision — governance, not code review.
 
 ### Maintenance
 

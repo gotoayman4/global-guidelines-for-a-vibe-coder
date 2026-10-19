@@ -14,7 +14,7 @@ AI generates code fast and destabilizes codebases fast. Granular commits and dis
 
 1. **Commit after every working increment** — granular commits = cheap rollbacks. NEVER commit broken code "to save progress" (stash/WIP branch instead). Never end a session without committing.
 2. **Conventional commit messages with type+scope** (`feat(auth): …`) — future sessions need the context. If you can't summarize the change in one sentence, the commit is too large; split it.
-3. **Revert broken AI output immediately** — don't debug in place; regenerate with better constraints. Checkpoint-commit before any major AI operation (`checkpoint: pre-auth-refactor`).
+3. **Revert wrong AI output** — a broken approach, not a failing check on a sound one — and regenerate with better constraints; never debug forward past two failed fixes. Checkpoint-commit before any major AI operation (`checkpoint: pre-auth-refactor`).
 4. **Parallel agents get their own branches** — never share a branch between concurrent agents; merge sequentially with an AI self-review between merges. Single-agent feature work does NOT require a new branch or worktree.
 5. **Branch protection on main:** no force-push, and the local CI gate must be green before merge. PR reviews and cloud status checks are optional team additions — never a requirement. Agents never force-push.
 6. **Pre-commit hooks MANDATORY** (husky + lint-staged): ESLint `--max-warnings 0`, `tsc --noEmit`, prettier — configured in package.json, auto-installed via `npm run prepare`. Skipping hooks (`--no-verify`) forbidden for main merges. Note: lint-staged passes filenames but `tsc` type-checks the whole project when tsconfig exists — expected; full-project check is the safe default.

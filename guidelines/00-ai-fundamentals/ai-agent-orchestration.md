@@ -8,7 +8,7 @@ tags: [agents, orchestration, parallel]
 
 ---
 
-The vibe coder's role shifts from prompt writer to **specification author + quality gate**. Agent brief quality is the single biggest lever — sloppy briefs fail across all agents simultaneously.
+The vibe coder's role shifts from prompt writer to **specification author + decision maker**. Agent brief quality is the single biggest lever — sloppy briefs fail across all agents simultaneously. Quality is enforced by automated gates and independent AI review, not by the operator reading the code; every role in the table below is an AI agent, and the operator never acts as a code reviewer.
 
 ## Orchestration Patterns
 
@@ -16,7 +16,7 @@ The vibe coder's role shifts from prompt writer to **specification author + qual
 |---|---|---|
 | **Sequential agent** | One agent, AI self-review at each step | Small tasks, fixes, learning |
 | **Parallel agents** | 2–6 agents on disjoint scopes; gates between | Complex multi-module features |
-| **Agent team** | implementer + reviewer + tester + auditor | Production-critical code |
+| **Agent team** | implementer + independent AI reviewer + tester + auditor | Production-critical code |
 | **Background agents** | Long autonomous runs, sandboxed | Boilerplate, test suites, docs |
 | **Arena mode** | Same brief to 2–3 models; synthesize best | High-stakes architecture decisions |
 | **Sequential gates** | ARCHITECT → IMPLEMENT → TEST → SECURITY → DOCUMENT, automated gates at critical-path stages only | Critical paths |

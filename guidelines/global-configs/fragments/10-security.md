@@ -6,7 +6,7 @@
   → Source: `03-git-and-ci/environment-management.md`
 - **Input Validation.** ALL user input MUST be validated at system boundaries (API controllers, DTOs). Trust no client-side validation.
   → Source: `02-engineering-practices/error-handling-philosophy.md`
-- **Authentication Code Review.** Auth code gets the highest scrutiny in EVERY mode: AI self-review + an automated auth-flow test at each milestone. Security never relaxes; no human reviewer is required.
+- **Authentication Code Review.** Auth code gets the highest scrutiny in EVERY mode: AI self-review + an automated auth-flow test at each milestone, plus an independent fresh-session AI review before shipping any auth change. Security never relaxes; no human reviewer is required.
   → Source: `02-engineering-practices/security-engineering.md`
 - **Dependency Audit and Version Pinning.** AI-suggested package names/versions are unverified — before installing any NEW dep or major bump, verify latest stable via web/npm (skip re-search for versions already verified here). Pin older majors only with an ADR.
   → Source: `00-ai-fundamentals/ai-security-governance.md`

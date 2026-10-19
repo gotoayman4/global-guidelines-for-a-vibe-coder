@@ -11,7 +11,7 @@
 
 **Last Updated:** [FILL: YYYY-MM-DD] | **Commit:** [FILL: short SHA] | **Change:** [FILL: one line]
 
-> **Written, never typed:** `npm run slice:close` derives all three facts and rewrites this line in place. A human updating it by hand is the failure mode it exists to prevent. Only `WORLD.md` and `docs/AI_ARCHITECTURE.md` carry it — `AGENTS.md` and `README.md` change on a trigger and git dates them.
+> **Written, never typed:** `npm run slice:close` derives all three facts and rewrites this line in place. Updating it by hand is the failure mode it exists to prevent. Only `WORLD.md` and `docs/AI_ARCHITECTURE.md` carry it — `AGENTS.md` and `README.md` change on a trigger and git dates them.
 
 ## Speed Mode
 

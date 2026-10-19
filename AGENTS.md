@@ -181,7 +181,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - No `execSync` / `execFileSync` / piped `spawnSync` in scripts — use `runSync` from `global-configs/scripts/lib/run-sync.js`
 - No unregistered files — every guideline file MUST be in `guidelines/_index/MASTER_INDEX.md`
 - No `// TODO` or `// FIXME` without explicit permission
-- No rule, template, or skill may require a human reviewer or approver — the single exception is a **MAJOR** change to `AGENTS.md` (see §Maintenance)
+- No rule, template, or skill may require a human code or security reviewer. The single governance gate is a **MAJOR** change to `AGENTS.md`, which requires an explicit recorded owner decision — not a code review (see §Maintenance)
 
 ---
 
@@ -200,7 +200,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - **Quarterly:** Audit skills and templates against source guidelines
 - **When adding a file:** Add front-matter + a `## Cross-References` footer, run `npm run render:index`, check RETRIEVAL_RULES.md
 - **When updating a guideline:** Also update the matching fragment in `global-configs/fragments/`, then `npm run render:starters`
-- **Who may change this file.** AI MAY freely make incremental changes — add a rule, narrow a rule, fix wording, retire a superseded rule. A **MAJOR** change requires human approval: removing or editing a global baseline rule, changing the Security section, or altering the authority hierarchy. Nothing else in this repo needs a human reviewer.
+- **Who may change this file.** AI MAY freely make incremental changes — add a rule, narrow a rule, fix wording, retire a superseded rule. A **MAJOR** change requires an explicit, recorded owner decision: removing or editing a global baseline rule, changing the Security section, or altering the authority hierarchy. This is a governance decision, not a code review — the owner does not read the diff. Nothing else in this repo needs a human reviewer.
 
 ---
 

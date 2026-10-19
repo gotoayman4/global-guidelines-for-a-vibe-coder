@@ -16,7 +16,7 @@ tags: [security, auth, xss, csp]
 1. Passwords: bcrypt or argon2 (never MD5/SHA1/SHA256) · min 8 chars with upper+number+special · login rate limit 5/min per IP · temporary lockout after 10 failures. Never store/log/return plaintext or hashes.
 2. Sessions/tokens: JWT expiration 15–60 min + refresh rotation; refresh tokens in httpOnly cookies (never localStorage); invalidation on logout/password change; CSRF protection on state-changing requests.
 3. OAuth: validate state parameter, whitelist redirect_uri, verify audience/issuer, minimum scopes.
-4. **Auth code gets the highest scrutiny.** Authentication code MUST receive careful review in every mode: an AI self-review plus an automated auth-flow test, run at every milestone and again at the ship boundary. The security property (auth works correctly, no bypass) never relaxes, and no human reviewer is required.
+4. **Auth code gets the highest scrutiny.** Authentication code MUST receive careful review in every mode: an AI self-review plus an automated auth-flow test at every milestone, and an independent fresh-session AI review before an auth change ships. The security property (auth works correctly, no bypass) never relaxes, and no human reviewer is required.
 
 **Authorization & data access**
 5. Least privilege on every endpoint: `authenticate` AND `authorize(role)` middleware. Multi-tenant data isolated via database RLS, not application checks alone.
