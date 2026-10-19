@@ -18,6 +18,12 @@
  * docs when a project path is given. Both are checked against the same fact table, so a
  * downstream project is held to the same rule as the templates it was built from.
  *
+ * SCOPE — the MANDATED set, not every file a tool loads. The set is AGENTS.md + WORLD.md +
+ * README.md, plus docs/AI_ARCHITECTURE.md when the project carries it. Tool configs
+ * (DEVTOOLS.md, .github/copilot-instructions.md) are tool-specific mirrors of rules whose home is
+ * AGENTS.md; a rule repeated there for another loader is not a second home, and failing it would
+ * fail a correct project. An absent on-demand document is reported as skipped, never as vacuous.
+ *
  * TWO KINDS OF FACT. Most facts are a heading (`re`). `guard-inventory` is a SHAPE (`match`):
  * two or more distinct `guard:*` scripts named in one document, which is an inventory rather than
  * an incidental mention. Its one home is AGENTS.md, and the reason it exists is that the guard set
@@ -61,8 +67,6 @@ const MANDATED_DOCS = [
   { installed: 'WORLD.md', template: 'WORLD.starter.md' },
   { installed: 'README.md', template: 'README.starter.md' },
   { installed: 'docs/AI_ARCHITECTURE.md', template: 'AI_ARCHITECTURE.starter.md' },
-  { installed: 'DEVTOOLS.md', template: 'DEVTOOLS.starter.md' },
-  { installed: '.github/copilot-instructions.md', template: 'copilot-instructions.starter.md' },
 ];
 
 /**
@@ -128,7 +132,8 @@ const CANONICAL_FACTS = [
 /**
  * Pure census over an explicit corpus.
  * @param {Array<{file: string, content: string}>} docs
- * @param {{templates?: boolean}} [opts] `templates` marks the central starter-template corpus.
+ * @param {{templates?: boolean, missing?: string[]}} [opts] `templates` marks the central starter-template corpus;
+ *   `missing` names mandated docs absent from the corpus (an on-demand doc is skipped, not failed).
  * @returns {{violations: string[], vacuous: string[], notes: string[], skipped: string[]}}
  */
 function census(docs, opts = {}) {
@@ -136,6 +141,7 @@ function census(docs, opts = {}) {
   const vacuous = [];
   const notes = [];
   const skipped = [];
+  const absent = new Set(opts.missing || []);
   for (const fact of CANONICAL_FACTS) {
     if (opts.templates && fact.templates === 'skip') {
       skipped.push(`${fact.id}: not enforced against the starter templates — ${fact.what} has no home in a template that ships [FILL]s`);
@@ -144,6 +150,10 @@ function census(docs, opts = {}) {
     const hit = fact.match || ((content) => fact.re.test(content));
     const holders = docs.filter((d) => hit(d.content)).map((d) => d.file);
     if (!holders.includes(fact.home)) {
+      if (absent.has(fact.home)) {
+        skipped.push(`${fact.id}: ${fact.home} is absent — this fact is not enforced in this corpus`);
+        continue;
+      }
       const line = `${fact.id}: ${fact.home} does not contain ${fact.what} — this fact is unguarded`;
       // A fact whose absence is legitimate is reported, never failed: the alternative is a guard
       // that fails a correct project, and a guard that fails correct work gets deleted.
@@ -202,7 +212,7 @@ function main() {
     process.exit(2);
   }
 
-  const { violations, vacuous, notes, skipped } = census(docs, { templates: useTemplates });
+  const { violations, vacuous, notes, skipped } = census(docs, { templates: useTemplates, missing });
 
   for (const v of violations) console.log(`   ❌ ${v}`);
   for (const v of vacuous) console.log(`   ⚠️  ${v}`);

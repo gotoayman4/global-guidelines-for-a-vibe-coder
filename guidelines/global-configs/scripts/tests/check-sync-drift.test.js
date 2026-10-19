@@ -125,11 +125,34 @@ test('CLI exits 2 when the registry is unreadable rather than reporting success'
   assert.match(result.stderr, /--record requires a project path/);
 });
 
+test('the green report names its own limits instead of claiming projects "run" the rules', () => {
+  // The defect this pins: the report said "all N project(s) run the current rules" after checking
+  // only that files matched and that an npm script mentioned a guard filename. It never read a
+  // run, so it could not know whether anything ran. A control that overstates its evidence is
+  // worse than a narrower one — the operator cannot tell which green claims to trust.
+  const f = fixture('ok');
+  const registry = path.join(f.root, 'sync-projects.json');
+  fs.writeFileSync(registry, JSON.stringify([{ name: 'p', path: f.project }]));
+  const result = runSync(process.execPath, [SCRIPT], {
+    cwd: REPO_ROOT,
+    env: {
+      ...process.env,
+      SYNC_DRIFT_SOURCE: f.source,
+      SYNC_DRIFT_REGISTRY: registry,
+      SYNC_DRIFT_MANIFEST: path.join(f.root, 'no-manifest.json'),
+    },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /delivered copies are current/);
+  assert.match(result.stdout, /execution: NOT VERIFIED/);
+  assert.doesNotMatch(result.stdout, /run the current rules/);
+});
+
 // ─── The skills copy: the artifact that instructs the agent, not the one it consults ─────
 
 const SKILL_BODY = '---\nname: a\ndescription: Activate for a\n---\n';
-/** A generated file that lives in the skills directory and that the sync deliberately never copies. */
-const NOT_A_SKILL = '# generated index — the sync copies SKILL.md files only, never this\n';
+/** A generated file that lives beside the skill directories and that the sync deliberately never copies. */
+const NOT_A_SKILL = '# generated index — it is not inside a skill directory, so it is never delivered\n';
 
 /**
  * A source tree that carries skills, a project whose `_guidelines/` mirror is current, and a
@@ -144,23 +167,31 @@ function skillsFixture(skillsMode) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-skills-'));
   const source = path.join(root, 'guidelines');
   const sourceSkills = path.join(source, 'global-configs', 'skills');
-  fs.mkdirSync(path.join(sourceSkills, 'a'), { recursive: true });
+  fs.mkdirSync(path.join(sourceSkills, 'a', 'references'), { recursive: true });
   fs.writeFileSync(path.join(sourceSkills, 'a', 'SKILL.md'), SKILL_BODY);
+  fs.writeFileSync(path.join(sourceSkills, 'a', 'references', 'note.md'), '# Note\n');
   fs.writeFileSync(path.join(sourceSkills, 'INDEX.md'), NOT_A_SKILL);
 
   const project = path.join(root, 'project');
   const mirrorSkills = path.join(project, '_guidelines', 'global-configs', 'skills');
-  fs.mkdirSync(path.join(mirrorSkills, 'a'), { recursive: true });
+  fs.mkdirSync(path.join(mirrorSkills, 'a', 'references'), { recursive: true });
   fs.writeFileSync(path.join(mirrorSkills, 'a', 'SKILL.md'), SKILL_BODY);
+  fs.writeFileSync(path.join(mirrorSkills, 'a', 'references', 'note.md'), '# Note\n');
   fs.writeFileSync(path.join(mirrorSkills, 'INDEX.md'), NOT_A_SKILL);
 
   if (skillsMode !== 'missing') {
     const skills = path.join(project, '_skills');
-    fs.mkdirSync(path.join(skills, 'a'), { recursive: true });
+    fs.mkdirSync(path.join(skills, 'a', 'references'), { recursive: true });
     fs.writeFileSync(
       path.join(skills, 'a', 'SKILL.md'),
       skillsMode === 'edited' ? SKILL_BODY.replace('Activate for a', 'Activate for something else') : SKILL_BODY
     );
+    if (skillsMode !== 'companion-missing') {
+      fs.writeFileSync(
+        path.join(skills, 'a', 'references', 'note.md'),
+        skillsMode === 'companion-edited' ? '# Note changed\n' : '# Note\n'
+      );
+    }
     if (skillsMode === 'extra') {
       fs.mkdirSync(path.join(skills, 'stale'), { recursive: true });
       fs.writeFileSync(path.join(skills, 'stale', 'SKILL.md'), '---\nname: stale\n---\n');
@@ -177,8 +208,8 @@ function skillsFixture(skillsMode) {
 test('hashTree with a glob keeps only the files the sync actually copies', () => {
   const f = skillsFixture('ok');
   const dir = path.join(f.source, 'global-configs', 'skills');
-  assert.equal(hashTree(dir).count, 2, 'the directory holds the skill and the generated index');
-  assert.equal(hashTree(dir, 'SKILL.md').count, 1, 'only SKILL.md travels to a project');
+  assert.equal(hashTree(dir).count, 3, 'the whole directory holds the skill, its companion and the generated index');
+  assert.equal(hashTree(dir, 'SKILL.md').count, 1, 'the glob still selects only the entry file');
 });
 
 test('skillsMirror derives the target, the source and the glob from the manifest', () => {
@@ -232,6 +263,20 @@ test('compareSkills separates sync, drift and a missing directory', () => {
   assert.equal(compareSkills(missing.project, skillsMirror(missing.source, missing.manifest)).state, 'no-mirror');
 
   assert.equal(compareSkills(ok.project, null), null, 'no declaration, no verdict');
+});
+
+test('a missing or stale COMPANION is drift, not a current skill', () => {
+  // The check used to compare `SKILL.md` only. A skill whose `references/` were never delivered —
+  // or edited centrally since — passed, while the skill's own instructions pointed at the stale file.
+  const missing = skillsFixture('companion-missing');
+  const missingVerdict = compareSkills(missing.project, skillsMirror(missing.source, missing.manifest));
+  assert.equal(missingVerdict.state, 'drift');
+  assert.deepEqual(missingVerdict.missing, ['a/references/note.md']);
+
+  const stale = skillsFixture('companion-edited');
+  const staleVerdict = compareSkills(stale.project, skillsMirror(stale.source, stale.manifest));
+  assert.equal(staleVerdict.state, 'drift');
+  assert.deepEqual(staleVerdict.stale, ['a/references/note.md']);
 });
 
 test('compareSkills compares against the PLAN, not the whole source corpus — the false-drift fix', () => {
@@ -314,6 +359,8 @@ test('CLI exits 1 for a stale, missing or left-behind skills copy', () => {
   assert.equal(run('edited').status, 1, 'a skill edited centrally is not the skill the project loads');
   assert.equal(run('missing').status, 1, 'a missing _skills/ means the AGENTS.md pointer resolves to nothing');
   assert.equal(run('extra').status, 1, 'a skill left behind is a stale skill, not a match');
+  assert.equal(run('companion-missing').status, 1, 'a skill whose references were never delivered is incomplete');
+  assert.equal(run('companion-edited').status, 1, 'a reference edited centrally is stale in the project');
 });
 
 // ─── Controls: the mirror answers "has it", this answers "does it run it" ─────
@@ -343,7 +390,7 @@ test('REVERSAL PROOF: a current mirror whose guard is not wired is unwired', () 
     scripts: { 'guard:breadth': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
   }, null, 2));
   const controls = controlsOf(ok.project, ['check-doc-breadth.js', 'check-guard-tiers.js']);
-  assert.equal(controls.state, 'unwired');
+  assert.equal(controls.state, 'unreferenced');
   assert.deepEqual(controls.missing, ['check-guard-tiers.js']);
 });
 
@@ -354,7 +401,7 @@ test('the control is matched by file, not by script name', () => {
   fs.writeFileSync(path.join(ok.project, 'package.json'), JSON.stringify({
     scripts: { 'lint:guards': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
   }, null, 2));
-  assert.equal(controlsOf(ok.project, ['check-doc-breadth.js']).state, 'wired');
+  assert.equal(controlsOf(ok.project, ['check-doc-breadth.js']).state, 'referenced');
 });
 
 test('a project with no package.json is reported, never failed', () => {

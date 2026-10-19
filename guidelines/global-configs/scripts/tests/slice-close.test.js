@@ -92,6 +92,8 @@ test('wrap keeps every word and never exceeds the width', () => {
 
 test('CLI closes a slice: writes the quarter archive and derives the decision number', () => {
   const dir = makeProject({ agents: '# AGENTS\n\nD7 is the last one.\n' });
+  fs.mkdirSync(path.join(dir, 'docs/gate-receipts'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'docs/gate-receipts/x.md'), '# gate receipt\n\nVERDICT: GREEN\n', 'utf8');
   const result = run([dir, '--title', 'the first slice', '--sha', 'abc1234', '--doc', 'AGENTS.md', '--receipt', 'docs/gate-receipts/x.md']);
   assert.equal(result.status, 0);
   assert.match(result.stdout, /D8 \(derived/);
@@ -105,6 +107,14 @@ test('CLI closes a slice: writes the quarter archive and derives the decision nu
   assert.match(body, /\*\*Doc:\*\* `AGENTS\.md`/);
   assert.match(body, /\*\*Receipt:\*\* `docs\/gate-receipts\/x\.md`/);
   assert.match(body, /- \*\*Mode:/, 'the entry is a bullet, one line per fact');
+});
+
+test('CLI refuses to cite a receipt that does not exist — a pointer is not evidence', () => {
+  const dir = makeProject();
+  const result = run([dir, '--title', 'cites nothing', '--receipt', 'docs/gate-receipts/missing.md']);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /does not name an existing file/);
+  assert.equal(fs.existsSync(path.join(dir, 'docs/changelog')), false, 'nothing is written on a false citation');
 });
 
 test('CLI derives the NEXT number on a second run — the archive is read back, not a counter incremented', () => {
@@ -122,14 +132,23 @@ test('CLI derives the NEXT number on a second run — the archive is read back, 
   assert.match(body, /· second/, 'entries append — the archive is never rewritten');
 });
 
-test('CLI updates the freshness line when the doc carries one, and only then', () => {
+test('CLI updates the freshness line only for the doc the slice names with --doc', () => {
   const dir = makeProject({
     world: '# WORLD\n\n- **mode:** `standard`\n\n**Last Updated:** 2020-01-01 | **Commit:** aaa | **Change:** old\n',
   });
-  run([dir, '--title', 'freshness moves', '--sha', 'ccc']);
+  run([dir, '--title', 'freshness moves', '--sha', 'ccc', '--doc', 'WORLD.md']);
   const world = fs.readFileSync(path.join(dir, 'WORLD.md'), 'utf8');
   assert.match(world, new RegExp(`\\*\\*Last Updated:\\*\\* ${today()} \\| \\*\\*Commit:\\*\\* ccc`));
   assert.match(world, /\*\*Change:\*\* freshness moves/);
+});
+
+test('CLI leaves a freshness line untouched when the slice does not name that doc', () => {
+  const dir = makeProject({
+    world: '# WORLD\n\n- **mode:** `standard`\n\n**Last Updated:** 2020-01-01 | **Commit:** aaa | **Change:** old\n',
+  });
+  const before = fs.readFileSync(path.join(dir, 'WORLD.md'), 'utf8');
+  run([dir, '--title', 'code only', '--sha', 'ccc', '--doc', 'AGENTS.md']);
+  assert.equal(fs.readFileSync(path.join(dir, 'WORLD.md'), 'utf8'), before, 'a code slice does not claim its steering doc changed');
 });
 
 test('CLI --dry-run reports the plan and writes nothing', () => {

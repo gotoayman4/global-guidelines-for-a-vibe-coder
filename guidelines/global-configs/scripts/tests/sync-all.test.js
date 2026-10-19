@@ -28,6 +28,40 @@ function buildFixture({ mirrorState = 'match' } = {}) {
   return { root, sourceRoot, projectPath };
 }
 
+test('syncProject records the delivered skills corpus alongside the guidelines hash', () => {
+  const { sourceRoot, projectPath } = buildFixture({ mirrorState: 'match' });
+  const project = { name: 'demo', path: projectPath };
+  const skills = { hash: 'a'.repeat(64), count: 21 };
+
+  syncProject(project, {
+    sourceRoot,
+    syncScript: 'C:/temp/sync-guidelines.ps1',
+    skills,
+    run: () => ({ status: 0, stdout: '', stderr: '' }),
+    dryRunFlag: false,
+  });
+
+  assert.equal(project.skillsHash, skills.hash);
+  assert.equal(project.skillsFiles, skills.count);
+});
+
+test('syncProject leaves the recorded skills hash untouched when the sync fails', () => {
+  const { sourceRoot, projectPath } = buildFixture({ mirrorState: 'mismatch' });
+  const project = { name: 'demo', path: projectPath, skillsHash: 'previous', skillsFiles: 20 };
+
+  syncProject(project, {
+    sourceRoot,
+    syncScript: 'C:/temp/sync-guidelines.ps1',
+    skills: { hash: 'a'.repeat(64), count: 21 },
+    run: () => ({ status: 0, stdout: '', stderr: '' }),
+    dryRunFlag: false,
+  });
+
+  assert.equal(project.status, 'failed');
+  assert.equal(project.skillsHash, 'previous');
+  assert.equal(project.skillsFiles, 20);
+});
+
 test('syncProject keeps a project failed when the delivered mirror hash differs', () => {
   const { sourceRoot, projectPath } = buildFixture({ mirrorState: 'mismatch' });
   const project = { name: 'demo', path: projectPath };

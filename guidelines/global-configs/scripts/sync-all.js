@@ -34,7 +34,7 @@
  */
 
 const { runSync } = require('./lib/run-sync.js');
-const { hashTree } = require('./check-sync-drift.js');
+const { hashTree, skillsMirror } = require('./check-sync-drift.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -82,6 +82,7 @@ function syncProject(project, options = {}) {
     now = stamp(),
     dryRunFlag = false,
     withGlobalConfigs = false,
+    skills = skillsMirror(sourceRoot),
   } = options;
 
   const name = project.name || project.path;
@@ -128,6 +129,13 @@ function syncProject(project, options = {}) {
       project.lastSynced = now;
       project.contentHash = source.hash;
       project.hashFiles = source.count;
+      // The skills corpus is a second delivered artifact. Recording only the guidelines hash let
+      // the registry keep asserting the previous corpus after a sync that replaced it — a stale
+      // record is the same defect the date-versus-hash rule exists for (check-sync-drift.js).
+      if (skills) {
+        project.skillsHash = skills.hash;
+        project.skillsFiles = skills.count;
+      }
       console.log(`  OK   ${name}`);
       return { ok: true, failed: 0, project };
     }

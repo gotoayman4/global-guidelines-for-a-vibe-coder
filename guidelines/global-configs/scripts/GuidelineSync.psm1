@@ -25,16 +25,52 @@ function Get-ManifestPath {
 }
 
 function Read-Manifest {
+    # Plain ConvertFrom-Json, not -AsHashtable: that switch does not exist on Windows PowerShell 5.1,
+    # the host sync-all.js spawns. The old try/catch made it work by falling through, but every
+    # 5.1 host paid an exception per sync and a future reader could mistake the fallback for
+    # optional. Every consumer below handles both a PSCustomObject and a dictionary.
     $manifestPath = Get-ManifestPath
     if (Test-Path $manifestPath) {
-        $json = Get-Content $manifestPath -Raw -Encoding UTF8
         try {
-            return $json | ConvertFrom-Json -AsHashtable
+            return (Get-Content $manifestPath -Raw -Encoding UTF8) | ConvertFrom-Json -ErrorAction Stop
         } catch {
-            return $json | ConvertFrom-Json
+            Write-Host "  WARNING: sync-manifest.json is not valid JSON — manifest-driven steps skipped." -ForegroundColor Yellow
+            return $null
         }
     }
     return $null
+}
+
+function Read-JsonObject {
+    <#
+    .SYNOPSIS
+        Read a JSON object into a hashtable, or throw — never silently reset it to an empty one.
+
+    .DESCRIPTION
+        The `.vscode/settings.json` merge used to parse with `ConvertFrom-Json -AsHashtable` (absent on
+        Windows PowerShell 5.1) and catch the failure into `@{}`. The merge then rewrote the file with
+        only the keys it knows, deleting every unrelated setting. A parse failure must leave the file
+        untouched: an unreadable settings file is a reason to stop, not a licence to start from zero.
+
+        Absent and empty files legitimately mean "no settings yet", so those return an empty map.
+        Anything else — invalid JSON, or a valid JSON array/scalar — throws.
+    #>
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) { return @{} }
+    $raw = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
+    if ($null -eq $raw -or $raw.Trim().Length -eq 0) { return @{} }
+
+    $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
+    if ($parsed -isnot [System.Management.Automation.PSCustomObject]) {
+        throw "top-level JSON value is not an object"
+    }
+
+    $map = @{}
+    foreach ($property in $parsed.PSObject.Properties) {
+        $map[$property.Name] = $property.Value
+    }
+    return $map
 }
 
 function Get-GitignoreEntries {
@@ -224,7 +260,13 @@ function Install-StarterFile {
     }
 
     if (Test-Path $targetPath) {
-        # Backup existing file if backup mode active
+        if ($mode -eq "create-if-missing") {
+            Write-Host "  SKIP $((Split-Path $targetPath -Leaf)) (already exists)" -ForegroundColor Gray
+            return
+        }
+
+        # Backup existing file if backup mode active. After the skip above: a file this run will not
+        # touch has no reason to produce a backup directory.
         if ($backupDir -and $projectPath) {
             $relativePath = $targetPath.Replace($projectPath, '').TrimStart('\').TrimStart('/')
             $safeName = $relativePath -replace '[\\\/]', '__'
@@ -237,11 +279,6 @@ function Install-StarterFile {
             Write-Utf8NoBom -Path $manifestFile -Content ($updated | ConvertTo-Json -Depth 3)
         } elseif ($backupDir) {
             Copy-Item $targetPath (Join-Path $backupDir (Split-Path $targetPath -Leaf)) -Force
-        }
-
-        if ($mode -eq "create-if-missing") {
-            Write-Host "  SKIP $((Split-Path $targetPath -Leaf)) (already exists)" -ForegroundColor Gray
-            return
         }
 
         $existingContent = Get-Content $targetPath -Raw -Encoding UTF8
@@ -370,7 +407,9 @@ function Sync-Skills {
     # The ignore entry is written BEFORE anything lands, so an interrupted run cannot leave a
     # generated directory untracked -- which is what fails the `clean-tree` step of the pre-push gate.
     # The entry comes from the manifest via `Get-GitignoreEntries`, never from a literal here.
-    Update-Gitignore -projectPath $projectPath -entry (Get-GitignoreEntries)
+    # `-DryRun` is propagated: this call used to write .gitignore during a preview, the one write in
+    # the sync that ignored its own flag.
+    Update-Gitignore -projectPath $projectPath -entry (Get-GitignoreEntries) -DryRun:$DryRun
 
     $plannerArgs = @($planner, $projectPath, '--quiet')
     if (-not $DryRun) { $plannerArgs += '--apply' }
@@ -404,11 +443,131 @@ function Sync-Skills {
         Write-Host "  WARNING: node.js not found -- ## Skills section NOT written." -ForegroundColor Yellow
         return
     }
-    $output = & node $injector $projectPath 2>&1
+    # `--check` in a preview: the injector's write mode is unconditional, so calling it during a
+    # dry run edited AGENTS.md. Check mode answers the same question and exits 1 when a change is due.
+    $injectorArgs = @($injector, $projectPath)
+    if ($DryRun) { $injectorArgs += '--check' }
+    $output = & node @injectorArgs 2>&1
+    $injectorExit = $LASTEXITCODE
     foreach ($line in $output) { Write-Host "  $line" }
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  WARNING: ## Skills section not written (inject-skills-block.js exit $LASTEXITCODE)" -ForegroundColor Yellow
+    if ($DryRun) {
+        if ($injectorExit -eq 1) {
+            Write-Host "  [DRY-RUN] Would refresh the generated ## Skills block in AGENTS.md" -ForegroundColor Yellow
+        } elseif ($injectorExit -ne 0) {
+            Write-Host "  WARNING: ## Skills preview failed (inject-skills-block.js exit $injectorExit)" -ForegroundColor Yellow
+        }
+    } elseif ($injectorExit -ne 0) {
+        Write-Host "  WARNING: ## Skills section not written (inject-skills-block.js exit $injectorExit)" -ForegroundColor Yellow
     }
+}
+
+function Sync-SkillPool {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourceSkillsDir,
+        [Parameter(Mandatory = $true)][string]$PoolDir,
+        [switch]$DryRun
+    )
+
+    # A skill is its WHOLE directory, not just SKILL.md. `references/`, `scripts/` and `assets/`
+    # are loaded on demand by the skill body, so a pool that links only the entry file delivers a
+    # skill whose own instructions point at files that are not there. This function is the one
+    # writer for both machine-global pools (opencode and Qoder); the per-project mirror has its own
+    # writer in `plan-skills.js`, which copies the same payload into `_skills/`.
+    #
+    # SYMLINK PER FILE, NOT PER DIRECTORY. A directory symlink would be simpler, but on Windows it
+    # needs elevation (or Developer Mode) exactly like a file link and would make the whole skill
+    # disappear on a host that refuses it. Per-file linking falls back to a copy per file, so a
+    # partial privilege failure degrades to a copied payload instead of a missing skill.
+    #
+    # STALE COMPANIONS ARE PRUNED. When a skill removes `references/old.md`, a pool that only ever
+    # adds files keeps offering the removed reference — a stale instruction is worse than a missing
+    # one because the agent will follow it. The destination skill directory is a generated mirror:
+    # its expected contents are the source's contents, and nothing else.
+    $result = [pscustomobject]@{
+        Skills  = 0
+        Files   = 0
+        Pruned  = 0
+        Skipped = 0
+        Errors  = @()
+        DryRun  = [bool]$DryRun
+    }
+
+    if (-not (Test-Path -LiteralPath $SourceSkillsDir)) {
+        throw "skills source not found: $SourceSkillsDir"
+    }
+    $skillDirs = @(Get-ChildItem -LiteralPath $SourceSkillsDir -Directory -ErrorAction SilentlyContinue |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'SKILL.md') })
+    if (-not $DryRun -and -not (Test-Path -LiteralPath $PoolDir)) {
+        $null = New-Item -ItemType Directory -Path $PoolDir -Force
+    }
+
+    foreach ($sourceDir in $skillDirs) {
+        $skillName = $sourceDir.Name
+        $destDir = Join-Path $PoolDir $skillName
+        try {
+            $files = @(Get-ChildItem -LiteralPath $sourceDir.FullName -File -Recurse -Force)
+            $expected = @{}
+            foreach ($file in $files) {
+                $rel = $file.FullName.Substring($sourceDir.FullName.Length).TrimStart([char[]]@('\', '/'))
+                $expected[$rel.ToLowerInvariant()] = $true
+            }
+
+            if ($DryRun) {
+                $result.Skills++
+                $result.Files += $files.Count
+                continue
+            }
+
+            if (-not (Test-Path -LiteralPath $destDir)) {
+                $null = New-Item -ItemType Directory -Path $destDir -Force
+            }
+            # A pool built by the pre-directory version of this script can still hold a flat
+            # `<name>.skill.md` beside the directory. It is the same skill in a shape no conformant
+            # loader reads; leaving it is a second, stale copy under a name the agent may search.
+            $legacyFlat = Join-Path $PoolDir "$skillName.skill.md"
+            if (Test-Path -LiteralPath $legacyFlat) {
+                Remove-Item -LiteralPath $legacyFlat -Force
+            }
+
+            foreach ($file in $files) {
+                $rel = $file.FullName.Substring($sourceDir.FullName.Length).TrimStart([char[]]@('\', '/'))
+                $dest = Join-Path $destDir $rel
+                $destParent = Split-Path $dest -Parent
+                if (-not (Test-Path -LiteralPath $destParent)) {
+                    $null = New-Item -ItemType Directory -Path $destParent -Force
+                }
+                if (Test-Path -LiteralPath $dest) {
+                    Remove-Item -LiteralPath $dest -Force
+                }
+                try {
+                    $null = New-Item -ItemType SymbolicLink -Path $dest -Target $file.FullName -Force -ErrorAction Stop
+                } catch {
+                    Copy-Item -LiteralPath $file.FullName -Destination $dest -Force
+                }
+                $result.Files++
+            }
+
+            foreach ($stale in @(Get-ChildItem -LiteralPath $destDir -File -Recurse -Force -ErrorAction SilentlyContinue)) {
+                $rel = $stale.FullName.Substring($destDir.Length).TrimStart([char[]]@('\', '/'))
+                if ($expected.ContainsKey($rel.ToLowerInvariant())) { continue }
+                Remove-Item -LiteralPath $stale.FullName -Force
+                $result.Pruned++
+            }
+            # Bottom-up, so a directory emptied by the prune is removed after its children.
+            foreach ($dir in @(Get-ChildItem -LiteralPath $destDir -Directory -Recurse -Force -ErrorAction SilentlyContinue |
+                    Sort-Object { ($_.FullName -split '[\\/]').Count } -Descending)) {
+                if (-not (Get-ChildItem -LiteralPath $dir.FullName -Force -ErrorAction SilentlyContinue)) {
+                    Remove-Item -LiteralPath $dir.FullName -Force
+                }
+            }
+
+            $result.Skills++
+        } catch {
+            $result.Skipped++
+            $result.Errors += "$skillName`: $($_.Exception.Message)"
+        }
+    }
+    return $result
 }
 
 function Update-Gitignore {
@@ -442,13 +601,17 @@ function Update-Gitignore {
         return
     }
 
-    # One header, and only the missing entries beneath it — so a second sync is a no-op.
-    $block = "`n# mirrored from central guidelines repo`n" + ($missing -join "`n")
-    Add-Content -Path $gitignore -Value $block -Encoding UTF8
+    # One header, and only the missing entries beneath it — so a second sync is a no-op. Written
+    # through Write-Utf8NoBom rather than Add-Content: `-Encoding UTF8` means "with a BOM" on 5.1,
+    # and a .gitignore that begins with a BOM can keep its first pattern from matching.
+    $eol = if ($existing -match "`r`n") { "`r`n" } else { "`n" }
+    $block = "# mirrored from central guidelines repo$eol" + ($missing -join $eol) + $eol
+    $next = if ($existing.Length -eq 0) { $block } else { $existing.TrimEnd() + $eol + $eol + $block }
+    Write-Utf8NoBom -Path $gitignore -Content $next
     Write-Host "  Added to .gitignore: $($missing -join ', ')" -ForegroundColor Green
 }
 
 Export-ModuleMember -Function Get-GuidelinesRepoRoot, Get-ManifestPath, Read-Manifest,
-    Get-GitignoreEntries, Get-BackupDir, New-DatedBackupDir, Restore-Backup,
+    Read-JsonObject, Get-GitignoreEntries, Get-BackupDir, New-DatedBackupDir, Restore-Backup,
     Sync-MirrorDirectory, Install-StarterFile, Install-ToolConfigFile,
-    Sync-Skills, Update-Gitignore, Write-Utf8NoBom
+    Sync-Skills, Sync-SkillPool, Update-Gitignore, Write-Utf8NoBom

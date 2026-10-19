@@ -45,6 +45,23 @@ test('a fact missing from its own home is reported as vacuous, never a silent pa
   assert.match(vacuous[0], /how-to-change-safely/);
 });
 
+test('an absent on-demand doc is skipped, not failed as a vacuous fact', () => {
+  // docs/AI_ARCHITECTURE.md is part of the set only when the project carries it. A project that
+  // does not have one must not fail the census for the document it never wrote.
+  const docs = CLEAN.filter((d) => d.file !== 'docs/AI_ARCHITECTURE.md');
+  const { violations, vacuous, skipped } = census(docs, { missing: ['docs/AI_ARCHITECTURE.md'] });
+  assert.deepEqual(violations, []);
+  assert.deepEqual(vacuous, []);
+  assert.ok(skipped.some((line) => line.includes('how-to-change-safely')), 'the skip must be named');
+});
+
+test('the census corpus is the mandated doc set — tool configs are mirrors, not homes', () => {
+  const files = MANDATED_DOCS.map((d) => d.installed);
+  assert.deepEqual(files, ['AGENTS.md', 'WORLD.md', 'README.md', 'docs/AI_ARCHITECTURE.md']);
+  assert.ok(!files.includes('DEVTOOLS.md'));
+  assert.ok(!files.includes('.github/copilot-instructions.md'));
+});
+
 test('the repo\'s own templates satisfy the census', () => {
   const { docs, missing } = collect(GUIDELINES_ROOT, true);
   assert.deepEqual(missing, [], 'every mandated template must exist');

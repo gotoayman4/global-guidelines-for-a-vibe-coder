@@ -388,22 +388,36 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
     $vscodeDir = Join-Path $projectPath ".vscode"
     if (-not (Test-Path $vscodeDir)) { $null = New-Item -ItemType Directory -Path $vscodeDir -Force }
     $vscodeSettings = Join-Path $vscodeDir "settings.json"
-    $vscodeData = @{}
-    if (Test-Path $vscodeSettings) {
-        # ConvertFrom-Json -AsHashtable requires PS 6+; fall back on PS 5.1 via PSObject.Properties
-        try {
-            $vscodeData = Get-Content $vscodeSettings -Raw -Encoding UTF8 | ConvertFrom-Json -AsHashtable
-        } catch {
-            try {
-                $tempObj = Get-Content $vscodeSettings -Raw -Encoding UTF8 | ConvertFrom-Json
+    # FAIL CLOSED, matching the CLI. The previous fallback caught an unreadable file into `@{}` and
+    # then rewrote it with only the AI keys — deleting every unrelated setting in the user's file.
+    $vscodeData = $null
+    try {
+        if ($moduleImported -and (Get-Command Read-JsonObject -ErrorAction SilentlyContinue)) {
+            $vscodeData = Read-JsonObject -Path $vscodeSettings
+        } elseif (Test-Path $vscodeSettings) {
+            $raw = Get-Content $vscodeSettings -Raw -Encoding UTF8
+            if ($raw.Trim().Length -gt 0) {
+                $tempObj = $raw | ConvertFrom-Json -ErrorAction Stop
+                if ($tempObj -isnot [System.Management.Automation.PSCustomObject]) {
+                    throw "top-level JSON value is not an object"
+                }
                 $vscodeData = @{}
-                if ($tempObj) { $tempObj.PSObject.Properties | ForEach-Object { $vscodeData[$_.Name] = $_.Value } }
-            } catch { $vscodeData = @{} }
+                foreach ($property in $tempObj.PSObject.Properties) {
+                    $vscodeData[$property.Name] = $property.Value
+                }
+            } else {
+                $vscodeData = @{}
+            }
+        } else {
+            $vscodeData = @{}
         }
+    } catch {
+        Append-Log $logBox "  WARNING: .vscode/settings.json is unreadable — left untouched: $($_.Exception.Message)"
     }
     # `$vscodeChanged` gates the write, for the reason the CLI twin documents at length: a run that
     # altered nothing must not produce a diff, and under the 5.1 host an unconditional write also
     # reformatted the file. `sync-manifest.json` requires both writers to produce identical outputs.
+    if ($null -ne $vscodeData) {
     $vscodeChanged = $false
     if (-not $vscodeData.ContainsKey("chat.useAgentsMdFile"))       { $vscodeData["chat.useAgentsMdFile"] = $true; $vscodeChanged = $true }
     if (-not $vscodeData.ContainsKey("chat.useNestedAgentsMdFiles")) { $vscodeData["chat.useNestedAgentsMdFiles"] = $true; $vscodeChanged = $true }
@@ -430,6 +444,7 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
         } catch {
             Append-Log $logBox "  WARNING: Could not write .vscode/settings.json"
         }
+    }
     }
 
     # Step 6: Skills

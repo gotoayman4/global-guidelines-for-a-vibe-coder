@@ -285,6 +285,51 @@ test('a legacy flat copy is pruned even when the same skill is planned as a dire
   assert.deepEqual(fs.readdirSync(target).sort(), ['muionly']);
 });
 
+test('a skill delivers its whole payload, and a removed companion is pruned', () => {
+  // A skill's references are loaded on demand by the skill itself. Copying SKILL.md alone delivered
+  // the entry point and none of the files it points at, while every entry-file check stayed green.
+  const root = project({ agents: STACK_TABLE });
+  const dir = skills({ muionly: 'name: muionly\ndescription: mui\nappliesTo: [mui]' });
+  const skillDir = path.join(dir, 'muionly');
+  fs.mkdirSync(path.join(skillDir, 'references'), { recursive: true });
+  fs.writeFileSync(path.join(skillDir, 'references', 'patterns.md'), '# Patterns\n');
+  fs.mkdirSync(path.join(skillDir, 'scripts'), { recursive: true });
+  fs.writeFileSync(path.join(skillDir, 'scripts', 'helper.js'), '// helper\n');
+
+  const first = applyPlan(root, planSkills(root, dir));
+  assert.deepEqual(first.copied.sort(), [
+    'muionly/SKILL.md',
+    'muionly/references/patterns.md',
+    'muionly/scripts/helper.js',
+  ]);
+  assert.ok(fs.existsSync(path.join(root, '_skills', 'muionly', 'references', 'patterns.md')));
+
+  // The source drops a companion; the next sync must remove the project's copy, or the skill keeps
+  // a loadable file its own text no longer describes.
+  fs.rmSync(path.join(skillDir, 'references', 'patterns.md'));
+  const second = applyPlan(root, planSkills(root, dir));
+  assert.deepEqual(second.removed, ['muionly/references/patterns.md']);
+  assert.ok(!fs.existsSync(path.join(root, '_skills', 'muionly', 'references', 'patterns.md')));
+  assert.ok(!fs.existsSync(path.join(root, '_skills', 'muionly', 'references')), 'the empty directory is gone');
+});
+
+test('a stale companion makes the delivered skill stale, not just its entry file', () => {
+  const root = project({ agents: STACK_TABLE });
+  const dir = skills({ muionly: 'name: muionly\ndescription: mui\nappliesTo: [mui]' });
+  const skillDir = path.join(dir, 'muionly');
+  fs.mkdirSync(path.join(skillDir, 'references'), { recursive: true });
+  fs.writeFileSync(path.join(skillDir, 'references', 'patterns.md'), '# Patterns v2\n');
+  applyPlan(root, planSkills(root, dir));
+  fs.writeFileSync(path.join(skillDir, 'references', 'patterns.md'), '# Patterns v3\n');
+
+  const drift = require('../check-sync-drift.js').compareSkills(root, {
+    target: '_skills',
+    source: dir,
+  });
+  assert.equal(drift.state, 'drift');
+  assert.deepEqual(drift.stale, ['muionly/references/patterns.md']);
+});
+
 test('applyPlan with prune disabled leaves the stale skill in place', () => {
   const root = project({ agents: STACK_TABLE });
   const dir = skills({ universal: 'name: universal\ndescription: always\ntags: [skill, review]' });

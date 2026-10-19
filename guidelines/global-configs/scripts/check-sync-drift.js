@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * check-sync-drift.js — Is every project actually running the current rules?
+ * check-sync-drift.js — Is every project's DELIVERED COPY current, and is every required
+ * guard DISCOVERABLE in its configuration?
+ *
+ * WHAT THIS DOES NOT PROVE. It reads files: it cannot tell whether a guard ever ran, or whether
+ * it passed. A `package.json` script that names a guard is evidence of wiring, not of execution;
+ * only a gate receipt (or another recorded run) is evidence of execution, and this check reads
+ * none. The report names that limit on every green run, because "all projects are running the
+ * current rules" was a sentence this script printed while checking neither delivery of skills nor
+ * execution of guards — and a control whose output overstates its evidence trains the operator to
+ * stop believing it. Execution evidence lives in `docs/gate-receipts/` per `local-ci-strategy.md`.
  *
  * INTENT: A mirror under `_guidelines/` is a COPY, and a copy that nothing compares drifts
  * silently. Measured on 2026-10-11: all 105 guideline files differed from the mirror in a
@@ -20,12 +29,14 @@
  * nothing else may write a hash, or the record stops meaning "this content was delivered".
  *
  * TWO SUBJECTS, ONE QUESTION. The mirror answers "does the project HAVE the current rules?"; the
- * controls pass answers "does it RUN them?" A mirror in sync whose guard files are never invoked
- * is the failure the first check cannot see: the file arrives, the tier is declared, and nothing
- * reads either. The required set is declared in `sync-manifest.json` §guards rather than derived
- * from the guards' own `@tier`, because a tier says WHEN a guard runs, not WHERE it is meaningful.
- * It is matched by FILE and not by script name — the doctrine maps each step to the project's own
- * names, so requiring a name would impose a convention this check has no business imposing.
+ * controls pass answers "does its configuration NAME them?" A mirror in sync whose guard files are
+ * never invoked is the failure the first check cannot see: the file arrives, the tier is declared,
+ * and nothing reads either — and a guard named in `package.json` may still never have run, which
+ * only a receipt can answer. The required set is declared in `sync-manifest.json` §guards rather
+ * than derived from the guards' own `@tier`, because a tier says WHEN a guard runs, not WHERE it
+ * is meaningful. It is matched by FILE and not by script name — the doctrine maps each step to the
+ * project's own names, so requiring a name would impose a convention this check has no business
+ * imposing.
  *
  * AND A THIRD ARTIFACT, ADDED 2026-10-12. `_skills/` is the one thing a project receives that
  * INSTRUCTS the agent rather than informing it, and until this pass existed nothing verified it:
@@ -41,7 +52,9 @@
  *   node check-sync-drift.js --record <path> # record the current source hash for one project
  *   node check-sync-drift.js --quiet         # exit code only
  *
- * Exit codes: 0 = every mirror matches the source; 1 = at least one drift or missing mirror;
+ * Exit codes: 0 = every delivered copy is current and every required guard is referenced in the
+ *               project's npm scripts (execution NOT verified);
+ *             1 = drift, a missing mirror/skills copy, or a required guard not referenced;
  *             2 = corpus error (no source tree, unreadable registry).
  *
  * @tier standard+ — a parity guard between a project's mirror and this source of truth; it runs
@@ -57,7 +70,7 @@ const path = require('path');
 // copy of the selection rule would drift from the first exactly on the project whose Stack table was
 // just edited — the case this guard exists to catch.
 const { planSkills } = require('./lib/plan-skills.js');
-const { SKILL_FILE, listSkills } = require('./lib/skill-files.js');
+const { skillPayload, listFiles } = require('./lib/skill-files.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 // Overridable so the CLI's exit-code contract can be exercised against a fixture instead of
@@ -195,10 +208,15 @@ function sameContent(a, b) {
  * So the expected set is DERIVED BY CALLING `plan-skills.js` — the one home for "which skills this
  * project receives" — never by re-implementing the rule here. What is verified, file by file:
  *
- *   - MISSING      — a planned skill the project does not carry (an interrupted sync, a hand delete).
- *   - STALE        — a planned skill whose bytes differ from the source (edited centrally, not
+ *   - MISSING      — a planned skill file the project does not carry (an interrupted sync, a hand delete).
+ *   - STALE        — a planned skill file whose bytes differ from the source (edited centrally, not
  *                    re-synced), or one left in the legacy flat layout a conformant loader never reads.
- *   - NOT SELECTED — a skill present that the plan does not name (a leftover from a changed stack).
+ *   - NOT SELECTED — a file present that the plan does not name (a leftover from a changed stack, or
+ *                    a companion renamed/removed in the source).
+ *
+ * THE PAYLOAD IS THE WHOLE SKILL DIRECTORY, not `SKILL.md`. A skill's `references/`, `scripts/` and
+ * `assets/` are instructed to load on demand; before this check covered them, a project could pass
+ * with a current entry file and a missing reference the skill told the agent to read.
  *
  * A project carrying exactly the planned files, byte for byte, is in sync — however many of the 20
  * that is. The legacy flat name is caught for free: the plan always expects `<name>/SKILL.md`, so a
@@ -213,8 +231,14 @@ function compareSkills(projectPath, skills) {
   if (!fs.existsSync(dir)) return { target: skills.target, state: 'no-mirror' };
 
   const plan = planSkills(projectPath, skills.source);
-  const expected = new Map(plan.copy.map((row) => [`${row.name}/${SKILL_FILE}`, path.join(skills.source, row.file)]));
-  const present = new Map(listSkills(dir).map((s) => [s.file, s.abs]));
+  const expected = new Map();
+  for (const row of plan.copy) {
+    const srcAbs = path.join(skills.source, row.file);
+    for (const item of skillPayload(srcAbs)) {
+      expected.set(`${row.name}/${item.rel}`, item.from);
+    }
+  }
+  const present = new Map(listFiles(dir).map((rel) => [rel, path.join(dir, rel)]));
 
   const missing = [];
   const stale = [];
@@ -286,14 +310,19 @@ function requiredGuards(manifestPath = MANIFEST) {
 }
 
 /**
- * Does this project expose a script for every required guard?
+ * Is every required guard file named by at least one npm script?
+ *
+ * DISCOVERY, NOT EXECUTION. A hit means some script's command string contains the guard's file
+ * name; it does not mean that script has ever run, that it passes, or that it is reachable from a
+ * gate. The verdict is therefore `referenced` / `unreferenced`, never "enforced" — execution is
+ * proved by a receipt, not by a string match.
  *
  * BY FILE, NOT BY SCRIPT NAME. The doctrine has each project map a step to its own script names,
  * so requiring a name would impose a convention this guard has no business imposing; requiring the
  * FILE is the contract. A project with no `package.json` is not a Node project and cannot expose
  * npm scripts at all — reported, never failed, because the alternative is failing correct work.
  *
- * @returns {{state: 'wired'|'unwired'|'unreadable'|'not-a-node-project', missing: string[]}}
+ * @returns {{state: 'referenced'|'unreferenced'|'unreadable'|'not-a-node-project', missing: string[]}}
  */
 function controlsOf(projectPath, required) {
   const pkg = path.join(projectPath, 'package.json');
@@ -306,7 +335,7 @@ function controlsOf(projectPath, required) {
   }
   const commands = Object.values(scripts).join('\n');
   const missing = required.filter((file) => !commands.includes(file));
-  return { state: missing.length === 0 ? 'wired' : 'unwired', missing };
+  return { state: missing.length === 0 ? 'referenced' : 'unreferenced', missing };
 }
 
 function main() {
@@ -359,22 +388,24 @@ function main() {
 
   if (!quiet) {
     console.log('═══════════════════════════════════════════');
-    console.log('  Sync Drift — mirror vs source of truth');
-    console.log(`  source: ${source.hash.slice(0, 12)} · ${source.count} files`);
-    console.log(`  skills: ${skills ? `${skills.count} source skill(s) → ${skills.target}/ (filtered per project by stack fit)` : 'NOT DERIVED — the manifest declares no skills, or their source directory is absent'}`);
-    console.log(`  controls: ${required ? `${required.length} guard file(s) every project must wire` : 'not declared'}`);
+    console.log('  Delivery check — copies vs source of truth');
+    console.log(`  source:   ${source.hash.slice(0, 12)} · ${source.count} files`);
+    console.log(`  skills:   ${skills ? `${skills.count} source skill(s) → ${skills.target}/ (filtered per project by stack fit)` : 'NOT DERIVED — the manifest declares no skills, or their source directory is absent'}`);
+    console.log(`  controls: ${required ? `${required.length} guard file(s) must be referenced in each project's npm scripts (discovery only)` : 'not declared'}`);
+    console.log('  execution: NOT VERIFIED — this check reads no gate receipt');
     console.log('═══════════════════════════════════════════\n');
   }
 
   // A Set, not a counter: a project can fail both the mirror check and the controls check, and it
-  // is still ONE project not running the current rules.
+  // is still ONE project failing the delivery check.
   const drifted = new Set();
+  const controlsTally = { referenced: 0, notApplicable: 0 };
   for (const row of compareProjects(SOURCE, source, projects, skills)) {
     if (row.state === 'no-mirror') {
       drifted.add(row.name);
       if (!quiet) console.log(`  ❌ ${row.name}: no ${MIRROR_NAME}/ mirror — the project has no rules at all`);
     } else if (row.state === 'sync') {
-      if (!quiet) console.log(`  ✅ ${row.name}: in sync (${row.mirrorFiles} files)`);
+      if (!quiet) console.log(`  ✅ ${row.name}: guidelines mirror in sync (${row.mirrorFiles} files)`);
     } else {
       drifted.add(row.name);
       if (!quiet) {
@@ -412,7 +443,7 @@ function main() {
           console.log('       → run `npm run sync:all`; the selector decides this set, and the sync writes it');
         }
       } else if (!quiet && row.state === 'sync') {
-        console.log(`       ✅ ${s.mirrorFiles} skill(s) in sync`);
+        console.log(`       ✅ ${s.mirrorFiles} skill file(s) in sync`);
       }
     }
 
@@ -422,34 +453,50 @@ function main() {
 
     // Controls travel with the mirror — but a guard file nobody runs is not a control. A mirror
     // that is in sync and a guard that is never invoked is exactly the gap this pass exists for:
-    // the file arrives, the tier is declared, and nothing ever reads either.
+    // the file arrives, the tier is declared, and nothing ever reads either. And a guard that IS
+    // invoked may still never have run: this pass stops at discovery.
     if (!required) continue;
     const controls = controlsOf(row.path, required);
-    if (controls.state === 'unwired') {
+    if (controls.state === 'unreferenced') {
       drifted.add(row.name);
       if (!quiet) {
         // "mirror is current" is only true when the mirror IS in sync. A project can fail both
         // checks, and the first version of this line asserted the mirror was fine in that case —
         // a report that contradicts the line above it is worse than a shorter one.
         const lead = row.state === 'sync' ? 'mirror is current but' : 'and';
-        console.log(`  ❌ ${row.name}: ${lead} ${controls.missing.length} guard(s) are not wired — ${controls.missing.join(', ')}`);
+        console.log(`  ❌ ${row.name}: ${lead} ${controls.missing.length} guard(s) are not referenced in package.json — ${controls.missing.join(', ')}`);
         console.log('       → add an npm script that runs each file (`sync-manifest.json` §guards declares the set)');
       }
     } else if (controls.state === 'unreadable') {
       drifted.add(row.name);
       if (!quiet) console.log(`  ❌ ${row.name}: package.json is unreadable — the required guards cannot be verified`);
     } else if (controls.state === 'not-a-node-project') {
+      controlsTally.notApplicable++;
       if (!quiet) console.log(`  ℹ️  ${row.name}: no package.json — npm-script controls do not apply`);
-    } else if (!quiet && row.state === 'sync') {
-      console.log(`       ✅ all ${required.length} required guard(s) wired`);
+    } else {
+      controlsTally.referenced++;
+      if (!quiet && row.state === 'sync') {
+        console.log(`       ✅ all ${required.length} required guard(s) referenced in package.json (execution not verified)`);
+      }
     }
   }
 
   if (drifted.size > 0) {
-    if (!quiet) console.log(`\n❌ ${drifted.size} of ${projects.length} project(s) are not running the current rules.\n`);
+    if (!quiet) console.log(`\n❌ ${drifted.size} of ${projects.length} project(s) failed the delivery check (mirror, skills, or guard discovery).\n`);
     process.exit(1);
   }
-  if (!quiet) console.log(`\n✅ all ${projects.length} project(s) run the current rules.\n`);
+  if (!quiet) {
+    console.log(`\n✅ delivered copies are current for all ${projects.length} project(s) (guidelines + skills).`);
+    if (!required) {
+      console.log('   controls: not declared — nothing to discover.');
+    } else {
+      const parts = [`${controlsTally.referenced} reference all ${required.length} required guard(s)`];
+      if (controlsTally.notApplicable) parts.push(`${controlsTally.notApplicable} not a Node project`);
+      console.log(`   controls: ${parts.join('; ')}.`);
+      console.log('   execution: NOT VERIFIED — a referenced guard may never have run; see `docs/gate-receipts/`.');
+    }
+    console.log('');
+  }
   process.exit(0);
 }
 

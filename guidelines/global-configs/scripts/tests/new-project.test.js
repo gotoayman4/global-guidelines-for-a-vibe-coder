@@ -33,20 +33,27 @@ test('injectMode inserts a Speed Mode section once and is idempotent', () => {
   assert.equal(occurrences.length, 1, 'must not insert a second Speed Mode block');
 });
 
-test('mergeGateScripts adds missing gate scripts only', () => {
-  const { pkg: empty, changed } = mergeGateScripts({ name: 'x' });
+test('mergeGateScripts adds gate:fast only, and includes changed tests when a test script exists', () => {
+  const { pkg: empty, changed } = mergeGateScripts({ name: 'x', scripts: { test: 'vitest' } });
   assert.equal(changed, true);
-  assert.ok(empty.scripts['gate:fast']);
-  assert.ok(empty.scripts['gate:receipt']);
+  assert.match(empty.scripts['gate:fast'], /npm test -- --run --changed/);
+  assert.equal(empty.scripts['gate:receipt'], undefined, 'an echo-only receipt is not evidence');
+
+  const { pkg: untested } = mergeGateScripts({ name: 'x', scripts: {} });
+  assert.ok(untested.scripts['gate:fast']);
+  assert.doesNotMatch(untested.scripts['gate:fast'], /npm test/);
 
   const { changed: again } = mergeGateScripts(empty);
   assert.equal(again, false, 'existing gate scripts are not overwritten');
 });
 
-test('prePushHook carries the order comment and full pipeline line', () => {
+test('prePushHook branches on WORLD.md instead of baking a mode or claiming steps it omits', () => {
   const hook = prePushHook();
-  assert.match(hook, /# Order: lint/);
-  assert.match(hook, /npm run build/);
+  assert.match(hook, /WORLD\.md/);
+  assert.match(hook, /gate:fast/);
+  assert.match(hook, /npm run build/, 'the standard branch runs the full pipeline');
+  assert.doesNotMatch(hook, /# Order:/, 'it must not claim an order its command does not run');
+  assert.doesNotMatch(hook, /audit|clean-tree/, 'it must not name steps that are absent from the hook');
 });
 
 test('parseArgs defaults mode to vibe and validates mode values', () => {

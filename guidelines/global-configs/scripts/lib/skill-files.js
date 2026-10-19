@@ -69,4 +69,60 @@ function isSkillPath(relPosix) {
   return relPosix === SKILL_FILE || relPosix.endsWith(`/${SKILL_FILE}`) || relPosix.endsWith(SKILL_EXT);
 }
 
-module.exports = { SKILL_FILE, SKILL_EXT, listSkills, skillName, isSkillPath };
+/**
+ * Every file a skill delivers, relative to its own directory.
+ *
+ * A skill is a DIRECTORY in the standard layout, and its `SKILL.md` is only the entry point:
+ * `references/`, `scripts/` and `assets/` sit beside it and are instructed to load on demand. The
+ * sync used to copy `SKILL.md` alone, so a project received a skill whose own links pointed at files
+ * that were never delivered — and the drift check compared entry files only, so it reported green.
+ * The payload is therefore every regular file under the skill's directory, not the entry file.
+ *
+ * A legacy flat `<name>.skill.md` has no companions; it is delivered as `SKILL.md`.
+ *
+ * @param {string} abs path to a skill's `SKILL.md`, or to a legacy `.skill.md`
+ * @returns {Array<{rel: string, from: string}>} `rel` is `/`-separated; `SKILL.md` sorts first
+ */
+function skillPayload(abs) {
+  if (path.basename(abs) !== SKILL_FILE) {
+    return [{ rel: SKILL_FILE, from: abs }];
+  }
+
+  const root = path.dirname(abs);
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(p);
+      else if (entry.isFile()) files.push({ rel: path.relative(root, p).replace(/\\/g, '/'), from: p });
+    }
+  };
+  walk(root);
+  return files.sort((a, b) => {
+    if (a.rel === SKILL_FILE) return -1;
+    if (b.rel === SKILL_FILE) return 1;
+    return a.rel.localeCompare(b.rel);
+  });
+}
+
+/**
+ * Every regular file under a directory, `/`-separated relative paths. Used to find files a project
+ * carries that its plan does not deliver.
+ * @param {string} root
+ * @returns {string[]}
+ */
+function listFiles(root) {
+  if (!fs.existsSync(root)) return [];
+  const out = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(p);
+      else if (entry.isFile()) out.push(path.relative(root, p).replace(/\\/g, '/'));
+    }
+  };
+  walk(root);
+  return out;
+}
+
+module.exports = { SKILL_FILE, SKILL_EXT, listSkills, skillName, isSkillPath, skillPayload, listFiles };

@@ -183,7 +183,10 @@ if (-not $GlobalOnly -and $projectRoot -ne $null) {
     Write-Host "[1b/3] Installing starter files..." -ForegroundColor Yellow
     $manifest = Read-Manifest
     if ($manifest -and $manifest.starters) {
-        $backupDir = if ($Backup) { New-DatedBackupDir $projectRoot } else { $null }
+        # A preview must not create `.guidelines-backups/` either: the directory is a write, and an
+        # untracked directory left by a dry run is the exact artefact the backup feature was added
+        # to avoid.
+        $backupDir = if ($Backup -and -not $DryRun) { New-DatedBackupDir $projectRoot } else { $null }
         foreach ($starter in $manifest.starters) {
             $templatePath = Join-Path $guidelinesRepo ($starter.template -replace '/', '\')
             $targetPath = Join-Path $projectRoot ($starter.target -replace '/', '\')
@@ -203,6 +206,26 @@ if (-not $GlobalOnly -and $projectRoot -ne $null) {
 # ---------------------------------------------------------------------------
 if (-not $SourceOnly) {
     Write-Host "[2/3] Syncing global tool configs..." -ForegroundColor Yellow
+
+    # `/DryRun` covered the mirror, starters and skills but NOT step 2: a preview still created
+    # tool-config directories and rewrote AGENTS.md files under the user profile. Those writes are
+    # outside the project and invisible in `git status`, so the violation was easy to miss. The
+    # branch below is the whole step: in a preview it names every target and writes none.
+    $skillCount = 0
+    $skillSkips = 0
+    $qoderSkillCount = 0
+    $qoderSkillSkips = 0
+    $globalSkips = @()
+    $vscodeNote = 'not run'
+    if ($DryRun) {
+        Write-Host "  [DRY-RUN] opencode: link all skills into $opencodeSkillsDir and rewrite $opencodeGlobalAgents" -ForegroundColor Yellow
+        Write-Host "  [DRY-RUN] Windsurf: rewrite $windsurfGlobalRules" -ForegroundColor Yellow
+        Write-Host "  [DRY-RUN] Cursor: rewrite $cursorGlobalGuidelines" -ForegroundColor Yellow
+        if (-not $GlobalOnly -and $projectRoot -ne $null) {
+            Write-Host "  [DRY-RUN] VS Code: merge AI settings into $(Join-Path $projectRoot '.vscode\settings.json')" -ForegroundColor Yellow
+        }
+        Write-Host "  [DRY-RUN] Qoder: link all skills into $qoderSkillsDir" -ForegroundColor Yellow
+    } else {
     # Machine-global configs live under the user profile, which some hosts deny (sandboxes, CI,
     # locked-down machines). They are best-effort BY DESIGN: the deliverable of a sync is the project
     # mirror, starters and skills — step 1 — and `check-sync-drift.js` verifies exactly that. Before
@@ -210,7 +233,6 @@ if (-not $SourceOnly) {
     # the whole run, so a fully-synced project was reported failed (measured 2026-10-13: every
     # `npm run sync:all` died in this step on `architect\SKILL.md`). A skip is counted and named,
     # never silent — a green run that quietly delivered nothing would be the original defect again.
-    $globalSkips = @()
 
     # --- opencode: symlink skills + global AGENTS.md ---
     Write-Host "  opencode ..." -ForegroundColor Gray
@@ -219,45 +241,17 @@ if (-not $SourceOnly) {
         $null = New-Item -ItemType Directory -Path $opencodeSkillsDir -Force
     }
     # The corpus is the Agent Skills standard layout: one directory per skill, each holding a
-    # SKILL.md. Enumerating `*/SKILL.md` (not `*.skill.md`) is what makes the pool conformant — a
-    # native loader scans for SKILL.md, and the flat file this used to link was invisible to every
-    # one of them. Kept in step with setup-global-references.ps1, which links the same pool.
-    $skillFiles = Get-ChildItem -Path "$guidelinesRepo\global-configs\skills" -Directory -ErrorAction SilentlyContinue |
-        ForEach-Object { Join-Path $_.FullName "SKILL.md" } |
-        Where-Object { Test-Path -LiteralPath $_ }
-    $skillCount = 0
-    $skillSkips = 0
-    foreach ($file in $skillFiles) {
-        # No -LiteralPath on this split: -LiteralPath binds to its own parameter set that
-        # excludes -Parent, so `Split-Path -LiteralPath $file -Parent` throws
-        # AmbiguousParameterSet on every host that runs these scripts (measured 2026-10-13
-        # on 5.1.26100 and 7.6 — all seven fleet syncs died here). The positional form is
-        # portable, and $file holds no wildcard characters: it is built from Join-Path over
-        # enumerated directory names plus the literal "SKILL.md".
-        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
-        $skillDir = Join-Path $opencodeSkillsDir $skillName
-        $symlinkPath = Join-Path $skillDir "SKILL.md"
-        try {
-            if (-not (Test-Path -LiteralPath $skillDir)) {
-                $null = New-Item -ItemType Directory -Path $skillDir -Force
-            }
-            if (Test-Path -LiteralPath $symlinkPath) {
-                Remove-Item -LiteralPath $symlinkPath -Force
-            }
-            # Symlink needs elevation (or Developer Mode) on Windows; fall back to a
-            # copy so an unelevated sync:all still lands the skill (D192 lesson).
-            try {
-                $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file -Force -ErrorAction Stop
-            } catch {
-                Copy-Item -LiteralPath $file -Destination $symlinkPath -Force
-            }
-            $skillCount++
-        } catch {
-            # One denied path (sandbox, read-only copy, ACL) must not take the other nineteen
-            # skills — or the project sync — down with it.
-            Write-Host "    SKIP $skillName`: $($_.Exception.Message)" -ForegroundColor Yellow
-            $skillSkips++
-        }
+    # SKILL.md plus any references/ and scripts/ the body loads on demand. `Sync-SkillPool` mirrors
+    # the whole directory, so a pool skill is the same skill the source describes — linking only
+    # SKILL.md left every on-demand file behind and made the body point at nothing.
+    if (-not (Get-Command Sync-SkillPool -ErrorAction SilentlyContinue)) {
+        throw "GuidelineSync.psm1 (Sync-SkillPool) is not loaded; skills were not linked."
+    }
+    $pool = Sync-SkillPool -SourceSkillsDir "$guidelinesRepo\global-configs\skills" -PoolDir $opencodeSkillsDir
+    $skillCount = $pool.Skills
+    $skillSkips = $pool.Skipped
+    foreach ($message in $pool.Errors) {
+        Write-Host "    SKIP $message" -ForegroundColor Yellow
     }
     # Global AGENTS.md for opencode
     $agentsLines = @(
@@ -280,7 +274,7 @@ if (-not $SourceOnly) {
         "- Project AGENTS.md rules override these global defaults"
     )
     Write-Utf8NoBom -Path $opencodeGlobalAgents -Content ($agentsLines -join "`r`n")
-    Write-Host "    Skills: $skillCount linked, $skillSkips skipped | AGENTS.md updated" -ForegroundColor Green
+    Write-Host "    Skills: $skillCount linked ($($pool.Files) files), $skillSkips skipped | AGENTS.md updated" -ForegroundColor Green
     } catch {
         Write-Host "    SKIPPED opencode: $($_.Exception.Message)" -ForegroundColor Yellow
         $globalSkips += "opencode"
@@ -338,11 +332,34 @@ Use absolute base path `$guidelinesRepo/` when loading files.
             $null = New-Item -ItemType Directory -Path $vscodeDir -Force
         }
         $vscodeSettingsFile = Join-Path $vscodeDir "settings.json"
-        if (Test-Path -LiteralPath $vscodeSettingsFile) {
-            $vscodeExisting = Get-Content $vscodeSettingsFile -Raw -Encoding UTF8
-            try { $vscodeSettings = $vscodeExisting | ConvertFrom-Json -AsHashtable } catch { $vscodeSettings = @{} }
-        } else {
-            $vscodeSettings = @{}
+        # FAIL CLOSED. The old parse used `ConvertFrom-Json -AsHashtable` (absent on Windows
+        # PowerShell 5.1) and caught the failure into `@{}`, then rewrote the file with only the
+        # keys this merge knows — deleting every unrelated setting. A file this script cannot parse
+        # is left byte-identical, and the skip is named.
+        $vscodeSettings = $null
+        try {
+            if (Get-Command Read-JsonObject -ErrorAction SilentlyContinue) {
+                $vscodeSettings = Read-JsonObject -Path $vscodeSettingsFile
+            } elseif (Test-Path -LiteralPath $vscodeSettingsFile) {
+                $raw = Get-Content $vscodeSettingsFile -Raw -Encoding UTF8
+                if ($raw.Trim().Length -gt 0) {
+                    $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
+                    if ($parsed -isnot [System.Management.Automation.PSCustomObject]) {
+                        throw "top-level JSON value is not an object"
+                    }
+                    $vscodeSettings = @{}
+                    foreach ($property in $parsed.PSObject.Properties) {
+                        $vscodeSettings[$property.Name] = $property.Value
+                    }
+                } else {
+                    $vscodeSettings = @{}
+                }
+            } else {
+                $vscodeSettings = @{}
+            }
+        } catch {
+            $vscodeNote = 'left untouched (unreadable JSON)'
+            Write-Host "    WARNING: .vscode/settings.json is not a readable JSON object — left untouched: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         # Merge AI settings with _guidelines/ relative paths.
         # `$changed` gates the write. This block used to rewrite settings.json on EVERY sync, so a
@@ -351,6 +368,7 @@ Use absolute base path `$guidelinesRepo/` when loading files.
         # `":  "` and no trailing newline, while 7.x emits clean 2-space. Measured 2026-10-12: four
         # fleet projects showed a 24-line churn for a file whose values were already correct.
         # A tool must not rewrite what it did not change.
+        if ($null -ne $vscodeSettings) {
         $changed = $false
         if (-not $vscodeSettings.ContainsKey("chat.useAgentsMdFile")) {
             $vscodeSettings["chat.useAgentsMdFile"] = $true; $changed = $true
@@ -372,6 +390,7 @@ Use absolute base path `$guidelinesRepo/` when loading files.
             if ($needsFix) { $vscodeSettings[$key] = $copilotInstructions; $changed = $true }
         }
         if (-not $changed) {
+            $vscodeNote = 'already current'
             Write-Host "    .vscode/settings.json already carries the AI settings" -ForegroundColor DarkGray
         } else {
             # WriteAllText, not Set-Content: `-Encoding UTF8` means "UTF-8 with a BOM" on 5.1 and
@@ -380,10 +399,13 @@ Use absolute base path `$guidelinesRepo/` when loading files.
             $vscodeJson = ($vscodeSettings | ConvertTo-Json -Depth 5) + "`n"
             try {
                 [System.IO.File]::WriteAllText($vscodeSettingsFile, $vscodeJson, (New-Object System.Text.UTF8Encoding($false)))
+                $vscodeNote = 'updated'
                 Write-Host "    .vscode/settings.json updated" -ForegroundColor Green
             } catch {
+                $vscodeNote = 'write failed (locked)'
                 Write-Host "    WARNING: Could not write .vscode/settings.json (file locked)" -ForegroundColor Yellow
             }
+        }
         }
         } catch {
             Write-Host "    SKIPPED VS Code: $($_.Exception.Message)" -ForegroundColor Yellow
@@ -399,30 +421,18 @@ Use absolute base path `$guidelinesRepo/` when loading files.
     }
     $qoderSkillCount = 0
     $qoderSkillSkips = 0
-    foreach ($file in $skillFiles) {
-        # Position-only split — see the skill-name split in the opencode block for why.
-        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
-        $qoderSkillDir = Join-Path $qoderSkillsDir $skillName
-        $qoderSymlink = Join-Path $qoderSkillDir "SKILL.md"
-        try {
-            if (-not (Test-Path -LiteralPath $qoderSkillDir)) {
-                $null = New-Item -ItemType Directory -Path $qoderSkillDir -Force
-            }
-            if (Test-Path -LiteralPath $qoderSymlink) {
-                Remove-Item -LiteralPath $qoderSymlink -Force
-            }
-            try {
-                $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file -Force -ErrorAction Stop
-            } catch {
-                Copy-Item -LiteralPath $file -Destination $qoderSymlink -Force
-            }
-            $qoderSkillCount++
-        } catch {
-            Write-Host "    SKIP $skillName`: $($_.Exception.Message)" -ForegroundColor Yellow
-            $qoderSkillSkips++
-        }
+    if (-not (Get-Command Sync-SkillPool -ErrorAction SilentlyContinue)) {
+        throw "GuidelineSync.psm1 (Sync-SkillPool) is not loaded; skills were not linked."
     }
-    Write-Host "    Skills: $qoderSkillCount linked, $qoderSkillSkips skipped" -ForegroundColor Green
+    # The same writer as the opencode pool: one implementation, so the two pools cannot disagree
+    # about which files a skill contains.
+    $pool = Sync-SkillPool -SourceSkillsDir "$guidelinesRepo\global-configs\skills" -PoolDir $qoderSkillsDir
+    $qoderSkillCount = $pool.Skills
+    $qoderSkillSkips = $pool.Skipped
+    foreach ($message in $pool.Errors) {
+        Write-Host "    SKIP $message" -ForegroundColor Yellow
+    }
+    Write-Host "    Skills: $qoderSkillCount linked ($($pool.Files) files), $qoderSkillSkips skipped" -ForegroundColor Green
     } catch {
         Write-Host "    SKIPPED Qoder: $($_.Exception.Message)" -ForegroundColor Yellow
         $globalSkips += "Qoder"
@@ -433,6 +443,7 @@ Use absolute base path `$guidelinesRepo/` when loading files.
         Write-Host "  WARNING: machine-global config skipped for: $($globalSkips -join ', ')" -ForegroundColor Yellow
         Write-Host "  The project mirror, starters and skills are complete; these tool configs are" -ForegroundColor Yellow
         Write-Host "  best-effort (they live under the user profile, which this host restricts)." -ForegroundColor Yellow
+    }
     }
 } else {
     Write-Host "[2/3] Skipping global tool configs (SourceOnly)" -ForegroundColor Gray
@@ -464,6 +475,9 @@ if (-not $SourceOnly) {
     # rather than inheriting the success of its neighbours — the summary is the last thing a reader
     # sees, and "installed" over a directory nothing was written to is the defect this whole file
     # family exists to kill.
+    if ($DryRun) {
+        Write-Host "  Tool configs: PREVIEW ONLY — nothing was written under the user profile or .vscode/"
+    } else {
     if ($globalSkips -contains "opencode") {
         Write-Host "  opencode:  SKIPPED (see the warning above)"
     } else {
@@ -487,7 +501,8 @@ if (-not $SourceOnly) {
     if ($globalSkips -contains "VS Code") {
         Write-Host "  VS Code:   SKIPPED (see the warning above)"
     } else {
-        Write-Host "  VS Code:   .vscode/settings.json instructions added"
+        Write-Host "  VS Code:   .vscode/settings.json $vscodeNote"
+    }
     }
 }
 Write-Host ""

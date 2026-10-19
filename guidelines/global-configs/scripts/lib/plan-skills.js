@@ -46,7 +46,7 @@ const path = require('path');
 const { parseFrontMatter, meta, asList } = require('./front-matter.js');
 const { isToken } = require('./tech-tokens.js');
 const { readStackProfile } = require('./stack-profile.js');
-const { SKILL_FILE, SKILL_EXT, listSkills } = require('./skill-files.js');
+const { SKILL_FILE, SKILL_EXT, listSkills, skillPayload, listFiles } = require('./skill-files.js');
 
 /**
  * A skill's declared or inferred scope.
@@ -160,10 +160,17 @@ function planSkills(projectRoot, skillsDir) {
  * directory supersedes it when the name is planned, and it is stale when the name is not. Keeping it
  * in the planned case is how a project ends up with two loadable copies of one skill.
  *
+ * A SKILL IS MORE THAN SKILL.md. `references/`, `scripts/` and `assets/` live beside the entry file
+ * and the skill instructs the agent to load them on demand. Copying the entry alone delivered a
+ * table of contents whose chapters were missing, while the drift check — which compared entry files
+ * only — reported the copy complete. Every file under the selected skill's directory is delivered,
+ * and every file the source no longer carries is pruned from the project's copy.
+ *
  * SAFETY, stated because this deletes files: only directories that actually contain a `SKILL.md` are
- * removed, only directly inside `<project>/_skills`, and only when their name is not planned; only
- * files ending in `.skill.md` are unlinked. A hand-written file of any other name is left alone.
- * Pruning is suppressed by `prune: false`.
+ * removed, only directly inside `<project>/_skills`, and only when their name is not planned; extra
+ * files inside a planned skill directory are removed only when the source skill does not carry them;
+ * only files ending in `.skill.md` are unlinked at the top level. A hand-written file of any other
+ * name is left alone. Pruning is suppressed by `prune: false`.
  *
  * @returns {{copied: string[], removed: string[], unchanged: number}}
  */
@@ -172,26 +179,43 @@ function applyPlan(projectRoot, plan, { prune = true } = {}) {
   fs.mkdirSync(target, { recursive: true });
 
   const plannedNames = new Set(plan.copy.map((row) => row.name));
+  const payloads = new Map();
   const copied = [];
   const unchanged = [];
   for (const row of plan.copy) {
     // The standard shape, regardless of the source's: `row.name` is the skill's own name, which is
     // also the directory a conformant loader requires it to live in.
-    const dest = `${row.name}/${SKILL_FILE}`;
-    const from = path.join(plan.skillsDir, row.file);
-    const to = path.join(target, dest);
-    fs.mkdirSync(path.dirname(to), { recursive: true });
-    const body = fs.readFileSync(from);
-    if (fs.existsSync(to) && Buffer.compare(fs.readFileSync(to), body) === 0) {
-      unchanged.push(dest);
-      continue;
+    const payload = skillPayload(path.join(plan.skillsDir, row.file));
+    payloads.set(row.name, payload);
+    for (const item of payload) {
+      const dest = `${row.name}/${item.rel}`;
+      const to = path.join(target, dest);
+      fs.mkdirSync(path.dirname(to), { recursive: true });
+      const body = fs.readFileSync(item.from);
+      if (fs.existsSync(to) && Buffer.compare(fs.readFileSync(to), body) === 0) {
+        unchanged.push(dest);
+        continue;
+      }
+      fs.writeFileSync(to, body);
+      copied.push(dest);
     }
-    fs.writeFileSync(to, body);
-    copied.push(dest);
   }
 
   const removed = [];
   if (prune) {
+    // First, inside every planned skill: remove a companion the source no longer carries. A renamed
+    // reference is otherwise left loadable forever, and the skill's links point at the old name.
+    for (const row of plan.copy) {
+      const dirAbs = path.join(target, row.name);
+      const expected = new Set((payloads.get(row.name) || []).map((item) => item.rel));
+      for (const rel of listFiles(dirAbs)) {
+        if (expected.has(rel)) continue;
+        fs.unlinkSync(path.join(dirAbs, rel));
+        removed.push(`${row.name}/${rel}`);
+      }
+      removeEmptyDirectories(dirAbs);
+    }
+
     for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
       if (entry.isDirectory()) {
         // Only a directory that carries a SKILL.md is a skill; anything else is hand-written.
@@ -210,6 +234,17 @@ function applyPlan(projectRoot, plan, { prune = true } = {}) {
   }
 
   return { copied, removed, unchanged: unchanged.length };
+}
+
+/** Remove empty subdirectories after pruning companions, keeping the skill directory itself. */
+function removeEmptyDirectories(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const child = path.join(dir, entry.name);
+    removeEmptyDirectories(child);
+    if (fs.readdirSync(child).length === 0) fs.rmdirSync(child);
+  }
 }
 
 module.exports = { planSkills, applyPlan, skillScope, inferFromTags, fitVerdict, asList, SKILL_FILE, SKILL_EXT, listSkills };

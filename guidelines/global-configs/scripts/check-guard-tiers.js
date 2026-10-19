@@ -46,6 +46,12 @@
  * The guard is also silent about *which* files a `standard+` guard protects — it reads tiers, not
  * subjects, and a tier is a statement about when a control runs, not about what it covers.
  *
+ * WHAT THIS DOES NOT PROVE: execution. The set is derived from npm scripts and the hook's
+ * `npm run` references. A wired guard can still be skipped by a condition, short-circuited with
+ * `|| true`, or never run because the chain itself was not invoked. Execution evidence is a gate
+ * receipt (`docs/gate-receipts/`); this guard proves classification and wiring, not that any
+ * command ran.
+ *
  * Usage:
  *   node check-guard-tiers.js [projectRoot] [--json]
  *
@@ -295,8 +301,9 @@ function render(report) {
   }
 
   lines.push(`  guards:  ${report.guards.length}`);
-  lines.push(`  gate:    ${report.gate || '(none declared)'}${report.gateKind === 'hook' ? ' (mode-branched)' : ''}  →  ${report.reachedByGate.length} guard(s)`);
-  lines.push(`  vibe:    npm run ${report.vibe}${report.reachedByVibe.length ? '' : ' (absent)'}  →  ${report.reachedByVibe.length} guard(s)`);
+  lines.push(`  gate:    ${report.gate || '(none declared)'}${report.gateKind === 'hook' ? ' (mode-branched)' : ''}  →  ${report.reachedByGate.length} guard(s) wired`);
+  lines.push(`  vibe:    npm run ${report.vibe}${report.reachedByVibe.length ? '' : ' (absent)'}  →  ${report.reachedByVibe.length} guard(s) wired`);
+  lines.push('  execution: NOT VERIFIED — this check reads npm scripts and the hook, not a gate receipt');
   lines.push('');
 
   for (const tier of TIERS) {
@@ -311,11 +318,11 @@ function render(report) {
 
   for (const problem of report.problems) lines.push(`  ❌ ${problem}`);
   if (report.problems.length === 0) {
-    lines.push('  ✅ every guard declares a tier, and no `ship` guard runs in the `vibe` loop');
+    lines.push('  ✅ every guard declares a tier, and no `ship` guard is wired into the `vibe` loop');
     // The scope of what was actually proved, named — the three cases are not the same claim.
     if (report.mirror) lines.push('     (a mirror: the guards a project wires are a subset of these — `npm run sync:drift` checks the declared set)');
     else if (report.gateKind === 'hook') lines.push('     (the chain is a mode-branched hook, so the `always` promise above is reported, not failed)');
-    else lines.push('     (and every `always` guard is in the gate)');
+    else lines.push('     (and every `always` guard is wired into the gate)');
   }
   lines.push('');
   return lines.join('\n');

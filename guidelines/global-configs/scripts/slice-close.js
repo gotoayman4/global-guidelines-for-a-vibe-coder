@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * slice-close.js — One command closes a slice: the record, the freshness line, the receipt pointer,
+ * slice-close.js — One command closes a slice: the record, the receipt pointer, the freshness line,
  * and (with `--adr`) the decision's three derived sites.
  *
  * INTENT: The steering writes a slice owes are DERIVED facts — the date, the commit, the decision
@@ -9,6 +9,14 @@
  * (documentation-strategy.md §Machine output is referenced, never transcribed). This script writes
  * them from the repository's own state, so the agent spends its prose only where prose IS the
  * product: the acceptance body and an ADR.
+ *
+ * CONSTRAINT: A `--receipt` path must exist before it is cited. A pointer to a file the gate never
+ * wrote is a false record, and the one thing a receipt exists to prevent is a claim with no
+ * artifact behind it.
+ *
+ * CONSTRAINT: The freshness line moves only for the doc the slice names with `--doc`. Bumping every
+ * freshness doc on every slice would make the line mean "some slice closed", not "this document
+ * changed" — a derived marker that lies in the same shape as one typed by hand.
  *
  * CONSTRAINT: It never invents a decision number. The next one is `max(existing) + 1`, computed
  * from the documents that actually carry decisions. A counter kept in a file races between two
@@ -49,7 +57,7 @@ const { deriveMode } = require('./lib/project-mode.js');
 /** Documents a decision number may appear in. Read-only; nothing is written back to them. */
 const DECISION_SOURCES = ['AGENTS.md', 'WORLD.md', 'docs/PRD.md', 'docs/DECISIONS.md', 'docs/ROADMAP.md'];
 
-/** Steering docs that carry a freshness line, if the project uses one. */
+/** Steering docs that carry a freshness line, if the project uses one. Only the slice's `--doc` moves. */
 const FRESHNESS_DOCS = ['WORLD.md', 'docs/AI_ARCHITECTURE.md'];
 
 /** The ADR index, and the header that identifies its table. */
@@ -235,6 +243,16 @@ function main() {
   const root = path.resolve(opts.root || process.cwd());
   if (!fs.existsSync(root)) usage(`project root does not exist: ${root}`);
 
+  if (opts.receipt) {
+    const receiptAbs = path.resolve(root, opts.receipt);
+    if (!fs.existsSync(receiptAbs) || !fs.statSync(receiptAbs).isFile()) {
+      usage(
+        `--receipt does not name an existing file: ${opts.receipt} — run the gate first; ` +
+          'a citation of a missing receipt is false evidence',
+      );
+    }
+  }
+
   const date = new Date().toISOString().split('T')[0];
   const archive = quarterFile(date);
   const archiveAbs = path.join(root, archive);
@@ -273,6 +291,7 @@ function main() {
   writes.push({ rel: archive, content: `${prior}${prior && !prior.endsWith('\n') ? '\n' : ''}${prior ? '\n' : archiveHeader}${entry}` });
 
   for (const rel of FRESHNESS_DOCS) {
+    if (opts.doc !== rel) continue;
     const abs = path.join(root, rel);
     if (!fs.existsSync(abs)) continue;
     const { content, changed } = updateFreshness(fs.readFileSync(abs, 'utf8'), date, sha, opts.title);

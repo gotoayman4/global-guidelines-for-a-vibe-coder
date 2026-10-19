@@ -8,14 +8,23 @@
 $ErrorActionPreference = "Stop"
 $guidelinesRepo = (Resolve-Path (Join-Path $PSScriptRoot ".." "..")).Path
 
-# Admin check — symlinks require elevation on Windows (unless Developer Mode enabled)
+# The shared module owns the pool writer (and the no-BOM/JSON-safe helpers). Duplicating the
+# linking loop here is how the two scripts drifted before: sync-guidelines linked `<name>/SKILL.md`
+# while this file kept its own copy of the same loop, and both silently dropped a skill's
+# `references/` and `scripts/` directories.
+$modulePath = Join-Path $PSScriptRoot "GuidelineSync.psm1"
+if (-not (Test-Path $modulePath)) {
+    Write-Host "ERROR: GuidelineSync.psm1 not found at $modulePath" -ForegroundColor Red
+    exit 1
+}
+Import-Module $modulePath -Force
+
+# Admin check — symlinks require elevation on Windows (unless Developer Mode enabled). Skills fall
+# back to copies, so this is advice rather than a precondition.
 $currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
 $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) {
-    Write-Host "WARNING: Not running as Administrator." -ForegroundColor Yellow
-    Write-Host "  Symlinks (skills, Cursor rule) will be SKIPPED." -ForegroundColor Yellow
-    Write-Host "  Plain files (AGENTS.md, Windsurf global_rules) will still be written." -ForegroundColor Yellow
-    Write-Host "  Re-run as Admin to create symlinks." -ForegroundColor Yellow
+    Write-Host "NOTE: Not running as Administrator. Skill files are copied instead of symlinked." -ForegroundColor Yellow
     Write-Host ""
 }
 
@@ -46,39 +55,13 @@ Write-Host ""
 # --------------------------------------------------
 Write-Host "[1] opencode" -ForegroundColor Yellow
 
-if (-not (Test-Path -LiteralPath $opencodeSkillsDir)) {
-    $null = New-Item -ItemType Directory -Path $opencodeSkillsDir -Force
+# A skill is its whole directory: the body loads `references/` and `scripts/` on demand, so the
+# pool must carry them. One shared writer serves this script and sync-guidelines.
+$pool = Sync-SkillPool -SourceSkillsDir "$guidelinesRepo\global-configs\skills" -PoolDir $opencodeSkillsDir
+foreach ($message in $pool.Errors) {
+    Write-Host "  SKIP $message" -ForegroundColor Yellow
 }
-# The corpus is the Agent Skills standard layout: one directory per skill, each holding a SKILL.md.
-# Enumerating `*/SKILL.md` (not `*.skill.md`) is what makes the pool conformant — a native loader
-# scans for SKILL.md, and the flat file it used to link was invisible to every one of them.
-$skillFiles = Get-ChildItem -Path "$guidelinesRepo\global-configs\skills" -Directory -ErrorAction SilentlyContinue |
-    ForEach-Object { Join-Path $_.FullName "SKILL.md" } |
-    Where-Object { Test-Path -LiteralPath $_ }
-$skillCount = 0
-if ($isAdmin) {
-    foreach ($file in $skillFiles) {
-        # No -LiteralPath on this split: -LiteralPath binds to its own parameter set that
-        # excludes -Parent, so `Split-Path -LiteralPath $file -Parent` throws
-        # AmbiguousParameterSet on every host that runs these scripts (measured 2026-10-13
-        # on 5.1.26100 and 7.6 — all seven fleet syncs died here). The positional form is
-        # portable, and $file holds no wildcard characters: it is built from Join-Path over
-        # enumerated directory names plus the literal "SKILL.md".
-        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
-        $skillDir = Join-Path $opencodeSkillsDir $skillName
-        $symlinkPath = Join-Path $skillDir "SKILL.md"
-        if (-not (Test-Path -LiteralPath $skillDir)) {
-            $null = New-Item -ItemType Directory -Path $skillDir -Force
-        }
-        if (Test-Path -LiteralPath $symlinkPath) {
-            Remove-Item -LiteralPath $symlinkPath -Force
-        }
-        $null = New-Item -ItemType SymbolicLink -Path $symlinkPath -Target $file -Force
-        $skillCount++
-    }
-} else {
-    Write-Host "  SKIPPED (not admin)" -ForegroundColor Gray
-}
+$skillCount = $pool.Skills
 
 # Use double-quoted here-string so $guidelinesRepo expands to the actual path
 $agentsContent = @"
@@ -100,7 +83,7 @@ This machine has a shared guidelines repository at:
 - Compact extracts (Key Takeaways + Anti-Patterns) when context is small
 - Project AGENTS.md rules override these global defaults
 "@
-Set-Content -Path $opencodeAgentsFile -Value $agentsContent -NoNewline -Encoding UTF8
+Write-Utf8NoBom -Path $opencodeAgentsFile -Content $agentsContent
 Write-Host "  Skills: $skillCount linked | AGENTS.md: $opencodeAgentsFile" -ForegroundColor Green
 
 # --------------------------------------------------
@@ -119,7 +102,7 @@ ALWAYS read _index/MASTER_INDEX.md from that path first.
 Then load only the files needed for the current task.
 Use absolute base path $guidelinesRepo/ when loading files.
 "@
-Set-Content -Path $windsurfGlobalRules -Value $windsurfContent -NoNewline -Encoding UTF8
+Write-Utf8NoBom -Path $windsurfGlobalRules -Content $windsurfContent
 Write-Host "  global_rules.md: $windsurfGlobalRules" -ForegroundColor Green
 
 # --------------------------------------------------
@@ -130,20 +113,18 @@ Write-Host "[3] Cursor" -ForegroundColor Yellow
 if (-not (Test-Path -LiteralPath $cursorRulesDir)) {
     $null = New-Item -ItemType Directory -Path $cursorRulesDir -Force
 }
-if ($isAdmin) {
-    if (Test-Path -LiteralPath $cursorRuleFile) {
-        Remove-Item -LiteralPath $cursorRuleFile -Force
-    }
-    if (Test-Path -LiteralPath $cursorTemplate) {
-        # Resolved copy (not a symlink — the raw template carries an unresolved {{GUIDELINES_ROOT}} token)
-        $cursorContent = (Get-Content $cursorTemplate -Raw -Encoding UTF8) -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
-        Set-Content -Path $cursorRuleFile -Value $cursorContent -NoNewline -Encoding UTF8
-        Write-Host "  User rule created: $cursorRuleFile" -ForegroundColor Green
-    } else {
-        Write-Host "  WARNING: template not found at $cursorTemplate" -ForegroundColor Yellow
-    }
+# A plain file write — nothing here needs elevation. It used to sit behind the admin check, so a
+# non-elevated run installed no Cursor rule at all while reporting the tools as configured.
+if (Test-Path -LiteralPath $cursorRuleFile) {
+    Remove-Item -LiteralPath $cursorRuleFile -Force
+}
+if (Test-Path -LiteralPath $cursorTemplate) {
+    # Resolved copy (not a symlink — the raw template carries an unresolved {{GUIDELINES_ROOT}} token)
+    $cursorContent = (Get-Content $cursorTemplate -Raw -Encoding UTF8) -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
+    Write-Utf8NoBom -Path $cursorRuleFile -Content $cursorContent
+    Write-Host "  User rule created: $cursorRuleFile" -ForegroundColor Green
 } else {
-    Write-Host "  SKIPPED (not admin)" -ForegroundColor Gray
+    Write-Host "  WARNING: template not found at $cursorTemplate" -ForegroundColor Yellow
 }
 
 # --------------------------------------------------
@@ -154,26 +135,12 @@ Write-Host "[4] Qoder" -ForegroundColor Yellow
 if (-not (Test-Path -LiteralPath $qoderSkillsDir)) {
     $null = New-Item -ItemType Directory -Path $qoderSkillsDir -Force
 }
-if ($isAdmin) {
-    $qoderCount = 0
-    foreach ($file in $skillFiles) {
-        # Position-only split — see the skill-name split in the opencode block for why.
-        $skillName = Split-Path (Split-Path $file -Parent) -Leaf
-        $qoderDir = Join-Path $qoderSkillsDir $skillName
-        $qoderSymlink = Join-Path $qoderDir "SKILL.md"
-        if (-not (Test-Path -LiteralPath $qoderDir)) {
-            $null = New-Item -ItemType Directory -Path $qoderDir -Force
-        }
-        if (Test-Path -LiteralPath $qoderSymlink) {
-            Remove-Item -LiteralPath $qoderSymlink -Force
-        }
-        $null = New-Item -ItemType SymbolicLink -Path $qoderSymlink -Target $file -Force
-        $qoderCount++
-    }
-    Write-Host "  Skills: $qoderCount linked to $qoderSkillsDir" -ForegroundColor Green
-} else {
-    Write-Host "  SKIPPED (not admin)" -ForegroundColor Gray
+# The same shared writer as the opencode pool — whole skill directories, symlink-or-copy.
+$pool = Sync-SkillPool -SourceSkillsDir "$guidelinesRepo\global-configs\skills" -PoolDir $qoderSkillsDir
+foreach ($message in $pool.Errors) {
+    Write-Host "  SKIP $message" -ForegroundColor Yellow
 }
+Write-Host "  Skills: $($pool.Skills) linked ($($pool.Files) files) to $qoderSkillsDir" -ForegroundColor Green
 
 # --------------------------------------------------
 # 5. VS Code: global settings.json (AI agent settings)
@@ -185,14 +152,20 @@ if (-not (Test-Path -LiteralPath $vscodeSettingsDir)) {
     $null = New-Item -ItemType Directory -Path $vscodeSettingsDir -Force
 }
 
-# Read existing settings or start fresh
-if (Test-Path -LiteralPath $vscodeGlobalSettings) {
-    $existingJson = Get-Content $vscodeGlobalSettings -Raw -Encoding UTF8
-    try { $vscodeSettings = $existingJson | ConvertFrom-Json -AsHashtable } catch { $vscodeSettings = @{} }
-} else {
-    $vscodeSettings = @{}
+# Read existing settings. A file that exists but cannot be parsed is LEFT UNTOUCHED — the old
+# catch-to-@{} rewrote it as the four AI keys alone, silently deleting every unrelated setting.
+$vscodeSettings = $null
+try {
+    if (Test-Path -LiteralPath $vscodeGlobalSettings) {
+        $vscodeSettings = Read-JsonObject -Path $vscodeGlobalSettings
+    } else {
+        $vscodeSettings = @{}
+    }
+} catch {
+    Write-Host "  WARNING: settings.json is not a readable JSON object — left untouched: $($_.Exception.Message)" -ForegroundColor Yellow
 }
 
+if ($null -ne $vscodeSettings) {
 # Ensure AI-related keys, preserving any existing values
 if (-not $vscodeSettings.ContainsKey("chat.useAgentsMdFile")) {
     $vscodeSettings["chat.useAgentsMdFile"] = $true
@@ -216,14 +189,16 @@ if (-not $vscodeSettings.ContainsKey("chat.useNestedAgentsMdFiles")) {
         if ($needsFix) { $vscodeSettings[$key] = $copilotInstructions }
     }
 
-# Write back merged settings (file may be locked by VS Code)
-$vscodeJson = $vscodeSettings | ConvertTo-Json -Depth 5
+# Write back merged settings (file may be locked by VS Code). Write-Utf8NoBom, not `-Encoding UTF8`:
+# that means "with a BOM" on 5.1 and VS Code's settings parser is not the only reader of this file.
+$vscodeJson = ($vscodeSettings | ConvertTo-Json -Depth 5) + "`n"
 try {
-    Set-Content -Path $vscodeGlobalSettings -Value $vscodeJson -NoNewline -Encoding UTF8 -ErrorAction Stop
+    Write-Utf8NoBom -Path $vscodeGlobalSettings -Content $vscodeJson
     Write-Host "  settings.json updated: $vscodeGlobalSettings" -ForegroundColor Green
 } catch {
     Write-Host "  WARNING: Could not write settings.json (VS Code may be running)" -ForegroundColor Yellow
     Write-Host "  Close VS Code, then re-run this script." -ForegroundColor Yellow
+}
 }
 
 # --------------------------------------------------

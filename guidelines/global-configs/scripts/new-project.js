@@ -4,8 +4,8 @@
  * new-project.js — One-command project bootstrap from the single-source starters.
  *
  * Expands AGENTS.starter.md, WORLD.starter.md, and README.starter.md into a target project root,
- * injects the speed-mode declaration, merges gate:fast / gate:receipt scripts into
- * package.json when present, and writes a pre-push hook skeleton. Husky install
+ * injects the speed-mode declaration, merges the gate:fast script into package.json when present,
+ * and writes a pre-push hook skeleton that branches on the declared mode. Husky install
  * is printed as a next step (no network installs from this script).
  *
  * Usage:
@@ -104,12 +104,12 @@ function injectMode(worldContent, mode) {
 }
 
 function mergeGateScripts(pkg) {
-  const additions = {
-    'gate:fast': 'npm run lint && npm run type-check',
-    'gate:receipt': 'echo "wire gate:receipt to the project full pipeline — see local-ci-strategy.md"',
-  };
+  const scripts = pkg.scripts || {};
+  const fast = ['npm run lint', 'npm run type-check'];
+  if (scripts.test || scripts['test:unit']) fast.push('npm test -- --run --changed');
+  const additions = { 'gate:fast': fast.join(' && ') };
   let changed = false;
-  pkg.scripts = pkg.scripts || {};
+  pkg.scripts = scripts;
   for (const [k, v] of Object.entries(additions)) {
     if (!pkg.scripts[k]) {
       pkg.scripts[k] = v;
@@ -122,11 +122,18 @@ function mergeGateScripts(pkg) {
 function prePushHook() {
   return [
     '#!/bin/sh',
-    '# Pre-push full gate — order is the normative list (local-ci-strategy.md)',
-    '# Order: lint → type-check → test → build → audit → clean-tree',
-    '# Enable: npm exec husky init  (or copy to .husky/pre-push)',
-    'npm run lint && npm run type-check && npm test -- --run && npm run build',
-    'exit $?',
+    '# Pre-push gate — branches on the declared mode (WORLD.md §Speed Mode).',
+    '# vibe: gate:fast + every always-tier guard (add them below).',
+    '# standard/guarded: the full pipeline.',
+    "mode=$(grep -Eo 'mode:\\*\\*[[:space:]]*`?(vibe|standard|guarded)' WORLD.md 2>/dev/null | head -n 1 | grep -Eo '(vibe|standard|guarded)')",
+    '[ -n "$mode" ] || mode=standard',
+    'echo "pre-push gate: mode=$mode"',
+    'if [ "$mode" = "vibe" ]; then',
+    '  npm run gate:fast || exit $?',
+    '  # Add this project\'s always-tier guards here — they run in every mode.',
+    'else',
+    '  npm run lint && npm run type-check && npm test -- --run && npm run build || exit $?',
+    'fi',
     '',
   ].join('\n');
 }
@@ -183,7 +190,7 @@ function main() {
       if (changed) {
         actions.push({
           file: 'package.json',
-          status: 'would write (merge gate:fast + gate:receipt scripts)',
+          status: 'would write (merge the gate:fast script)',
           write: () => fs.writeFileSync(pkgDest, `${JSON.stringify(merged, null, 2)}\n`, 'utf8'),
         });
       } else {
@@ -224,9 +231,11 @@ function main() {
   console.log('  1. Search [FILL] in AGENTS.md — fill the stack table + project mandates (the only home for rules)');
   console.log('  2. Complete WORLD.md sections (mode already set to ' + args.mode + ')');
   console.log('  3. Complete README.md — what this is, structure tree, quick start');
-  console.log('  4. npx husky init   # install hooks; keep the generated pre-push order comment');
-  console.log('  5. pwsh -File <central-repo>\\guidelines\\global-configs\\scripts\\sync-guidelines.ps1 -ProjectPath .  # mirror _guidelines/');
-  console.log('  6. git config core.hooksPath .husky   # if not using husky default');
+  console.log('  4. npx husky init   # install hooks; the generated pre-push branches on WORLD.md');
+  console.log('  5. Wire a real gate:receipt script: run the full pipeline and write docs/gate-receipts/<UTC-stamp>.md —');
+  console.log('     an echo-only placeholder is not evidence (local-ci-strategy.md §Gate Receipts).');
+  console.log('  6. pwsh -File <central-repo>\\guidelines\\global-configs\\scripts\\sync-guidelines.ps1 -ProjectPath .  # mirror _guidelines/');
+  console.log('  7. git config core.hooksPath .husky   # if not using husky default');
   console.log('\n  Docs set: AGENTS.md + WORLD.md + README.md (+ docs/AI_ARCHITECTURE.md on demand).');
   console.log('  There is no AI_CONTEXT.md or ARCHITECTURE_INDEX.md — one home per fact (07-documentation/documentation-strategy.md).');
 }
