@@ -27,11 +27,12 @@
     "validate:fast": "npm run check-links && npm run check-index",
     "validate:standard": "npm run guard:gate-wording && npm run guard:decisions && npm run guard:breadth && npm run docs:check",
     "test:scripts": "node --test guidelines/global-configs/scripts/tests/*.test.js",
-    "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run check-index-drift && npm run check-skills-drift && npm run docs:census && npm run guard:tiers && npm run test:scripts",
+    "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run check-index-drift && npm run check-skills-drift && npm run guard:paths && npm run docs:census && npm run guard:tiers && npm run test:scripts",
     "slice:close": "node guidelines/global-configs/scripts/slice-close.js",
     "sync:drift": "node guidelines/global-configs/scripts/check-sync-drift.js",
     "skills:activations": "node guidelines/global-configs/scripts/check-skill-activations.js",
-    "audit:friction": "node guidelines/global-configs/scripts/audit-friction.js"
+    "audit:friction": "node guidelines/global-configs/scripts/audit-friction.js",
+    "guard:paths": "node guidelines/global-configs/scripts/check-agents-paths.js"
   },
   "engines": {
     "node": ">=18"

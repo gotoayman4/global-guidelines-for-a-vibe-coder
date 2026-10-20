@@ -40,6 +40,13 @@ present after a sync, absent in a fresh clone until one runs. The canonical sour
 central steering repo's `guidelines/global-configs/skills/` — the mirror is a copy of it,
 and only the skills that fit this project's stack are copied.
 
+**One store per skill.** Never copy a delivered skill into a native skill store
+(`.qoder/skills/`, `.claude/skills/`, `.agents/skills/`, `.opencode/skills/`, …). A same-named
+file there shadows `_skills/` by path priority, not by policy — which copy an agent opens is
+decided by load order — and the copy cannot follow upstream. Measured 2026-10-21: three of
+seven projects carried divergent stores, one with eleven of eleven skills stale. A native
+store is for the skills the corpus does not ship.
+
 A skill never outranks `AGENTS.md`: where the two disagree, `AGENTS.md` wins. And a row whose
 `Applies to` does not cover this project's stack is **not applicable** — skip it rather than
 adapting it, because a skill written for a stack this project forbids will contradict the

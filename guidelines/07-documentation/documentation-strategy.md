@@ -64,6 +64,14 @@ A project consumes this doc set through a `_guidelines/` mirror. A mirror is a c
    ```
 6. **Inline code comments** follow `ai-code-documentation.md` (ICDC framework) — persistent context for the next AI session.
 
+## Scoped Rule Files
+
+Agent harnesses load directory-scoped rule files (`.qoder/rules/`, `src/.qoder/rules/`, `backend/.qoder/rules/`) on demand, and a project's Session Bootstrap tells every session to read them. They are hand-authored, not delivered by the sync, so they rot where nothing checks them: measured 2026-10-21 in one project, eight of ten were untracked — present on the disk that wrote the sentence, absent from every clone — and the copy in another still described a UI major that had moved twice.
+
+1. **A rule file points at the mirror, never at an absolute path.** The source line reads `_guidelines/` (or the guide's repo-relative path); a drive-letter path is readable on one machine and nowhere else.
+2. **A rule file owns no fact another document already owns.** Versions, gate commands and bundle ceilings are linked to their owner (`AGENTS.md` §Stack, §Build & Validation Commands, the budget script itself) — a copied number is a second home, and the copy is the one nobody edits.
+3. **Every path the Session Bootstrap names is committed.** An untracked target is an instruction no clone can obey; `npm run guard:paths` fails when a named file resolves nowhere or git does not carry it.
+
 ## Directives
 
 1. Update documentation in the SAME iteration as the code change (workflow Phase 8) — stale docs mislead future sessions worse than missing docs. The **breadth** of the update scales with the declared mode (§Trigger Table); the **record** never does (§Record vs Ritual).

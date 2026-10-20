@@ -122,7 +122,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [adr-template.md](../07-documentation/adr-template.md) | Advisory | Global | ~355 | `#adr` `#decisions` `#template` |
-| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~5641 | `#documentation` `#strategy` `#maintenance` `#changelog-archives` `#single-source` `#line-length` |
+| [documentation-strategy.md](../07-documentation/documentation-strategy.md) | Normative | Global | ~5944 | `#documentation` `#strategy` `#maintenance` `#changelog-archives` `#single-source` `#line-length` |
 
 ### 08 — Governance
 
@@ -187,6 +187,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-doc-breadth.js](../global-configs/scripts/check-doc-breadth.js) | Script | Global | ~200 | `#script` `#guard` `#breadth` `#modes` `#steering-docs` `#single-source` |
 | [check-guard-tiers.js](../global-configs/scripts/check-guard-tiers.js) | Script | Global | ~4,400 (run it; read it only to change it) | `#script` `#guard` `#tiers` `#gate` `#derived` `#single-source` |
 | [check-skill-activations.js](../global-configs/scripts/check-skill-activations.js) | Script | Global | ~2,800 (run it; read it only to change it) | `#script` `#guard` `#skills` `#activation` `#receipt` |
+| [check-agents-paths.js](../global-configs/scripts/check-agents-paths.js) | Script | Global | ~3,000 (run it; read it only to change it) | `#script` `#guard` `#bootstrap` `#tracked-ness` `#portability` `#gate` |
 | [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
