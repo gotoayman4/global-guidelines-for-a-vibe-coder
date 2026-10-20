@@ -219,6 +219,26 @@ test('a real change to a table cell is still a change', () => {
   assert.equal(action, 'refreshed', 'a changed trigger is a change, not a re-alignment');
 });
 
+test('a starter-derived pointer is upgraded into the live inventory, not left beside it', () => {
+  // THE STARTER PATH. `AGENTS.starter.md` ships a `## Skills` section whose managed region holds a
+  // POINTER — where the skills live and that the table lists them — because a project that has
+  // never been synced has no inventory to show. The first sync replaces that region with the live
+  // table, so the project ends up with ONE `## Skills` section carrying both the pointer and the
+  // inventory, never two sections and never a stale pointer.
+  const pointer = `${marked('Your stack\'s skills are delivered at `_skills/<name>/SKILL.md`.\n**Read it before a task.**')}`;
+  const doc = `# AGENTS.md — Project Constitution\n\n## AI Collaboration\n\nSome rule.\n\n## Skills\n\n${pointer}\n\n## Reference & Project Setup\n\nMore.\n`;
+  const { content, action } = applyBlock(doc, 'THE INVENTORY');
+  assert.equal(action, 'refreshed');
+  assert.match(content, /THE INVENTORY/, 'the region is replaced by the live inventory');
+  assert.doesNotMatch(content, /Read it before a task/, 'the starter pointer does not survive');
+  assert.equal(
+    (content.match(/^## Skills\s*$/gm) || []).length,
+    1,
+    'and the project still has exactly one ## Skills section'
+  );
+  assert.match(content, /## Reference & Project Setup/, 'the sections around it are untouched');
+});
+
 // ─── The CLI ─────────────────────────────────────────────────────────────────
 
 test('CLI injects, is idempotent, and --check distinguishes current from due', () => {

@@ -38,7 +38,7 @@ This is **not** an application project. It is a centralized development guidelin
 - Rule text lives in `guidelines/global-configs/fragments/` — one `##` section per file, order and token budget in `fragments/manifest.json`
 - `guidelines/global-configs/templates/AGENTS.starter.md` is GENERATED output — NEVER hand-edit it (`npm run check-drift` fails validate if it diverges)
 - To change a rule: edit the fragment → `npm run render:starters` → `npm run validate` → commit fragment + template together
-- The constitution has a token budget (**5,000 tokens** — `fragments/manifest.json` `maxTokens`; the rendered starter currently measures 4,997): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure: this line said "~7,000" for months while the manifest said 5,000 and `check-drift` enforced it.
+- The constitution has a token budget (**5,500 tokens** — `fragments/manifest.json` `maxTokens`; the rendered starter currently measures 5,088): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure: this line said "~7,000" for months while the manifest said 5,000 and `check-drift` enforced it.
 - Other starter templates (WORLD, DEVTOOLS, tool configs) are hand-maintained; when a guideline changes, update the matching one
 - Starter templates use `[FILL]` placeholders for project-specific values
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
@@ -75,6 +75,12 @@ trigger matches, which is why the trigger has to be visible *before* the file is
   never reaches the inventory that says when to open a skill. `npm run sync:drift` verifies the
   `_skills/` copy against this source — a skill edited here is not the skill a project loads — and
   reports whether the project's inventory names every skill it was delivered.
+- **The starter seeds the pointer.** `AGENTS.starter.md` ships a `## Skills` section whose managed
+  region holds a POINTER — where the skills live, and that the table lists them — because a
+  project that has never been synced has no inventory to show. The first sync replaces that region
+  with the live table, so a project ends up with ONE `## Skills` section carrying both the pointer
+  and the inventory: never two sections, never a stale pointer. The fragment is
+  `global-configs/fragments/65-skills.md`; the region it holds is the same one the injector writes.
 
 ---
 

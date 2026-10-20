@@ -1,7 +1,7 @@
 {
-  "$comment": "Render order for AGENTS.starter.md. Each fragment is one full markdown section (## header included). The renderer concatenates in this order and joins sections with a single blank line. Edit rules HERE, never in templates/AGENTS.starter.md — that file is generated output.",
+  "$comment": "Render order for AGENTS.starter.md. Each fragment is one full markdown section (## header included). The renderer concatenates in this order and joins sections with a single blank line. Edit rules HERE, never in templates/AGENTS.starter.md — that file is generated output. `65-skills.md` is a MANAGED REGION: its `## Skills` section holds the same marker block the injector writes, carrying a POINTER until the first sync replaces it with the live inventory. A project therefore has one `## Skills` section, never two — see 65-skills.md and the injector's starter path.",
   "output": "../templates/AGENTS.starter.md",
-  "maxTokens": 5000,
+  "maxTokens": 5500,
   "sections": [
     "00-preamble.md",
     "10-security.md",
@@ -10,6 +10,7 @@
     "40-architecture.md",
     "50-design-ux.md",
     "60-ai-collaboration.md",
+    "65-skills.md",
     "70-rtl-arabic.md",
     "80-performance.md",
     "90-project-setup.md"
