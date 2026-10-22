@@ -520,3 +520,56 @@ test('competingStores reports a store that holds no colliding skill without clai
   assert.deepEqual(qoder.collisions, [], 'a project-local skill is not a collision');
   assert.deepEqual(qoder.divergent, []);
 });
+
+test('competingStores recognizes a generated adapter whose marker names the delivered source', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-stores-'));
+  const skill = '---\nname: alpha\n---\n\nupstream\n';
+  fs.mkdirSync(path.join(root, '_skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '_skills', 'alpha', 'SKILL.md'), skill);
+  fs.mkdirSync(path.join(root, '.opencode', 'skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.opencode', 'skills', 'alpha', 'SKILL.md'), skill);
+  fs.writeFileSync(
+    path.join(root, '.opencode', 'skills', '.opencode-skill-sync.json'),
+    JSON.stringify({ source: path.join(root, '_skills'), names: ['alpha'] })
+  );
+
+  const stores = competingStores(root, '_skills');
+  const opencode = stores.find((s) => s.path === '.opencode/skills');
+  assert.ok(opencode, 'the adapter is still reported');
+  assert.equal(opencode.adapter, true, 'a declared generated adapter is not a competing store');
+  assert.deepEqual(opencode.divergent, [], 'and its content still follows the delivered copy');
+});
+
+test('a generated adapter whose content drifted is still a divergence', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-stores-'));
+  fs.mkdirSync(path.join(root, '_skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '_skills', 'alpha', 'SKILL.md'), '---\nname: alpha\n---\n\nupstream\n');
+  fs.mkdirSync(path.join(root, '.opencode', 'skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.opencode', 'skills', 'alpha', 'SKILL.md'), '---\nname: alpha\n---\n\nFORK\n');
+  fs.writeFileSync(
+    path.join(root, '.opencode', 'skills', '.opencode-skill-sync.json'),
+    JSON.stringify({ source: path.join(root, '_skills'), names: ['alpha'] })
+  );
+
+  const stores = competingStores(root, '_skills');
+  const opencode = stores.find((s) => s.path === '.opencode/skills');
+  assert.equal(opencode.adapter, true, 'the marker is recognized');
+  assert.deepEqual(opencode.divergent, ['alpha'], 'but a hand edit is still caught');
+});
+
+test('a marker whose name list does not match the store is not an adapter', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-stores-'));
+  const skill = '---\nname: alpha\n---\n';
+  fs.mkdirSync(path.join(root, '_skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '_skills', 'alpha', 'SKILL.md'), skill);
+  fs.mkdirSync(path.join(root, '.opencode', 'skills', 'alpha'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.opencode', 'skills', 'alpha', 'SKILL.md'), skill);
+  fs.writeFileSync(
+    path.join(root, '.opencode', 'skills', '.opencode-skill-sync.json'),
+    JSON.stringify({ source: path.join(root, '_skills'), names: ['alpha', 'stale-name'] })
+  );
+
+  const stores = competingStores(root, '_skills');
+  const opencode = stores.find((s) => s.path === '.opencode/skills');
+  assert.equal(opencode.adapter, false, 'a stale marker cannot excuse an unexplained copy');
+});

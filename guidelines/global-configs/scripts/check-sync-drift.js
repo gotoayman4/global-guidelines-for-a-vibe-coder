@@ -335,7 +335,16 @@ function skillsBlockVerdict(projectPath, skills) {
  * Deleting a project's own skills to make one store win would be a destructive act taken on an
  * inference; this pass makes the situation visible and leaves the decision to the owner.
  *
- * @returns {Array<{path: string, skills: number, collisions: string[], divergent: string[]}>}
+ * A GENERATED ADAPTER is the one exception, not a second copy. Some tools (opencode, for one)
+ * scan a fixed native directory and cannot be pointed at `_skills/`. The skills block's own rule
+ * allows a generated adapter for exactly that case: build output refreshed by a tracked script,
+ * never edited by hand. Such a store declares itself with a `.*-skill-sync.json` marker that names
+ * the delivered source and the exact names it generated. When the marker resolves to this project's
+ * delivered skills directory and its name list matches what the store holds, the store is reported
+ * as an adapter and its content is still compared file by file — it follows upstream rather than
+ * shadowing it. A marker that does not match, or content that differs, remains a warning/failure.
+ *
+ * @returns {Array<{path: string, target: string, skills: number, collisions: string[], divergent: string[], adapter: boolean}>}
  */
 const NATIVE_SKILL_STORES = [
   '.agents/skills',
@@ -347,6 +356,28 @@ const NATIVE_SKILL_STORES = [
   '.qoder/skills',
   '.kiro/skills',
 ];
+
+function generatedAdapter(storeDir, projectPath, skillsTarget) {
+  let entries;
+  try {
+    entries = fs.readdirSync(storeDir, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+  const marker = entries.find((e) => e.isFile() && /^\..*-skill-sync\.json$/.test(e.name));
+  if (!marker) return null;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(path.join(storeDir, marker.name), 'utf8'));
+    if (!Array.isArray(manifest.names) || typeof manifest.source !== 'string') return null;
+    const declared = path.resolve(manifest.source);
+    const delivered = path.resolve(projectPath, skillsTarget);
+    // Windows paths are case-insensitive; comparing raw strings would misread the same directory
+    // written with different casing as a foreign source.
+    return declared.toLowerCase() === delivered.toLowerCase() ? manifest : null;
+  } catch {
+    return null;
+  }
+}
 
 function competingStores(projectPath, skillsTarget = '_skills') {
   const out = [];
@@ -364,7 +395,12 @@ function competingStores(projectPath, skillsTarget = '_skills') {
       collisions.push(skill.name);
       if (!sameContent(upstream, skill.abs)) divergent.push(skill.name);
     }
-    out.push({ path: rel, skills: found.length, collisions, divergent });
+    const manifest = generatedAdapter(dir, projectPath, skillsTarget);
+    const names = new Set(found.map((s) => s.name));
+    const adapter = Boolean(manifest)
+      && manifest.names.length === names.size
+      && manifest.names.every((name) => names.has(name));
+    out.push({ path: rel, target: skillsTarget, skills: found.length, collisions, divergent, adapter });
   }
   return out;
 }
@@ -642,13 +678,22 @@ function main() {
     // name; do not resolve it by deleting a project's own store.
     if (row.competingStores && row.competingStores.length) {
       for (const store of row.competingStores) {
-        if (!quiet) {
+        if (store.divergent.length) {
+          drifted.add(row.name);
+          if (!quiet) {
+            const detail = `${store.collisions.length} same-named skill(s), ${store.divergent.length} with DIFFERENT content (${store.divergent.slice(0, 4).join(', ')})`;
+            console.log(`  ⚠️  ${row.name}: also carries a skill store at ${store.path}/ — ${store.skills} skill(s), ${detail}`);
+          }
+        } else if (store.adapter) {
+          if (!quiet) {
+            console.log(`       ✅ generated adapter at ${store.path}/ — ${store.skills} skill(s) match ${store.target}/`);
+          }
+        } else if (!quiet) {
           const detail = store.collisions.length
-            ? `${store.collisions.length} same-named skill(s)${store.divergent.length ? `, ${store.divergent.length} with DIFFERENT content (${store.divergent.slice(0, 4).join(', ')})` : ''}`
+            ? `${store.collisions.length} same-named skill(s)`
             : 'no name collisions with the delivered set';
           console.log(`  ⚠️  ${row.name}: also carries a skill store at ${store.path}/ — ${store.skills} skill(s), ${detail}`);
         }
-        if (store.divergent.length) drifted.add(row.name);
       }
     }
 
