@@ -74,11 +74,14 @@ Before every push, run that mode's gate locally. This gate replaces the cloud CI
 
    ```sh
    # mode = vibe      → the fast loop + the always tier
-   npm run gate:fast && npm run test -- --run
+   npm run gate:fast                  # lint + type-check + changed tests
+   # always-tier guards: run the project's derived set here (§Guard Tiers)
    # mode = standard  → the full pipeline
    npm run lint && npm run type-check && npm test -- --run && npm run build
    # mode = guarded   → the full pipeline + the path-aware extras
    ```
+
+   The `vibe` branch MUST NOT call the full suite (`npm test -- --run`): `gate:fast` already runs the tests the diff touches, and the suite is a ship-boundary step.
 
    Map each step to the project's actual script names (`[FILL]` in starter templates). Read the mode from `WORLD.md` (the sole owner of the value) rather than hard-coding a second copy of it. **Writing the full pipeline unconditionally is the defect this branch exists to prevent:** it makes `vibe` pay `standard`'s cost on every push, and a project then "fixes" the slowness by skipping the gate — the one outcome that is forbidden.
 2. **The hook header comment is the normative list.** Write the step order once, as a `# Order: a → b → c` comment at the top of `.husky/pre-push`; the constitution restates it (and a guard compares the two token-for-token), every other document links to it. Measured in production: two hand-kept copies of one step list had already drifted apart.

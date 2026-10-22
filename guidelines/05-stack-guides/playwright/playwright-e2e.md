@@ -7,6 +7,9 @@ tags: [playwright, e2e, testing]
 # Playwright E2E Testing
 
 **Tags:** `#playwright` `#e2e` `#testing` `#browser` `#a11y`
+
+**Mode scope:** these directives govern every E2E test that exists. E2E is a `ship`-tier guard — it runs at the ship boundary in every mode, and during iteration in standard/guarded, never as a per-change `vibe` requirement (`testing-philosophy.md` §Guard Tiers).
+
 ---
 
 ## Directives

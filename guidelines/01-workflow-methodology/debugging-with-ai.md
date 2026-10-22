@@ -16,7 +16,7 @@ Loop: `OBSERVE → ISOLATE → HYPOTHESIZE → FIX → VERIFY`. Each iteration n
 2. **Isolate before fixing:** binary-search (disable half, test minimal input, rollback to last-good commit) · minimal reproduction (20 lines beats a codebase dump) · targeted log injection at decision points — the gap between expected and actual log output IS the bug location.
 3. **Hypothesize via AI:** "Here are error + stack + relevant code: what are the 2–3 most likely causes? Explain each; rank by probability." Cross-check with a second model for critical bugs.
 4. **Fix minimally:** "Apply the MINIMAL fix. Do not refactor unrelated code. Then explain: root cause, what changed, why it's safe, edge cases handled and not handled."
-5. **Verify (never trust "error went away"):** reproduction case succeeds · existing tests pass · regression test added · related edge cases tested (null/empty/large/concurrent) · no new console errors · UI looks correct visually.
+5. **Verify (never trust "error went away"):** reproduction case succeeds · existing tests pass · regression test added in standard/guarded (in `vibe`, at the second bite or before a milestone) · related edge cases tested (null/empty/large/concurrent) · no new console errors · UI looks correct visually.
 
 ## Useful Patterns
 
@@ -34,10 +34,10 @@ Loop: `OBSERVE → ISOLATE → HYPOTHESIZE → FIX → VERIFY`. Each iteration n
 | Anti-Pattern | Fix |
 |---|---|
 | Paraphrasing errors | Paste exact text + full trace |
-| Accepting first fix unverified | Regression test + edge cases |
+| Accepting first fix unverified | Re-run the reproduction + edge cases (regression test at second bite/milestone in `vibe`) |
 | Function rewrite for one-line bug | Demand minimal fix |
 | Prose descriptions of visual bugs | Screenshot |
-| No regression test after fix | Bug will re-emerge |
+| No regression test after fix | Add it at the second bite/milestone in `vibe`; immediately in standard/guarded — the bug will re-emerge |
 
 ## Cross-References
 

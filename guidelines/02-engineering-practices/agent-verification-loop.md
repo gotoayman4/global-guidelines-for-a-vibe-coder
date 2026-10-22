@@ -40,10 +40,10 @@ Depth below is the standard/guarded floor; vibe mode runs the cheapest sufficien
 
 LLM-driven interactive verification — screen capture + vision analysis, GUI automation, browser-driving for visual confirmation — is slow and token-expensive. It is the MOST expensive verification instrument available and MUST be treated as a scarce resource, rationed by tier:
 
-**Tier 1 — Automated tests (DEFAULT; every change).**
+**Tier 1 — Automated tests (DEFAULT in standard/guarded; in `vibe`, the smoke run is the per-change evidence and Tier 1 runs at milestone/ship).**
 Unit tests, service/API integration tests against a real (temp) database, type-check, lint, i18n/contract parity checks. These are the primary evidence of correctness: fast, deterministic, repeatable, CI-friendly. If a behavior is hard to assert with tests, add test hooks (data attributes, exported pure functions, seam interfaces) rather than reaching for screen automation.
 
-**Tier 2 — Programmatic E2E (occasional; slice/milestone completions).**
+**Tier 2 — Programmatic E2E (occasional; milestone/ship completions in every mode, slice completions in standard/guarded).**
 Headless end-to-end harness (e.g., Playwright `_electron` / `chromium`) that drives the real app and asserts on DOM state, returned data, or persisted DB rows. NO screenshots, NO vision models — selectors and data only. Runs in seconds.
 
 **Tier 3 — Visual/interactive verification (rare exception ONLY).**

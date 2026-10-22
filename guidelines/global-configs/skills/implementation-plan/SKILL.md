@@ -120,7 +120,7 @@ Read this entire plan before starting implementation. Execute tasks in the defin
 
 - [ ] All functional requirements implemented
 - [ ] Repository rules followed
-- [ ] All tests passing
+- [ ] Verification per the declared mode (smoke run in `vibe`; all tests passing in standard/guarded)
 - [ ] Documentation updated
 - [ ] No unresolved blockers remain
 - [ ] Acceptance criteria satisfied

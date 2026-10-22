@@ -12,7 +12,7 @@ Speed is a first-class metric alongside accuracy: time from intent to first runn
 
 ## Mode Declaration
 
-The project declares its mode in `WORLD.md` (`mode: vibe | standard | guarded`). Default is `vibe` until the first ship/milestone; after that the mode is escalated by a dated decision recorded in WORLD.md. When WORLD.md is silent, assume `standard`. Mode changes are recorded in WORLD.md with date and reason.
+The project declares its mode in `WORLD.md` (`mode: vibe | standard | guarded`). A starter project begins at `vibe` — the default until the first ship/milestone, after which escalation is a dated decision recorded in WORLD.md. A project that declares no mode at all is assumed `standard`: its stage is unknown, and an undeclared project must not silently receive the loosest tier (`global-configs/scripts/lib/project-mode.js`). Mode changes are recorded in WORLD.md with date and reason.
 
 ## The Mode Matrix
 

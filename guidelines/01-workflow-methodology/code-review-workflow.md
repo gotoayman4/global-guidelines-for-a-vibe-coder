@@ -59,10 +59,12 @@ Size is a constraint on the reviewing AI's working context, not a human time bud
 
 | Size | Approach | Merge criteria |
 |---|---|---|
-| 1 file <50 lines | Self-review + tests | Tests pass |
+| 1 file <50 lines | Self-review + the mode's verification | Smoke run (`vibe`) / tests pass (standard+) |
 | 1–3 files <200 lines | Full checklist | All items pass |
 | 3–5 files <500 lines | Full checklist + independent fresh session | Checklist + regressions pass |
 | 5+ files / 500+ lines | **Split the slice first** | N/A |
+
+Tests in this table mean the verification the mode requires: the smoke run in `vibe`, the suite in standard/guarded (`testing-philosophy.md`).
 
 A large diff degrades AI review quality and makes a reversal proof ambiguous: when the check goes red, the slice no longer says which change caused it. That is the reason to split — not a human reader's patience.
 
@@ -91,7 +93,7 @@ No verdict without a run. A review that executed nothing is a read, not a review
 
 `AI GENERATES → SELF-REVIEW → FIX → AUTOMATED GATES → INDEPENDENT AI REVIEW (risk-based) → FIX → COMMIT/MERGE`
 
-Never commit on a quick scan alone; never without tests; never with an unverified security claim.
+Never commit on a quick scan alone; never without the verification the mode requires (the smoke run in `vibe`, tests in standard/guarded); never with an unverified security claim.
 
 ## The Owner's Role
 

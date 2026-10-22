@@ -14,11 +14,11 @@ tags: [testing, philosophy, contracts]
 
 | Mode | Requirement |
 |---|---|
-| **vibe** | Smoke run per iteration (app starts, happy path works). Regression test only when a bug bites the same path twice, or when stabilizing at a milestone. No suite requirement while iterating. |
+| **vibe** | Smoke run per behavior-changing iteration (app starts, happy path works); Tier 0 changes need only lint/type-check (`agent-verification-loop.md`). Regression test only when a bug bites the same path twice, or when stabilizing at a milestone. No suite requirement while iterating; the per-push gate runs only the changed tests (`gate:fast`). |
 | **standard** | Behavioral tests with code for critical/high-risk changes; regression test with every fix; integration at boundaries; E2E on critical flows. |
 | **guarded** | Full pyramid (below) + critical-flow E2E before ship; security-sensitive paths get an explicit security pass (self-review + automated tests). |
 
-**Ship boundary (all modes):** before any release or milestone exit, critical flows (login/auth · payments · permissions · data persistence) MUST be verified — E2E or equivalent — in both LTR and RTL. Vibe mode never ships unverified critical flows.
+**Ship boundary (all modes):** before any release or milestone exit, critical flows (login/auth · payments · permissions · data persistence) MUST be verified by automated E2E against the deployed target — in both LTR and RTL. Vibe mode never ships unverified critical flows.
 
 ## Universal Directives (every test that exists)
 
@@ -27,7 +27,7 @@ tags: [testing, philosophy, contracts]
 3. **Tests are the executable specification.** When context is lost, models change, or a new agent joins — tests remain and constrain AI behavior.
 4. **AI-optimized pyramid (standard/guarded):** integration ~45% (API contracts, DB, service boundaries) · behavioral unit ~30% · E2E ~15% (login, payments, core workflows) · static ~10% (tsc strict, ESLint). Unit tests de-emphasized — AI-written ones mirror implementation and break on refactor.
 5. **Protect critical flows first:** login/auth · payments · permissions · data persistence · core workflows must NEVER silently break. Then contract shapes, form validation, search. Layout snapshots last.
-6. **Verification cost mirrors the pyramid:** automated tests are the DEFAULT evidence for every change; programmatic headless e2e (no screenshots/vision) runs at slice/milestone completions; visual/interactive verification (screen capture + vision analysis) is a scarce resource reserved for milestone sign-off, layout-only defects, or explicit user request. See `agent-verification-loop.md` → Verification Cost Tiering. If behavior is hard to test, add test hooks rather than screen automation.
+6. **Verification cost mirrors the pyramid:** automated tests are the DEFAULT evidence in standard/guarded; in `vibe`, the smoke run is the per-change evidence. Programmatic headless e2e (no screenshots/vision) runs at milestone/ship completions in every mode, and at slice completions in standard/guarded; visual/interactive verification (screen capture + vision analysis) is a scarce resource reserved for milestone sign-off, layout-only defects, or explicit user request. See `agent-verification-loop.md` → Verification Cost Tiering. If behavior is hard to test, add test hooks rather than screen automation.
 7. **Never trust AI-generated tests without review.** They are often tautological or shallow. Verify: assertions check correct behavior (not "function was called") · edge cases covered (null/empty/boundaries) · test fails when behavior is wrong (break the code deliberately) · one behavior per test. In vibe mode, review applies to every test that does exist — there is simply less of it.
 
 ## Guard Tiers — Cost Follows Risk, Not Repo Age

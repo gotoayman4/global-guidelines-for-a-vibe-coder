@@ -11,6 +11,10 @@
  * LOCKED IT IN with its own hook-integrity guard. Measured consequence: a `vibe` repo paying a
  * `standard` gate on every push (`GAMS_WORKFLOW_SPEED_ANALYSIS_2026-10-12.md` §6).
  *
+ * A second leak survived that reform: the Tier-B hook example and the CI pipeline table still
+ * ran the FULL test suite on every `vibe` push. Both now name the changed-tests slice, and the
+ * retired phrasings below catch the regression — the suite is a ship-boundary step.
+ *
  * CONSTRAINT: the retired phrasing is matched as a REGEX over markdown prose, so a cross-
  * reference ("the mode decides — see `local-ci-strategy.md` §Which Gate Runs") is a link and
  * must not trip it. Only the claim that the gate IS the full pipeline is retired.
@@ -74,6 +78,16 @@ const RETIRED = [
     re: /The full Minimum Pipeline/i,
     why: 'the pipeline’s construction is fixed; the mode decides the per-push scope',
   },
+  {
+    id: 'vibe-full-suite-hook',
+    re: /gate:fast`?\s*&&\s*`?npm run test -- --run/i,
+    why: '`gate:fast` already runs the changed tests; the full suite is a ship-boundary step',
+  },
+  {
+    id: 'vibe-full-test-row',
+    re: /`vibe` per push\s*\|\s*LINT → TYPE CHECK → TEST/i,
+    why: 'a vibe push runs the changed tests via `gate:fast`, not the full suite',
+  },
 ];
 
 /**
@@ -104,6 +118,18 @@ const CANONICAL = [
     file: '03-git-and-ci/local-ci-strategy.md',
     re: /the pre-push hook\s*\|\s*\*\*the declared mode's gate\*\*/,
     what: 'the Tier A/B loop table’s pre-push row',
+  },
+  {
+    id: 'ci-cd-vibe-row',
+    file: '03-git-and-ci/ci-cd-philosophy.md',
+    re: /`vibe` per push\s*\|\s*LINT → TYPE CHECK → changed tests/i,
+    what: 'the pipeline table’s vibe row — changed tests only',
+  },
+  {
+    id: 'local-ci-vibe-hook',
+    file: '03-git-and-ci/local-ci-strategy.md',
+    re: /npm run gate:fast\s+# lint \+ type-check \+ changed tests/,
+    what: 'the Tier-B hook example — no full suite in the vibe branch',
   },
 ];
 

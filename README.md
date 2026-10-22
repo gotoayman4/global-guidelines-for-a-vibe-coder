@@ -92,9 +92,10 @@ Also available: `-DryRun` (preview, write nothing), `-Backup` (dated backup befo
 ## Speed Modes
 
 Projects declare a process mode in `WORLD.md` (`vibe | standard | guarded`) — see
-`guidelines/01-workflow-methodology/speed-tiered-workflow.md`. Default is `vibe` until the
-first ship; when WORLD.md is silent, assume `standard`. Modes scale plan/test/docs ceremony
-only — security, honesty, and the ship-boundary gate apply in every mode.
+`guidelines/01-workflow-methodology/speed-tiered-workflow.md`. A starter project begins at
+`vibe` until its first ship/milestone; a project that declares no mode is assumed `standard`.
+Modes scale context, plan, test depth, steering writes, and the per-push gate; security,
+honesty, and the ship boundary apply in every mode.
 
 ## The Single-Source Pipeline (how the rules are maintained)
 

@@ -31,7 +31,7 @@ Read these from the project root. The set is small and fixed (`documentation-str
 
 Subsystem / API detail lives in `docs/AI_ARCHITECTURE.md` and is loaded on demand, not at boot.
 
-If `WORLD.md` declares a mode, scope plan/test/docs ceremony to `01-workflow-methodology/speed-tiered-workflow.md`. When WORLD.md is silent, assume `standard`. Security, honesty, and ship-boundary rules apply in every mode.
+Scope context, plan, test depth, steering writes, and the per-push gate by the declared mode (`01-workflow-methodology/speed-tiered-workflow.md`). A project that declares no mode is assumed `standard` — its stage is unknown; never silently `vibe`. Security, honesty, and ship-boundary rules apply in every mode.
 
 ### Step 2: Load _guidelines/ Mirror (if present)
 

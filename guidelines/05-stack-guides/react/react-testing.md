@@ -10,6 +10,8 @@ tags: [react, testing, rtl]
 
 React Testing Library (RTL) for component tests. AI generates implementation-mirroring tests that break on refactoring — these patterns prevent that.
 
+**Mode scope:** these directives govern every component test that exists. In `vibe`, component tests are not a per-change requirement — the smoke run is the test step; critical flows are E2E-verified at the ship boundary (`testing-philosophy.md`).
+
 ## Directives
 
 1. **Test behavior, not implementation** — what the user sees and does; never inspect `useState` values or props directly.
