@@ -174,6 +174,8 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [lib/project-mode.js](../global-configs/scripts/lib/project-mode.js) | Script | Global | ~50 | `#script` `#mode` `#world-md` `#shared` `#single-source` |
 | [lib/context-caps.js](../global-configs/scripts/lib/context-caps.js) | Script | Global | ~50 | `#script` `#token-budget` `#shared` `#single-source` `#mirror-safe` |
 | [lib/doc-breadth.js](../global-configs/scripts/lib/doc-breadth.js) | Script | Global | ~50 | `#script` `#breadth` `#steering-docs` `#shared` `#single-source` `#mirror-safe` |
+| [read-mode.js](../global-configs/scripts/read-mode.js) | Script | Global | ~50 (run it; read it only to change it) | `#script` `#mode` `#speed-mode` `#gate` `#shared` `#single-source` |
+| [audit-gate.js](../global-configs/scripts/audit-gate.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#audit` `#dependencies` `#gate` `#allowlist` |
 | [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
 | [check-docs-freshness.js](../global-configs/scripts/check-docs-freshness.js) | Script | Global | ~300 | `#script` `#documentation` `#drift-detection` `#warn-only` |

@@ -47,6 +47,10 @@ const { spawnSync } = require('child_process');
  * @param {string} [options.cwd]     Working directory for the child.
  * @param {object} [options.env]     Environment for the child.
  * @param {boolean} [options.windowsHide=true] Hide the console window on Windows.
+ * @param {boolean} [options.shell=false] Run the command through the shell. Needed only for a
+ *   `.cmd`/`.bat` executable on Windows (see `npmSync`), and never for a fixed argv.
+ * @param {number} [options.timeout] Milliseconds before the child is killed. A killed child
+ *   reports `signal`, never `status`, so a caller can tell "it timed out" from "it failed".
  * @returns {{status:number|null, signal:string|null, stdout:string, stderr:string, error:Error|null}}
  */
 function runSync(command, args = [], options = {}) {
@@ -62,6 +66,8 @@ function runSync(command, args = [], options = {}) {
       cwd: options.cwd,
       env: options.env,
       windowsHide: options.windowsHide !== false,
+      shell: options.shell === true,
+      timeout: options.timeout,
       // 'ignore' for stdin; inherited file handles (not pipes) for stdout/stderr.
       stdio: ['ignore', outFd, errFd],
     });
@@ -84,4 +90,28 @@ function runSync(command, args = [], options = {}) {
   };
 }
 
-module.exports = { runSync };
+/**
+ * Run npm itself, without a shell and without the `.cmd` problem.
+ *
+ * WHY NOT `npm` DIRECTLY. On Windows, npm ships as `npm.cmd`, and Node refuses to spawn a `.cmd`
+ * without a shell (the CVE-2024-27980 mitigation): `spawnSync('npm.cmd', …)` fails with EINVAL. The
+ * shell is therefore a Windows-only fallback, used when this process was NOT started by npm.
+ *
+ * WHY `npm_execpath` FIRST. When a script runs under `npm run`, npm exports the path of its own
+ * CLI (`npm_execpath`). Running that file with the current node executable needs no shell on any
+ * platform and no `.cmd` at all — so the common path has no shell, no quoting and no PATH lookup.
+ *
+ * @param {string[]} args  npm's own argument vector, e.g. `['run', 'validate']`.
+ * @param {object} [options] the same options `runSync` takes.
+ * @returns {{status:number|null, signal:string|null, stdout:string, stderr:string, error:Error|null}}
+ */
+function npmSync(args = [], options = {}) {
+  const cli = process.env.npm_execpath;
+  if (cli && /\.js$/i.test(cli)) {
+    return runSync(process.execPath, [cli, ...args], options);
+  }
+  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  return runSync(npm, args, { ...options, shell: process.platform === 'win32' });
+}
+
+module.exports = { runSync, npmSync };

@@ -4,9 +4,11 @@
  * new-project.js — One-command project bootstrap from the single-source starters.
  *
  * Expands AGENTS.starter.md, WORLD.starter.md, and README.starter.md into a target project root,
- * injects the speed-mode declaration, merges the gate:fast script into package.json when present,
- * and writes a pre-push hook skeleton that branches on the declared mode. Husky install
- * is printed as a next step (no network installs from this script).
+ * injects the speed-mode declaration, merges the gate scripts into package.json, seeds the
+ * dependency-audit wrapper the gate calls, and writes a pre-push hook that reads the declared mode
+ * through the SHIPPED reader and runs, in order: the derived always tier, the mode's gate, the
+ * audit wrapper and the clean-tree check. Husky install is printed as a next step (no network
+ * installs from this script).
  *
  * Usage:
  *   node new-project.js <projectPath> [--mode vibe|standard|guarded] [--name <pkg>]
@@ -25,7 +27,30 @@ const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const STARTERS = path.join(REPO_ROOT, 'global-configs', 'templates');
+const SCRIPTS = path.join(REPO_ROOT, 'global-configs', 'scripts');
 const dryRun = process.argv.includes('--dry-run');
+
+/**
+ * The files the scaffold seeds into a project so the hook's steps always RESOLVE.
+ *
+ * The audit wrapper is the dependency gate the hook calls in every mode, and it is seeded rather
+ * than referenced through the mirror on purpose: the mirror is gitignored, so a project that has
+ * not synced yet would carry an `audit:gate` script pointing at a file that does not exist — the
+ * same "Missing script" hard-fail, one level up. The wrapper's capture helper travels with it, so
+ * the seeded copy is self-contained.
+ */
+const SEEDED = [
+  {
+    src: path.join(SCRIPTS, 'audit-gate.js'),
+    dest: path.join('scripts', 'audit-gate.js'),
+    what: 'the dependency-audit wrapper the pre-push hook calls',
+  },
+  {
+    src: path.join(SCRIPTS, 'lib', 'run-sync.js'),
+    dest: path.join('scripts', 'lib', 'run-sync.js'),
+    what: 'the capture helper the wrapper needs (no pipes — see its docblock)',
+  },
+];
 
 function usage(msg) {
   if (msg) console.error(`❌ ${msg}`);
@@ -107,7 +132,13 @@ function mergeGateScripts(pkg) {
   const scripts = pkg.scripts || {};
   const fast = ['npm run lint', 'npm run type-check'];
   if (scripts.test || scripts['test:unit']) fast.push('npm test -- --run --changed');
-  const additions = { 'gate:fast': fast.join(' && ') };
+  const additions = {
+    'gate:fast': fast.join(' && '),
+    // The dependency audit runs through a wrapper, never a bare `npm audit`: a bare audit that
+    // cannot reach the registry reports nothing and exits 0 — a silent pass. The wrapper is seeded
+    // into `scripts/` below, so this script always resolves.
+    'audit:gate': 'node scripts/audit-gate.js',
+  };
   let changed = false;
   pkg.scripts = scripts;
   for (const [k, v] of Object.entries(additions)) {
@@ -119,21 +150,111 @@ function mergeGateScripts(pkg) {
   return { pkg, changed };
 }
 
+/**
+ * The pre-push hook the scaffold writes.
+ *
+ * It implements the constitution's gate rule (AGENTS.starter.md, "Pre-Commit + Pre-Push Gates"):
+ * the DECLARED MODE picks the gate, and BOTH branches add the dependency-audit wrapper and the
+ * clean-tree check. Four things the previous skeleton got wrong, each measured:
+ *
+ *   - It read the mode with a `grep` in the hook. A grep here is a SECOND reader of `WORLD.md`, and
+ *     a second reader is a second opinion that drifts — it matched `- **Transition mode:**` and
+ *     read a `vibe` out of a sentence about something else. The mode is read by the SHIPPED
+ *     reader now, and an unreadable mode FAILS SAFE to the full chain: an unreadable mode must
+ *     never buy the fast path.
+ *   - It ran the full pipeline with `&& npm test -- --run && npm run build`, so a project without
+ *     a `test` or a `build` script died on "Missing script" — a scaffold that blocks a legitimate
+ *     project at its first push. A script the project does not have is now SKIPPED WITH A NOTE; a
+ *     script that EXISTS and FAILS still fails the push.
+ *   - It carried a comment where the always tier should have been ("Add this project's always-tier
+ *     guards here"). The tier is now DERIVED from the guards' own `@tier` docblocks, so a guard
+ *     that declares itself `always` is in this gate without anybody editing this file.
+ *   - It ran neither the audit wrapper nor the clean-tree check, though the constitution names
+ *     both in every mode.
+ */
 function prePushHook() {
   return [
     '#!/bin/sh',
-    '# Pre-push gate — branches on the declared mode (WORLD.md §Speed Mode).',
-    '# vibe: gate:fast + every always-tier guard (add them below).',
-    '# standard/guarded: the full pipeline.',
-    "mode=$(grep -Eo 'mode:\\*\\*[[:space:]]*`?(vibe|standard|guarded)' WORLD.md 2>/dev/null | head -n 1 | grep -Eo '(vibe|standard|guarded)')",
-    '[ -n "$mode" ] || mode=standard',
-    'echo "pre-push gate: mode=$mode"',
-    'if [ "$mode" = "vibe" ]; then',
-    '  npm run gate:fast || exit $?',
-    '  # Add this project\'s always-tier guards here — they run in every mode.',
+    '# Pre-push gate — the declared mode decides how much runs (`local-ci-strategy.md` §Tier B).',
+    '#',
+    '# Order: mode → always-tier → gate → audit → clean-tree',
+    '#',
+    '# Four rules that are easy to get wrong here:',
+    '#   · The mode is READ BY THE SHIPPED READER, never by a grep in this file: a grep here is a',
+    '#     second reader of WORLD.md, and a second reader is a second opinion that drifts. The',
+    '#     reader is `_guidelines/global-configs/scripts/read-mode.js` (the synced mirror), or a',
+    '#     vendored `scripts/read-mode.js`. If neither is there — or the declaration is not',
+    '#     legible — the gate FAILS SAFE to the full chain: an unreadable mode must never buy the',
+    '#     fast path.',
+    '#   · The always tier is DERIVED from the guards\' own `@tier` docblocks, not listed here: a',
+    '#     list kept by hand in a hook goes stale, and it fails in the direction nobody notices.',
+    '#   · A step this project does not have is SKIPPED WITH A NOTE, never a hard failure. A step',
+    '#     that EXISTS and FAILS fails the push.',
+    '#   · The audit and the clean-tree check run in EVERY mode: `vibe` defers the full suite,',
+    '#     never the security or the honesty checks.',
+    '#',
+    '# `--no-verify` is forbidden in every mode. A step that cannot run must fail, never pass.',
+    '',
+    'set -e',
+    '',
+    'cd "$(git rev-parse --show-toplevel)" || exit 1',
+    '',
+    'MODE=standard',
+    'for reader in "_guidelines/global-configs/scripts/read-mode.js" "scripts/read-mode.js"; do',
+    '  if [ -f "$reader" ]; then',
+    '    MODE=$(node "$reader" 2>/dev/null) || MODE=""',
+    '    [ -n "$MODE" ] || MODE=standard',
+    '    break',
+    '  fi',
+    'done',
+    'echo "pre-push gate: mode=$MODE"',
+    '',
+    '# run_step <script> [args...] — a script this project does not have is a note; a script that',
+    '# fails is a failure.',
+    'run_step() {',
+    '  step_script="$1"',
+    '  shift',
+    '  if node -e "const s=(require(\'./package.json\').scripts)||{};process.exit(s[process.argv[1]]?0:1)" "$step_script" 2>/dev/null; then',
+    '    npm run "$step_script" "$@"',
+    '  else',
+    '    echo "  (skipped $step_script — this project has no such script)"',
+    '  fi',
+    '}',
+    '',
+    '# The always tier runs in EVERY mode. The set is derived by the guard that owns the tiers, so',
+    '# a guard that declares itself `always` reaches this gate without anybody editing this file.',
+    'if [ -f "_guidelines/global-configs/scripts/check-guard-tiers.js" ]; then',
+    '  node "_guidelines/global-configs/scripts/check-guard-tiers.js" --root . --run-always',
     'else',
-    '  npm run lint && npm run type-check && npm test -- --run && npm run build || exit $?',
+    '  echo "  (skipped the always tier — _guidelines/ is not synced, so no tier can be derived)"',
     'fi',
+    '',
+    'if [ "$MODE" = "vibe" ]; then',
+    '  # The fast loop: lint + type-check + the tests the diff touches. The full suite is a',
+    '  # ship-boundary step, not a per-push one.',
+    '  run_step gate:fast',
+    'else',
+    '  # The full pipeline: lint → type-check → test → build.',
+    '  run_step lint',
+    '  run_step type-check',
+    '  run_step test -- --run',
+    '  run_step build',
+    'fi',
+    '',
+    '# The dependency audit, through the project\'s own wrapper. A bare `npm audit` that cannot',
+    '# reach the registry reports nothing and exits 0 — a silent pass.',
+    'run_step audit:gate',
+    '',
+    '# Clean-tree: decided on CONTENT, never on git\'s stat cache. A stat-based check reports files',
+    '# as modified whose worktree blob is identical to the index, and blocks a genuinely clean push.',
+    'if ! git diff --quiet HEAD || [ -n "$(git ls-files --others --exclude-standard)" ]; then',
+    '  echo "pre-push FAIL: working tree is dirty after the gate (staged, unstaged, or untracked)" >&2',
+    '  git diff --name-status HEAD >&2',
+    '  git ls-files --others --exclude-standard >&2',
+    '  exit 1',
+    'fi',
+    '',
+    'exit 0',
     '',
   ].join('\n');
 }
@@ -216,6 +337,51 @@ function main() {
     });
   }
 
+  for (const seeded of SEEDED) {
+    const dest = path.join(projectPath, seeded.dest);
+    if (fs.existsSync(dest)) {
+      actions.push({ file: seeded.dest, status: 'exists — skipped (the project owns it)' });
+      continue;
+    }
+    if (!fs.existsSync(seeded.src)) {
+      actions.push({ file: seeded.dest, status: 'source missing — skipped' });
+      continue;
+    }
+    actions.push({
+      file: seeded.dest,
+      status: `would write (${seeded.what})`,
+      write: () => {
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(seeded.src, dest);
+      },
+    });
+  }
+
+  const allowlistDest = path.join(projectPath, 'scripts', 'audit-allowlist.json');
+  if (fs.existsSync(allowlistDest)) {
+    actions.push({ file: 'scripts/audit-allowlist.json', status: 'exists — skipped (the project owns it)' });
+  } else {
+    actions.push({
+      file: 'scripts/audit-allowlist.json',
+      status: 'would write (the accepted-risk list the audit wrapper reads)',
+      write: () => {
+        fs.mkdirSync(path.dirname(allowlistDest), { recursive: true });
+        fs.writeFileSync(
+          allowlistDest,
+          `${JSON.stringify(
+            {
+              _comment:
+                'Accepted dependency risks, keyed by advisory URL (GHSA-…). Every entry needs a "why" and a "reviewBy" date: an entry whose review date has passed AND whose advisory is still reported fails the gate.',
+            },
+            null,
+            2,
+          )}\n`,
+          'utf8',
+        );
+      },
+    });
+  }
+
   if (dryRun) {
     console.log('── dry run — no files written ──');
     for (const a of actions) console.log(`  ${a.file}: ${a.status}`);
@@ -231,15 +397,19 @@ function main() {
   console.log('  1. Search [FILL] in AGENTS.md — fill the stack table + project mandates (the only home for rules)');
   console.log('  2. Complete WORLD.md sections (mode already set to ' + args.mode + ')');
   console.log('  3. Complete README.md — what this is, structure tree, quick start');
-  console.log('  4. npx husky init   # install hooks; the generated pre-push branches on WORLD.md');
+  console.log('  4. npx husky init   # install hooks; the generated pre-push reads the declared mode through');
+  console.log('     the shipped reader and runs the always tier, the mode\'s gate, the audit and the clean-tree check');
   console.log('  5. Wire a real gate:receipt script: run the full pipeline and write docs/gate-receipts/<UTC-stamp>.md —');
   console.log('     an echo-only placeholder is not evidence (local-ci-strategy.md §Gate Receipts).');
   console.log('  6. pwsh -File <central-repo>\\guidelines\\global-configs\\scripts\\sync-guidelines.ps1 -ProjectPath .  # mirror _guidelines/');
+  console.log('     (until then the hook cannot read the mode through the shipped reader and cannot derive the always tier —');
+  console.log('     it fails safe to the full chain and says so)');
   console.log('  7. git config core.hooksPath .husky   # if not using husky default');
+  console.log('  8. Record every accepted dependency risk in scripts/audit-allowlist.json — with a why and a review-by date');
   console.log('\n  Docs set: AGENTS.md + WORLD.md + README.md (+ docs/AI_ARCHITECTURE.md on demand).');
   console.log('  There is no AI_CONTEXT.md or ARCHITECTURE_INDEX.md — one home per fact (07-documentation/documentation-strategy.md).');
 }
 
 if (require.main === module) main();
 
-module.exports = { injectMode, mergeGateScripts, prePushHook, parseArgs };
+module.exports = { injectMode, mergeGateScripts, prePushHook, parseArgs, SEEDED };

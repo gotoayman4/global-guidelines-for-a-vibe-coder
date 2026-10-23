@@ -72,6 +72,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { npmSync } = require('./lib/run-sync.js');
 
 /** The three tiers, exactly as `local-ci-strategy.md` §Guard Tiers names them. */
 const TIERS = ['always', 'standard+', 'ship'];
@@ -101,9 +102,60 @@ const VIBE_CHAIN = 'gate:fast';
  */
 const HOOK = path.join('.husky', 'pre-push');
 
+/**
+ * The npm scripts that run the `always` tier — the set a per-push gate owes, derived.
+ *
+ * A guard is reached by an npm script that names its file; a script is reached by that
+ * guard when the guard's tier is `always`. The result is the executable form of the tier:
+ * the gate does not carry a list, it asks for the list and runs what it gets back.
+ *
+ * A script that runs this guard WITH `--run-always` is excluded: it IS the derivation, so
+ * running it would re-enter the derivation and recurse forever.
+ *
+ * @param {object} report the `analyse` result
+ * @returns {string[]} distinct npm script names, in the order the guards were discovered
+ */
+function alwaysRunners(report) {
+  const names = new Set();
+  const scripts = report.scripts || {};
+  for (const guard of report.guards) {
+    if (guard.tier !== 'always') continue;
+    for (const runner of guard.runners || []) {
+      if (String(scripts[runner] || '').includes('--run-always')) continue;
+      names.add(runner);
+    }
+  }
+  return [...names];
+}
+
+/**
+ * Run the derived `always` set. The first failure stops the run and is the verdict.
+ *
+ * The derivation is the point: a list kept by hand in the hook goes stale, and it fails in
+ * the direction nobody notices. A set derived from the guards' own `@tier` docblocks cannot
+ * go stale, and a guard that adds itself to the tier is in the gate the next push.
+ *
+ * The runners are npm SCRIPT NAMES, not guard files: a project wires a guard under its own
+ * script name (`guard:mode`, `guard:tiers`), and the tier says WHICH guards must run, never
+ * how a project chose to invoke them.
+ *
+ * @param {object} report the `analyse` result
+ * @param {string} repo  where `package.json` lives
+ * @returns {{ok: boolean, ran: Array<{name: string, status: number|null, stderr: string}>}}
+ */
+function runAlways(report, repo) {
+  const ran = [];
+  for (const name of alwaysRunners(report)) {
+    const result = npmSync(['run', name], { cwd: repo });
+    ran.push({ name, status: result.status, stderr: result.stderr });
+    if (result.status !== 0) return { ok: false, ran };
+  }
+  return { ok: true, ran };
+}
+
 function usage(msg) {
   if (msg) console.error(`❌ ${msg}`);
-  console.error('Usage: node check-guard-tiers.js [--root <repoRoot>] [--json]');
+  console.error('Usage: node check-guard-tiers.js [--root <repoRoot>] [--json] [--print-always] [--run-always]');
   process.exit(2);
 }
 
@@ -212,6 +264,7 @@ function analyse(scriptsDir = SCRIPTS, repo = REPO) {
     scriptsDir,
     repo,
     mirror,
+    scripts,
     guards,
     gate: null,
     vibe: VIBE_CHAIN,
@@ -332,10 +385,14 @@ function main() {
   const argv = process.argv.slice(2);
   let json = false;
   let root = null;
+  let printAlways = false;
+  let runAlwaysFlag = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--json') json = true;
+    else if (arg === '--print-always') printAlways = true;
+    else if (arg === '--run-always') runAlwaysFlag = true;
     else if (arg === '--root') {
       root = argv[i + 1];
       if (!root) usage('--root needs a path');
@@ -352,10 +409,34 @@ function main() {
   const repo = root ? path.resolve(root) : REPO;
 
   const report = analyse(SCRIPTS, repo);
+
+  // `--print-always` and `--run-always` answer the only question the tier exists to answer:
+  // which npm scripts must a per-push gate owe? The answer is derived here, so the hook asks the
+  // guard instead of carrying a list that goes stale.
+  if (printAlways || runAlwaysFlag) {
+    const names = alwaysRunners(report);
+    if (printAlways) {
+      if (json) console.log(JSON.stringify({ alwaysRunners: names }, null, 2));
+      else for (const name of names) console.log(name);
+    }
+    if (runAlwaysFlag) {
+      const result = runAlways(report, repo);
+      if (json) console.log(JSON.stringify({ alwaysRunners: names, ran: result.ran }, null, 2));
+      else {
+        for (const entry of result.ran) {
+          console.log(`${entry.status === 0 ? '✅' : '❌'} npm run ${entry.name}`);
+          if (entry.status !== 0 && entry.stderr.trim()) console.error(entry.stderr.trim());
+        }
+      }
+      process.exit(result.ok ? 0 : 1);
+    }
+    process.exit(0);
+  }
+
   console.log(json ? JSON.stringify(report, null, 2) : render(report));
   process.exit(report.problems.length > 0 ? 1 : 0);
 }
 
 if (require.main === module) main();
 
-module.exports = { analyse, render, discoverGuards, readTier, readScripts, expand, runnersOf, resolveGate, isMirror, leadingDocblock, TIERS, SCRIPTS, REPO };
+module.exports = { analyse, render, discoverGuards, readTier, readScripts, expand, runnersOf, resolveGate, isMirror, leadingDocblock, alwaysRunners, runAlways, TIERS, SCRIPTS, REPO };
