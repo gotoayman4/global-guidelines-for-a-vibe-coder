@@ -38,7 +38,7 @@ This is **not** an application project. It is a centralized development guidelin
 - Rule text lives in `guidelines/global-configs/fragments/` — one `##` section per file, order and token budget in `fragments/manifest.json`
 - `guidelines/global-configs/templates/AGENTS.starter.md` is GENERATED output — NEVER hand-edit it (`npm run check-drift` fails validate if it diverges)
 - To change a rule: edit the fragment → `npm run render:starters` → `npm run validate` → commit fragment + template together
-- The constitution has a token budget (**5,500 tokens** — `fragments/manifest.json` `maxTokens`; the rendered starter currently measures 5,088): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure: this line said "~7,000" for months while the manifest said 5,000 and `check-drift` enforced it.
+- The constitution has a token budget (**5,500 tokens** — `fragments/manifest.json` `maxTokens`, enforced by `npm run check-drift`): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure: this line said "~7,000" for months while the manifest said 5,000 and `check-drift` enforced it, and it then said "5,088" while the starter measured 5,389. `npm run render:starters` prints the current figure — read it there.
 - Other starter templates (WORLD, DEVTOOLS, tool configs) are hand-maintained; when a guideline changes, update the matching one
 - Starter templates use `[FILL]` placeholders for project-specific values
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
