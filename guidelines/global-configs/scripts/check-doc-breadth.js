@@ -10,12 +10,21 @@
  * binds nothing is decoration, and the failure it hides is a slice that spends its budget
  * re-stating facts in five places instead of shipping the change.
  *
- * THE MEASUREMENT THAT SET THE RULE. Across the reference project's 29 commits, the distribution
- * of steering files touched per commit is bimodal: every commit that changes product source
- * touches **0 or 1** (max 1), and every commit touching 2-4 is a docs/ritual commit. So the
- * pathology is not "many steering files" — a milestone legitimately writes the full set. It is
- * "many steering files *on a code slice*". That is what this guard fails, and it is why a
- * naive per-commit cap would have failed a third of real, healthy history.
+ * THE MEASUREMENT THAT SET THE RULE, AND THE ONE THAT CORRECTED IT. Across the reference
+ * project's 29 commits, the distribution of steering files touched per commit is bimodal: every
+ * commit that changes product source touches **0 or 1** (max 1), and every commit touching 2-4 is
+ * a docs/ritual commit. So the pathology is not "many steering files" — a milestone legitimately
+ * writes the full set. It is "many steering files *on a code slice*". That is what this guard
+ * fails, and it is why a naive per-commit cap would have failed a third of real, healthy history.
+ *
+ * That measurement counted the CANONICAL homes only — the four files the trigger table names. A
+ * project can write `docs/PRD.md`, `docs/ROADMAP.md` and `docs/ACCEPTANCE.md` on every slice and
+ * the canonical count reads 1, because none of those is one of the four. Re-measured on 2026-10-23
+ * over the reference project's last 80 commits: the canonical count read 0–3 on a code slice
+ * (so the "max 1" claim was already stale), while the real markdown surface read 0–10. The
+ * doctrine's own anti-pattern is "a `vibe` slice writing five steering files"; the canonical
+ * count could not see five of them. The counted set is therefore the UNION of the table's
+ * canonical homes and the project's own markdown surface (`lib/doc-breadth.js` §steeringWrites).
  *
  * DECISION: a commit is judged only when it changes product source. A commit with no source
  * change is a ritual commit and is exempt — its whole job is the steering set. The exemption is
@@ -45,16 +54,13 @@
 const path = require('path');
 const { runSync } = require('./lib/run-sync.js');
 const { readMode, MODES } = require('./lib/project-mode.js');
-const { docBreadth } = require('./lib/doc-breadth.js');
+const { docBreadth, steeringWrites, RECORD } = require('./lib/doc-breadth.js');
 
 /** Trees that are never a project's own product: its docs, and its mirrored guidelines. */
 const NOT_PRODUCT = [/(^|\/)docs\//, /(^|\/)_guidelines\//, /(^|\/)guidelines\//, /(^|\/)\.workbuddy-ai\//, /(^|\/)node_modules\//];
 
 /** A programming-language extension. Config-only files are deliberately absent — see DECISION. */
 const SOURCE_EXT = /\.(m?[jt]sx?|c[jt]s|py|rb|go|rs|java|kt|kts|scala|php|cs|swift|dart|ex|exs|lua|pl|r|jl|sql|sh|bash|zsh|ps1|psm1|bat|cmd|vue|svelte|astro|tf|proto|graphql|gql|rules)$/i;
-
-/** The record: the decision entry and its receipt path. It never scales, so it is never counted. */
-const RECORD = [/(^|\/)docs\/adr\//, /(^|\/)docs\/DECISIONS\.md$/, /(^|\/)docs\/changelog\//];
 
 function usage(msg) {
   if (msg) console.error(`❌ ${msg}`);
@@ -106,7 +112,7 @@ function examine(root, ref = 'HEAD') {
   }
   const subject = (gitLines(root, ['log', '-1', '--format=%s', ref]) || [''])[0];
 
-  const steering = files.filter((f) => table.steering.includes(f));
+  const steering = steeringWrites(files, table.steering);
   const source = files.filter(isSource);
   const record = files.filter((f) => RECORD.some((re) => re.test(f)));
 

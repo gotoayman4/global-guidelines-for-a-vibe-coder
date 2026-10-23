@@ -4,7 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const { runSync } = require('../lib/run-sync.js');
-const { docBreadth } = require('../lib/doc-breadth.js');
+const { docBreadth, steeringWrites, isSteeringFile } = require('../lib/doc-breadth.js');
 const { examine, isSource, SOURCE_EXT } = require('../check-doc-breadth.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
@@ -261,4 +261,55 @@ test('the guard is silent on the repository it ships in', () => {
   // wider check, run when the rule was set.
   const report = examine(REPO_ROOT);
   assert.equal(report.violation, false, JSON.stringify(report.steering));
+});
+
+// ─── The counted set is the union, not just the table's four ─────────────────
+
+test('THE REVERSAL PROOF: a vibe slice writing two PROJECT docs fails', () => {
+  // The escape hatch the canonical count left open. `docs/PRD.md` and `docs/ROADMAP.md` are not
+  // one of the four homes the trigger table names, so the old count read 1 and let the slice
+  // through — while the doctrine's own anti-pattern is "a `vibe` slice writing five steering
+  // files". Measured on the reference project: 0–3 on the canonical count, 0–10 on the real
+  // markdown surface, on the same code slices.
+  const dir = project('vibe');
+  const sha = commit(dir, {
+    'src/a.ts': 'export const a = 1;\n',
+    'docs/PRD.md': '# PRD\n\nupdated\n',
+    'docs/ROADMAP.md': '# Roadmap\n\nupdated\n',
+  }, 'feat: add a');
+
+  const report = examine(dir, sha);
+  assert.equal(report.violation, true, 'two steering writes exceed the vibe breadth of one');
+  assert.deepEqual(report.steering, ['docs/PRD.md', 'docs/ROADMAP.md']);
+  assert.equal(report.source.length, 1);
+});
+
+test("the project's own docs are steering; the categories that never scale are not", () => {
+  // Each exclusion is a category the constitution names — the record, run evidence, dated
+  // reports, machine output, the mirror — so none of them is a private judgement of the script.
+  assert.equal(isSteeringFile('docs/PRD.md'), true, "a project's own doc is steering");
+  assert.equal(isSteeringFile('docs/ROADMAP.md'), true);
+  assert.equal(isSteeringFile('AGENTS.md'), true);
+  assert.equal(isSteeringFile('docs/adr/001-thing.md'), false, 'the record never scales');
+  assert.equal(isSteeringFile('docs/changelog/2026-Q4.md'), false, 'the record never scales');
+  assert.equal(isSteeringFile('docs/DECISIONS.md'), false, 'the record never scales');
+  assert.equal(isSteeringFile('docs/gate-receipts/2026-10-23-051247Z.md'), false, 'a receipt is the gate, not the slice');
+  assert.equal(isSteeringFile('docs/reviews/round5-2026-10-22.md'), false, 'a dated report is an immutable record');
+  assert.equal(isSteeringFile('docs/constitution-citations.lock.md'), false, 'machine output is cited, not transcribed');
+  assert.equal(isSteeringFile('_guidelines/global-configs/scripts/x.md'), false, 'the mirror is not the project');
+  assert.equal(isSteeringFile('node_modules/pkg/README.md'), false);
+  assert.equal(isSteeringFile('apps/web-portal/docs/NOTES.md'), false, 'a nested package doc is not project steering');
+  assert.equal(isSteeringFile('src/a.ts'), false, 'source is not steering');
+});
+
+test('a table-named file outside the surface still counts — the set is a union', () => {
+  // The trigger table owns the canonical set; this script only widens it, never narrows it.
+  const files = ['apps/x/CONSTITUTION.md', 'docs/PRD.md'];
+  assert.deepEqual(steeringWrites(files, ['apps/x/CONSTITUTION.md']), ['apps/x/CONSTITUTION.md', 'docs/PRD.md']);
+  assert.deepEqual(steeringWrites(files, []), ['docs/PRD.md']);
+});
+
+test('the canonical four are still counted — widening did not replace them', () => {
+  const { steering } = docBreadth();
+  assert.deepEqual(steeringWrites(steering, steering), steering);
 });
