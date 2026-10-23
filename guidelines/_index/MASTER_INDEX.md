@@ -191,6 +191,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-guard-tiers.js](../global-configs/scripts/check-guard-tiers.js) | Script | Global | ~4,400 (run it; read it only to change it) | `#script` `#guard` `#tiers` `#gate` `#derived` `#single-source` |
 | [check-skill-activations.js](../global-configs/scripts/check-skill-activations.js) | Script | Global | ~2,800 (run it; read it only to change it) | `#script` `#guard` `#skills` `#activation` `#receipt` |
 | [check-agents-paths.js](../global-configs/scripts/check-agents-paths.js) | Script | Global | ~3,000 (run it; read it only to change it) | `#script` `#guard` `#bootstrap` `#tracked-ness` `#portability` `#gate` |
+| [check-mode-conformance.js](../global-configs/scripts/check-mode-conformance.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#guard` `#mode` `#speed-mode` `#gate` `#fleet` |
 | [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
