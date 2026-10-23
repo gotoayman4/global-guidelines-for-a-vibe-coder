@@ -142,7 +142,7 @@ Two different things hide under the word "documentation", and only one of them m
 
 A mode that removes the **record** is not fast, it is amnesiac. A mode that keeps every **ritual** is not safe, it is slow. The failure this table exists to prevent is a `vibe` slice writing five steering files (the ritual, un-scaled) while leaving no decision entry (the record, skipped) — the worst of both.
 
-**The decision number is derived, never counted.** The next number is `max(existing) + 1`, computed by the tooling at slice close from the numbers already in the project. Do not maintain a counter in a document: a hand-kept counter needs its own parity guard, and two concurrent sessions take the same number. See `local-ci-strategy.md` §Slice Close.
+**The decision number is derived, never counted.** The next number is `max(existing) + 1`, computed by the tooling at slice close from the numbers already **recorded** in the project — read from the committed tree, so the record a slice is writing cannot raise the number it is claiming. Do not maintain a counter in a document: a hand-kept counter needs its own parity guard, and two concurrent sessions take the same number. A line that DECLARES the next unclaimed number (`- Next D-number: **D40**`) is different: it is an earmark, and it is legitimate only when a guard asserts it stays above every number already cited — with that guard, the tool takes the higher of the two and the reservation wins; without one, it is the counter above with a name that sounds like a plan. See `local-ci-strategy.md` §Slice Close.
 
 ## Freshness — Written, Never Typed
 

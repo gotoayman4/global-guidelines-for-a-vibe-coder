@@ -126,13 +126,20 @@ A receipt proves the gate ran. The rest of what a slice owes — the changelog e
 
 ```sh
 npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md --receipt docs/gate-receipts/<stamp>.md
+# a project whose archive is named per document adds: --archive docs/changelog/roadmap-2026-Q4.md
 ```
 
 | It writes | Derived from |
 |---|---|
-| `docs/changelog/<YYYY>-Q<n>.md` — the dated entry | today's date · `git rev-parse --short HEAD` · `--title` |
-| the next decision number, `D<max+1>` | the numbers already present in the docs **and** the archives — never a counter kept in a file |
+| the archive — `docs/changelog/<YYYY>-Q<n>.md`, or the file `--archive` names — the dated entry | today's date · `git rev-parse --short HEAD` · `--title` |
+| the next decision number | the highest `D<n>` already **recorded** in the project's docs and archive, read from the **committed** tree (`git show HEAD:./<path>`), or a document's own declared next-number line when that is higher — never a counter kept in a file |
 | the freshness line on `WORLD.md` / `docs/AI_ARCHITECTURE.md` | the same date and SHA, when the slice's `--doc` names that file and it carries one |
+
+**Two things the derivation must not read, both measured 2026-10-23.** It scans `git show HEAD:./<path>` — the committed bytes — not the working tree, because the record being written is itself sitting in the working tree: at D360 the slice's own half-written entry had already raised the maximum, so closing that slice a second time invented `D361`, a number no document used. And a line that *declares* the next unclaimed number (`- Next D-number: **D360**`) is a reservation, not a record — scanning it like a used number returns the number **after** the one reserved, which is the same invention one step away. Such lines are therefore skipped by the scan and answer directly when they are the higher of the two. `--dry-run` prints which fact decided the number (`from the project's declared next-number line`, `derived: max(committed used D<n>) + 1`, or `given by --decision`), because a derived number that cannot say where it came from is indistinguishable from one that was typed.
+
+**One archive per quarter is the default, not the rule.** The rule is ONE primary entry per slice. A project whose archives are named after the document they serve passes `--archive docs/changelog/roadmap-2026-Q4.md` and gets no second file written beside it. The path must be markdown under `docs/` — anything else exits 2, because a record filed where no guard looks is worse than no record.
+
+**A script a project cannot install is not a rule it can follow.** `slice-close.js` ships inside the guideline bundle. A project that keeps that bundle gitignored has no tracked path for an npm script to point at, so a `slice:close` entry in its `package.json` would be a declared control with nothing behind it. Such a project runs the tool by path per machine (`node <bundle>/global-configs/scripts/slice-close.js <projectRoot> --title …`) or vendors the script into its own tracked `scripts/` and takes ownership of its tests — and either way, the constitution names the command that actually executes.
 
 **`--adr` adds the decision's three sites, because all three restate what the repository already knows:**
 
@@ -150,7 +157,7 @@ npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md --
 
 `--duration <minutes>` records **intent → first running slice** in the entry (`**Intent→slice:** 42m`). `speed-tiered-workflow.md` §Absolute Rules 5 mandates the measurement and nothing captured it; an unmeasured slice records nothing rather than a fabricated `0m`.
 
-`--dry-run` prints the plan and writes nothing; `--decision` overrides the derived number when a concurrent session took it. **Prose stays human:** the acceptance body and the ADR's `--why`. Everything else is a fact the repository already knows — and a fact a machine writes cannot be forgotten, mistyped, or raced.
+`--dry-run` prints the plan and writes nothing; `--decision` overrides the derived number when a concurrent session really did take it. **Prose stays human:** the acceptance body and the ADR's `--why`. Everything else is a fact the repository already knows — and a fact a machine writes cannot be forgotten, mistyped, or raced.
 
 ## Tier C — act (Optional)
 

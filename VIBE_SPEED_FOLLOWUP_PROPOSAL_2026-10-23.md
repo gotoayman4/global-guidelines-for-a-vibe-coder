@@ -6,6 +6,8 @@
 guarded tier, and reported where the minutes went.
 **Method:** each candidate recommendation was checked against the current corpus before it was written. Six of eight
 were already upstream rules, several in stronger form than the recommendation proposed. Only the remainder shipped.
+**Correction, same day:** one of the six "already upstream" rows was true of the *rule* and false of the *tool* — see
+§5, which is the part of this document that changed after the downstream implementation measured it.
 **Status:** Applied — `npm run validate` exits 0; `npm run validate:standard` exits 0 (measured 2026-10-23, re-measurable
 with those two commands).
 
@@ -21,7 +23,7 @@ reform of 2026-10-11 (`WORKFLOW_SPEED_REFORM_PROPOSAL_2026-10-11.md`, S1–S16) 
 | Run the cheap structural lane after every new file, not after the slice | **Already upstream** | `local-ci-strategy.md` §The Loop — `gate:fast` runs "after every edit batch, during the slice" |
 | Date-only constitution header, no per-slice freshness prose | **Already upstream, stricter** | `documentation-strategy.md` §Freshness — "`AGENTS.md` and `README.md` carry none" |
 | One slice record with pointers instead of copies | **Already upstream** | `documentation-strategy.md` §History — one archive per quarter, `**Doc:**` column, S8 |
-| Derive the decision number, never count it | **Already upstream** | `slice:close.js` + §Record vs Ritual |
+| Derive the decision number, never count it | **Rule upstream, tool broken** | `slice:close.js` + §Record vs Ritual — but the tool read the working tree and could only write a quarterly archive; see §5 |
 | The mode decides what the per-push gate runs | **Already upstream** | `local-ci-strategy.md` §Which Gate Runs — "writing the full pipeline unconditionally is the defect this branch exists to prevent" |
 | Subprocess-capture facts (sync pipes) | **Half upstream** | repo `AGENTS.md` §Subprocess Capture, `lib/run-sync.js` — never in a **mirrored** guideline, so no project received it |
 | Suite-level scoping inside one E2E step | **Genuine gap** | §Guard Tiers derived the guard set; nobody applied the derivation one level down |
@@ -49,6 +51,7 @@ mirror. `sync:drift` proves the copy arrived; nothing proves it was obeyed.
 | **U5** | **Session scratch has one ignored home.** One gitignored directory (`scratch/`), each writer adds its own path to the ignored set, staging by path — never `git add -A` in a tree that can hold scratch. | `03-git-and-ci/local-ci-strategy.md` + `fragments/30-git.md` | `clean-tree` in the hook |
 | **U6** | **Two instrument facts.** An editor/language-server diagnostic is not the compiler's verdict; a multi-line inline `node -e` in PowerShell leaves the shell in a here-string continuation that swallows every later command. | `02-engineering-practices/agent-verification-loop.md` + `fragments/20-testing.md` | the project's `type-check` step, and "truncated output is never evidence" |
 | **U7** | **Non-vacuity asserts the expected population**, not merely a non-empty corpus — a silently shrunken collection passes louder than an empty one. | `07-documentation/documentation-strategy.md` §Guards | each guard's own count assertion |
+| **U8** | **A derived number is derived from the committed tree, and a declared next-number line is an earmark.** `slice:close` scans `git show HEAD:./<path>`, skips lines that *declare* the next unclaimed number, and answers with the higher of `max(used)+1` and the declaration; `--archive` names a per-document archive; `--dry-run` prints which fact decided the number. | `03-git-and-ci/local-ci-strategy.md` §Slice Close, `07-documentation/documentation-strategy.md` §Record vs Ritual | `guidelines/global-configs/scripts/tests/slice-close.test.js` — 7 new cases, including a real temporary repository so the committed/working-tree split is exercised rather than asserted |
 
 The constitution absorbed four short clauses (escalation class, type-verdict authority, cached-step disclosure,
 scratch home; non-vacuity stays prose-side). `npm run render:starters` measures the starter at **5,317 / 5,500
@@ -78,3 +81,28 @@ control that is not enforced" failure this corpus already outlaws.
    parity guards exist to catch hand-typed derived facts; a derived fact that is never typed retires the guard.
 5. Suite scoping (U1), cached-step disclosure (U3), scratch home (U5), and the ROADMAP render debt that makes 86% of
    the suite's wall time a standing tax rather than a per-slice discovery.
+
+## 5. What the downstream measurement found in this repo's own tool
+
+§4 item 4 told the project to "adopt `slice:close`". Implementing that instruction surfaced three defects in the tool
+this repo ships — the rule was sound, the instrument was not, and only the instrument was in this repo.
+
+| Defect | Measured consequence | Fix |
+|---|---|---|
+| The next-number scan read the **working tree** | At D360 the slice's own half-written archive entry had already raised the maximum: the run derived **D361**, a number no document used, and a second run of the same close would have written a record for a decision nobody made | Scan `git show HEAD:./<path>` — committed bytes — with the disk read kept only as the fallback for a path HEAD does not have (a document created this slice, or a project with no repository) |
+| A line that **declares** the next number was counted as a used one | `- Next D-number: **D360**` is the project's reservation; counted as a record it returns the number *after* the reserved one, so the earmark and the derivation fight | Skip such lines in the scan, take `max(max(used)+1, declared)`, and report which fact answered |
+| The archive path was hard-coded to `docs/changelog/<YYYY>-Q<n>.md` | A project whose changelog archives are named per document (`roadmap-2026-Q4.md`) would have gotten a second, unguarded file written beside its real one — a slice recorded twice, which is the four-copies defect this corpus outlaws | `--archive <rel.md>`, validated to markdown under `docs/`, exit 2 otherwise |
+
+**And the instruction itself needed correcting.** `_guidelines/` is gitignored in the consuming project (0 tracked
+files), so `npm run slice:close` cannot point at a path the repository does not carry: the script name would have been
+a declared control with nothing behind it — the failure mode that project's own proposal corpus outlaws twice
+(`gs-coordinator-helper/guidelines-proposals/2026-09-23-declared-control-not-enforced`,
+`…/2026-09-23-affordance-is-not-a-guard`). §4 item 4 is therefore amended: the project either runs the tool by
+per-machine path or vendors it, and the constitution names only the command that actually executes. The decision is
+recorded downstream in `gs-coordinator-helper/guidelines-proposals/2026-10-23-slice-close-counts-in-flight-numbers.md`.
+
+**The general lesson, which is why this section is in a proposal file rather than a commit message:** verifying that a
+rule exists upstream is not verifying that its tool works for the project being advised. The table in §1 classified
+rows by reading guideline text; the rows that name a script need the script *run against a real project* before they
+can be marked "already upstream". U8's control is a test that creates a temporary git repository — the only shape that
+can distinguish the committed tree from the working tree, which is exactly the distinction that was missing.
