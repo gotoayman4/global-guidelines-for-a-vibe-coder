@@ -27,8 +27,11 @@ const DECISION_LOG_HEADER = /^\|\s*ID\s*\|\s*Decision\s*\|\s*Rationale\s*\|/;
 
 const today = () => new Date().toISOString().split('T')[0];
 
+/** The canonical mode declaration shape — `WORLD.md` §Speed Mode, a list item, a backticked value. */
+const worldWithMode = (mode, rest = '') => `# WORLD\n\n## Speed Mode\n\n- **mode:** \`${mode}\`\n${rest}`;
+
 /** A minimal project: a constitution carrying decisions, and a WORLD.md declaring a mode. */
-function makeProject({ agents = '# AGENTS\n\nSee D7 for the last decision.\n', world = '# WORLD\n\n- **mode:** `vibe`\n' } = {}) {
+function makeProject({ agents = '# AGENTS\n\nSee D7 for the last decision.\n', world = worldWithMode('vibe') } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'slice-close-'));
   if (agents !== null) fs.writeFileSync(path.join(dir, 'AGENTS.md'), agents, 'utf8');
   if (world !== null) fs.writeFileSync(path.join(dir, 'WORLD.md'), world, 'utf8');
@@ -63,7 +66,7 @@ test('nextDecision also reads decisions already in the archive', () => {
 });
 
 test('deriveMode reads WORLD.md and defaults to standard when silent', () => {
-  assert.equal(deriveMode(makeProject({ world: '# WORLD\n\n- **mode:** `guarded`\n' })), 'guarded');
+  assert.equal(deriveMode(makeProject({ world: worldWithMode('guarded') })), 'guarded');
   assert.equal(deriveMode(makeProject({ world: '# WORLD\n\nNo mode declared.\n' })), 'standard');
   assert.equal(deriveMode(makeProject({ world: null })), 'standard');
 });
@@ -136,7 +139,7 @@ test('CLI derives the NEXT number on a second run — the archive is read back, 
 
 test('CLI updates the freshness line only for the doc the slice names with --doc', () => {
   const dir = makeProject({
-    world: '# WORLD\n\n- **mode:** `standard`\n\n**Last Updated:** 2020-01-01 | **Commit:** aaa | **Change:** old\n',
+    world: worldWithMode('standard', '\n**Last Updated:** 2020-01-01 | **Commit:** aaa | **Change:** old\n'),
   });
   run([dir, '--title', 'freshness moves', '--sha', 'ccc', '--doc', 'WORLD.md']);
   const world = fs.readFileSync(path.join(dir, 'WORLD.md'), 'utf8');
@@ -146,7 +149,7 @@ test('CLI updates the freshness line only for the doc the slice names with --doc
 
 test('CLI leaves a freshness line untouched when the slice does not name that doc', () => {
   const dir = makeProject({
-    world: '# WORLD\n\n- **mode:** `standard`\n\n**Last Updated:** 2020-01-01 | **Commit:** aaa | **Change:** old\n',
+    world: worldWithMode('standard', '\n**Last Updated:** 2020-01-01 | **Commit:** aaa | **Change:** old\n'),
   });
   const before = fs.readFileSync(path.join(dir, 'WORLD.md'), 'utf8');
   run([dir, '--title', 'code only', '--sha', 'ccc', '--doc', 'AGENTS.md']);

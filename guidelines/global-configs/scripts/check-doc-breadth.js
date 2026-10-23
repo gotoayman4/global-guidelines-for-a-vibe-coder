@@ -44,7 +44,7 @@
 
 const path = require('path');
 const { runSync } = require('./lib/run-sync.js');
-const { deriveMode, MODES } = require('./lib/project-mode.js');
+const { readMode, MODES } = require('./lib/project-mode.js');
 const { docBreadth } = require('./lib/doc-breadth.js');
 
 /** Trees that are never a project's own product: its docs, and its mirrored guidelines. */
@@ -88,7 +88,14 @@ function examine(root, ref = 'HEAD') {
     return { ...base, vacuous: `the trigger table could not be read (${path.relative(root, table.owner) || table.owner}) — no breadth to enforce` };
   }
 
-  const mode = deriveMode(root);
+  const answer = readMode(root);
+  // A declaration of a value that is not a mode is REPORTED with the value it named. Reading
+  // it as "no declaration" would flatten `turbo` into `standard` and leave the operator
+  // with a project that silently changed tier and a message that says nothing was declared.
+  if (answer.value && !MODES.includes(answer.value)) {
+    return { ...base, vacuous: answer.reason };
+  }
+  const mode = answer.mode || 'standard';
   if (!MODES.includes(mode)) {
     return { ...base, vacuous: `\`WORLD.md\` declares mode \`${mode}\`, which is not one of ${MODES.join(' / ')}` };
   }

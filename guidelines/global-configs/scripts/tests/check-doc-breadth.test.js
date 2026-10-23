@@ -31,7 +31,7 @@ const WRITE = {
  * A fixture that overwrites it with plain prose silently demotes the project to `standard`, so
  * the test then measures a breadth of 2 while believing it is measuring 1.
  */
-const world = (mode) => ({ 'WORLD.md': `# World\n\n- **mode:** \`${mode}\`\n\nupdated\n` });
+const world = (mode) => ({ 'WORLD.md': `# World\n\n## Speed Mode\n\n- **mode:** \`${mode}\`\n\nupdated\n` });
 
 function git(dir, args) {
   // `--no-verify` and an explicit gpgsign=false: a fixture commit must not depend on the
@@ -48,7 +48,7 @@ function cli(dir, ...args) {
 /** A project with the mandated steering files and a declared mode. */
 function project(mode = 'vibe') {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'breadth-'));
-  fs.writeFileSync(path.join(dir, 'WORLD.md'), `# World\n\n- **mode:** \`${mode}\`\n`);
+  fs.writeFileSync(path.join(dir, 'WORLD.md'), `# World\n\n## Speed Mode\n\n- **mode:** \`${mode}\`\n`);
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# Agents\n');
   fs.writeFileSync(path.join(dir, 'README.md'), '# Readme\n');
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
@@ -226,7 +226,7 @@ test('an undeclared mode falls back to standard, and an unknown one is vacuous',
   git(dir, ['commit', '-q', '--no-verify', '-m', 'feat: a']);
   assert.equal(examine(dir).mode, 'standard', 'silence must not grant the loosest mode');
 
-  fs.writeFileSync(path.join(dir, 'WORLD.md'), '# World\n\n- **mode:** `turbo`\n');
+  fs.writeFileSync(path.join(dir, 'WORLD.md'), '# World\n\n## Speed Mode\n\n- **mode:** `turbo`\n');
   const unknown = examine(dir);
   assert.match(unknown.vacuous, /turbo/);
   assert.equal(unknown.violation, false);

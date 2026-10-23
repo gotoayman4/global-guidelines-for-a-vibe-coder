@@ -300,7 +300,7 @@ test('an absent menu file is a note, an absent chain file is a failure', () => {
   // Only the three chain documents exist: the whole menu is absent.
   const root = makeFixture({
     'AGENTS.md': '# Rules\n\nInstruction.\n',
-    'WORLD.md': '# Product\n\n- **mode:** `vibe`\n',
+    'WORLD.md': '# Product\n\n## Speed Mode\n\n- **mode:** `vibe`\n',
     'README.md': '# Readme\n\nInstruction.\n',
   });
   const json = runBudget(root, ['--cap-from-mode', '--strict', '--json']).json;
@@ -319,7 +319,7 @@ test('an absent menu file is a note, an absent chain file is a failure', () => {
 test('a long paragraph is an advisory, never a failure', () => {
   const root = makeFixture({
     'AGENTS.md': `# Rules\n\n${'word '.repeat(200)}\n`,
-    'WORLD.md': '# Product\n\n- **mode:** `vibe`\n',
+    'WORLD.md': '# Product\n\n## Speed Mode\n\n- **mode:** `vibe`\n',
     'README.md': '# Readme\n\nInstruction.\n',
   });
 
@@ -337,7 +337,7 @@ test('a long paragraph is an advisory, never a failure', () => {
 test('--cap-from-mode resolves the cap from the declared mode', () => {
   const root = makeFixture({
     ...defaultCorpus(),
-    'WORLD.md': '# Product\n\n- **mode:** `guarded`\n',
+    'WORLD.md': '# Product\n\n## Speed Mode\n\n- **mode:** `guarded`\n',
   });
   const json = runBudget(root, ['--cap-from-mode', '--json']).json;
 
@@ -366,7 +366,7 @@ test('the resolved cap follows the mode (reversal proof)', () => {
   const heavy = `# Rules\n\n${'xxxx\n'.repeat(40000)}`;
   const root = makeFixture({
     'AGENTS.md': heavy,
-    'WORLD.md': '# Product\n\n- **mode:** `vibe`\n',
+    'WORLD.md': '# Product\n\n## Speed Mode\n\n- **mode:** `vibe`\n',
   });
 
   const vibe = runBudget(root, ['--files', 'AGENTS.md,WORLD.md', '--cap-from-mode', '--strict', '--json']);
@@ -375,7 +375,7 @@ test('the resolved cap follows the mode (reversal proof)', () => {
 
   // The same corpus under `guarded` is within its cap: the number moved with the mode,
   // which is the whole point of deriving it instead of typing it into package.json.
-  fs.writeFileSync(path.join(root, 'WORLD.md'), '# Product\n\n- **mode:** `guarded`\n', 'utf8');
+  fs.writeFileSync(path.join(root, 'WORLD.md'), '# Product\n\n## Speed Mode\n\n- **mode:** `guarded`\n', 'utf8');
   const guarded = runBudget(root, ['--files', 'AGENTS.md,WORLD.md', '--cap-from-mode', '--strict', '--json']);
   assert.equal(guarded.status, 0);
 });
