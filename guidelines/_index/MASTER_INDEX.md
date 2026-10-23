@@ -90,6 +90,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
+| [arabic-rtl-pdf-generation.md](../05-stack-guides/arabic-rtl-pdf-generation.md) | Normative | Global — Web and Electron Apps (Arabic PDF output) | ~4777 | `#rtl` `#arabic` `#pdf` `#chromium` `#electron` `#print` `#bidi` `#fonts` `#paged-media` `#accessibility` |
 | [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~803 | `#mui` `#rtl` `#i18n` `#bidirectional` |
 | [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 7+ / 9+) | ~773 | `#mui` `#styling` `#theme` |
 | [nestjs-architecture.md](../05-stack-guides/nestjs/nestjs-architecture.md) | Normative | Stack (NestJS) | ~703 | `#nestjs` `#backend` `#modules` |
@@ -97,7 +98,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [react-architecture.md](../05-stack-guides/react/react-architecture.md) | Normative | Stack (React) | ~648 | `#react` `#hooks` `#components` |
 | [react-performance.md](../05-stack-guides/react/react-performance.md) | Normative | Stack (React) | ~587 | `#react` `#performance` `#memo` |
 | [react-testing.md](../05-stack-guides/react/react-testing.md) | Normative | Stack (React) | ~675 | `#react` `#testing` `#rtl` |
-| [rtl-tech-stack.md](../05-stack-guides/rtl-tech-stack.md) | Normative | Global — All Projects (Bilingual by Default) | ~1298 | `#rtl` `#arabic` `#bidirectional` `#numerals` |
+| [rtl-tech-stack.md](../05-stack-guides/rtl-tech-stack.md) | Normative | Global — All Projects (Bilingual by Default) | ~1306 | `#rtl` `#arabic` `#bidirectional` `#numerals` |
 | [shadcn-rtl-bidirectional.md](../05-stack-guides/shadcn/shadcn-rtl-bidirectional.md) | Normative | Stack (shadcn/ui + Tailwind CSS v4) | ~1538 | `#shadcn` `#tailwind` `#rtl` `#i18n` `#bidirectional` `#radix` `#base-ui` `#logical-properties` |
 | [supabase-auth.md](../05-stack-guides/supabase/supabase-auth.md) | Normative | Stack (Supabase Auth) | ~633 | `#supabase` `#auth` `#jwt` `#grants` |
 | [supabase-database.md](../05-stack-guides/supabase/supabase-database.md) | Normative | Stack (Supabase / PostgreSQL) | ~974 | `#supabase` `#postgresql` `#rls` `#grants` `#postgrest` |
@@ -202,6 +203,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 
 | File | Status | Scope | Applies to | Tokens | Tags |
 |---|---|---|---|---|---|
+| [arabic-rtl-pdf-export/SKILL.md](../global-configs/skills/arabic-rtl-pdf-export/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1205 | `#skill` `#pdf` `#rtl` `#arabic` `#chromium` `#print` `#bidi` `#fonts` `#paged-media` |
 | [architect/SKILL.md](../global-configs/skills/architect/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1928 | `#skill` `#architecture` `#design` `#stress-test` |
 | [bidirectional-docx-rtl/SKILL.md](../global-configs/skills/bidirectional-docx-rtl/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3071 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
 | [code-review/SKILL.md](../global-configs/skills/code-review/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1403 | `#skill` `#review` `#quality` |
@@ -287,6 +289,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | **First project setup** | first-project-setup (skill) | planning-and-scoping, git-workflow-strategy, design-system-governance |
 | **Cost optimization** | cost-optimization-strategy, context-management-strategy | — |
 | **RTL/Arabic setup** | rtl-tech-stack, bidirectional-design-principles, accessibility-standards | mui-rtl-bidirectional only when MUI is selected; shadcn-rtl-bidirectional only when shadcn/ui is selected |
+| **Arabic PDF export / print** | arabic-rtl-pdf-generation, rtl-tech-stack | bidirectional-design-principles, accessibility-standards, testing-patterns |
 | **Multi-tool setup** | multi-tool-workflows, ai-agent-orchestration | — |
 | **UI/UX design review** | ux-design-principles, visual-design-principles, icon-usage | accessibility-standards, bidirectional-design-principles, design-system-governance |
 | **Design system setup** | design-system-governance, visual-design-principles, icon-usage | frontend-architecture, bidirectional-design-principles |
@@ -359,6 +362,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 - `state-management.md` → see also: `frontend-architecture.md`, `react-architecture.md`, `form-patterns.md`
 
 ### 05-stack-guides
+- `arabic-rtl-pdf-generation.md` → depends on: `rtl-tech-stack.md`, `bidirectional-design-principles.md` · see also: `accessibility-standards.md`, `security-engineering.md`, `testing-patterns.md`, `performance-optimization.md`
 - `mui-rtl-bidirectional.md` → see also: `mui-styling.md`, `react-architecture.md`, `accessibility-standards.md`, `playwright-e2e.md`
 - `mui-styling.md` → see also: `mui-rtl-bidirectional.md`, `react-architecture.md`, `accessibility-standards.md`
 - `nestjs-architecture.md` → see also: `typescript-conventions.md`, `backend-architecture.md`, `api-design-standards.md`, `supabase-database.md`
@@ -366,7 +370,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 - `react-architecture.md` → extended by: `react-performance.md`, `react-testing.md` · depends on: `frontend-architecture.md`, `state-management.md`
 - `react-performance.md` → depends on: `react-architecture.md`, `performance-optimization.md`
 - `react-testing.md` → see also: `testing-patterns.md`, `testing-philosophy.md`, `playwright-e2e.md`
-- `rtl-tech-stack.md` → extended by: `mui-rtl-bidirectional.md`, `shadcn-rtl-bidirectional.md` · depends on: `accessibility-standards.md` · governed by: `bidirectional-design-principles.md`
+- `rtl-tech-stack.md` → extended by: `mui-rtl-bidirectional.md`, `shadcn-rtl-bidirectional.md`, `arabic-rtl-pdf-generation.md` · depends on: `accessibility-standards.md` · governed by: `bidirectional-design-principles.md`
 - `shadcn-rtl-bidirectional.md` → depends on: `rtl-tech-stack.md`, `accessibility-standards.md` · extended by: `mui-rtl-bidirectional.md` · applied by: `playwright-e2e.md`, `frontend-architecture.md`, `responsive-design.md`
 - `supabase-auth.md` → see also: `supabase-database.md`, `nestjs-architecture.md`, `security-engineering.md`
 - `supabase-database.md` → see also: `supabase-auth.md`, `database-architecture.md`, `nestjs-architecture.md`, `security-engineering.md`

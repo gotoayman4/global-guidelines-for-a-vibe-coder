@@ -64,6 +64,6 @@ npm run lint:rtl                    # CI gate — logical-properties ESLint rule
 
 ## Cross-References
 
-- **Extended by:** `mui/mui-rtl-bidirectional.md`, `shadcn/shadcn-rtl-bidirectional.md`
+- **Extended by:** `mui/mui-rtl-bidirectional.md`, `shadcn/shadcn-rtl-bidirectional.md`, `arabic-rtl-pdf-generation.md`
 - **Depends on:** `accessibility-standards.md`
 - **Governed by:** `../02-engineering-practices/bidirectional-design-principles.md`

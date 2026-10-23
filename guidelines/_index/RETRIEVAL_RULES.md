@@ -52,6 +52,7 @@ Extract keywords from the user's request to identify task type:
 | "Update docs", "Stale docs", "Steering", "AI context" | Docs / steering update | `#documentation` `#strategy` `#maintenance` |
 | "Refactor", "Clean up", "Improve structure" | Refactoring | `#refactoring` `#performance` |
 | "RTL", "Arabic", "Bidirectional", "i18n", "Numerals" | RTL/Arabic/i18n | `#rtl` `#i18n` `#a11y` `#arabic` |
+| "Arabic PDF", "RTL PDF", "PDF export", "print to PDF", "Electron PDF", "invoice PDF Arabic" | Arabic PDF generation | `#pdf` `#rtl` `#arabic` `#electron` `#print` |
 | "Slow", "Performance", "Optimize" | Performance | `#performance` |
 | "Secure", "Security audit", "XSS", "Auth" | Security | `#security` `#auth` |
 | "Cost", "Cheap", "Free tier", "Token usage" | Cost optimization | `#cost` `#tokens` |

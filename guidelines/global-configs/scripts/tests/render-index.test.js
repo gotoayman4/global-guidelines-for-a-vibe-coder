@@ -44,7 +44,7 @@ test('collect finds all nine categories with a non-empty corpus (non-vacuity)', 
   assert.equal(model.categories.length, 9, 'all nine domain directories must be present');
   const files = model.categories.reduce((n, c) => n + c.entries.length, 0);
   assert.ok(files >= 60, `expected >=60 category files, got ${files}`);
-  assert.equal(model.skills.length, 21, 'all twenty-one skills must be present');
+  assert.equal(model.skills.length, 22, 'all twenty-two skills must be present');
   for (const c of model.categories) {
     assert.ok(c.entries.length > 0, `category ${c.dir} is empty`);
     for (const e of c.entries) {
@@ -66,7 +66,7 @@ test('rendered regions are non-empty and cover the corpus (non-vacuity)', () => 
   assert.ok((tables.match(/^\| \[/gm) || []).length >= 60, 'category tables must list every guideline file');
 
   const skills = region(rendered, 'GENERATED:index-skills');
-  assert.equal((skills.match(/\/SKILL\.md\)/g) || []).length, 21, 'every skill must be listed');
+  assert.equal((skills.match(/\/SKILL\.md\)/g) || []).length, 22, 'every skill must be listed');
 
   const graph = region(rendered, 'GENERATED:index-graph');
   assert.match(graph, /### 08-governance/);

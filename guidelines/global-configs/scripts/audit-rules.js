@@ -91,6 +91,7 @@ const EXTRACTION_EXCLUSIONS = [
   '02-engineering-practices/ai-code-documentation.md',
   '02-engineering-practices/file-organization.md',
   '05-stack-guides/rtl-tech-stack.md',
+  '05-stack-guides/arabic-rtl-pdf-generation.md', // task-activated print/export guide, loaded on demand
   '06-frontend-patterns/icon-usage.md', // icon rules extracted into visual-design-principles.md and AGENTS.starter.md
 ];
 

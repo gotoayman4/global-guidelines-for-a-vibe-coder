@@ -132,6 +132,13 @@ Standardize terminology across all guideline documents so AI agents and humans s
 | **IDE** | Integrated Development Environment — the program where you write code (e.g., VS Code). | Like a workshop — it has all the tools you need in one place. |
 | **CLI** | Command Line Interface — typing commands instead of clicking buttons. | Like giving instructions over the phone instead of pressing buttons on a remote. |
 | **Framework** | A pre-built structure that provides common functionality so you don't start from scratch. | Like a house frame — the structure is there, you add the walls, plumbing, and furniture. |
+| **OpenType Shaping** | The process that selects the correct visual form of each Arabic letter (isolated, initial, medial, final) and applies ligatures and mark positioning before glyphs are drawn. | Like cursive handwriting — the same letter looks different depending on which letters sit beside it. |
+| **UAX #9 (Bidi Algorithm)** | The Unicode standard that decides the visual order of mixed right-to-left and left-to-right text, including numbers and punctuation. | Like traffic rules for a two-way street — both directions share the road without colliding. |
+| **Presentation Forms** | Legacy Unicode blocks (U+FB50–FDFF, U+FE70–FEFF) that store pre-shaped Arabic glyphs. They bypass shaping and break ligatures, search and copy — never emit them. | Like a photograph of a word instead of the word — it looks right but you cannot edit, search or read it aloud. |
+| **ToUnicode Map (CMap)** | A table inside a PDF that maps embedded glyph IDs back to Unicode characters, which is what makes text selectable and searchable. | Like an index at the back of a book — it tells you which real word a printed symbol stands for. |
+| **PDF/A** | An ISO-standard PDF profile for long-term archiving: all fonts embedded, colour described explicitly, no external dependencies. | Like sealing a document in archival plastic — it will still be readable years later. |
+| **Tagged PDF / PDF/UA** | A PDF carrying a structure tree (headings, tables, reading order, language) used by assistive technology. PDF/UA is the accessibility conformance profile. | Like adding invisible labels to every part of a document so a screen reader can describe its structure. |
+| **Paged Media** | CSS features that describe printed pages: `@page`, margins, running headers, page breaks, footnotes. Browsers implement a subset; Paged.js and Vivliostyle fill the gaps. | Like page-layout rules for a print shop — where the margins, headers and page breaks go. |
 
 ---
 
