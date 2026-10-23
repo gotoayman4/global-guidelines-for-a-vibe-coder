@@ -71,6 +71,14 @@ Escalation is **automatic and evidence-based**. The last four triggers escalate 
 | The same test file fails twice in one slice | escalate the slice to `standard`; say so in one line |
 | Repeated silent regressions | escalate the project; run `workflow-friction-audit.md` |
 
+### One Escalation Class per Slice
+
+The cost of a slice is not the lines it changes; it is the number of **distinct verification regimes** its diff triggers. Each class above carries its own tier, its own fixtures and its own failure vocabulary, and they do not share evidence: a slice in two classes pays two full verifications, and a slice in four pays a matrix nobody can describe in a sentence. Measured 2026-10-23 in a referenced project: one `vibe` slice escalated on a mail path, a desktop-shell IPC security pin and a shared-package type contract at once — the gate ran six steps, and the security step could only run *outside* the gate because it is path-aware.
+
+1. A slice carries **one** escalation class. A second class is a second slice.
+2. Two classes MAY stay together when the record names, in one line, the root cause they share — "the dialog and the probe are one user action". That line is the record.
+3. Unrelated classes split even though splitting writes the record twice. Two small green slices are cheaper than one slice whose verification cannot be explained.
+
 ## Accepted Trade-offs by Mode
 
 | Mode | Accepted risk | Absorbed by |
@@ -93,6 +101,7 @@ Escalation is **automatic and evidence-based**. The last four triggers escalate 
 | **Reading everything "because the bootstrap mandates it"** | the chain is a menu; name the 2–4 files the task needs |
 | **A cap re-based upward every time its file grows** | re-base only against live measurement; freeze the chain total |
 | **Keeping a hand-maintained decision counter** | derive the next number from the existing set; a counter races between concurrent sessions |
+| **A slice that escalates on several unrelated classes** | verification regimes multiply, they do not add — split at the class boundary, or name the shared root cause in the record |
 
 ## Key Takeaways
 
