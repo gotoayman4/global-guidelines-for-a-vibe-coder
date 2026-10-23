@@ -91,7 +91,7 @@
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Docs Line Fires on Triggers Only.** Trigger-table match (`documentation-strategy.md`) → update steering the same iteration and report `Docs: updated <files>`; non-trigger → NO Docs line, silence is correct, a padded `N/A` is ceremony. **Breadth scales with the mode** (vibe writes the record only); the decision record never scales. Missing a real trigger is a violation.
   → Source: `07-documentation/documentation-strategy.md`
-- **One Home Per Fact.** The mandated doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never add a compressed "AI context"/index copy; a new doc retires one. Each canonical list lives in exactly one file; every other site links, and `npm run docs:census` fails on a restated fact. Always-read files keep change logs in dated archives (`docs/changelog/…`), not inline.
+- **One Home Per Fact.** The mandated doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never add a compressed "AI context"/index copy; a new doc retires one. Each canonical list lives in exactly one file; every other site links, and `npm run docs:census` fails on a restated fact. Always-read files keep change logs in one dated archive per quarter (`docs/changelog/<YYYY>-Q<n>.md`), not inline.
   → Source: `07-documentation/documentation-strategy.md`
 - **Reference Machine Output, Never Transcribe.** Verification numbers go into artifacts (`docs/gate-receipts/…`) and are cited by path — hand-copied figures decay silently.
   → Source: `07-documentation/documentation-strategy.md`

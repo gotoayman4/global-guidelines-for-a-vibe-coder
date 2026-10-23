@@ -24,6 +24,31 @@
  * AGENTS.md; a rule repeated there for another loader is not a second home, and failing it would
  * fail a correct project. An absent on-demand document is reported as skipped, never as vacuous.
  *
+ * THE DOC SET'S SHAPE, WHICH THE CENSUS ALSO CHECKS. A census counts facts; the shape of the set
+ * around them is a second question, and it lives here rather than in a second guard because this
+ * one is already wired into the projects that need it — a rule in a guard nobody runs is a rule
+ * that does not exist. Two rules, both stated by `documentation-strategy.md`:
+ *   - ONE ARCHIVE PER QUARTER. `docs/changelog/` holds `<YYYY>-Q<n>.md`. A per-document archive
+ *     (`prd-2026-Q4.md`, `roadmap-2026-Q4.md`) writes one event four times — the "one canonical
+ *     copy" violation the doctrine outlaws for rules, applied to events. The event names its doc
+ *     in a `**Doc:**` column instead.
+ *   - NO RESURRECTED DOCS. `docs/AI_CONTEXT.md` and `ARCHITECTURE_INDEX.md` were deleted on
+ *     purpose (§The Mandated Doc Set); each was a second copy of facts already owned, and one of
+ *     them was always loaded, so it taxed every session twice. A file with that name is a
+ *     resurrection, wherever it lands.
+ *
+ * WHAT THE SHAPE CHECK SCANS, AND WHY IT IS NOT A FALSE POSITIVE. The deleted names are matched
+ * anywhere in the project tree except the mirrors and the vendored third-party trees, because the
+ * sync tool's own backup folders (`.<tool>-backups/`) hold a copy of everything that ever shipped
+ * and would report every project that was ever synced. A starter template named after a deleted
+ * doc counts as the same resurrection: the sync would deliver it to every project downstream.
+ * A file in `docs/changelog/` that carries NO quarter token is reported, not failed — an explanatory
+ * README is legitimate, and a guard that fails a correct project gets deleted.
+ *
+ * A shape violation fails the run exactly as a duplicated fact does. It is not a warning: the
+ * doctrine's own words are that a resurrection is "a second copy that still loads", and a rule
+ * that only prints is a rule nobody must obey.
+ *
  * TWO KINDS OF FACT. Most facts are a heading (`re`). `guard-inventory` is a SHAPE (`match`):
  * two or more distinct `guard:*` scripts named in one document, which is an inventory rather than
  * an incidental mention. Its one home is AGENTS.md, and the reason it exists is that the guard set
@@ -44,7 +69,12 @@
  *   node check-doc-census.js                 # central repo: scan the starter templates
  *   node check-doc-census.js <projectRoot>   # scan an installed project's docs
  *
- * Exit codes: 0 = one home per fact; 1 = a duplicated or vacuous fact; 2 = corpus error.
+ * Both the facts and the shape are checked in either mode: the templates are the corpus every
+ * project is built from, so a template that resurrects a deleted doc is the same defect as a
+ * project that carries it.
+ *
+ * Exit codes: 0 = one home per fact and a correct doc-set shape; 1 = a duplicated or vacuous
+ * fact, or a shape violation; 2 = corpus error.
  *
  * @tier standard+ — a documentation contract. It governs the doc set rather than the code, so a
  *   `vibe` slice must not pay for it; it belongs at a milestone exit.
@@ -130,6 +160,117 @@ const CANONICAL_FACTS = [
 ];
 
 /**
+ * The quarterly archive name: `docs/changelog/<YYYY>-Q<n>.md`. One archive per quarter, named for
+ * the quarter it holds — not for the document the events came from.
+ */
+const ARCHIVE_NAME = /^(\d{4})-Q([1-4])\.md$/;
+
+/** A quarter token anywhere in a name — how a per-document archive is recognised. */
+const QUARTER = /(\d{4})-Q([1-4])/i;
+
+/**
+ * Documents deleted on purpose (§The Mandated Doc Set). Each was a second copy of facts another
+ * document already owned. A file with one of these names is a resurrection.
+ */
+const DELETED_DOCS = ['AI_CONTEXT.md', 'ARCHITECTURE_INDEX.md'];
+
+/**
+ * Trees a project's own doc set never lives in. The mirrors are copies of the central guidelines,
+ * the vendor trees are third-party code, and the rest are build output.
+ */
+const SKIP_DIRS = new Set([
+  'node_modules', '_guidelines', '_skills', 'dist', 'build', 'out', 'coverage',
+  'vendor', 'third_party', 'target', 'venv', '__pycache__',
+]);
+
+/** How deep into a project tree a resurrected doc may hide. `docs/x/y/z.md` is deep enough. */
+const MAX_DEPTH = 6;
+
+/**
+ * Every file under a root, as a repo-relative POSIX path.
+ *
+ * Dot-entries are skipped whole (`.git`, the sync tool's `.<tool>-backups/`, `.workbuddy-ai/`),
+ * because a backup folder holds a copy of everything that ever shipped and would report every
+ * project that was ever synced.
+ *
+ * @param {string} root
+ * @returns {string[]}
+ */
+function walk(root) {
+  const found = [];
+  const stack = [{ dir: root, depth: 0 }];
+  while (stack.length) {
+    const { dir, depth } = stack.pop();
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.name.startsWith('.')) continue;
+      const abs = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (SKIP_DIRS.has(entry.name)) continue;
+        if (depth < MAX_DEPTH) stack.push({ dir: abs, depth: depth + 1 });
+        continue;
+      }
+      found.push(path.relative(root, abs).split(path.sep).join('/'));
+    }
+  }
+  return found;
+}
+
+/**
+ * The shape of a project's doc set: one archive per quarter, and no resurrected document.
+ *
+ * @param {string} root the project root
+ * @returns {{violations: string[], notes: string[]}}
+ */
+function docSetShape(root) {
+  const violations = [];
+  const notes = [];
+
+  for (const rel of walk(root)) {
+    const base = path.basename(rel);
+    // A starter template named after a deleted doc is the same resurrection: the sync would
+    // deliver it to every project downstream.
+    const stem = base.replace(/\.(starter|template)\.md$/, '.md');
+    if (!DELETED_DOCS.includes(stem)) continue;
+    violations.push(
+      `resurrected doc: \`${rel}\` — ${stem} was deleted on purpose (§The Mandated Doc Set); it is a second copy of facts another document already owns`,
+    );
+  }
+
+  const changelog = path.join(root, 'docs', 'changelog');
+  const archives = fs.existsSync(changelog)
+    ? fs.readdirSync(changelog).filter((name) => name.endsWith('.md'))
+    : [];
+  const byQuarter = new Map();
+  for (const name of archives) {
+    const canonical = ARCHIVE_NAME.exec(name);
+    const token = canonical ? `${canonical[1]}-Q${canonical[2]}` : (QUARTER.exec(name) || [])[0];
+    if (!token) {
+      notes.push(`docs/changelog/${name} carries no quarter — the archive name is the quarter it holds`);
+      continue;
+    }
+    if (!canonical) {
+      violations.push(
+        `docs/changelog/${name} is a per-document archive — one event written once per document; merge it into \`docs/changelog/${token}.md\` and record the document in the entry's \`**Doc:**\` column`,
+      );
+    }
+    byQuarter.set(token, [...(byQuarter.get(token) || []), name]);
+  }
+  for (const [quarter, group] of byQuarter) {
+    if (group.length > 1 && group.some((name) => ARCHIVE_NAME.test(name))) {
+      violations.push(`docs/changelog holds ${group.length} archives for ${quarter} — one archive per quarter: ${group.join(', ')}`);
+    }
+  }
+
+  return { violations, notes };
+}
+
+/**
  * Pure census over an explicit corpus.
  * @param {Array<{file: string, content: string}>} docs
  * @param {{templates?: boolean, missing?: string[]}} [opts] `templates` marks the central starter-template corpus;
@@ -213,21 +354,34 @@ function main() {
   }
 
   const { violations, vacuous, notes, skipped } = census(docs, { templates: useTemplates, missing });
+  const shape = docSetShape(projectRoot);
 
   for (const v of violations) console.log(`   ❌ ${v}`);
+  for (const v of shape.violations) console.log(`   ❌ ${v}`);
   for (const v of vacuous) console.log(`   ⚠️  ${v}`);
   for (const n of notes) console.log(`   ℹ️  ${n}`);
+  for (const n of shape.notes) console.log(`   ℹ️  ${n}`);
   for (const s of skipped) console.log(`   ⏭️  ${s}`);
-  if (violations.length === 0 && vacuous.length === 0) {
+  if (violations.length === 0 && vacuous.length === 0 && shape.violations.length === 0) {
     const enforced = CANONICAL_FACTS.length - skipped.length;
     console.log(`✅ ${enforced} canonical facts, each in exactly one of ${docs.length} docs`);
   }
   if (missing.length > 0) console.log(`\n   (absent, skipped: ${missing.join(', ')})`);
   console.log();
 
-  process.exit(violations.length > 0 || vacuous.length > 0 ? 1 : 0);
+  process.exit(violations.length > 0 || vacuous.length > 0 || shape.violations.length > 0 ? 1 : 0);
 }
 
 if (require.main === module) main();
 
-module.exports = { census, collect, namesGuards, CANONICAL_FACTS, MANDATED_DOCS };
+module.exports = {
+  census,
+  collect,
+  namesGuards,
+  docSetShape,
+  walk,
+  CANONICAL_FACTS,
+  MANDATED_DOCS,
+  DELETED_DOCS,
+  ARCHIVE_NAME,
+};

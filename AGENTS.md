@@ -92,7 +92,7 @@ npm run check-links     # Check for broken internal links
 npm run check-index     # Verify all files have MASTER_INDEX entries
 npm run check-drift     # Fail if AGENTS.starter.md was hand-edited or exceeds its token budget
 npm run check-index-drift # Fail if MASTER_INDEX.md was hand-edited — regenerate it instead
-npm run docs:census     # Fail if a canonical fact appears in >1 mandated project doc (one home per fact)
+npm run docs:census     # Fail on a duplicated canonical fact, a per-document archive, or a resurrected doc
 npm run render:starters # Regenerate AGENTS.starter.md from global-configs/fragments/
 npm run render:index    # Regenerate the MASTER_INDEX tables + graph from front-matter and footers
 npm run render:skills   # Regenerate skills/INDEX.md — the trigger inventory, from skill front-matter
@@ -151,7 +151,7 @@ Every guideline file in `guidelines/` MUST open with YAML front-matter — `stat
 - The mandated project doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand). A new document in this set MUST retire one.
 - `docs/AI_CONTEXT.md` and `ARCHITECTURE_INDEX.md` were deleted as duplicate copies — do NOT recreate them. Onboarding is `README.md`; navigation is links + search.
 - A canonical list (trigger table, gate steps, forbidden patterns, version table) lives in exactly one file; every other site names that file and links.
-- `npm run docs:census` fails the gate if a canonical fact appears in more than one mandated project doc.
+- `npm run docs:census` fails the gate if a canonical fact appears in more than one mandated project doc, or if the set's shape is wrong — one archive per quarter (`docs/changelog/<YYYY>-Q<n>.md`), and no resurrected document.
 
 ### Cross-References
 Every guideline file MUST end with a `## Cross-References` section — typed bullets (`- **Depends on:** \`x.md\``) or a flat backticked list. Reference files by basename. `npm run render:index` builds the cross-reference graph from this section; a file without one renders as `no cross-references`.
