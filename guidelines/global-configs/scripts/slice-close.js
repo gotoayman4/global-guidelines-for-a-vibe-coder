@@ -18,30 +18,31 @@
  * freshness doc on every slice would make the line mean "some slice closed", not "this document
  * changed" — a derived marker that lies in the same shape as one typed by hand.
  *
- * CONSTRAINT: It never invents a decision number, and it never counts its own in-flight work.
- * The next one is `max(existing) + 1`, computed from the COMMITTED tree (`git show HEAD:./<path>`,
- * which git resolves against the project root rather than the repository root) of the documents
- * that carry decisions, falling back to the file on disk only when nothing is committed for that
- * path (a brand-new archive, or a project that is not a git repository at all). Measured
- * 2026-10-23 in gs-coordinator-helper at D360: reading the working tree, the tool derived D361
- * while the repository's authoritative next-number line still said D360 — the slice's own
- * half-written record had raised the maximum, so closing the same slice twice invented a number
- * nobody had used. The same run exposed the second half: a line that DECLARES the next unclaimed
- * number is an earmark, not a record, and scanning it like a used number returns the number after
- * the one reserved. Such a line is therefore skipped by the scan and taken as the answer when it is
- * the higher of the two. The CLI report names which fact answered (`--dry-run` prints it) because a
- * derived number that cannot say where it came from is indistinguishable from a typed one.
- * A counter kept in a file races between two concurrent sessions and needs its own parity guard
- * to notice; a derived number cannot, and `--decision` is the override when a concurrent session
- * really did take it (documentation-strategy.md §Record vs Ritual).
+ * CONSTRAINT: It never invents a decision number, and a rerun is a no-op. The next one is
+ * `max(existing) + 1` over DECISION DOCUMENTS read from the COMMITTED tree (`git show HEAD:./<path>`,
+ * resolved against the project root), so a half-written record inside one cannot raise the maximum;
+ * a document HEAD does not have is read from disk. The ARCHIVE is read from disk instead: it is the
+ * record being written, and a close that is not committed is still a record. An archive heading with
+ * this date and title means the slice is already closed — exit 0, nothing written — and a number
+ * already present is exit 2 instead of a second entry. Two slices closed before a commit therefore
+ * get two numbers, and a retry costs one process start instead of a duplicate record.
+ *
+ * A line that DECLARES the next unclaimed number is an earmark, not a record: the scan skips it and
+ * takes it as the answer when it is higher. The report names which fact answered (`--dry-run` prints
+ * it) because a derived number that cannot say where it came from is indistinguishable from a typed
+ * one. Measured 2026-10-23 downstream at D360: reading the half-written record invented D361; a
+ * first revision read only the committed tree and gave two uncommitted closes the same number.
+ * `--decision` is the override when a concurrent session really did take one
+ * (documentation-strategy.md §Record vs Ritual).
  *
  * DECISION: One archive per quarter is the DEFAULT, not the rule — the rule is ONE primary entry
  * per slice. A single event written into four per-document changelog files is four copies of one
  * fact, the exact shape "one canonical copy per rule" outlaws, so `docs/changelog/<YYYY>-Q<n>.md`
- * carries a `**Doc:**` column instead of the project growing a file per document
+ * carries a `**Doc:**` fact instead of the project growing a file per document
  * (documentation-strategy.md §History). A project whose primary archive is named after the document
  * it serves passes `--archive docs/changelog/roadmap-2026-Q4.md`; no second archive is written,
- * because a slice recorded twice is the same four-copies defect with a different filename.
+ * because a slice recorded twice is the same four-copies defect with a different filename. The
+ * derivation still reads the default quarter file after such a switch, so its numbers continue.
  *
  * DECISION: `--adr` writes the decision's THREE derived sites — the ADR file's header block, the
  * row in `docs/adr/README.md`'s index, and the row in the decisions log — because all three restate
@@ -50,10 +51,10 @@
  * authored: it arrives as `--why` and is never invented here. A full-depth ADR is authored by the
  * agent and passed with `--adr-file`, which makes this script add the rows without touching the file.
  *
- * Non-vacuity: the derived number comes from the committed tree, so a run before the slice is
- * committed reports the number the tree already owes, and a run after it MUST report n+1. A corpus
- * with no documents at all is a usage error, never a silent pass. An `--archive` outside `docs/`, or
- * one that is not markdown, is the same: a record written where no guard looks is worse than none.
+ * Non-vacuity: a rerun of the same slice writes nothing; a different slice closed before a commit
+ * reports n+1. A corpus with no documents at all is a usage error, never a silent pass. An
+ * `--archive` outside `docs/`, one that is not markdown, or one that names a decision document is
+ * the same: a record written where no guard looks is worse than none.
  *
  * Usage:
  *   node slice-close.js [projectRoot] --title "<one line>" [--mode vibe|standard|guarded]
@@ -78,15 +79,14 @@ const DECISION_SOURCES = ['AGENTS.md', 'WORLD.md', 'docs/PRD.md', 'docs/DECISION
 const FRESHNESS_DOCS = ['WORLD.md', 'docs/AI_ARCHITECTURE.md'];
 
 /**
- * A line that DECLARES the next unclaimed number — `- Next D-number: **D360** …` is the shape this
- * repo's starters render. The number on it is a reservation, not a record, so it is excluded from
- * the used-number scan and offered as the answer instead (see the header CONSTRAINT).
+ * A line that DECLARES the next unclaimed number. Accepted shapes: a bullet or table cell, a bold
+ * label, and `:` or `is` before the value — `- Next D-number: **D40**` is the canonical one
+ * (documentation-strategy.md §Record vs Ritual). The number is a reservation, not a record, so the
+ * line is excluded from the used-number scan and offered as the answer instead.
  */
-const NEXT_NUMBER_LINE_RE = /^\s*(?:[-*]\s*)?Next\s+(?:D-number|decision\s+number|slice\s+number)\s*:/i;
+const NEXT_NUMBER_LINE_RE =
+  /^\s*(?:[-*]\s*)?(?:\|\s*)?(?:\*\*)?\s*Next\s+(?:D-number|decision\s+number|slice\s+number)\s*(?:\*\*)?\s*(?::|\||\bis\b)\s*/i;
 const NEXT_NUMBER_VALUE_RE = /\bD(\d{1,4})\b/i;
-
-/** Where an `--archive` may live. A record outside these bounds is a file no guard reads. */
-const ARCHIVE_PATH_RE = /^(?:\.\/)?docs\/[\w\-.\/]+\.md$/;
 
 /** The ADR index, and the header that identifies its table. */
 const ADR_INDEX = 'docs/adr/README.md';
@@ -200,11 +200,28 @@ function quarterFile(date) {
   return `docs/changelog/${year}-Q${q}.md`;
 }
 
+/** Resolve an `--archive` and return the absolute path plus its normalized POSIX-relative form. */
+function resolveArchive(root, archive) {
+  const abs = path.resolve(root, archive);
+  return { abs, rel: path.relative(root, abs).split(path.sep).join('/') };
+}
+
+function escapeRe(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** The number of an entry this script already wrote for `date` + `title`, or null. */
+function entryNumber(content, date, title) {
+  const re = new RegExp(`^### ${escapeRe(date)} — D(\\d{1,4}) · ${escapeRe(title)}$`, 'm');
+  const hit = content.match(re);
+  return hit ? Number(hit[1]) : null;
+}
+
 /**
  * The next decision number: `max(D<n>) + 1` over the numbers already USED in the documents that
  * carry decisions, or 1 when none exists — and never below a number a document has explicitly
- * earmarked as next. Derived, never counted, and derived from the COMMITTED tree so the record this
- * slice is writing cannot raise the number it is claiming (see the header CONSTRAINT).
+ * earmarked as next. Derived, never counted; decision documents come from the committed tree so a
+ * half-written record inside one cannot raise the number it is claiming (header CONSTRAINT).
  *
  * `extra` is for a document the caller has already read and knows about — the archive, which is not
  * in DECISION_SOURCES and whose path only `main()` resolves.
@@ -230,16 +247,6 @@ function nextFromDocs(docs) {
   return Math.max(max + 1, declaredNextNumber(docs));
 }
 
-/** The documents a number is derived from: this project's own, from the committed tree. */
-function loadDecisionDocs(root) {
-  const docs = [];
-  for (const rel of DECISION_SOURCES) {
-    const content = committedText(root, rel);
-    if (content !== null) docs.push({ rel, content });
-  }
-  return docs;
-}
-
 /** The highest number a document declares to be the next unclaimed one; 0 when none does. */
 function declaredNextNumber(docs) {
   let declared = 0;
@@ -254,21 +261,25 @@ function declaredNextNumber(docs) {
 }
 
 /**
- * The committed bytes at `rel`, or the working-tree file when HEAD has no such path (a document
- * created this slice), or null when neither exists. `git show` is used rather than `git ls-tree`
- * + a blob read because the answer needed is the text, and a range-limited read would need the
- * object id first. A non-zero status is not an error here — an untracked file simply has no
- * committed version.
+ * A decision document: committed bytes first, or the working-tree file when HEAD has no such path
+ * (a document created this slice), or null. A non-zero status is not an error here — an untracked
+ * file simply has no committed version, and `tree` is carried into the report so a fallback is
+ * visible rather than silent.
  */
-function committedText(root, rel) {
+function readProjectDoc(root, rel) {
   // `HEAD:./` is git's notation for "relative to the current directory", and the cwd is the project
   // root. The bare `HEAD:<path>` form resolves from the REPOSITORY root, so a project that is a
   // subdirectory of an enclosing repo would be derived from that repo's files — a number invented
   // from somebody else's history.
   const result = runSync('git', ['show', `HEAD:./${rel}`], { cwd: root });
-  if (result.status === 0) return result.stdout;
+  if (result.status === 0) return { rel, content: result.stdout, tree: 'committed' };
   const abs = path.join(root, rel);
-  return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8') : null;
+  return fs.existsSync(abs) ? { rel, content: fs.readFileSync(abs, 'utf8'), tree: 'working' } : null;
+}
+
+/** The documents a number is derived from: this project's own decision docs, in preference order. */
+function loadDecisionDocs(root) {
+  return DECISION_SOURCES.map((rel) => readProjectDoc(root, rel)).filter(Boolean);
 }
 
 /** The declared mode, read from WORLD.md. Absent or silent → `standard` (speed-tiered-workflow.md). */
@@ -323,11 +334,33 @@ function main() {
   if (!fs.existsSync(root)) usage(`project root does not exist: ${root}`);
 
   const date = new Date().toISOString().split('T')[0];
-  const archive = opts.archive || quarterFile(date);
-  if (!ARCHIVE_PATH_RE.test(archive)) {
-    usage(`--archive must name a markdown file under docs/ (got "${archive}")`);
+  const defaultArchive = quarterFile(date);
+  const requested = opts.archive || defaultArchive;
+  const { abs: archiveAbs, rel: archive } = resolveArchive(root, requested);
+  const badArchive =
+    path.isAbsolute(requested) ||
+    !archive.startsWith('docs/') ||
+    !archive.endsWith('.md') ||
+    DECISION_SOURCES.includes(archive) ||
+    archive.startsWith('docs/adr/');
+  if (badArchive) {
+    usage(`--archive must name a markdown file under docs/ that is not a decision document (got "${requested}")`);
   }
-  const archiveAbs = path.join(root, archive);
+
+  // The archive is the record being written, so it is read from disk: a close that is not committed
+  // is still a record. An identical heading means this slice is already closed — a rerun is a no-op.
+  const archiveExisted = fs.existsSync(archiveAbs);
+  const prior = archiveExisted ? fs.readFileSync(archiveAbs, 'utf8') : '';
+  const already = entryNumber(prior, date, opts.title);
+  if (already !== null) {
+    console.log('═══════════════════════════════════════════');
+    console.log(`  Slice Close — ${root}`);
+    console.log('═══════════════════════════════════════════\n');
+    console.log(`  decision:  D${already} (already recorded)`);
+    console.log(`  archive:   ${archive}`);
+    console.log('\n  Nothing to write: this slice is already in the archive. A rerun is a no-op.\n');
+    process.exit(0);
+  }
 
   if (opts.receipt) {
     const receiptAbs = path.resolve(root, opts.receipt);
@@ -339,25 +372,38 @@ function main() {
     }
   }
 
-  // Derivation reads the COMMITTED tree; the append below still reads the file on disk, because a
-  // record nobody has committed is a record that exists and must not be duplicated.
   const derivationDocs = loadDecisionDocs(root);
-  const archiveDoc = committedText(root, archive);
-  if (archiveDoc !== null) derivationDocs.push({ rel: archive, content: archiveDoc });
+  if (prior) derivationDocs.push({ rel: archive, content: prior, tree: 'working' });
+  // An archive adopted mid-quarter still reads the quarter file it replaced, so numbers continue
+  // instead of restarting at the new file's first entry.
+  if (archive !== defaultArchive) {
+    const previous = readProjectDoc(root, defaultArchive);
+    if (previous) derivationDocs.push(previous);
+  }
   if (derivationDocs.length === 0) {
     usage(`no decision documents under ${root} — this is not a project (nothing to derive a number from)`);
   }
 
   const decision = opts.decision ? Number(opts.decision) : nextFromDocs(derivationDocs);
   if (!Number.isFinite(decision) || decision < 1) usage(`--decision must be a positive number`);
+  // Fast fail rather than a second record for a number that is already used.
+  const clash = prior.match(new RegExp(`^### [^\\n]* — D${decision} · [^\\n]*$`, 'm'));
+  if (clash) {
+    console.error(`❌ D${decision} is already recorded in ${archive}: "${clash[0]}"`);
+    console.error('   Commit the archive, or pass --decision with the number this slice actually gets.');
+    process.exit(2);
+  }
   // Which fact answered. The report names it because a derived number that cannot say where it came
   // from is indistinguishable from one that was typed.
   const earmark = declaredNextNumber(derivationDocs);
+  const diskFallback = derivationDocs
+    .filter((d) => d.tree === 'working' && d.rel !== archive)
+    .map((d) => d.rel);
   const decisionSource = opts.decision
     ? 'given by --decision'
     : earmark === decision && earmark > 0
       ? "from the project's declared next-number line"
-      : 'derived: max(committed used D<n>) + 1';
+      : `derived: max(used D<n>) + 1${diskFallback.length ? ` (disk fallback: ${diskFallback.join(', ')})` : ''}`;
   const sha = opts.sha || shortSha(root);
   const mode = opts.mode || deriveMode(root);
   if (!['vibe', 'standard', 'guarded'].includes(mode)) usage(`--mode must be vibe | standard | guarded (got "${mode}")`);
@@ -372,12 +418,12 @@ function main() {
 
   const writes = [];
 
-  const archiveHeader = fs.existsSync(archiveAbs)
+  const archiveHeader = archiveExisted
     ? ''
     : `# ${path.basename(archive, '.md')} — changelog archive\n\n` +
       'Append-only, newest last. One `### YYYY-MM-DD — D<n> · <title>` entry per slice,\n' +
-      'wrapped at ≤400 characters per line. One file per quarter, not one per document.\n\n';
-  const prior = fs.existsSync(archiveAbs) ? fs.readFileSync(archiveAbs, 'utf8') : '';
+      'wrapped at ≤400 characters per line. One archive per quarter is the default;\n' +
+      '`--archive` names the file a project keeps instead.\n\n';
   writes.push({ rel: archive, content: `${prior}${prior && !prior.endsWith('\n') ? '\n' : ''}${prior ? '\n' : archiveHeader}${entry}` });
 
   for (const rel of FRESHNESS_DOCS) {
@@ -457,10 +503,12 @@ if (require.main === module) main();
 
 module.exports = {
   quarterFile,
+  resolveArchive,
   nextDecision,
   nextFromDocs,
   declaredNextNumber,
-  committedText,
+  entryNumber,
+  readProjectDoc,
   loadDecisionDocs,
   deriveMode,
   updateFreshness,

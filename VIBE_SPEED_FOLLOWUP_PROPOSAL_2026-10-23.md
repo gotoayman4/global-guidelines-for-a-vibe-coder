@@ -89,9 +89,9 @@ this repo ships — the rule was sound, the instrument was not, and only the ins
 
 | Defect | Measured consequence | Fix |
 |---|---|---|
-| The next-number scan read the **working tree** | At D360 the slice's own half-written archive entry had already raised the maximum: the run derived **D361**, a number no document used, and a second run of the same close would have written a record for a decision nobody made | Scan `git show HEAD:./<path>` — committed bytes — with the disk read kept only as the fallback for a path HEAD does not have (a document created this slice, or a project with no repository) |
-| A line that **declares** the next number was counted as a used one | `- Next D-number: **D360**` is the project's reservation; counted as a record it returns the number *after* the reserved one, so the earmark and the derivation fight | Skip such lines in the scan, take `max(max(used)+1, declared)`, and report which fact answered |
-| The archive path was hard-coded to `docs/changelog/<YYYY>-Q<n>.md` | A project whose changelog archives are named per document (`roadmap-2026-Q4.md`) would have gotten a second, unguarded file written beside its real one — a slice recorded twice, which is the four-copies defect this corpus outlaws | `--archive <rel.md>`, validated to markdown under `docs/`, exit 2 otherwise |
+| The next-number scan read the **working tree** | At D360 the slice's own half-written archive entry had already raised the maximum: the run derived **D361**, a number no document used, and a second run of the same close would have written a record for a decision nobody made | Decision docs are scanned from `git show HEAD:./<path>` — committed bytes — with the disk read kept for a document created this slice. The archive is read from disk, because an uncommitted close is still a record; a heading with this date and title makes the run a no-op, and a different slice continues its numbering |
+| A line that **declares** the next number was counted as a used one | `- Next D-number: **D360**` is the project's reservation; counted as a record it returns the number *after* the reserved one, so the earmark and the derivation fight | Skip such lines in the scan, accept the shapes a document uses (bold label, table cell, `is`), take `max(max(used)+1, declared)`, and report which fact answered |
+| The archive path was hard-coded to `docs/changelog/<YYYY>-Q<n>.md` | A project whose changelog archives are named per document (`roadmap-2026-Q4.md`) would have gotten a second, unguarded file written beside its real one — a slice recorded twice, which is the four-copies defect this corpus outlaws | `--archive <rel.md>` resolved against the root and containment-checked: under `docs/`, markdown, not a decision document; exit 2 otherwise. A mid-quarter switch also reads the quarter file it replaces |
 
 **And the instruction itself needed correcting.** `_guidelines/` is gitignored in the consuming project (0 tracked
 files), so `npm run slice:close` cannot point at a path the repository does not carry: the script name would have been
@@ -106,3 +106,10 @@ rule exists upstream is not verifying that its tool works for the project being 
 rows by reading guideline text; the rows that name a script need the script *run against a real project* before they
 can be marked "already upstream". U8's control is a test that creates a temporary git repository — the only shape that
 can distinguish the committed tree from the working tree, which is exactly the distinction that was missing.
+
+**Why the fix lives in the tool, not in a rule.** The commit came from another agent closing slices in
+`gs-coordinator-helper` in `vibe` mode, where the time being optimized is the time spent documenting and testing the
+process rather than the product. A derived number that changes on a retry turns a one-command close into a re-check,
+and a rule telling the agent to re-check costs more than making the tool idempotent. That is the trade this section
+records: decision docs are read from the committed tree, the archive from disk, an identical heading exits 0, and a
+number already in the archive exits 2 — no new guard, no new ritual, no second document to keep in step.

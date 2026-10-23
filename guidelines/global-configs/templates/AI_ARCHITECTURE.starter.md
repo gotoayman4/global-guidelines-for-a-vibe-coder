@@ -11,7 +11,7 @@
 
 **Last Updated:** [FILL: YYYY-MM-DD] | **Commit:** [FILL: short SHA] | **Change:** [FILL: one line]
 
-> **Written, never typed:** `npm run slice:close` derives all three facts and rewrites this line in place. The affected table still changes in the same iteration as the code — that is prose, and prose is written deliberately, not copied from a stale header.
+> **Written, never typed:** the slice-close tool derives all three facts and rewrites this line in place. The affected table still changes in the same iteration as the code — that is prose, and prose is written deliberately, not copied from a stale header.
 
 ## Subsystems
 

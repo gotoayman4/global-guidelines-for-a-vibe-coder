@@ -350,6 +350,21 @@ test('nextFromDocs skips a declared next-number line instead of counting it as u
   assert.equal(nextFromDocs(docs), 40, 'and returned as the answer, not bumped to D41');
 });
 
+test('the earmark line is recognized in the shapes a document actually uses', () => {
+  for (const line of [
+    '- Next D-number: **D9**',
+    '- **Next D-number:** `D9`',
+    '**Next D-number:** D9',
+    '| Next D-number | D9 |',
+    '- Next D-number is D9',
+  ]) {
+    // The D12 sits on the earmark line; counting it would return 13, so this also pins the whole-line skip.
+    const docs = [{ rel: 'docs/ROADMAP.md', content: `${line} — D12 decided this.\n` }];
+    assert.equal(declaredNextNumber(docs), 9, line);
+    assert.equal(nextFromDocs(docs), 9, `${line} is skipped whole`);
+  }
+});
+
 test('nextFromDocs takes the earmark only when it is above the used numbers', () => {
   const docs = [
     { rel: 'docs/ROADMAP.md', content: '- Next D-number: **D9** (stale line)\n' },
@@ -365,16 +380,14 @@ test('nextDecision reads the project documents itself and honours their earmark'
   assert.equal(nextDecision(dir), 40);
 });
 
-test('CLI derives from the committed tree: an uncommitted record cannot raise its own number', () => {
+test('CLI derives decision docs from the committed tree: an uncommitted mention cannot raise the number', () => {
   const dir = makeGitProject('# AGENTS\n\nD7 is the last committed one.\n');
-  // In-flight work: the working tree carries D9 and the archive entry that claims it, neither committed.
+  // In-flight prose: the working AGENTS.md cites D9, uncommitted. Prose is not the record.
   fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# AGENTS\n\nD7 and now D9 in the working tree.\n', 'utf8');
-  fs.mkdirSync(path.join(dir, 'docs/changelog'), { recursive: true });
-  fs.writeFileSync(path.join(dir, 'docs/changelog/in-flight.md'), `### ${today()} — D9 · half written\n`, 'utf8');
 
   const before = run([dir, '--title', 'closing', '--dry-run']);
   assert.equal(before.status, 0);
-  assert.match(before.stdout, /D8 \(derived: max\(committed used D<n>\) \+ 1\)/, 'the tree owes D8, not D10');
+  assert.match(before.stdout, /D8 \(derived: max\(used D<n>\) \+ 1/, 'the tree owes D8, not D10');
 
   runSync('git', ['add', '-A'], { cwd: dir });
   gitCommit(dir, 'record D9');
@@ -382,12 +395,49 @@ test('CLI derives from the committed tree: an uncommitted record cannot raise it
   assert.match(after.stdout, /D10 \(derived/, 'after the commit the same run MUST report n+1');
 });
 
+test('a second close of the same slice is a no-op — one heading, one write', () => {
+  const dir = makeGitProject('# AGENTS\n\nD7.\n');
+  seedArchive(dir, '### earlier — D7 · old\n');
+
+  const first = run([dir, '--title', 'closing', '--sha', 'aaa']);
+  assert.match(first.stdout, /D8 \(derived/);
+  const again = run([dir, '--title', 'closing', '--sha', 'aaa']);
+  assert.equal(again.status, 0);
+  assert.match(again.stdout, /D8 \(already recorded\)/);
+
+  const body = fs.readFileSync(path.join(dir, quarterFile(today())), 'utf8');
+  assert.equal((body.match(/— D8 · closing/g) || []).length, 1, 'a retry must not append a duplicate entry');
+});
+
+test('two slices closed before one commit get two numbers', () => {
+  const dir = makeGitProject('# AGENTS\n\nD7.\n');
+  seedArchive(dir, '### earlier — D7 · old\n');
+
+  const a = run([dir, '--title', 'slice A', '--sha', 'aaa']);
+  const b = run([dir, '--title', 'slice B', '--sha', 'bbb']);
+  assert.match(a.stdout, /D8 \(derived/);
+  assert.match(b.stdout, /D9 \(derived/, 'the uncommitted D8 is a record in the archive, so the next slice is D9');
+});
+
+test('a number already in the archive fails fast instead of recording it twice', () => {
+  const dir = makeGitProject('# AGENTS\n\nD7.\n');
+  seedArchive(dir, `### ${today()} — D8 · another slice\n`);
+
+  const result = run([dir, '--title', 'mine', '--decision', '8']);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /D8 is already recorded/);
+  assert.match(result.stderr, /Commit the archive/);
+});
+
 test('CLI --archive writes the named document archive and no other', () => {
   const dir = makeProject({ agents: '# AGENTS\n\nD7.\n' });
-  const result = run([dir, '--title', 'per-doc archive', '--sha', 'abc1234', '--archive', 'docs/changelog/roadmap-2026-Q4.md']);
+  const archive = 'docs/changelog/roadmap-2026-Q4.md';
+  const result = run([dir, '--title', 'per-doc archive', '--sha', 'abc1234', '--archive', archive]);
   assert.equal(result.status, 0);
   assert.match(result.stdout, /archive:\s+docs\/changelog\/roadmap-2026-Q4\.md \(given by --archive\)/);
-  assert.ok(fs.existsSync(path.join(dir, 'docs/changelog/roadmap-2026-Q4.md')), 'the named archive carries the entry');
+  const body = fs.readFileSync(path.join(dir, archive), 'utf8');
+  assert.match(body, /One archive per quarter is the default/, 'the header no longer forbids the file it was asked to write');
+  assert.doesNotMatch(body, /not one per document/);
   assert.ok(!fs.existsSync(path.join(dir, quarterFile(today()))), 'the default quarter file is NOT written beside it');
 });
 
@@ -399,8 +449,25 @@ test('CLI --archive re-reads the named archive, so a second slice continues its 
   assert.match(second.stdout, /D9 \(derived/, 'the first entry is in the archive the derivation now reads');
 });
 
-test('CLI rejects an --archive outside docs/ or that is not markdown', () => {
-  for (const bad of ['ROADMAP.md', 'docs/roadmap.txt', '../elsewhere/x.md']) {
+test('an archive adopted mid-quarter continues the default quarter file numbering', () => {
+  const dir = makeProject({ agents: '# AGENTS\n\nD7.\n' });
+  const first = run([dir, '--title', 'default first', '--sha', 'aaa']);
+  assert.match(first.stdout, /D8 \(derived/);
+
+  const second = run([dir, '--title', 'named second', '--sha', 'bbb', '--archive', 'docs/changelog/roadmap-2026-Q4.md']);
+  assert.match(second.stdout, /D9 \(derived/, 'the default quarter file still holds D8, so the new archive starts at D9');
+});
+
+test('CLI rejects an --archive outside docs/, that is not markdown, or that is a decision document', () => {
+  for (const bad of [
+    'ROADMAP.md',
+    'docs/roadmap.txt',
+    '../elsewhere/x.md',
+    'docs/../outside.md',
+    'docs/changelog/../../outside.md',
+    'docs/PRD.md',
+    'docs/adr/README.md',
+  ]) {
     const result = run([makeProject(), '--title', 'x', '--archive', bad]);
     assert.equal(result.status, 2, `${bad} must be a usage error`);
     assert.match(result.stderr, /--archive must name a markdown file under docs\//);
@@ -414,6 +481,15 @@ function makeGitProject(agents) {
   runSync('git', ['add', '-A'], { cwd: dir });
   gitCommit(dir, 'first');
   return dir;
+}
+
+/** Commit a seeded archive at the resolved quarter path, so the next close has committed history. */
+function seedArchive(dir, content) {
+  const rel = quarterFile(today());
+  fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+  fs.writeFileSync(path.join(dir, rel), content, 'utf8');
+  runSync('git', ['add', rel], { cwd: dir });
+  gitCommit(dir, 'seed archive');
 }
 
 function gitCommit(dir, message) {
