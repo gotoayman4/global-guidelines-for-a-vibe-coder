@@ -29,6 +29,7 @@ tags: [vite, build, bundler]
 6. **Tree shaking:** named/modular imports — `import Button from '@mui/material/Button'`, never root barrel imports of MUI.
 7. **Bundle audit:** run `npx vite-bundle-visualizer` periodically.
 8. **RTL needs no Vite config** — handled in app code: inline `<html dir>` script in index.html + Emotion stylis-plugin-rtl cache + theme.direction.
+9. **Test-transform cache (measured only):** if Vitest profiling shows repeated module transformation is a material local-feedback cost, consider `fsModuleCache` when supported by the installed Vitest version. Compare cold and warm runs, verify source/config changes invalidate cached transforms, and keep the cache disposable. Caching MUST NOT narrow test selection or ship-boundary verification.
 
 ## Anti-Patterns
 

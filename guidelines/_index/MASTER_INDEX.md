@@ -103,7 +103,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [supabase-auth.md](../05-stack-guides/supabase/supabase-auth.md) | Normative | Stack (Supabase Auth) | ~633 | `#supabase` `#auth` `#jwt` `#grants` |
 | [supabase-database.md](../05-stack-guides/supabase/supabase-database.md) | Normative | Stack (Supabase / PostgreSQL) | ~974 | `#supabase` `#postgresql` `#rls` `#grants` `#postgrest` |
 | [typescript-conventions.md](../05-stack-guides/typescript/typescript-conventions.md) | Normative | Stack (TypeScript) | ~614 | `#typescript` `#types` `#strict` |
-| [vite-configuration.md](../05-stack-guides/vite/vite-configuration.md) | Normative | Stack (Vite) | ~449 | `#vite` `#build` `#bundler` |
+| [vite-configuration.md](../05-stack-guides/vite/vite-configuration.md) | Normative | Stack (Vite) | ~549 | `#vite` `#build` `#bundler` |
 
 ### 06 — Frontend Patterns
 
