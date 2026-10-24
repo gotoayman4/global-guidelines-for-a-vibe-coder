@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * slice-close.js — One command closes a slice: the record, the receipt pointer, the freshness line,
- * and (with `--adr`) the decision's three derived sites.
+ * slice-close.js — One command closes a slice: the record, optional receipt pointer, freshness
+ * line, and (with `--adr`) the decision's three derived sites.
  *
  * INTENT: The steering writes a slice owes are DERIVED facts — the date, the commit, the decision
- * number, the receipt path — and hand-typing a derived fact is how it goes stale silently
+ * number, and (at a milestone/release exit) the receipt path — and hand-typing a derived fact is how it goes stale silently
  * (documentation-strategy.md §Machine output is referenced, never transcribed). This script writes
  * them from the repository's own state, so the agent spends its prose only where prose IS the
  * product: the acceptance body and an ADR.

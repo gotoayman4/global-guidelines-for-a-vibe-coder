@@ -50,6 +50,8 @@ The reading a session does before its first edit is the largest single cost it p
 
 The hook reads the declared `mode`, so a project escalates its gate by escalating its mode — a dated, recorded act, not a hand-edit to the hook. **Removing a check is never the optimisation**: the optimisation is running each check at the frequency its trigger actually needs (`workflow-friction-audit.md`).
 
+**Receipt cadence is separate from gate cadence.** Routine slices use the mode's loop and pre-push gate without generating a full `gate:receipt`. Run one full receipt at a milestone or release exit, after the code is final; use `--e2e` when that boundary requires the end-to-end matrix. This reduces repeated full runs and artifacts, not the checks required by the hook or any security tier.
+
 ## Absolute Rules (All Modes)
 
 1. **Security never relaxes.** SQLi prevention, secrets, input validation, auth review, CORS, security headers, and magic-byte upload checks apply identically in every mode.

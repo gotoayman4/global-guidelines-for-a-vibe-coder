@@ -105,7 +105,11 @@ Before every push, run that mode's gate locally. This gate replaces the cloud CI
 
 ## Gate Receipts — Evidence Is an Artifact, Not a Sentence
 
-A project-owned `npm run gate:receipt` runs the same steps and writes `docs/gate-receipts/<UTC-stamp>.md`: timestamp, branch/commit, per-step exit code and key figures, and one verdict line. Steering prose then **cites the file path** and copies nothing (see `documentation-strategy.md`). An echo-only placeholder is not a receipt — it writes no evidence. Rules for the instrument:
+A project-owned `npm run gate:receipt` runs the same steps and writes `docs/gate-receipts/<UTC-stamp>.md`: timestamp, branch/commit, per-step exit code and key figures, and one verdict line. Steering prose then **cites the file path** and copies nothing (see `documentation-strategy.md`). An echo-only placeholder is not a receipt — it writes no evidence.
+
+**Cadence — a receipt is a boundary artifact, not an iteration check.** Routine slices use the fast loop and the declared pre-push gate; do not run `gate:receipt` after every slice or edit batch. Run it once at a milestone or release exit, after the code is final. Add `--e2e` when that boundary requires the end-to-end matrix. This changes only how often the full evidence artifact is generated: it does not defer or remove any per-push, path-triggered, or other security check. If a record cites full-gate figures, cite a receipt from the exact tree those figures describe; never reuse a stale receipt or imply that a fast-loop result proves the full gate.
+
+Rules for the instrument:
 
 - **Strip ANSI escapes** from captured output before parsing or writing it. A tool that colorizes for a terminal writes `\e[32m105 passed` into the artifact — unreadable to a reader and unparseable by a guard.
 - **A step that cannot be green before the commit is informational.** The receipt is written while the work is still dirty, so a clean-tree check would make every honest receipt RED. Mark it informational, print what it found, keep it out of the verdict and the exit code.
@@ -122,11 +126,12 @@ A project-owned `npm run gate:receipt` runs the same steps and writes `docs/gate
 
 ## Slice Close — the Steering Writes Are Derived Too
 
-A receipt proves the gate ran. The rest of what a slice owes — the changelog entry, the decision number, the freshness line — was still typed by hand, and a hand-typed derived fact decays. `npm run slice:close` writes them from the repository's own state:
+A receipt proves the full gate ran, but routine slice-close does not require one. At milestone or release exit, pass the boundary receipt when the record needs to cite it. The other facts a slice owes — the changelog entry, the decision number, the freshness line — are derived by `npm run slice:close` from repository state:
 
 ```sh
-npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md --receipt docs/gate-receipts/<stamp>.md
+npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md
 # a project whose archive is named per document adds: --archive docs/changelog/roadmap-2026-Q4.md
+# At a milestone/release exit, add: --receipt docs/gate-receipts/<stamp>.md
 ```
 
 | It writes | Derived from |
