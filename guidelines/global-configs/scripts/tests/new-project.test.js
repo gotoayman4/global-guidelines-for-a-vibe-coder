@@ -33,6 +33,18 @@ test('injectMode inserts a Speed Mode section once and is idempotent', () => {
   assert.equal(occurrences.length, 1, 'must not insert a second Speed Mode block');
 });
 
+test('injectMode records the init on the Set line and never scaffolds a transition log (D428)', () => {
+  const world = fs.readFileSync(path.join(STARTERS, 'WORLD.starter.md'), 'utf8');
+  const once = injectMode(world, 'vibe');
+  assert.doesNotMatch(once, /Transition log/, 'a boot file carries no history — the changelog owns it');
+  assert.match(once, /\*\*Set:\*\* \d{4}-\d{2}-\d{2} — initialized as/, 'the Set line is the one dated record');
+  assert.match(once, /\*\*Escalation:\*\* [^]*release override/, 'a release exit escalates via the override');
+
+  const twice = injectMode(once, 'guarded');
+  assert.match(twice, /\*\*mode:\*\* `guarded`/, 'a re-inject follows the mode argument');
+  assert.match(twice, /initialized as `vibe` by new-project\.js/, 'the init record is never rewritten');
+});
+
 test('mergeGateScripts adds the fast gate and the audit wrapper, and includes changed tests when a test script exists', () => {
   const { pkg: empty, changed } = mergeGateScripts({ name: 'x', scripts: { test: 'vitest' } });
   assert.equal(changed, true);
@@ -55,6 +67,17 @@ test('prePushHook reads the mode through the shipped reader and fails safe', () 
   assert.match(hook, /MODE=standard/, 'an unreadable mode falls back to the full chain');
   assert.match(hook, /gate:fast/, 'the vibe branch runs the fast gate');
   assert.match(hook, /run_step build/, 'the standard branch runs the full pipeline');
+});
+
+test('the hook escalates a release through an override, never a WORLD.md edit (D428)', () => {
+  const hook = prePushHook();
+  assert.match(hook, /GS_RELEASE_GATE/, 'the one-push override trigger');
+  assert.match(hook, /\.release-override/, 'the durable override marker');
+  // The lift must run BEFORE anything branches on $MODE, or the override buys nothing.
+  const lift = hook.indexOf('GS_RELEASE_GATE');
+  const alwaysTier = hook.indexOf('check-guard-tiers.js');
+  const branch = hook.indexOf('run_step gate:fast');
+  assert.ok(lift > 0 && lift < alwaysTier && lift < branch, 'the lift applies before any branch reads MODE');
 });
 
 test('the hook runs the audit wrapper and the clean-tree check in every mode', () => {

@@ -77,7 +77,7 @@ Escalation is **automatic and evidence-based**. The last four triggers escalate 
 
 A milestone or release exit that owes the full chain runs it through a **release override the gate reads** — a release branch, tag, env var, or override file — instead of editing the declared `mode` in `WORLD.md` and editing it back a day later. The declared mode changes only when the project's **steady state** changes; a flip that lasts one release is an override. A project that flip-flops its declared mode every release pays two boot-file edits, a hook-behavior change and a transition-log entry per release, and its mode line stops meaning anything.
 
-**The transition log lives in the changelog, not in `WORLD.md`.** Mode-change lines are dated history; a boot file carries no history (`documentation-strategy.md` §Directives rule 6). `WORLD.md` states only the current mode and where the log is; `npm run slice:close` moves each new transition line to the changelog in the same close.
+**The transition log lives in the changelog, not in `WORLD.md`.** Mode-change lines are dated history; a boot file carries no history (`documentation-strategy.md` §Directives rule 6). `WORLD.md` states only the current mode and how a release escalates; a mode change is recorded once, in the changelog entry of the slice that made it — the same entry `npm run slice:close` writes.
 
 ### One Escalation Class per Slice
 

@@ -3,7 +3,15 @@
 **Purpose:** This is a completed example of WORLD.md for a fictional SaaS task-management system. Use this as a reference when filling in your own WORLD.starter.md.
 
 **Source:** `global-configs/templates/WORLD.example.md`
-**Last Updated:** 2026-05-26
+**Last Updated:** 2026-10-26
+
+---
+
+## Speed Mode
+
+- **mode:** `vibe` — `vibe | standard | guarded` per `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`
+- **Set:** 2026-05-26 — bootstrapped on the fast track until the first ship; revisit at every milestone.
+- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (`GS_RELEASE_GATE=1` or the gitignored `.release-override`); this file changes only when the steady state changes. Transition history lives in `docs/changelog/` — a boot file carries no history.
 
 ---
 

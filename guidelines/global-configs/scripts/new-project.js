@@ -92,23 +92,29 @@ function injectMode(worldContent, mode) {
   const date = new Date().toISOString().split('T')[0];
   const marker = '## What This Project Is';
   const modeLine = `- **mode:** \`${mode}\` — \`vibe | standard | guarded\` per \`_guidelines/01-workflow-methodology/speed-tiered-workflow.md\``;
-  const initLine = `  - ${date} — initialized as \`${mode}\` by new-project.js`;
+  // The Set line is the ONE dated record a boot file keeps: when the mode was set and why.
+  // A scaffold that writes a Transition log block teaches every later session to append to it,
+  // and history in a boot file is paid by every session (speed-tiered-workflow.md §A Release
+  // Escalation Is an Override; documentation-strategy.md rule 6). Mode changes are recorded in
+  // `docs/changelog/`; a release exit escalates through an override the gate reads, not an edit.
+  const setLine = `- **Set:** ${date} — initialized as \`${mode}\` by new-project.js; revisit at every milestone.`;
+  const escalationLine = '- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (GS_RELEASE_GATE=1 or the gitignored `.release-override`); this file changes only when the steady state changes. Transition history lives in `docs/changelog/` — a boot file carries no history.';
 
   if (worldContent.includes('## Speed Mode')) {
     let next = worldContent.replace(/^[ \t]*- \*\*mode:\*\*.*$/m, modeLine);
-    if (!next.includes(`initialized as \`${mode}\` by new-project.js`)) {
-      // Preserve the file's own line endings when inserting under Transition log.
-      const eol = next.includes('\r\n') ? '\r\n' : '\n';
-      const logRe = /(^[ \t]*- \*\*Transition log:\*\*[ \t]*$)/m;
-      if (logRe.test(next)) {
-        next = next.replace(logRe, `$1${eol}${initLine}`);
-      } else {
-        // No log heading — append a Transition log block after the Set: line (or mode line).
-        const anchor = /^[ \t]*- \*\*Set:\*\*.*$/m.exec(next);
-        if (anchor) {
-          next = next.replace(anchor[0], `${anchor[0]}${eol}- **Transition log:**${eol}${initLine}`);
-        }
-      }
+    const setRe = /^[ \t]*- \*\*Set:\*\*.*$/m;
+    const setMatch = setRe.exec(next);
+    if (setMatch) {
+      // An ALREADY-INITIALIZED Set line keeps its record (idempotent re-inject); only the
+      // starter's [FILL] placeholder is replaced. The test is on the MATCHED LINE, never on
+      // the whole document — the starter carries [FILL] markers far below Speed Mode.
+      if (setMatch[0].includes('[FILL')) next = next.replace(setRe, setLine);
+    } else {
+      next = next.replace(modeLine, `${modeLine}\n${setLine}`);
+    }
+    if (!next.includes('**Escalation:**')) {
+      const anchor = setRe.exec(next);
+      if (anchor) next = next.replace(anchor[0], `${anchor[0]}\n${escalationLine}`);
     }
     return next;
   }
@@ -118,9 +124,8 @@ function injectMode(worldContent, mode) {
     '## Speed Mode',
     '',
     modeLine,
-    '- **Set:** bootstrapped by new-project.js; revisit at every milestone.',
-    '- **Transition log:**',
-    initLine,
+    setLine,
+    escalationLine,
     '',
     '',
     marker,
@@ -179,13 +184,16 @@ function prePushHook() {
     '#',
     '# Order: mode → always-tier → gate → audit → clean-tree',
     '#',
-    '# Four rules that are easy to get wrong here:',
+    '# Five rules that are easy to get wrong here:',
     '#   · The mode is READ BY THE SHIPPED READER, never by a grep in this file: a grep here is a',
     '#     second reader of WORLD.md, and a second reader is a second opinion that drifts. The',
     '#     reader is `_guidelines/global-configs/scripts/read-mode.js` (the synced mirror), or a',
     '#     vendored `scripts/read-mode.js`. If neither is there — or the declaration is not',
     '#     legible — the gate FAILS SAFE to the full chain: an unreadable mode must never buy the',
     '#     fast path.',
+    '#   · A release or milestone exit escalates through the OVERRIDE below (GS_RELEASE_GATE=1 or',
+    '#     `.release-override`) — never by editing WORLD.md and editing it back. The declared',
+    '#     mode changes only when the steady state changes.',
     '#   · The always tier is DERIVED from the guards\' own `@tier` docblocks, not listed here: a',
     '#     list kept by hand in a hook goes stale, and it fails in the direction nobody notices.',
     '#   · A step this project does not have is SKIPPED WITH A NOTE, never a hard failure. A step',
@@ -208,6 +216,15 @@ function prePushHook() {
     '  fi',
     'done',
     'echo "pre-push gate: mode=$MODE"',
+    '',
+    '# Release override: a release or milestone exit escalates WITHOUT editing WORLD.md — set',
+    '# GS_RELEASE_GATE=1 for one push, or leave a `.release-override` file at the repo root for',
+    '# the release week (gitignore it). The lift is one-way and one-deep: vibe becomes standard;',
+    '# a declared standard/guarded is untouched, and it can never make a gate cheaper.',
+    'if [ "$MODE" = "vibe" ] && { [ "$GS_RELEASE_GATE" = "1" ] || [ -f .release-override ]; }; then',
+    '  MODE=standard',
+    '  echo "pre-push gate: release override active — running the standard chain"',
+    'fi',
     '',
     '# run_step <script> [args...] — a script this project does not have is a note; a script that',
     '# fails is a failure.',
