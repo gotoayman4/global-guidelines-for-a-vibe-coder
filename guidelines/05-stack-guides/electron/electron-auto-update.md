@@ -35,7 +35,7 @@ private source repo ── tag v* + CI ──▶ public releases-only repo
 | Netlify | Landing/download page only | Not the feed: 15 credits per deploy + 20/GB; GitHub serves the feed and bytes |
 | Retention | Current + previous stable, two newest prereleases; prune older | GitHub never expires release assets; clients read only the newest feed |
 | Changelog | `CHANGELOG.md` in the source repo | Release body and in-app view are generated copies |
-| Signing | macOS mandatory; Windows Authenticode | The OS, not `latest.yml`, is the authenticity boundary |
+| Signing | Optional on Windows; macOS signing required for auto-update | The OS, not `latest.yml`, is the authenticity boundary; unsigned Windows builds show SmartScreen, and macOS cannot self-update unsigned |
 | Update UX | Consent-first; never force restart | Silent restart loses unsaved work |
 
 **Why not `private: true`:** `PrivateGitHubProvider` needs a token **at runtime on the user's machine** (`GH_TOKEN`/`GITHUB_TOKEN` or `publish.token`). A build-time token never ships, and a shipped token is extractable from the ASAR. No token in the app — use the public releases-only repo.
@@ -46,7 +46,7 @@ private source repo ── tag v* + CI ──▶ public releases-only repo
 
 | OS | Build target | Feed file | Non-negotiable |
 |---|---|---|---|
-| Windows | NSIS | `latest.yml` | Per-user install; publisher name lives under `azureSignOptions` or `signtoolOptions` and must equal the certificate CN; portable builds cannot self-update |
+| Windows | NSIS | `latest.yml` | Per-user install; when signing, the publisher name lives under `azureSignOptions` or `signtoolOptions` and must equal the certificate CN; portable builds cannot self-update |
 | macOS | **DMG + ZIP, x64 + arm64** | `latest-mac.yml` | Both targets and both arches; signed + notarized; the updater refuses unsigned apps |
 | Linux | AppImage (default), deb, rpm, pacman | `latest-linux.yml` | All four self-update; AppImage needs no root, package installs use the system manager |
 
@@ -97,6 +97,7 @@ linux: { target: [AppImage], category: Utility }
 - `macos-latest` builds one architecture by default. Without `arch: [x64, arm64]` (or `universal`), Intel or Apple Silicon Macs never receive updates; build both in the same job.
 - NSIS already ships a `.blockmap`; `nsis.differentialPackage` defaults to `true`. Set `'store-asar'` only if you want smaller deltas at the cost of a larger installer.
 - `electron-builder` writes `app-update.yml` into the packaged `resources/`; never hand-write or edit it. No `publish` block = no feed.
+- Signing is optional: omit `azureSignOptions`/`signtoolOptions` and `CSC_LINK`/`CSC_KEY_PASSWORD` for an unsigned build. Windows then shows SmartScreen and the UI must not claim a verified publisher; macOS still needs a Developer ID for the updater to work.
 - Build **all architectures for one OS in one job**. Two jobs that both write `latest.yml` overwrite each other; the last wins and the other arch 404s.
 - `dev-app-update.yml` + `autoUpdater.forceDevUpdateConfig = true` are for local tests only; keep both out of the packaged app.
 
@@ -313,13 +314,13 @@ process.stdout.write(body + '\n')
 1. **No update credential ships in the app.** `app-update.yml` MUST contain no `token` and no `private: true`; the verifier fails the build if either appears. If a private feed is unavoidable, use a fine-grained `Contents: read` token for one repo, accept that it is extractable, document it, and rotate it — never a classic `repo`-scope PAT.
 2. **HTTPS only; feed fixed at build time.** Never accept a feed URL from user input, remote config, or any runtime value; never call `setFeedURL()` with dynamic data.
 3. **No downgrades.** `allowDowngrade = false`; setting `autoUpdater.channel` silently turns it on — reset it after any channel change.
-4. **Keep OS signature verification on.** Windows: `verifyUpdateCodeSignature = true` (default) and the publisher name (under `win.azureSignOptions` or `win.signtoolOptions`) equal to the certificate CN; a mismatch rejects the update. macOS: Developer ID + hardened runtime + notarization, or the updater will not work at all.
+4. **Keep OS signature verification on.** Windows: `verifyUpdateCodeSignature = true` (default) and the publisher name (under `win.azureSignOptions` or `win.signtoolOptions`) equal to the certificate CN; a mismatch rejects the update. macOS: Developer ID + hardened runtime + notarization, or the updater will not work at all. An unsigned build has no publisher identity for Windows to compare, so the feed's `sha512` is the only integrity check — never represent it as publisher verification.
 5. **`sha512` detects corruption, not a compromised feed.** Anyone who compromises the release account can edit `latest.yml`. The authenticity boundary is the code signature; v27's Ed25519-signed manifests (preview, not current stable) close the "edit the manifest" hole — plan for it, do not assume it.
 6. **Linux updates depend on the package manager.** AppImage is verified only by the manifest sha512 and needs no root; deb/rpm/pacman install through the system package manager, which may prompt for sudo and may not enforce a signature for local files. Publish a SHA-256 checksum and a GPG signature on the download page. On electron-updater 7 (v27 preview), `allowUnverifiedLinuxPackages` defaults to `true` and bypasses GPG for deb/rpm — set it to `false` if you sign those, knowing dpkg cannot enforce it and bare rpm needs `%_pkgverify_level signature` on the target.
 7. **Release repo hygiene.** Artifacts only — no source, no `.env`, no source maps containing secrets. Protect tags; only CI writes. Never point the updater at GitHub Actions artifacts (they expire and require auth) — use Releases.
 8. **Treat release notes as remote input.** Render `releaseNotes` as plain text or sanitize with DOMPurify before `dangerouslySetInnerHTML`. Never build a custom "download the exe and run it" updater — it bypasses signature, publisher, and downgrade checks and turns a feed compromise into code execution.
 
-**Signing reality (2026-10-26).** No free signing path exists for a private commercial app: macOS requires the paid Apple Developer Program; Windows Authenticode is Azure Artifact Signing (~$9.99/month; individuals USA/Canada, organizations USA/Canada/EU/UK) or an OV certificate ($150–300/year). Self-signed blocks public users; EV no longer bypasses SmartScreen (since 2024); SignPath Foundation is free only for qualifying open-source projects.
+**Signing is optional (2026-10-26).** No free signing path exists for a private commercial app: macOS requires the paid Apple Developer Program; Windows Authenticode is Azure Artifact Signing (~$9.99/month; individuals USA/Canada, organizations USA/Canada/EU/UK) or an OV certificate ($150–300/year). Self-signed blocks public users; EV no longer bypasses SmartScreen (since 2024); SignPath Foundation is free only for qualifying open-source projects. **An unsigned build MAY be published publicly, with no owner decision or ADR requirement.** Windows users will see SmartScreen ("unknown publisher"), and macOS cannot auto-update an unsigned app. Signing is recommended for user trust and required only where the platform enforces it. Because an unsigned build has no publisher signature, TLS plus `sha512` on the feed is the only integrity check — a compromised release account can push code — and the UI MUST NOT claim a verified publisher it does not have.
 
 ## 6. Versioning, Channels, Rollout, Rollback
 
@@ -339,7 +340,7 @@ process.stdout.write(body + '\n')
 | Old→new install | Install the previous release on a clean VM/account; it finds, downloads, and installs the new one; data survives |
 | macOS "Later" path | After choosing **Later** and downloading, quitting the app installs the update; a canceled close prompt must not block it |
 | Offline / corrupt | No crash offline; a truncated or corrupt download fails with a clear error and no install |
-| Code signatures | macOS: `codesign --verify --deep --strict`, `spctl -a -vv`, `xcrun stapler validate` pass. Windows: `Get-AuthenticodeSignature` reports `Valid`, publisher matches the configured name (certificate CN) |
+| Code signatures | Signed builds: macOS `codesign --verify --deep --strict`, `spctl -a -vv`, `xcrun stapler validate` pass; Windows `Get-AuthenticodeSignature` reports `Valid` and the publisher matches the certificate CN. Unsigned builds: expect Windows SmartScreen, verify install + update still work, and state the publisher is unverified; macOS auto-update requires a signature |
 | Prune safety | After deleting older releases, the current feed + assets still resolve and an N−2 client updates to latest |
 | Notes rendering | Prompt shows sanitized notes; after restart "What's new" shows the bundled section |
 
@@ -353,7 +354,7 @@ process.stdout.write(body + '\n')
 | 404 even though the repo is private | `private: true` with no runtime token; silent fallback to the public provider | Remove `private`; use the public releases-only repo |
 | No update offered | Version not bumped, tag ≠ version, or `appId`/`productName` changed | Version guard in CI; keep identity stable |
 | macOS update never applies | Only DMG built, or app unsigned/not notarized | Build DMG **and** ZIP; Developer ID + notarize |
-| Windows update rejected / SmartScreen block | Publisher name not under `azureSignOptions`/`signtoolOptions`, unsigned build, or certificate mismatch | Sign with the same identity; set the publisher to the certificate CN |
+| Windows update rejected / SmartScreen block | Publisher name not under `azureSignOptions`/`signtoolOptions`, unsigned build, or certificate mismatch | Unsigned: SmartScreen is expected — disclose it and verify install. Signed: use the same identity and set the publisher to the certificate CN |
 | Linux update button does nothing | Installed from a distro repository or snap, not the release artifact | Install from the release's AppImage/deb/rpm; AppImage needs no root |
 | One architecture 404s | Two jobs overwrote `latest.yml` | Build all arches in one OS job |
 | Clients stop updating after cleanup | Deleted the current release or its `latest*.yml` | Keep current + previous; prune only older tags |
@@ -372,7 +373,7 @@ process.stdout.write(body + '\n')
 | Deleting the current release or `latest.yml` | Every installed client loses its feed permanently | Prune only older tags; verify the feed after cleanup |
 | Editing `latest*.yml` after publishing | Immutable releases reject the upload; v27 signatures invalidate | Edit the draft before publish; never patch a published feed |
 | Force restart / install on a timer | Loses unsaved work; users disable updates | Consent-first; install on quit after "Later" |
-| Shipping unsigned macOS/Windows builds | Updater refuses macOS; SmartScreen blocks Windows | Sign before the first public release |
+| Claiming an unsigned build is publisher-verified | Neither `latest.yml` nor `sha512` proves publisher identity; Windows shows "unknown publisher" | State that the build is unsigned; sign it if the warning must disappear |
 | Changelog = commit log | Users cannot decide; security fixes buried | `CHANGELOG.md` written for users; generated copies only |
 | Checking for updates every minute | Rate limits, battery drain, log noise | 30 s after launch, then 4–6 h + jitter |
 | Publishing from a laptop | Unreproducible artifacts, missing assets, leaked secrets | Tag-driven CI with the draft → verify → publish gate |
@@ -383,7 +384,7 @@ process.stdout.write(body + '\n')
 2. `latest*.yml` is the contract. Publish the installer, `.blockmap`, and feed together; keep current + previous and prune older ones — GitHub never expires release assets. Netlify is a landing/download page; GitHub serves the feed and bytes.
 3. `CHANGELOG.md` is canonical and user-facing; the release body, public copy, and bundled snapshot are generated; CI fails a version without notes.
 4. Consent-first UX: check silently, download after consent, install on restart or next quit, never force a restart over unsaved work.
-5. macOS signing is mandatory and Windows signing effectively is; `sha512` is integrity, the code signature is authenticity, and no free signing path exists for a private commercial app. Verify the feed, artifacts, packaged `app-update.yml`, and an old→new install before publishing; roll back with a higher version, never by deleting the bad one.
+5. Signing is optional on Windows and required on macOS for auto-update; no free signing path exists for a private commercial app. An unsigned build MAY be published publicly — Windows shows SmartScreen and macOS cannot self-update unsigned — so `sha512` plus TLS is the only integrity check and the UI must never claim a verified publisher it does not have. Verify the feed, artifacts, packaged `app-update.yml`, and an old→new install before publishing; roll back with a higher version, never by deleting the bad one.
 
 ## Cross-References
 

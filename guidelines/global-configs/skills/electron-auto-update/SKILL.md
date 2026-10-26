@@ -55,7 +55,7 @@ Companion guidelines, only when the task touches their area:
 - Never make the source repo public to satisfy `update-electron-app`.
 - Never embed a GitHub token in the app; `private: true` without a runtime token silently falls back and 404s.
 - Never delete the current release or its `latest*.yml`; prune only older tags.
-- Never ship unsigned builds: macOS refuses them, Windows SmartScreen blocks them. There is no free signing path for a private commercial app.
+- Unsigned builds MAY be published publicly; no owner decision or ADR is required. Windows users see SmartScreen, macOS cannot auto-update an unsigned app, and `sha512` proves integrity, not publisher identity — disclose the unknown publisher and never claim a verified publisher the build does not have.
 - Never force a restart over unsaved work.
 - Keep `allowDowngrade = false`; roll back by publishing a higher version.
 
