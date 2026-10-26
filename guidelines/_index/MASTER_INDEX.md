@@ -91,6 +91,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [arabic-rtl-pdf-generation.md](../05-stack-guides/arabic-rtl-pdf-generation.md) | Normative | Global — Web and Electron Apps (Arabic PDF output) | ~4777 | `#rtl` `#arabic` `#pdf` `#chromium` `#electron` `#print` `#bidi` `#fonts` `#paged-media` `#accessibility` |
+| [electron-auto-update.md](../05-stack-guides/electron/electron-auto-update.md) | Normative | Stack (Electron) | ~7553 | `#electron` `#auto-update` `#release` `#github-releases` `#netlify` `#code-signing` `#changelog` |
 | [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~803 | `#mui` `#rtl` `#i18n` `#bidirectional` |
 | [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 7+ / 9+) | ~773 | `#mui` `#styling` `#theme` |
 | [nestjs-architecture.md](../05-stack-guides/nestjs/nestjs-architecture.md) | Normative | Stack (NestJS) | ~703 | `#nestjs` `#backend` `#modules` |
@@ -213,6 +214,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1336 | `#skill` `#debugging` `#noncoder` `#visual` |
 | [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1635 | `#skill` `#deploy` `#production` `#hosting` |
 | [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3559 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
+| [electron-auto-update/SKILL.md](../global-configs/skills/electron-auto-update/SKILL.md) | Advisory | Global (Task-Type Skill) | `electron` | ~951 | `#skill` `#electron` `#auto-update` `#release` `#github-releases` `#code-signing` |
 | [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` | ~2776 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` `#node` `#console` |
 | [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1658 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory — with an enforced core | Global (Task-Type Skill) | `firebase` `firestore` | ~3848 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
@@ -288,6 +290,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | **Rules file setup** | AGENTS.starter.md, ai-governance-framework | — |
 | **Skill installation** | code-review (skill), test-generation (skill), refactoring (skill) | security-audit (skill), performance-audit (skill) |
 | **Windows installer** | inno-setup (skill) | security-engineering, cost-optimization-strategy |
+| **Electron auto-update / desktop release** | electron-auto-update (skill), ci-cd-philosophy, security-engineering | electron-auto-update, environment-management, cost-optimization-strategy, error-handling-philosophy |
 | **Production deployment** | deploy-production (skill), git-workflow-strategy | ci-cd-philosophy, local-ci-strategy, environment-management |
 | **First project setup** | first-project-setup (skill) | planning-and-scoping, git-workflow-strategy, design-system-governance |
 | **Cost optimization** | cost-optimization-strategy, context-management-strategy | — |
@@ -366,6 +369,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 
 ### 05-stack-guides
 - `arabic-rtl-pdf-generation.md` → depends on: `rtl-tech-stack.md`, `bidirectional-design-principles.md` · see also: `accessibility-standards.md`, `security-engineering.md`, `testing-patterns.md`, `performance-optimization.md`
+- `electron-auto-update.md` → depends on: `security-engineering.md`, `ci-cd-philosophy.md` · applied by: `environment-management.md` · see also: `cost-optimization-strategy.md`, `bidirectional-design-principles.md`, `documentation-strategy.md`
 - `mui-rtl-bidirectional.md` → see also: `mui-styling.md`, `react-architecture.md`, `accessibility-standards.md`, `playwright-e2e.md`
 - `mui-styling.md` → see also: `mui-rtl-bidirectional.md`, `react-architecture.md`, `accessibility-standards.md`
 - `nestjs-architecture.md` → see also: `typescript-conventions.md`, `backend-architecture.md`, `api-design-standards.md`, `supabase-database.md`

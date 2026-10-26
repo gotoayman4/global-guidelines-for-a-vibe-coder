@@ -12,7 +12,7 @@
 This is **not** an application project. It is a centralized development guidelines repository that:
 - Houses ~80 guideline files organized into domain directories (`guidelines/00-*` through `guidelines/08-*`)
 - Provides templates for steering files (AGENTS.starter.md, WORLD.starter.md, etc.)
-- Ships 22 skills, each a `<name>/SKILL.md` directory, for specialized AI coding workflows
+- Ships 23 skills, each a `<name>/SKILL.md` directory, for specialized AI coding workflows
 - Includes sync tooling (`sync-manager.ps1`, `setup-global-references.ps1`) to distribute guidelines to downstream projects
 - Is consumed by projects via a `_guidelines/` mirror and inline rule extraction
 
@@ -56,7 +56,7 @@ This is **not** an application project. It is a centralized development guidelin
 
 ## Skills (Always Load)
 
-The 22 skills in `guidelines/global-configs/skills/` are **task-activated**: they load only when their
+The 23 skills in `guidelines/global-configs/skills/` are **task-activated**: they load only when their
 trigger matches, which is why the trigger has to be visible *before* the file is opened.
 
 - **The inventory is `skills/INDEX.md`** — a `Skill → Load when → Applies to` table generated from

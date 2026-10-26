@@ -47,6 +47,7 @@ Extract keywords from the user's request to identify task type:
 | "Write tests", "Add tests", "Test coverage" | Testing | `#testing` |
 | "Plan", "Architecture", "Design the system" | Planning | `#planning` `#architecture` |
 | "Deploy", "CI/CD", "Pipeline" | CI/CD | `#ci-cd` `#git` |
+| "Auto-update", "auto updater", "Electron release", "latest.yml", "update feed", "code signing" | Electron auto-update | `#electron` `#auto-update` `#release` |
 | "CI quota", "Actions minutes", "run CI locally", "free CI", "pre-push gate", "husky" | Local CI | `#local-ci` `#ci-cd` `#cost` |
 | "Review this code", "Code review" | Code review | `#review` `#security` |
 | "Update docs", "Stale docs", "Steering", "AI context" | Docs / steering update | `#documentation` `#strategy` `#maintenance` |

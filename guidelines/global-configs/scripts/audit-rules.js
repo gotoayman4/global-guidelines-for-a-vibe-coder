@@ -76,6 +76,7 @@ const EXTRACTION_EXCLUSIONS = [
   '05-stack-guides/supabase/supabase-database.md',
   '05-stack-guides/typescript/typescript-conventions.md',
   '05-stack-guides/vite/vite-configuration.md',
+  '05-stack-guides/electron/electron-auto-update.md', // stack-specific release guide, loaded on demand
   '06-frontend-patterns/dialog-patterns.md',
   '06-frontend-patterns/form-patterns.md',
   '06-frontend-patterns/notification-patterns.md',
