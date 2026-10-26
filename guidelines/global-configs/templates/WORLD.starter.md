@@ -17,8 +17,7 @@
 
 - **mode:** `vibe` — `vibe | standard | guarded` per `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`
 - **Set:** [FILL: date + reason]. Default is `vibe` until first ship; revisit at every milestone.
-- **Transition log:**
-  - [FILL: YYYY-MM-DD — mode change + reason]
+- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (branch/tag/env); this file changes only when the steady state changes. Transition history lives in `docs/changelog/` — a boot file carries no history.
 
 ---
 

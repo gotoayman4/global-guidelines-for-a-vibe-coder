@@ -73,6 +73,12 @@ Escalation is **automatic and evidence-based**. The last four triggers escalate 
 | The same test file fails twice in one slice | escalate the slice to `standard`; say so in one line |
 | Repeated silent regressions | escalate the project; run `workflow-friction-audit.md` |
 
+### A Release Escalation Is an Override, Not an Edit
+
+A milestone or release exit that owes the full chain runs it through a **release override the gate reads** — a release branch, tag, env var, or override file — instead of editing the declared `mode` in `WORLD.md` and editing it back a day later. The declared mode changes only when the project's **steady state** changes; a flip that lasts one release is an override. A project that flip-flops its declared mode every release pays two boot-file edits, a hook-behavior change and a transition-log entry per release, and its mode line stops meaning anything.
+
+**The transition log lives in the changelog, not in `WORLD.md`.** Mode-change lines are dated history; a boot file carries no history (`documentation-strategy.md` §Directives rule 6). `WORLD.md` states only the current mode and where the log is; `npm run slice:close` moves each new transition line to the changelog in the same close.
+
 ### One Escalation Class per Slice
 
 The cost of a slice is not the lines it changes; it is the number of **distinct verification regimes** its diff triggers. Each class above carries its own tier, its own fixtures and its own failure vocabulary, and they do not share evidence: a slice in two classes pays two full verifications, and a slice in four pays a matrix nobody can describe in a sentence. Measured 2026-10-23 in a referenced project: one `vibe` slice escalated on a mail path, a desktop-shell IPC security pin and a shared-package type contract at once — the gate ran six steps, and the security step could only run *outside* the gate because it is path-aware.
@@ -99,6 +105,8 @@ The cost of a slice is not the lines it changes; it is the number of **distinct 
 | guarded ceremony on a throwaway spike | demote to vibe — the ceremony protects nothing here |
 | Treating mode as an excuse to skip security or honesty rules | Absolute Rules apply in every mode |
 | Mode declared at bootstrap, never revisited | revisit at every milestone; record the change |
+| Flip-flopping the declared mode for every release | run the release chain on a release override; edit the declared mode only when the steady state changes |
+| A per-slice write to a plan document (PRD/ROADMAP/sprint plan) | plan docs close at the sprint boundary; a slice's record is its changelog entry + decision number (`planning-and-scoping.md` rule 9) |
 | **A vibe session that reads the whole boot chain and writes six steering files** | the mode is not wired to Context or Steering — apply both rows, or the mode is decoration |
 | **Reading everything "because the bootstrap mandates it"** | the chain is a menu; name the 2–4 files the task needs |
 | **A cap re-based upward every time its file grows** | re-base only against live measurement; freeze the chain total |

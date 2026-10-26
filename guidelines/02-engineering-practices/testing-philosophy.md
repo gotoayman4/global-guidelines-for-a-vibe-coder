@@ -42,6 +42,8 @@ A suite that runs every test on every push grows into a tax: its cost tracks how
 
 **Tiering changes *when* a test runs, never *whether* it runs before a release.** The ship boundary runs the full pyramid in every mode, and a `vibe` slice auto-escalates the moment its diff touches auth, rules, or a mail path.
 
+**A docs-subject guard is not an app test.** A guard whose corpus is the steering docs or repo config — parity, drift, freshness, budget, guard inventory — belongs to the **docs lane**: a script or `node --test` suite that `docs:check` / the docs gate runs when the docs or its owned paths change. It never lives in the app suite's hot lane, because a prose check that reddens a behavior slice is a tax on the inner loop and an fs-bound flake source with no product signal. The app lane tests app behavior; the docs lane polices documents; each runs at the cadence its trigger needs.
+
 ## Anti-Patterns
 
 | Anti-Pattern | Fix |
@@ -57,6 +59,7 @@ A suite that runs every test on every push grows into a tax: its cost tracks how
 | Test policy and ship boundary read as contradictory, so a scripted production write is proposed as the "honest" resolution | The boundary asks for **verification**, not automation. Restrict tests to a sandbox **and** run a dated automated pass against the real target — write both down in the same file |
 | Every guard running on every push because nobody tagged it | Give it a tier (`always` \| `standard+` \| `ship`) and let the gate derive the set — an untagged guard defaults to `always`, which is how a suite becomes a tax |
 | A guard list hand-kept in the hook | Derive the set from the guards' own docblocks; a hand-kept list goes stale and fails silently |
+| Doc-policing parity/drift/freshness guards inside the app's test suite | Move them to the docs lane — the app lane carries zero docs-subject guards |
 
 ## Cross-References
 
