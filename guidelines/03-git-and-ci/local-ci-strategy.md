@@ -55,16 +55,7 @@ A suite whose every test runs on every push grows without bound, because its cos
 
 The tier is declared in the guard's own file-level docblock, and **`npm run guard:tiers` is the control**: it fails a guard with no `@tier`, a guard no npm script runs, an `always` guard the gate never reaches, and a `ship` guard the `vibe` chain reaches. A `standard+` guard the gate does not reach is *reported, never failed* — six guards in this repo are milestone- or fleet-scoped by design, and naming them is what makes that a decision instead of an accident. **Derive the set from the guards themselves** — a list kept by hand in the hook is a list that goes stale, and it fails in the direction nobody notices. Measured when the control was written (2026-10-12): 9 guards, 1 tier declared, 3 reached by the gate.
 
-**The `standard+` tier needs a command, or it is a tier nobody can enter.** `npm run validate` is the `always` gate — every push, in every mode. A repo whose only two commands are `validate:fast` and `validate` has no way to run its `standard+` guards at all: they pass `guard:tiers` (which reports them, as designed), they run in downstream projects, and they never once execute against this repo's own corpus. That is not a tier, it is a directory listing. `npm run validate:standard` closes it — it runs the four `standard+` guards in this repo:
-
-| Guard | What it checks here |
-|---|---|
-| `guard:gate-wording` | the retired gate phrasings are absent and the canonical statements present, across the corpus |
-| `guard:decisions` | the ADR index agrees with the ADR files — reports "not applicable" where a repo keeps no `docs/adr/`, and exits 0 |
-| `guard:breadth` | a commit that changed product source wrote no more steering files than the mode allows; a source-free commit is exempt |
-| `docs:check` | a trigger-like change landed alongside its steering doc — warn-only, never fails |
-
-Measured 2026-10-13 before the command existed: all four passed against this repo, so the gap was reachability rather than a hidden failure. Run it before a milestone exit, or whenever a change touches the decision record, the steering-doc set, or gate wording. It is deliberately **not** part of `validate`: folding it in would make `always` and `standard+` the same tier and delete the distinction the `@tier` field exists to express.
+**The `standard+` tier needs a command, or it is a tier nobody can enter.** `npm run validate` is the `always` gate; `npm run validate:standard` is what reaches the `standard+` guards against this repo's own corpus. Run it before a milestone exit. It is deliberately **not** part of `validate`: folding it in would make `always` and `standard+` the same tier and delete the distinction the `@tier` field exists to express.
 
 ## Suite Scope — the Same Derivation One Level Down
 
@@ -100,7 +91,7 @@ Before every push, run that mode's gate locally. This gate replaces the cloud CI
    The wrapper owns the reasoned, expiring allowlist (each entry: why, what, review-by date) and the npm flags its sandbox needs: `npm audit` inside a lifecycle script needs script execution disabled, so pin that env var in the wrapper, not in the developer's shell.
 4. **Clean-tree check:** `git status --porcelain` must be empty after the build. It belongs in the hook, not a cloud job.
 5. **Conditional steps, two conditions.** A step that takes minutes and protects a subtree (E2E over the data layer, the desktop shell's IPC tests) runs only when that subtree changed; a step whose tier is `ship` runs only at the ship boundary. Put the trigger in the hook **next to the step it gates**, so trigger and check cannot drift apart. A security-relevant pin is not a convenience: if it is the only place a check runs, it stays in the gate.
-6. **Skip is forbidden:** `git push --no-verify` is forbidden exactly like `--no-verify` on commit hooks. If the gate is slow, fix the gate (tier it, scope it by path or mode, cache it) — never skip it.
+6. **Skip is forbidden:** `git push --no-verify` is forbidden exactly like `--no-verify` on commit hooks. If the gate is slow, fix the gate (tier it, scope it by path or mode, cache it) — never skip it. **A required step whose npm script is missing FAILS the gate with a message**, in `standard` and `guarded`: skipping it and reporting green is how a project with no `build` script ships unbuilt code under a passing gate.
 7. **Fail fast locally:** the gate runs in seconds-to-minutes, not queue-minutes — iterate freely with `gate:fast`, push only green.
 
 ## Gate Receipts — Evidence Is an Artifact, Not a Sentence
@@ -116,7 +107,7 @@ Rules for the instrument:
 - **Nested npm inherits the parent's env.** A step that shells out to `npm run …` must re-apply the wrapper's own env handling (the audit case above), or it fails for reasons that have nothing to do with the code.
 - **Receipts are append-only and dated.** Never rewrite one to make a slice look green; the next run writes a new file.
 - **A receipt is a bounded summary, never a pasted tool log.** Per-step exit codes, key figures, and the verdict are the artifact. The raw logs of an investigation — repro dumps, repeat-run captures, contention traces — are session scratch: they belong to the gitignored `scratch/` home, never to `docs/gate-receipts/` and never to a commit. A hundred-kilobyte `.txt` committed as "evidence" is a log file wearing a receipt's name, and the guards that police receipts then inherit a corpus nobody should have committed.
-- A guard asserts the cited receipts exist and their verdict is GREEN, and `slice:close --receipt` refuses to write a pointer to a file that was never written — so a citation cannot rot into a lie.
+- Cite only a receipt that exists and whose verdict is GREEN; a pointer to a file the gate never wrote is a false record.
 - **A cached step is keyed on content and says it was cached.** Memoising a gate step is legitimate only where the step's signal is a function of the content the key covers — a tree hash (`git write-tree`) for anything that walks the working tree, a lockfile hash for the dependency audit — never a timestamp, an mtime heuristic, or "the last run was recent". The receipt records the key and marks the step `cached (<key>)`, so a cached green is distinguishable from a run green. **A step whose soundness was never measured at the gate is not eligible:** the loop may cache a step freely, a gate caches only what has been measured sound where it runs. A receipt that caches nothing prints `cached: none` — the absence of that line is what a silent cache looks like.
 - **A gate that cannot run is not a gate.** Any step whose pass depends on an external tool exits a distinct code when the tool never executed, and is verified through its real invocation path (hook → `npm run` → child), never only by running the underlying command by hand. Nested invocations inherit the parent toolchain's exported config; where a child refuses an inherited key, sanitize the child environment explicitly and document which keys were dropped and why dropping them cannot weaken the check. Exit-0 with unparsed, empty, or absent output is a failure, not a pass.
 - **A step that cannot START is not a step that found nothing.** On a Windows host where a filesystem filter driver intercepts them, libuv's *synchronous pipe* path (`execSync`, `execFileSync`, piped `spawnSync`) returns `EBUSY` while async `spawn` and `stdio:'ignore'` both succeed. A harness built on the sync forms therefore fails to *collect* rather than to *fail*, and its empty output reads as a pass. Capture a child through the async path or an inherited file handle (`global-configs/scripts/lib/run-sync.js` exists for exactly this), and give a start failure its own exit code — never an empty result set.
@@ -125,45 +116,9 @@ Rules for the instrument:
 - **A session's scratch has one ignored home.** The clause above covers what a *tool* writes; the same failure has a second author. A working session writes probes, captured logs, patch files and one-off analysis scripts, and root-level scatter does three kinds of damage at once: `clean-tree` trips on the ones nobody ignored, `git add -A` commits the ones somebody did, and the next session reads them as documents. Put them in one gitignored directory (`scratch/`), have every writer add its own path to the ignored set — the same derivation as above — and **stage by path, never `-A`**, in a tree that can hold scratch. Scratch is never evidence: it belongs in no receipt and no record.
 - **A tool must not rewrite a file whose content it did not change.** An unconditional write turns a no-op sync into a diff, and a diff is a review the next reader pays for. When merging into a project file — `.vscode/settings.json`, a per-tool rule file — compare first and write nothing when every value already matches. This is not only tidiness: the write path is host-dependent, so a run under a different shell reformats as it writes. `ConvertTo-Json` on Windows PowerShell 5.1 emits a BOM, a 4-space indent, `":  "` and no trailing newline, while 7.x emits clean 2-space — and `sync-all.js` spawns the 5.1 host, so the noise is guaranteed on every fleet run. Measured 2026-10-12: four projects showed a 24-line diff for a file whose values never changed.
 
-## Slice Close — the Steering Writes Are Derived Too
+## Closing a Slice — the Commit Is the Record
 
-A receipt proves the full gate ran, but routine slice-close does not require one. At milestone or release exit, pass the boundary receipt when the record needs to cite it. The other facts a slice owes — the changelog entry, the decision number, the freshness line — are derived by `npm run slice:close` from repository state:
-
-```sh
-npm run slice:close -- --title "the login form gains a Retry" --doc AGENTS.md
-# a project whose archive is named per document adds: --archive docs/changelog/roadmap-2026-Q4.md
-# At a milestone/release exit, add: --receipt docs/gate-receipts/<stamp>.md
-```
-
-| It writes | Derived from |
-|---|---|
-| the archive — `docs/changelog/<YYYY>-Q<n>.md`, or the file `--archive` names — the dated entry | today's date · `git rev-parse --short HEAD` · `--title` |
-| the next decision number | the highest `D<n>` already **recorded** — decision docs from the **committed** tree (`git show HEAD:./<path>`), the archive from disk — or a document's own declared next-number line when higher. A number already in the archive exits 2; a rerun of the same slice exits 0 and writes nothing |
-| the freshness line on `WORLD.md` / `docs/AI_ARCHITECTURE.md` | the same date and SHA, when the slice's `--doc` names that file and it carries one |
-
-**The archive is read from disk; the decision documents from the committed tree.** The archive is the record being written, so an uncommitted close is still a record: a heading with this date and title means the slice is already closed — exit 0, nothing written — and a different slice continues from it, so two closes before a commit get two numbers. Decision documents are prose that may cite the in-flight number, so they are scanned from `git show HEAD:./<path>` (measured downstream at D360: the half-written record had raised the maximum and the close invented D361); a document HEAD does not have is read from disk. A line that *declares* the next unclaimed number (`- Next D-number: **D360**`) is a reservation, not a record: the scan skips it and takes it as the answer when it is higher. `--dry-run` prints which fact decided the number.
-
-**One archive per quarter is the default, not the rule.** The rule is ONE primary entry per slice. A project whose archives are named after the document they serve passes `--archive docs/changelog/roadmap-2026-Q4.md` and gets no second file written beside it. The path is resolved against the project root, must stay under `docs/`, must be markdown, and must not be a decision document — anything else exits 2, because a record filed where no guard looks is worse than no record. An archive adopted mid-quarter also reads the quarter file it replaces, so its numbering continues.
-
-**A script a project cannot install is not a rule it can follow.** `slice-close.js` ships inside the guideline bundle. A project that keeps that bundle gitignored has no tracked path for an npm script to point at, so a `slice:close` entry in its `package.json` would be a declared control with nothing behind it. Such a project runs the tool by path per machine (`node <bundle>/global-configs/scripts/slice-close.js <projectRoot> --title …`) or vendors the script into its own tracked `scripts/` and takes ownership of its tests — and either way, the constitution names the command that actually executes.
-
-**`--adr` adds the decision's three sites, because all three restate what the repository already knows:**
-
-| It writes | Derived from |
-|---|---|
-| `docs/adr/<NNN>-<slug>.md` — the lite ADR, header filled | the derived number, the date, `--title`; the **body is `--why`, authored by the caller** |
-| the row in `docs/adr/README.md`'s index table | the number, the file name, the title, the depth |
-| the row in the decisions log (`docs/PRD.md` §24, or `docs/DECISIONS.md`) | the number, the title, `--why` |
-
-`--why` is **required** with `--adr`: the reasoning is the one part this script must not invent, and a row without it is a placeholder. A **full-depth ADR is authored by the agent** and passed with `--adr-file` — the script then adds the two rows and leaves the file byte-identical. Measured motivation: a project recorded 50 decisions and hand-wrote 100 index rows, each of which is a copy of a fact already in the ADR (`GAMS_WORKFLOW_SPEED_ANALYSIS_2026-10-12.md` §2.4).
-
-`npm run guard:decisions` (`check-decision-index.js`) is the control: it fails when an ADR file has no index row, when a row points at a file that does not exist, and when the same ADR is listed twice. An ADR whose decision is not yet in the log is a **warning** — work in flight must not fail the gate — and becomes a failure under `--strict` at a milestone exit.
-
-`npm run guard:breadth` (`check-doc-breadth.js`) is the control on the other side of §Record vs Ritual: a slice that changes product source may write only as many steering files as `WORLD.md`'s mode allows, and a commit that changes no source is a **ritual commit** and is exempt, because the full set is its job. The breadth and the file set are read from `documentation-strategy.md` §Trigger Table, so the guard follows an edit to the column instead of restating it — and a table it cannot read is reported as vacuous, never as a pass.
-
-`--duration <minutes>` records **intent → first running slice** in the entry (`**Intent→slice:** 42m`). `speed-tiered-workflow.md` §Absolute Rules 5 mandates the measurement and nothing captured it; an unmeasured slice records nothing rather than a fabricated `0m`.
-
-`--dry-run` prints the plan and writes nothing; `--decision` overrides the derived number when a concurrent session really did take it. **Prose stays human:** the acceptance body and the ADR's `--why`. Everything else is a fact the repository already knows — and a fact a machine writes cannot be forgotten, mistyped, or raced.
+A slice closes with its commit; there is no close-out command. The commit message states the change in one sentence, a trigger-table match updates the fact's one home in the same iteration, and an irreversible decision gets an ADR written in the same pass. At a milestone or release exit, cite the boundary receipt by path when the record needs full-gate figures. What was retired on 2026-10-27: the derived decision number, the per-slice changelog entry written by a script, machine-written freshness headers, and the three-site ADR index — each derived a fact the repository already records, and none of them caught a wrong answer.
 
 ## Tier C — act (Optional)
 

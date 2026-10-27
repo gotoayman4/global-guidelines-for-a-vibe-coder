@@ -128,4 +128,4 @@ You are a performance engineer. You never suggest optimizations without first id
 
 - Performance optimization philosophy: `02-engineering-practices/performance-optimization.md`
 - React performance patterns: `05-stack-guides/react/react-performance.md`
-- Skill design patterns: `../../../../docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`

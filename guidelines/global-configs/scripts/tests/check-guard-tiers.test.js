@@ -51,7 +51,7 @@ const runner = (name) => `node guidelines/global-configs/scripts/${name}`;
 test('the repo classifies every guard and the tiers hold', () => {
   const report = analyse();
   assert.deepEqual(report.problems, [], JSON.stringify(report.problems));
-  assert.ok(report.guards.length >= 10, 'the guard set is discovered, not empty');
+  assert.ok(report.guards.length >= 9, 'the guard set is discovered, not empty');
   assert.equal(report.gate, 'npm run validate');
   assert.equal(report.gateKind, 'npm');
 });
@@ -289,7 +289,7 @@ test('the guard set is mirror-relative: a project root supplies only package.jso
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tiers-project-'));
   fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { validate: 'echo nothing' } }));
   const report = analyse(SCRIPTS, dir);
-  assert.ok(report.guards.length >= 10, 'the real guard set is read, not the empty root');
+  assert.ok(report.guards.length >= 9, 'the real guard set is read, not the empty root');
   assert.equal(report.gate, 'npm run validate');
 });
 

@@ -27,7 +27,7 @@ Every guideline file follows this structure:
 status: "Normative"          # Normative | Advisory | Archived
 scope: "Global"              # Global | Stack (Technology)
 tags: [topic, subtopic]      # inline list — MASTER_INDEX renders these
-control: "guard:breadth"     # the npm script that enforces this rule, or `none` if unguarded
+control: "docs:census"       # the npm script that enforces this rule, or `none` if unguarded
 ---
 
 # Title — Short Descriptive Subtitle

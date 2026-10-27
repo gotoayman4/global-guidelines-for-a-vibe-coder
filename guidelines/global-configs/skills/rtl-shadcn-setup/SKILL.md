@@ -161,4 +161,4 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 - RTL tech stack overview: `05-stack-guides/rtl-tech-stack.md`
 - MUI RTL guide (for comparison): `05-stack-guides/mui/mui-rtl-bidirectional.md`
 - Accessibility standards: `02-engineering-practices/accessibility-standards.md`
-- Skill design patterns: `../../../../docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`

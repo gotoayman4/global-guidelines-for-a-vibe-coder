@@ -39,7 +39,7 @@ function allGuidelines(dir = GUIDELINES) {
 }
 
 test('the control key is read from the front-matter, quoted or bare', () => {
-  assert.equal(parseGuideline(guideline('"guard:breadth"')).control, 'guard:breadth');
+  assert.equal(parseGuideline(guideline('"guard:tiers"')).control, 'guard:tiers');
   assert.equal(parseGuideline(guideline('guard:tiers')).control, 'guard:tiers');
   assert.equal(parseGuideline(guideline('none')).control, 'none');
 });
@@ -51,9 +51,9 @@ test('an absent control is allowed — that is the ratchet, not a failure', () =
 });
 
 test('a real guard resolves against the repo\'s own scripts', () => {
-  const verdict = checkControl('guard:breadth', readScripts());
+  const verdict = checkControl('guard:tiers', readScripts());
   assert.equal(verdict.ok, true);
-  assert.equal(verdict.file, 'guidelines/global-configs/scripts/check-doc-breadth.js');
+  assert.equal(verdict.file, 'guidelines/global-configs/scripts/check-guard-tiers.js');
 });
 
 test('REVERSAL PROOF: a control naming a script that does not exist fails', () => {

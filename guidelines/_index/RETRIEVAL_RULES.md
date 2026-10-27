@@ -77,19 +77,14 @@ Navigate to the "Task-Type → Recommended Files" table in MASTER_INDEX.md. Find
 
 For each primary file, check the "Cross-Reference Graph" section of MASTER_INDEX.md. Load all dependencies first, then the primary files.
 
-### Step 4: Apply Token Budget
+### Step 4: Apply the Read Budget
 
-| Context Budget | Strategy |
-|---|---|
-| **High** (>50K tokens available) | Load all primary + secondary files (full versions) |
-| **Medium** (20-50K tokens) | Load all primary files (full), skip secondary |
-| **Low** (10-20K tokens) | Load primary files (compact extracts only) |
-| **Critical** (<10K tokens) | Load only the most critical 1-2 files (compact) |
+The budget is the declared mode's cap (`speed-tiered-workflow.md` §The Context Budget), not a fixed tier table. Within it: load primary files first, add secondary files only while the cap allows, and switch to compact extracts rather than exceeding it.
 
 ### Step 5: Progressive Disclosure
 
 If unsure about task scope:
-1. Load `MASTER_INDEX.md` once at session start — it is a navigation index, not a guideline, and its size grows with the repo; do not re-read it per task
+1. Open `MASTER_INDEX.md` only if you cannot name the file you need — it is a navigation index, not guidance, and its size grows with the repo
 2. Load the top 1-2 primary files
 3. If more detail needed, load dependencies and secondary files
 4. If context runs low, switch to compact extracts
@@ -141,6 +136,6 @@ Full methodology in: `../../docs/repo-meta/rule-extraction-methodology.md`
 
 ## Cross-References
 
-- **Depends on:** `MASTER_INDEX.md` (always loaded first)
+- **Depends on:** `MASTER_INDEX.md` (a lookup, not a required read)
 - **Referenced by:** AI agent configuration files, IDE instruction files
 - **See also:** `../08-governance/ai-governance-framework.md`

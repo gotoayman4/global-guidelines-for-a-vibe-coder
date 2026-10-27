@@ -82,14 +82,14 @@ test('the hook escalates a release through an override, never a WORLD.md edit (D
 
 test('the hook runs the audit wrapper and the clean-tree check in every mode', () => {
   const hook = prePushHook();
-  assert.match(hook, /run_step audit:gate/);
+  assert.match(hook, /run_optional audit:gate/);
   assert.match(hook, /git diff --quiet HEAD/, 'the clean-tree check is decided on content');
   // The audit and the clean-tree check sit OUTSIDE the mode branch: `vibe` defers the full
   // suite, never the security or the honesty checks.
   const branch = hook.indexOf('if [ "$MODE" = "vibe" ]');
   assert.ok(branch > 0, 'the mode branch exists');
   const endOfBranch = hook.indexOf("fi\n", hook.indexOf('run_step build'));
-  assert.ok(hook.indexOf('run_step audit:gate') > endOfBranch, 'the audit runs after the mode branch');
+  assert.ok(hook.indexOf('run_optional audit:gate') > endOfBranch, 'the audit runs after the mode branch');
 });
 
 test('the hook derives the always tier instead of asking for it in a comment', () => {
@@ -98,9 +98,10 @@ test('the hook derives the always tier instead of asking for it in a comment', (
   assert.doesNotMatch(hook, /always-tier guards here/, 'the old skeleton asked the reader to wire the tier by hand');
 });
 
-test('the hook skips a script the project does not have, and never chains the pipeline', () => {
+test('a required script the project does not have FAILS the hook — never skipped as green', () => {
   const hook = prePushHook();
-  assert.match(hook, /skipped \$step_script/, 'a missing script is a note');
+  assert.match(hook, /pre-push FAIL: required script/, 'a missing required script is a failure');
+  assert.match(hook, /run_optional audit:gate/, 'the audit wrapper is the only optional step');
   assert.doesNotMatch(hook, /npm run lint && npm run type-check/, 'a chained pipeline dies on the first missing script');
 });
 
@@ -226,12 +227,12 @@ const MARKER = [
   '',
 ].join('\n');
 
-test('the hook passes a project that has no scripts at all — a missing script is a note, not a failure', { skip: hasSh ? false : 'no sh on PATH' }, () => {
+test('a project with no scripts at all FAILS — a gate that runs nothing is not a gate', { skip: hasSh ? false : 'no sh on PATH' }, () => {
   const root = makeHookRepo({});
   const result = runSync('sh', ['.husky/pre-push'], { cwd: root });
-  assert.equal(result.status, 0, `the hook must not die on "Missing script"\n${result.stdout}\n${result.stderr}`);
+  assert.notEqual(result.status, 0, 'a missing required script must fail the push');
   assert.match(result.stdout, /mode=standard/);
-  assert.match(result.stdout, /skipped lint — this project has no such script/);
+  assert.match(result.stderr, /required script lint is missing/);
 });
 
 test('the hook fails a step that exists and fails', { skip: hasSh ? false : 'no sh on PATH' }, () => {

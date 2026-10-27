@@ -25,42 +25,12 @@ apply the skill anywhere.
 
 <!-- GENERATED:skills-index — run `npm run render:skills` -->
 
-**Every skill here is task-activated.** Before starting a task, scan the `Load when`
-column. When a row matches, open that skill and follow it, and announce it in chat as
-`Skill: <name> activated`.
-
-**Record the activation.** The chat announcement is what the human sees; it is not evidence.
-When you open a skill, append one line to `docs/skill-activations.log` in this project:
-`<ISO-8601 timestamp> | <skill-name> | <the task that triggered it>`. A receipt naming a
-skill this project does not carry is a false receipt, so the log is validated against the
-delivered set.
-
-**Where the files live.** `_skills/<name>/SKILL.md` is the synced mirror this project reads:
-present after a sync, absent in a fresh clone until one runs. The canonical source is the
-central steering repo's `guidelines/global-configs/skills/` — the mirror is a copy of it,
-and only the skills that fit this project's stack are copied.
-
-**One store per skill.** A hand-maintained copy of a delivered skill in a native store
-(`.qoder/skills/`, `.claude/skills/`, `.agents/skills/`, `.opencode/skills/`, …) shadows
-`_skills/` by path priority, not by policy — which copy an agent opens is decided by load
-order — and it cannot follow upstream. Measured 2026-10-21: three of seven projects carried
-divergent stores, one with eleven of eleven skills stale. A native store holds only what the
-corpus does not ship. The exception is a generated adapter for a tool that cannot read
-`_skills/` directly: a tracked script writes it after every sync and a manifest lists it, so
-the bytes cannot diverge and nobody edits it by hand — build output, not a second home.
-
-A skill never outranks `AGENTS.md`: where the two disagree, `AGENTS.md` wins. And a row whose
-`Applies to` does not cover this project's stack is **not applicable** — skip it rather than
-adapting it, because a skill written for a stack this project forbids will contradict the
-constitution if it is followed anyway.
-
-**The sync applies the same rule when it copies.** `_skills/` is not the whole pool:
-`plan-skills.js` reads each project's `### Stack` table, its `### Forbidden …` list and its
-`package.json`, copies only the skills that fit and prunes the ones that no longer do.
-`npm run plan:skills` prints that decision for every registered project without touching
-anything. A project that declares no stack at all receives everything, because nothing can be
-ruled out — the right default for an empty folder, the wrong one for a project that simply
-never filled the table in.
+**Skills are task-activated.** Scan the `Load when` column when a task starts; when a row
+matches, open `_skills/<name>/SKILL.md` and follow it. A skill never outranks `AGENTS.md`, and a
+row whose `Applies to` does not cover this stack is not applicable — skip it. `_skills/` is the
+synced, stack-filtered copy of the central corpus (absent until the first sync); do not keep a
+hand-maintained copy of a delivered skill in a native store (`.qoder/skills/`, `.claude/skills/`,
+…) — it shadows `_skills/` and cannot follow upstream.
 
 | Skill | Load when | Applies to | Status |
 |---|---|---|---|

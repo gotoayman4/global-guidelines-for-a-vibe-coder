@@ -395,11 +395,11 @@ test('REVERSAL PROOF: a current mirror whose guard is not wired is unwired', () 
   // gap the mirror hash cannot see, and the reason this pass exists.
   const ok = fixture('ok');
   fs.writeFileSync(path.join(ok.project, 'package.json'), JSON.stringify({
-    scripts: { 'guard:breadth': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
+    scripts: { 'guard:tiers': 'node _guidelines/global-configs/scripts/check-guard-tiers.js .' },
   }, null, 2));
-  const controls = controlsOf(ok.project, ['check-doc-breadth.js', 'check-guard-tiers.js']);
+  const controls = controlsOf(ok.project, ['check-doc-census.js', 'check-guard-tiers.js']);
   assert.equal(controls.state, 'unreferenced');
-  assert.deepEqual(controls.missing, ['check-guard-tiers.js']);
+  assert.deepEqual(controls.missing, ['check-doc-census.js']);
 });
 
 test('the control is matched by file, not by script name', () => {
@@ -407,15 +407,15 @@ test('the control is matched by file, not by script name', () => {
   // only one that does not impose a convention.
   const ok = fixture('ok');
   fs.writeFileSync(path.join(ok.project, 'package.json'), JSON.stringify({
-    scripts: { 'lint:guards': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
+    scripts: { 'lint:guards': 'node _guidelines/global-configs/scripts/check-guard-tiers.js .' },
   }, null, 2));
-  assert.equal(controlsOf(ok.project, ['check-doc-breadth.js']).state, 'referenced');
+  assert.equal(controlsOf(ok.project, ['check-guard-tiers.js']).state, 'referenced');
 });
 
 test('a project with no package.json is reported, never failed', () => {
   // Not every project is a Node project; one that is cannot expose npm scripts at all.
   const ok = fixture('ok');
-  const controls = controlsOf(ok.project, ['check-doc-breadth.js']);
+  const controls = controlsOf(ok.project, ['check-guard-tiers.js']);
   assert.equal(controls.state, 'not-a-node-project');
   assert.deepEqual(controls.missing, []);
 });
@@ -423,14 +423,14 @@ test('a project with no package.json is reported, never failed', () => {
 test('an unreadable package.json fails rather than passing silently', () => {
   const ok = fixture('ok');
   fs.writeFileSync(path.join(ok.project, 'package.json'), '{ this is not json');
-  assert.equal(controlsOf(ok.project, ['check-doc-breadth.js']).state, 'unreadable');
+  assert.equal(controlsOf(ok.project, ['check-guard-tiers.js']).state, 'unreadable');
 });
 
 test('CLI exits 1 when the mirror is current but a required guard is unwired', () => {
   const f = fixture('ok');
   const registry = path.join(f.root, 'sync-projects.json');
   fs.writeFileSync(registry, JSON.stringify([{ name: 'p', path: f.project }]));
-  const declared = manifest(f.root, ['check-doc-breadth.js']);
+  const declared = manifest(f.root, ['check-guard-tiers.js']);
   const run = () => runSync(process.execPath, [SCRIPT, '--quiet'], {
     cwd: REPO_ROOT,
     env: { ...process.env, SYNC_DRIFT_SOURCE: f.source, SYNC_DRIFT_REGISTRY: registry, SYNC_DRIFT_MANIFEST: declared },
@@ -440,7 +440,7 @@ test('CLI exits 1 when the mirror is current but a required guard is unwired', (
   assert.equal(run().status, 1, 'in sync, but the guard is never run');
 
   fs.writeFileSync(path.join(f.project, 'package.json'), JSON.stringify({
-    scripts: { 'guard:breadth': 'node _guidelines/global-configs/scripts/check-doc-breadth.js .' },
+    scripts: { 'guard:tiers': 'node _guidelines/global-configs/scripts/check-guard-tiers.js .' },
   }, null, 2));
   assert.equal(run().status, 0, 'wired — the mirror is current and the guard runs');
 });

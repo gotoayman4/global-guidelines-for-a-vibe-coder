@@ -7,12 +7,6 @@
 
 ---
 
-## Freshness
-
-**Last Updated:** [FILL: YYYY-MM-DD] | **Commit:** [FILL: short SHA] | **Change:** [FILL: one line]
-
-> **Written, never typed:** the slice-close tool derives all three facts and rewrites this line in place. Updating it by hand is the failure mode it exists to prevent. Only `WORLD.md` and `docs/AI_ARCHITECTURE.md` carry it — `AGENTS.md` and `README.md` change on a trigger and git dates them.
-
 ## Speed Mode
 
 - **mode:** `vibe` — `vibe | standard | guarded` per `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`
@@ -124,24 +118,24 @@ These features have been specifically considered and rejected. AI must not re-pr
 
 ## Security Model & Trust Boundaries (Optional — Add if project has auth)
 
-Describe how authentication, authorization, and data access controls work:
+Describe the trust boundaries in project terms — the binding implementation rules (magic-byte upload checks, input validation, secrets) already live in `AGENTS.md` §Security and are not restated here:
 
 - **Authentication:** [FILL — e.g., "Enforced by Supabase Auth JWT verification"]
 - **Role-Based Access Control (RBAC):** [FILL — e.g., "Users can have multiple roles. Roles guard endpoint access"]
 - **Active Role Selection:** [FILL — if applicable, explain how frontend supplies active role to backend]
 - **RBAC Trust Boundary:** [FILL — how does backend validate claimed roles against DB?]
 - **Database Row-Level Security (RLS):** [FILL — if using Supabase/PostgreSQL RLS]
-- **File Upload MIME Validation:** [FILL — mandatory: verify MIME via magic-byte inspection, not client headers. Use `file-type@16.5.4` for Node.js]
 
 ---
 
 ## Data Freshness Policy (Optional — Add if project uses SWR/React Query)
 
-- **Cache Keys:** [FILL — e.g., "ALL query keys use raw tuple format: `['entity', params] as const`. Key constants are centralized in `src/constants/swrKeys.ts`."]
+Only what differs from the global defaults in `AGENTS.md` §Architecture (tuple cache keys, one state owner, fetch cap) belongs here:
+
+- **Cache Keys:** [FILL — e.g., "Key constants are centralized in `src/constants/swrKeys.ts`."]
 - **Mutate After Mutations:** [FILL — e.g., "Every data mutation MUST call `mutate()` on affected cache keys AFTER success."]
 - **Stale-While-Revalidate:** [FILL — describe SWR/React Query global config]
 - **Polling:** [FILL — disabled by default; enable only for dashboards with documented interval]
-- **Parallel Fetch Cap:** [FILL — e.g., "Batch fetches capped at 4 concurrent requests via shared `fetchAllPages<T>()` utility"]
 
 ---
 

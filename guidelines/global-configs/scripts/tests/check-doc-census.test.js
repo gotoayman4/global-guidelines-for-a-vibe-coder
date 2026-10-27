@@ -84,8 +84,8 @@ test('REVERSAL PROOF: a second document enumerating the guard set FAILS the cens
   // The inventory's home is the guards themselves (`npm run guard:tiers` derives it). AGENTS.md
   // may name it; a second document naming it is how a hand-kept list comes back.
   const docs = CLEAN.map((d) => ({ ...d }));
-  docs.find((d) => d.file === 'AGENTS.md').content += `\n${guardRow(['guard:breadth', 'guard:tiers'])}\n`;
-  docs.find((d) => d.file === 'README.md').content += `\n${guardRow(['guard:breadth', 'guard:decisions'])}\n`;
+  docs.find((d) => d.file === 'AGENTS.md').content += `\n${guardRow(['guard:mode', 'guard:tiers'])}\n`;
+  docs.find((d) => d.file === 'README.md').content += `\n${guardRow(['guard:mode', 'guard:tiers'])}\n`;
   const { violations } = census(docs);
   assert.equal(violations.length, 1, JSON.stringify(violations));
   assert.match(violations[0], /guard-inventory/);
@@ -96,15 +96,15 @@ test('one incidental mention is not an inventory', () => {
   // The threshold is the point: a single command quoted in a sentence is prose, and failing it
   // would fail correct documentation.
   const docs = CLEAN.map((d) => ({ ...d }));
-  docs.find((d) => d.file === 'AGENTS.md').content += `\nSee \`npm run guard:breadth\`.\n`;
-  docs.find((d) => d.file === 'README.md').content += `\nSee \`npm run guard:breadth\`.\n`;
+  docs.find((d) => d.file === 'AGENTS.md').content += `\nSee \`npm run guard:mode\`.\n`;
+  docs.find((d) => d.file === 'README.md').content += `\nSee \`npm run guard:mode\`.\n`;
   const { violations } = census(docs);
   assert.equal(violations.filter((v) => v.includes('guard-inventory')).length, 0);
 });
 
 test('the inventory matcher counts distinct scripts, not occurrences', () => {
-  assert.equal(namesGuards('`npm run guard:breadth` then `guard:breadth` again'), false);
-  assert.equal(namesGuards('`npm run guard:breadth` and `npm run guard:tiers`'), true);
+  assert.equal(namesGuards('`npm run guard:mode` then `guard:mode` again'), false);
+  assert.equal(namesGuards('`npm run guard:mode` and `npm run guard:tiers`'), true);
   assert.equal(namesGuards('no guards here'), false);
 });
 

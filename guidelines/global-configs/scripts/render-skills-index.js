@@ -17,9 +17,10 @@
  * `render-index.js` has to the guideline front-matter. Adding a skill adds a row with no edit here.
  *
  * THE OBLIGATION IS PART OF THE GENERATED BLOCK. The preamble inside the markers states the
- * load-and-announce rule, so a consumer that emits the block (`--emit`) receives the rule and the
+ * load-when-matched rule, so a consumer that emits the block (`--emit`) receives the rule and the
  * inventory together. Splitting them would let a project install the table and lose the rule that
- * makes the table mean anything.
+ * makes the table mean anything. The preamble is deliberately short: this block is injected into
+ * every project's AGENTS.md and is paid for on every session.
  *
  * WHAT THIS DOES NOT GUARD. A skill with no `description` renders as `—` and this script does not
  * fail — `audit-rules.js` owns that contract, and two guards failing for one defect is how a report
@@ -103,42 +104,12 @@ function collect(skillsDir = SKILLS_DIR) {
  */
 function renderBlock(skills, { linkPrefix = '' } = {}) {
   const lines = [];
-  lines.push('**Every skill here is task-activated.** Before starting a task, scan the `Load when`');
-  lines.push('column. When a row matches, open that skill and follow it, and announce it in chat as');
-  lines.push('`Skill: <name> activated`.');
-  lines.push('');
-  lines.push('**Record the activation.** The chat announcement is what the human sees; it is not evidence.');
-  lines.push('When you open a skill, append one line to `docs/skill-activations.log` in this project:');
-  lines.push('`<ISO-8601 timestamp> | <skill-name> | <the task that triggered it>`. A receipt naming a');
-  lines.push('skill this project does not carry is a false receipt, so the log is validated against the');
-  lines.push('delivered set.');
-  lines.push('');
-  lines.push('**Where the files live.** `_skills/<name>/SKILL.md` is the synced mirror this project reads:');
-  lines.push('present after a sync, absent in a fresh clone until one runs. The canonical source is the');
-  lines.push('central steering repo\'s `guidelines/global-configs/skills/` — the mirror is a copy of it,');
-  lines.push('and only the skills that fit this project\'s stack are copied.');
-  lines.push('');
-  lines.push('**One store per skill.** A hand-maintained copy of a delivered skill in a native store');
-  lines.push('(`.qoder/skills/`, `.claude/skills/`, `.agents/skills/`, `.opencode/skills/`, …) shadows');
-  lines.push('`_skills/` by path priority, not by policy — which copy an agent opens is decided by load');
-  lines.push('order — and it cannot follow upstream. Measured 2026-10-21: three of seven projects carried');
-  lines.push('divergent stores, one with eleven of eleven skills stale. A native store holds only what the');
-  lines.push('corpus does not ship. The exception is a generated adapter for a tool that cannot read');
-  lines.push('`_skills/` directly: a tracked script writes it after every sync and a manifest lists it, so');
-  lines.push('the bytes cannot diverge and nobody edits it by hand — build output, not a second home.');
-  lines.push('');
-  lines.push('A skill never outranks `AGENTS.md`: where the two disagree, `AGENTS.md` wins. And a row whose');
-  lines.push('`Applies to` does not cover this project\'s stack is **not applicable** — skip it rather than');
-  lines.push('adapting it, because a skill written for a stack this project forbids will contradict the');
-  lines.push('constitution if it is followed anyway.');
-  lines.push('');
-  lines.push('**The sync applies the same rule when it copies.** `_skills/` is not the whole pool:');
-  lines.push('`plan-skills.js` reads each project\'s `### Stack` table, its `### Forbidden …` list and its');
-  lines.push('`package.json`, copies only the skills that fit and prunes the ones that no longer do.');
-  lines.push('`npm run plan:skills` prints that decision for every registered project without touching');
-  lines.push('anything. A project that declares no stack at all receives everything, because nothing can be');
-  lines.push('ruled out — the right default for an empty folder, the wrong one for a project that simply');
-  lines.push('never filled the table in.');
+  lines.push('**Skills are task-activated.** Scan the `Load when` column when a task starts; when a row');
+  lines.push('matches, open `_skills/<name>/SKILL.md` and follow it. A skill never outranks `AGENTS.md`, and a');
+  lines.push('row whose `Applies to` does not cover this stack is not applicable — skip it. `_skills/` is the');
+  lines.push('synced, stack-filtered copy of the central corpus (absent until the first sync); do not keep a');
+  lines.push('hand-maintained copy of a delivered skill in a native store (`.qoder/skills/`, `.claude/skills/`,');
+  lines.push('…) — it shadows `_skills/` and cannot follow upstream.');
   lines.push('');
   lines.push(`| Skill | Load when | Applies to | Status |`);
   lines.push('|---|---|---|---|');

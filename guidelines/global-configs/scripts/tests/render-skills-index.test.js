@@ -65,7 +65,7 @@ test('the generated block carries the obligation AND the inventory — they cann
   // A consumer that emits the block receives the rule and the table together. If the rule lived
   // outside the markers, a project could install the table and lose the rule that gives it meaning.
   const block = renderBlock(collect(fixture(TWO).dir));
-  assert.match(block, /announce it in chat as/);
+  assert.match(block, /Scan the `Load when` column/);
   assert.match(block, /never outranks `AGENTS\.md`/);
   assert.match(block, /\| Skill \| Load when \| Applies to \| Status \|/);
   assert.match(block, /\[alpha\]\(alpha\/SKILL\.md\)/);

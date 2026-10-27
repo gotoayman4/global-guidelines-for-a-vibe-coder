@@ -38,7 +38,7 @@ This is **not** an application project. It is a centralized development guidelin
 - Rule text lives in `guidelines/global-configs/fragments/` — one `##` section per file, order and token budget in `fragments/manifest.json`
 - `guidelines/global-configs/templates/AGENTS.starter.md` is GENERATED output — NEVER hand-edit it (`npm run check-drift` fails validate if it diverges)
 - To change a rule: edit the fragment → `npm run render:starters` → `npm run validate` → commit fragment + template together
-- The constitution has a token budget (**5,500 tokens** — `fragments/manifest.json` `maxTokens`, enforced by `npm run check-drift`): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure: this line said "~7,000" for months while the manifest said 5,000 and `check-drift` enforced it, and it then said "5,088" while the starter measured 5,389. `npm run render:starters` prints the current figure — read it there.
+- The constitution has a token budget (**4,000 tokens** — `fragments/manifest.json` `maxTokens`, enforced by `npm run check-drift`): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure; `npm run render:starters` prints the current measurement — read it there.
 - Other starter templates (WORLD, DEVTOOLS, tool configs) are hand-maintained; when a guideline changes, update the matching one
 - Starter templates use `[FILL]` placeholders for project-specific values
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
@@ -60,12 +60,9 @@ The 23 skills in `guidelines/global-configs/skills/` are **task-activated**: the
 trigger matches, which is why the trigger has to be visible *before* the file is opened.
 
 - **The inventory is `skills/INDEX.md`** — a `Skill → Load when → Applies to` table generated from
-  each skill's front-matter. Read it when a task starts, not the whole directory.
-- **When a row matches, load the skill and announce it** in chat as `Skill: <name> activated`, then
-  record it: append one line to the project's `docs/skill-activations.log` as
-  `<ISO-8601 timestamp> | <skill-name> | <the task that triggered it>`. The chat announcement is
-  what the human sees; the log is the only thing a guard can read. `npm run skills:activations`
-  checks it — a receipt naming a skill the project does not carry is a false receipt and fails.
+  each skill's front-matter. Read it when a task starts, not the whole directory. When a row
+  matches, open the skill and follow it. No announcement or activation log is required — the
+  work product is the evidence (owner decision `LEAN_OPERATING_MODEL_DECISION_2026-10-27.md`).
 - **A skill never outranks `AGENTS.md`.** Where the two disagree, this file wins.
 - **Check `Applies to` before the trigger.** A skill written for a stack this project forbids will
   contradict the constitution if followed; `—` means no stack was declared, so verify before use.
@@ -100,9 +97,7 @@ npm run check-skills-drift # Fail if skills/INDEX.md was hand-edited — regener
 npm run plan:skills     # Print which skills belong in which project, and why (no arg = the whole fleet; --apply to write)
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
 npm run sync:drift      # Fail if a project's _guidelines/ mirror or _skills/ copy is not the current source (content hash, not a date)
-npm run skills:activations # Check a project's skill-activation receipt — a receipt naming a skill it does not carry is false
-npm run slice:close     # Derive the changelog entry, the decision number and the freshness line for a slice
-npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness, untriaged lessons
+npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness
 npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + docs:census + guard:tiers + test:scripts
 ```
 

@@ -24,7 +24,7 @@ The project declares its mode in `WORLD.md` (`mode: vibe | standard | guarded`).
 | **Plan** | 3-bullet intent; no plan gate | feature plan for non-trivial; AI reviews | standard plan + architecture review |
 | **Tests** | smoke run + regression test only when a bug bites twice or at milestone | behavioral tests with code; regression every fix | full pyramid + critical-flow E2E before ship |
 | **Verification** | run it once + one-line report at the cheapest sufficient tier | evidence table by change type | full evidence + security pass on auth/data changes |
-| **Steering writes** | **1 file** — the record (decision number + its entry) | 2 files | the full set + an ADR per architectural decision |
+| **Steering writes** | one home per trigger; an ADR only for an irreversible decision | same | same |
 | **Gate** — per push | **`gate:fast`** + the `always` guard tier | the full pipeline | the full pipeline + the path-aware extras |
 | **Commits** | conventional, coarser increments | every working increment | every increment + checkpoint discipline |
 
@@ -58,7 +58,7 @@ The hook reads the declared `mode`, so a project escalates its gate by escalatin
 2. **No fake evidence.** NEVER claim tests pass without running them; NEVER present predictions as observations.
 3. **Ship boundary hardens quality.** Before any release or milestone exit: critical-flow checks (login, payments, data persistence) verified in both LTR and RTL, and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A vibe loop may be loose; a ship may not.
 4. **Fix the change; revert the approach.** A failing check on a sound change is fixed and re-run (two attempts — `agent-verification-loop.md`). Wrong output — the approach itself is broken, or fixes keep landing on new breakage — is reverted or stashed and regenerated with better constraints. Never debug forward past the second failed fix.
-5. **Speed is measured.** Record intent → first running slice (minutes) per iteration (see `workflow-friction-audit.md` buckets). A mode that feels fast but measures slow is misconfigured.
+5. **Speed is measured, not felt.** If a mode feels slow, measure where the minutes went (reading, gate, rework) before adding or removing ceremony (`workflow-friction-audit.md`).
 
 ## Mode Transitions
 
@@ -77,15 +77,7 @@ Escalation is **automatic and evidence-based**. The last four triggers escalate 
 
 A milestone or release exit that owes the full chain runs it through a **release override the gate reads** — a release branch, tag, env var, or override file — instead of editing the declared `mode` in `WORLD.md` and editing it back a day later. The declared mode changes only when the project's **steady state** changes; a flip that lasts one release is an override. A project that flip-flops its declared mode every release pays two boot-file edits, a hook-behavior change and a transition-log entry per release, and its mode line stops meaning anything.
 
-**The transition log lives in the changelog, not in `WORLD.md`.** Mode-change lines are dated history; a boot file carries no history (`documentation-strategy.md` §Directives rule 6). `WORLD.md` states only the current mode and how a release escalates; a mode change is recorded once, in the changelog entry of the slice that made it — the same entry `npm run slice:close` writes.
-
-### One Escalation Class per Slice
-
-The cost of a slice is not the lines it changes; it is the number of **distinct verification regimes** its diff triggers. Each class above carries its own tier, its own fixtures and its own failure vocabulary, and they do not share evidence: a slice in two classes pays two full verifications, and a slice in four pays a matrix nobody can describe in a sentence. Measured 2026-10-23 in a referenced project: one `vibe` slice escalated on a mail path, a desktop-shell IPC security pin and a shared-package type contract at once — the gate ran six steps, and the security step could only run *outside* the gate because it is path-aware.
-
-1. A slice carries **one** escalation class. A second class is a second slice.
-2. Two classes MAY stay together when the record names, in one line, the root cause they share — "the dialog and the probe are one user action". That line is the record.
-3. Unrelated classes split even though splitting writes the record twice. Two small green slices are cheaper than one slice whose verification cannot be explained.
+**The transition log lives in the changelog, not in `WORLD.md`.** Mode-change lines are dated history; a boot file carries no history (`documentation-strategy.md` §Directives rule 6). `WORLD.md` states only the current mode and how a release escalates.
 
 ## Accepted Trade-offs by Mode
 
@@ -93,7 +85,7 @@ The cost of a slice is not the lines it changes; it is the number of **distinct 
 |---|---|---|
 | vibe | no suite → silent regressions between milestones | milestone critical-flow checks; regression-on-second-bite |
 | vibe | the fast loop can pass what the full pipeline would catch | the ship boundary runs the full pipeline; nothing is *skipped*, it is *deferred* to a named boundary |
-| vibe | staler steering prose | the **record** still lands (decision number + entry); only the ritual defers to the milestone |
+| vibe | staler steering prose | non-trigger prose defers to the milestone; a trigger still writes its one home in the same iteration |
 | standard | slower inner loop than vibe | `gate:fast` two-loop pattern |
 | guarded | slowest loop | path-aware gates keep unrelated subtrees fast |
 
@@ -106,19 +98,18 @@ The cost of a slice is not the lines it changes; it is the number of **distinct 
 | Treating mode as an excuse to skip security or honesty rules | Absolute Rules apply in every mode |
 | Mode declared at bootstrap, never revisited | revisit at every milestone; record the change |
 | Flip-flopping the declared mode for every release | run the release chain on a release override; edit the declared mode only when the steady state changes |
-| A per-slice write to a plan document (PRD/ROADMAP/sprint plan) | plan docs close at the sprint boundary; a slice's record is its changelog entry + decision number (`planning-and-scoping.md` rule 9) |
-| **A vibe session that reads the whole boot chain and writes six steering files** | the mode is not wired to Context or Steering — apply both rows, or the mode is decoration |
+| A per-slice write to a plan document (PRD/ROADMAP/sprint plan) | plan docs close at the sprint boundary; a slice's record is its commit message (`planning-and-scoping.md`) |
+| **A vibe session that reads the whole boot chain and writes six steering files** | the mode is not wired to Context or Steering — the boot chain is three files, and a trigger writes one home |
 | **Reading everything "because the bootstrap mandates it"** | the chain is a menu; name the 2–4 files the task needs |
 | **A cap re-based upward every time its file grows** | re-base only against live measurement; freeze the chain total |
-| **Keeping a hand-maintained decision counter** | derive the next number from the existing set; a counter races between concurrent sessions |
-| **A slice that escalates on several unrelated classes** | verification regimes multiply, they do not add — split at the class boundary, or name the shared root cause in the record |
+| **A slice that escalates on several unrelated classes** | unrelated verification regimes do not share evidence — split the slice, or name the shared root cause in one line |
 
 ## Key Takeaways
 
 1. Declare the mode; let it scale context, plan, tests, verification, steering and gate — never security or honesty.
 2. The ship boundary is the hard quality gate; the loop inside is where speed is won.
-3. Budget the reading, cap the steering writes, and derive what can be derived — those three are the whole difference between a fast mode and a relabelled slow one.
-4. Measure intent → first running slice; escalate automatically when the evidence says so.
+3. Budget the reading and give every fact one home — that is most of the difference between a fast mode and a relabelled slow one.
+4. Escalate on evidence, and measure where the minutes went before changing the process.
 
 ---
 

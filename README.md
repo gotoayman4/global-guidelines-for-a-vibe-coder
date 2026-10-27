@@ -21,7 +21,7 @@ guidelines/
     fragments/   — single-source rule sections; rendered into templates/AGENTS.starter.md
     scripts/     — sync writers (GuidelineSync.psm1, sync-guidelines.ps1, sync-all.js), guards
                    (check-*.js, audit-*.js), generators (render-*.js, plan-skills.js,
-                   inject-skills-block.js), scaffolders (new-*.js, slice-close.js), and
+                   inject-skills-block.js), scaffolders (new-*.js), and
                    setup-global-references.ps1 — run `npm run` with no argument for the full list
     skills/      — one <name>/SKILL.md directory per skill (code-review, refactoring, security-audit, …)
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync

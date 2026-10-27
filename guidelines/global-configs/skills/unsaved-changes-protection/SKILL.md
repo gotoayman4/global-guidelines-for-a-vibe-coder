@@ -110,4 +110,4 @@ When generating or modifying form components:
 - Form patterns: `06-frontend-patterns/form-patterns.md`
 - Dialog patterns: `06-frontend-patterns/dialog-patterns.md`
 - UX design principles: `02-engineering-practices/ux-design-principles.md`
-- Skill design patterns: `../../../../docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`

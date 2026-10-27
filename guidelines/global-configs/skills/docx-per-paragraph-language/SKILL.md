@@ -267,4 +267,4 @@ You distinguish between:
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`
 - RTL tech stack: `05-stack-guides/rtl-tech-stack.md`
 - `docx` library `ILanguageOptions` type: `node_modules/docx/dist/file/paragraph/run/language.d.ts`
-- Skill design patterns: `../../../../docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`

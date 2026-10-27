@@ -5,9 +5,8 @@
  *
  * INTENT: the mode is declared once, in `WORLD.md` (`speed-tiered-workflow.md` §Mode
  * Declaration), and read by every instrument that behaves differently per mode:
- * `slice-close.js` records it in the changelog entry, `measure-boot-budget.js` resolves
- * the context cap from it, `check-doc-breadth.js` applies its breadth, and `read-mode.js`
- * is what a project's pre-push hook calls. One reader, one shape — a second copy drifts,
+ * `measure-boot-budget.js` resolves the context cap from it, and `read-mode.js` is what
+ * a project's pre-push hook calls. One reader, one shape — a second copy drifts,
  * and the drift is invisible because both copies would still look right. Three copies
  * existed; they disagreed on three of four shapes of declaration (measured 2026-10-23),
  * and the only correct one lived in a downstream repository that this repo never shipped.

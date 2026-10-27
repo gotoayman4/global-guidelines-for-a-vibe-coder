@@ -75,9 +75,6 @@ const { skillPayload, listFiles, listSkills } = require('./lib/skill-files.js');
 // sync cannot disagree about what "the block names every delivered skill" means. Importing the
 // injector is safe: it runs `main()` only when it IS the entry point.
 const { verifyInventory, skillsSectionBody, markedSpan } = require('./inject-skills-block.js');
-// The receipt validator. Same reason as above: the guard and the rule must agree on what a valid
-// receipt is, so the drift report and the standalone check cannot disagree about the same file.
-const { readActivations, validateActivations } = require('./check-skill-activations.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 // Overridable so the CLI's exit-code contract can be exercised against a fixture instead of
@@ -406,39 +403,6 @@ function competingStores(projectPath, skillsTarget = '_skills') {
 }
 
 /**
- * The activation receipt: what the project claims it has loaded, and whether the claim is true.
- *
- * WHY THIS IS THE ANSWER TO "WAS A SKILL EVER USED". The upstream constitution said the chat
- * announcement was "the only thing that makes activation visible, because no file in the repo can
- * record whether a skill was loaded" — which is true, and is the problem: a claim with no artifact
- * behind it cannot be checked, so nothing could ever tell a steering repo that its skills were
- * being ignored. The receipt is that artifact: an agent appends a line to
- * `docs/skill-activations.log` when it opens a skill, and this reads it.
- *
- * WHAT IT PROVES, and what it does not. It proves the project's bookkeeping is well-formed and
- * names skills the project can actually open. It does NOT prove a skill was read, or that reading
- * it helped — a receipt is a record of an assertion, not a witness. A project that never opens a
- * skill writes no receipts and is not failing anything here; the value is that a project that
- * CLAIMS twenty activations has twenty checkable lines, and one naming a skill it does not carry
- * is caught.
- *
- * @returns {{state: 'none'|'valid'|'invalid', total: number, distinctSkills: number,
- *            lastActivatedAt: string|null, errors: Array<{lineNumber: number, reason: string}>}}
- */
-function activationVerdict(projectPath) {
-  const { exists, entries } = readActivations(projectPath);
-  if (!exists) return { state: 'none', total: 0, distinctSkills: 0, lastActivatedAt: null, errors: [] };
-  const { errors, total, distinctSkills, lastActivatedAt } = validateActivations(projectPath, entries);
-  return {
-    state: errors.length ? 'invalid' : 'valid',
-    total,
-    distinctSkills,
-    lastActivatedAt,
-    errors,
-  };
-}
-
-/**
  * Compare each project's mirror against the source. Pure over its inputs, so the test can
  * drive it with fixtures instead of the live fleet.
  *
@@ -457,9 +421,8 @@ function compareProjects(sourceDir, source, projects, skills = null) {
     const skillsVerdict = compareSkills(project.path, skills);
     const blockVerdict = skillsBlockVerdict(project.path, skills);
     const stores = competingStores(project.path, skills ? skills.target : '_skills');
-    const activations = activationVerdict(project.path);
     if (!fs.existsSync(mirror)) {
-      return { name, path: project.path, state: 'no-mirror', recorded, lastSynced: project.lastSynced, skills: skillsVerdict, skillsBlock: blockVerdict, competingStores: stores, activations };
+      return { name, path: project.path, state: 'no-mirror', recorded, lastSynced: project.lastSynced, skills: skillsVerdict, skillsBlock: blockVerdict, competingStores: stores };
     }
     const theirs = hashTree(mirror);
     return {
@@ -473,7 +436,6 @@ function compareProjects(sourceDir, source, projects, skills = null) {
       skills: skillsVerdict,
       skillsBlock: blockVerdict,
       competingStores: stores,
-      activations,
     };
   });
 }
@@ -653,24 +615,6 @@ function main() {
       } else if (!quiet && b.state !== 'not-required') {
         const note = b.managed ? 'generated' : 'hand-written';
         console.log(`       ✅ ## Skills section is ${note} and names ${b.referenced}/${b.delivered} skill(s)`);
-      }
-    }
-
-    // THE RECEIPT. What the project claims it has loaded, and whether the claim holds.
-    if (row.activations && row.activations.state !== 'none') {
-      const a = row.activations;
-      if (a.state === 'invalid') {
-        drifted.add(row.name);
-        if (!quiet) {
-          console.log(`  ❌ ${row.name}: the skill-activation receipt has ${a.errors.length} invalid line(s)`);
-          for (const error of a.errors.slice(0, 5)) {
-            console.log(`       line ${error.lineNumber}: ${error.reason}`);
-          }
-          if (a.errors.length > 5) console.log(`       … and ${a.errors.length - 5} more`);
-          console.log('       → `docs/skill-activations.log` must name skills this project actually carries');
-        }
-      } else if (!quiet) {
-        console.log(`       ✅ ${a.total} skill activation(s) recorded across ${a.distinctSkills} skill(s)`);
       }
     }
 

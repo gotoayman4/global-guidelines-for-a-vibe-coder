@@ -30,8 +30,8 @@ Activate when:
 
 Load compact extracts (Key Takeaways + Anti-Patterns) from:
 
-1. `../../../../docs/human/day-one-setup.md` — Step-by-step setup guide
-2. `../../../../docs/human/beginner-vibe-coder-guide.md` — Simplified development loop
+1. `docs/human/day-one-setup.md` — Step-by-step setup guide
+2. `docs/human/beginner-vibe-coder-guide.md` — Simplified development loop
 3. `03-git-and-ci/git-workflow-strategy.md` — Git initialization and first commit
 4. `02-engineering-practices/cost-optimization-strategy.md` — Free-tier-first tooling
 
@@ -160,9 +160,9 @@ You are a project setup specialist. You guide users with zero coding experience 
 
 ## Cross-References
 
-- Day one setup guide: `../../../../docs/human/day-one-setup.md`
-- Beginner vibe coder guide: `../../../../docs/human/beginner-vibe-coder-guide.md`
+- Day one setup guide: `docs/human/day-one-setup.md`
+- Beginner vibe coder guide: `docs/human/beginner-vibe-coder-guide.md`
 - Git workflow: `03-git-and-ci/git-workflow-strategy.md`
 - Local CI strategy: `03-git-and-ci/local-ci-strategy.md`
-- Skill design patterns: `../../../../docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
 - File organization rules: `02-engineering-practices/file-organization.md`

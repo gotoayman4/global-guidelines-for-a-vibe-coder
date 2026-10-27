@@ -15,7 +15,7 @@ Each `.md` file here is one full markdown section of the generated template
 ## Adding a rule
 
 A new rule must retire, narrow, or demote an existing one — the token budget in
-`manifest.json` (`maxTokens` ≈ 5,000, estimated at chars/4) is enforced by `npm run check-drift`.
+`manifest.json` (`maxTokens` 4,000, estimated at chars/4) is enforced by `npm run check-drift`.
 Detail that is not needed in every session belongs in a guideline file under `guidelines/0X-*`,
 not in the always-loaded starter. Mode-scoped detail lives in
 `01-workflow-methodology/speed-tiered-workflow.md`.

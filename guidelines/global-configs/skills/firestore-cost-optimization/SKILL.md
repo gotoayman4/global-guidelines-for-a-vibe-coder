@@ -223,4 +223,4 @@ The two paste-ready files — the ESLint `no-restricted-syntax` rule for the lis
 - Paste-ready hosting header block: `global-configs/templates/firebase-hosting-headers.json.template`
 - SDK/query reference (progressive disclosure): `.agents/skills/firebase-firestore/`
 - Conflict resolution: `global-configs/skills/performance-audit/SKILL.md` (when cost and speed conflict, cost wins unless UX is measurably broken)
-- Skill design patterns: `../../../../docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
