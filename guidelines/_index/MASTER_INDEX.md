@@ -91,7 +91,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [arabic-rtl-pdf-generation.md](../05-stack-guides/arabic-rtl-pdf-generation.md) | Normative | Global — Web and Electron Apps (Arabic PDF output) | ~4777 | `#rtl` `#arabic` `#pdf` `#chromium` `#electron` `#print` `#bidi` `#fonts` `#paged-media` `#accessibility` |
-| [electron-auto-update.md](../05-stack-guides/electron/electron-auto-update.md) | Normative | Stack (Electron) | ~7942 | `#electron` `#auto-update` `#release` `#github-releases` `#netlify` `#code-signing` `#changelog` |
+| [electron-auto-update.md](../05-stack-guides/electron/electron-auto-update.md) | Normative | Stack (Electron) | ~11367 | `#electron` `#auto-update` `#release` `#github-releases` `#netlify` `#code-signing` `#changelog` |
 | [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~803 | `#mui` `#rtl` `#i18n` `#bidirectional` |
 | [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 7+ / 9+) | ~773 | `#mui` `#styling` `#theme` |
 | [nestjs-architecture.md](../05-stack-guides/nestjs/nestjs-architecture.md) | Normative | Stack (NestJS) | ~703 | `#nestjs` `#backend` `#modules` |
@@ -214,7 +214,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1336 | `#skill` `#debugging` `#noncoder` `#visual` |
 | [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1635 | `#skill` `#deploy` `#production` `#hosting` |
 | [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3559 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
-| [electron-auto-update/SKILL.md](../global-configs/skills/electron-auto-update/SKILL.md) | Advisory | Global (Task-Type Skill) | `electron` | ~992 | `#skill` `#electron` `#auto-update` `#release` `#github-releases` `#code-signing` |
+| [electron-auto-update/SKILL.md](../global-configs/skills/electron-auto-update/SKILL.md) | Advisory | Global (Task-Type Skill) | `electron` | ~1532 | `#skill` `#electron` `#auto-update` `#release` `#github-releases` `#code-signing` |
 | [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` | ~2776 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` `#node` `#console` |
 | [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1658 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory — with an enforced core | Global (Task-Type Skill) | `firebase` `firestore` | ~3848 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
