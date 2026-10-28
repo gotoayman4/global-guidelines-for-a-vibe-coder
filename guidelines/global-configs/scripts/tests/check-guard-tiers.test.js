@@ -4,7 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const { runSync } = require('../lib/run-sync.js');
-const { analyse, expand, readTier, leadingDocblock, TIERS, SCRIPTS } = require('../check-guard-tiers.js');
+const { analyse, expand, readTier, leadingDocblock, render, resolveGate, TIERS, SCRIPTS } = require('../check-guard-tiers.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/check-guard-tiers.js');
@@ -235,8 +235,87 @@ test('resolveGate falls back to null when there is neither a gate script nor a h
   assert.deepEqual(report.problems, [], 'no chain is not a violation — it is reported');
 });
 
-// ─── A project's mirror carries every guard; it wires a subset ───────────────
+// ─── What a hook actually says it runs: `run_step`, a named file, and the derivation ───
 
+test('a `run_step` ref is a step, not only `npm run`', () => {
+  // The scaffold writes `run_step` so a MISSING script fails the push. A parser that reads only
+  // `npm run` reports a correctly wired hook as running nothing — and then every `always` guard in
+  // every scaffolded project reads as unreached.
+  const dir = fixture({
+    guards: { 'check-alpha.js': 'always' },
+    scripts: { 'check-alpha': runner('check-alpha.js') },
+    hook: '#!/bin/sh\nrun_step check-alpha\n',
+  });
+  const report = inspect(dir);
+  assert.ok(report.reachedByGate.includes('check-alpha.js'), JSON.stringify(report.reachedByGate));
+  assert.deepEqual(report.problems, []);
+});
+
+test('a hook that names a guard file reaches that guard', () => {
+  // Invoking the script by path is a step too; there is no npm-script name to match.
+  const dir = fixture({
+    guards: { 'check-alpha.js': 'always' },
+    scripts: { 'check-alpha': runner('check-alpha.js') },
+    hook: '#!/bin/sh\nnode "_guidelines/global-configs/scripts/check-alpha.js" --strict\n',
+    layout: 'mirror',
+  });
+  const report = inspect(dir, 'mirror');
+  assert.ok(report.reachedByGate.includes('check-alpha.js'), JSON.stringify(report.reachedByGate));
+});
+
+test('a hook that runs the DERIVATION reaches every `always` guard by construction', () => {
+  // `--run-always` asks this guard for the tier and runs what comes back, so the set is decided by
+  // the guards' own docblocks and never appears as a name in the hook. A reader that needs a name
+  // tells a wired project its gate is empty — the false headline this exists to stop.
+  const dir = fixture({
+    guards: { 'check-alpha.js': 'always', 'check-beta.js': 'always' },
+    scripts: { 'guard:alpha': runner('check-alpha.js') },
+    hook: '#!/bin/sh\nnode "_guidelines/global-configs/scripts/check-guard-tiers.js" --root . --run-always\nrun_step guard:alpha\n',
+    layout: 'mirror',
+  });
+  const report = inspect(dir, 'mirror');
+  assert.equal(report.derivesAlways, true);
+  assert.ok(report.reachedByGate.includes('check-beta.js'), 'reached by the derivation, not by a name');
+  assert.doesNotMatch(report.advisories.join('\n'), /check-beta\.js: declares `always`/);
+  assert.deepEqual(report.problems, []);
+});
+
+test('REVERSAL PROOF: running the reporter without `--run-always` does not claim the tier', () => {
+  // Reporting the always set is not running it. A hook that calls this guard for its table must not
+  // be read as a gate, or the guard certifies a chain that executes nothing.
+  const dir = fixture({
+    guards: { 'check-alpha.js': 'always', 'check-beta.js': 'always' },
+    scripts: { 'guard:alpha': runner('check-alpha.js'), 'guard:beta': runner('check-beta.js') },
+    hook: '#!/bin/sh\nnode "_guidelines/global-configs/scripts/check-guard-tiers.js" --root .\n',
+    layout: 'mirror',
+  });
+  const report = inspect(dir, 'mirror');
+  assert.equal(report.derivesAlways, false);
+  assert.deepEqual(report.reachedByGate, [], 'the reporter is named; neither guard is');
+  const misses = report.advisories.filter((line) => /declares `always` but/.test(line));
+  assert.equal(misses.length, 2, JSON.stringify(report.advisories));
+  assert.deepEqual(report.problems, [], 'against a hook the `always` promise stays advisory');
+  assert.equal(resolveGate(path.join(dir, 'nowhere'), {}).derivesAlways, false);
+});
+
+test('the report tells a missing `gate:fast` from one that wires no guard', () => {
+  // Both render as "0 guard(s) wired". One is a project that never defined the chain; the other has
+  // the chain and simply keeps no guard in it. Printing the same word for both hides which to act on.
+  const absent = render(inspect(fixture({ guards: { 'check-alpha.js': 'standard+' }, scripts: { 'check-alpha': runner('check-alpha.js') }, layout: 'mirror' }), 'mirror'));
+  assert.match(absent, /npm run gate:fast \(absent\)/);
+
+  const dir = fixture({
+    guards: { 'check-alpha.js': 'standard+' },
+    scripts: { 'gate:fast': 'npm run lint', lint: 'echo', 'check-alpha': runner('check-alpha.js') },
+    layout: 'mirror',
+  });
+  const report = inspect(dir, 'mirror');
+  assert.ok(report.scripts['gate:fast'], 'the chain exists here');
+  assert.equal(report.reachedByVibe.length, 0);
+  assert.match(render(report), /npm run gate:fast — nothing wired into it/);
+});
+
+// ─── A project's mirror carries every guard; it wires a subset ───────────────
 test('isMirror tells the repo that owns the guards from the one that mirrors them', () => {
   const central = fixture({ guards: { 'check-a.js': 'standard+' } });
   const mirrored = fixture({ guards: { 'check-a.js': 'standard+' }, layout: 'mirror' });

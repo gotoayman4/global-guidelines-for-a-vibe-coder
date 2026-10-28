@@ -235,17 +235,28 @@ function isMirror(scriptsDir) {
  * and every step in it is meant to run. A hook is not: §Tier B has it branch on the declared mode,
  * so the set it runs depends on a value this guard would have to read from `WORLD.md` to judge.
  * That distinction is why the `always` assertion is fatal for the first and advisory for the second.
+ *
+ * A hook reaches a step three ways, and reading only the first makes every scaffolded project report
+ * zero guards wired: `npm run <script>`, the `run_step <script>` helper the scaffold writes (which
+ * exists precisely so a missing script fails rather than silently passing), and a guard invoked by
+ * file — `node …/check-guard-tiers.js --root . --run-always`. The last is the DERIVATION: it asks
+ * this guard for the `always` set and runs what comes back, so its membership is decided by the
+ * guards' own docblocks and is never visible as a name in the hook. A reader that only saw literal
+ * script names would tell a correctly wired project that its `always` guards are unreached.
  */
 function resolveGate(repo, scripts) {
   const named = scripts && GATE_CANDIDATES.find((candidate) => scripts[candidate]);
-  if (named) return { label: `npm run ${named}`, names: expand(scripts, named), npm: true };
+  if (named) return { label: `npm run ${named}`, names: expand(scripts, named), files: new Set(), derivesAlways: false, npm: true };
 
   const hook = path.join(repo, HOOK);
   if (fs.existsSync(hook)) {
-    const names = new Set([...fs.readFileSync(hook, 'utf8').matchAll(/npm run ([A-Za-z0-9:_-]+)/g)].map((match) => match[1]));
-    return { label: HOOK.replace(/\\/g, '/'), names, npm: false };
+    const text = fs.readFileSync(hook, 'utf8');
+    const names = new Set([...text.matchAll(/(?:npm run|run_step)\s+([A-Za-z0-9:_-]+)/g)].map((match) => match[1]));
+    const files = new Set([...text.matchAll(/check-[A-Za-z0-9._-]+\.js/g)].map((match) => match[0]));
+    const derivesAlways = files.has('check-guard-tiers.js') && text.includes('--run-always');
+    return { label: HOOK.replace(/\\/g, '/'), names, files, derivesAlways, npm: false };
   }
-  return { label: null, names: new Set(), npm: false };
+  return { label: null, names: new Set(), files: new Set(), derivesAlways: false, npm: false };
 }
 
 /**
@@ -287,6 +298,7 @@ function analyse(scriptsDir = SCRIPTS, repo = REPO) {
   const gate = resolveGate(repo, scripts);
   report.gate = gate.label;
   report.gateKind = gate.npm ? 'npm' : gate.label ? 'hook' : null;
+  report.derivesAlways = gate.derivesAlways;
   const vibeNames = scripts[VIBE_CHAIN] ? expand(scripts, VIBE_CHAIN) : new Set();
 
   for (const guard of guards) {
@@ -307,7 +319,7 @@ function analyse(scriptsDir = SCRIPTS, repo = REPO) {
       }
     }
 
-    guard.inGate = runners.some((name) => gate.names.has(name));
+    guard.inGate = runners.some((name) => gate.names.has(name)) || gate.files.has(guard.file) || (guard.tier === 'always' && gate.derivesAlways);
     guard.inVibe = runners.some((name) => vibeNames.has(name));
     if (guard.inGate) report.reachedByGate.push(guard.file);
     if (guard.inVibe) report.reachedByVibe.push(guard.file);
@@ -354,8 +366,12 @@ function render(report) {
   }
 
   lines.push(`  guards:  ${report.guards.length}`);
-  lines.push(`  gate:    ${report.gate || '(none declared)'}${report.gateKind === 'hook' ? ' (mode-branched)' : ''}  →  ${report.reachedByGate.length} guard(s) wired`);
-  lines.push(`  vibe:    npm run ${report.vibe}${report.reachedByVibe.length ? '' : ' (absent)'}  →  ${report.reachedByVibe.length} guard(s) wired`);
+  const gateNote = report.gateKind === 'hook' ? (report.derivesAlways ? ' (mode-branched; `always` tier derived)' : ' (mode-branched)') : '';
+  lines.push(`  gate:    ${report.gate || '(none declared)'}${gateNote}  →  ${report.reachedByGate.length} guard(s) wired`);
+  // "(absent)" means the chain does not exist. An existing `gate:fast` that wires no guard is a
+  // different fact, and printing the same word for both hides which one a reader should act on.
+  const vibeNote = report.reachedByVibe.length ? '' : report.scripts && report.scripts[report.vibe] ? ' — nothing wired into it' : ' (absent)';
+  lines.push(`  vibe:    npm run ${report.vibe}${vibeNote}  →  ${report.reachedByVibe.length} guard(s) wired`);
   lines.push('  execution: NOT VERIFIED — this check reads npm scripts and the hook, not a gate receipt');
   lines.push('');
 
