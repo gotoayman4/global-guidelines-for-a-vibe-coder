@@ -12,8 +12,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: rtl-shadcn-setup activated -- Source: _skills/rtl-shadcn-setup/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -78,7 +76,7 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 8. **Create direction toggle component:** Updates `document.documentElement.dir`, `document.documentElement.lang`, `localStorage`, and i18n language atomically.
 9. **Set up Storybook RTL mode** (standard/guarded only — vibe relies on logical-properties lint + milestone dual-direction pass): Global toolbar for direction switching + `DirectionProvider` decorator.
 10. **Set up Playwright dual-direction testing:** RTL and LTR projects in config with Arabic locale (`ar-SA`).
-11. **Add RTL audit to CI:** logical-properties ESLint rule in GitHub Actions (cross-platform; `rtlify-ai` is POSIX-only and false-greens on Windows — do not use it as the gate).
+11. **Add the RTL audit to the project gate:** logical-properties ESLint rule in the pre-push hook and `npm run lint` (local CI is the default; a cloud workflow is an optional addition, never instead — `local-ci-strategy.md`). `rtlify-ai` is POSIX-only and false-greens on Windows — do not use it as the gate.
 12. **Verify with checklist:** Ensure portal components have explicit `dir`, no physical CSS classes in codebase, Arabic typography rules applied.
 
 ---
@@ -104,7 +102,7 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 - [ ] Direction toggle component created
 - [ ] Storybook RTL mode configured
 - [ ] Playwright dual-direction testing configured
-- [ ] RTL audit in CI (logical-properties ESLint rule)
+- [ ] RTL audit wired into the project gate (logical-properties ESLint rule)
 
 ### RTL Acceptance Checklist
 - [ ] All pages render correctly with dir="rtl"
@@ -161,4 +159,4 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 - RTL tech stack overview: `05-stack-guides/rtl-tech-stack.md`
 - MUI RTL guide (for comparison): `05-stack-guides/mui/mui-rtl-bidirectional.md`
 - Accessibility standards: `02-engineering-practices/accessibility-standards.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

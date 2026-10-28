@@ -40,7 +40,7 @@ const STEERING = [
 // Trigger patterns with the steering doc each one points at (one home per fact —
 // documentation-strategy.md §Trigger Table).
 const TRIGGERS = [
-  { re: /(^|\/)\.env\.example$/, hint: 'AGENTS.md §Build & Validation Commands (env setup)' },
+  { re: /(^|\/)\.env\.example$/, hint: 'docs/AI_ARCHITECTURE.md — the env-var registry row (+ AGENTS.md §Build & Validation Commands if setup changed)' },
   { re: /(^|\/)package\.json$/, hint: 'AGENTS.md §Stack + §Build & Validation Commands' },
   { re: /Dockerfile$|docker-compose.*\.yml$/, hint: 'AGENTS.md §Build & Validation Commands' },
   { re: /src\/pages\/api\/|src\/app\/api\/|\/routes?\//, hint: 'docs/AI_ARCHITECTURE.md API Registry' },
@@ -48,7 +48,7 @@ const TRIGGERS = [
   { re: /prisma\/|\/migrations?\//, hint: 'docs/AI_ARCHITECTURE.md Data & Migrations' },
   // Auth: any path segment containing "auth" (oauth, authentication, …),
   // except author-byline files (AuthorCard, authors, …).
-  { test: (f) => f.split(/[\\/]/).some((seg) => /auth/i.test(seg) && !/^author/i.test(seg)), hint: 'docs/AI_ARCHITECTURE.md Cross-Cutting (+ ADR if a decision)' },
+  { test: (f) => f.split(/[\\/]/).some((seg) => /auth/i.test(seg) && !/^author/i.test(seg)), hint: 'docs/AI_ARCHITECTURE.md Cross-Cutting + an ADR in every mode' },
   { re: /src\/components\/ui\/|src\/shared\/|packages\/ui\//, hint: 'AGENTS.md §Project-Specific Mandates' },
 ];
 

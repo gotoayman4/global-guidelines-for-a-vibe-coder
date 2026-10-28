@@ -12,8 +12,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: inno-setup activated -- Source: _skills/inno-setup/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -107,7 +105,7 @@ You are a Windows installer packaging specialist using Inno Setup. You create cl
 
 - Do NOT bundle debug builds — always package production builds only
 - Do NOT hardcode absolute paths — use Inno Setup constants (`{app}`, `{win}`, `{commonappdata}`)
-- Do NOT skip code signing — unsigned installers trigger SmartScreen warnings that scare users
+- Do NOT skip code signing silently — unsigned installers trigger SmartScreen warnings that scare users. Signing is recommended for any public Windows installer and **required** where the app auto-updates on macOS; it is optional on Windows when the project consciously accepts SmartScreen (`electron-auto-update.md` §The Architecture). If unsigned, the UI must not claim a verified publisher.
 - Do NOT forget 32/64-bit architecture detection — use `{arch}` constant and separate entries when needed
 - Do NOT include development files (node_modules, .git, .env) in the installer
 - Do NOT skip the uninstall verification — broken uninstallers leave orphan files and registry entries
@@ -120,7 +118,7 @@ You are a Windows installer packaging specialist using Inno Setup. You create cl
 
 1. Inno Setup is free, well-maintained, and produces professional Windows installers.
 2. Always use Inno Setup constants (`{app}`, `{win}`) for paths — never hardcode `C:\Program Files`.
-3. Code signing is mandatory for production. Unsigned installers trigger SmartScreen warnings.
+3. Code signing is strongly recommended for production — unsigned installers trigger SmartScreen warnings. It is required where auto-update ships on macOS and optional on Windows when the project accepts SmartScreen (`electron-auto-update.md`).
 4. Test on a clean Windows VM — your development machine has dependencies that clean machines don't.
 5. Package only production builds. Debug builds are larger, slower, and may expose sensitive information.
 6. The uninstaller MUST clean up everything: installed files, shortcuts, registry entries, and app data if the user chooses.
@@ -131,4 +129,4 @@ You are a Windows installer packaging specialist using Inno Setup. You create cl
 
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Cost optimization: `02-engineering-practices/cost-optimization-strategy.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

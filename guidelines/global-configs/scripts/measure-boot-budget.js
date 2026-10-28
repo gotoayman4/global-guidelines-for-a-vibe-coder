@@ -76,15 +76,18 @@ const BOOLEAN_FLAGS = new Set(['json', 'strict', 'cap-from-mode']);
  * A project with its own documents passes `--files`, which replaces this list and treats
  * every path as chain — the flag declares a floor, and a floor is what gets budgeted.
  *
- * CAVEAT: a missing `always` file is a failure; a missing `on-demand` file is a note. The
- * menu is generic and a project may legitimately not carry all of it, which is the reason
- * report-only is the default. Failing a build because a project has no `DEVTOOLS.md` would
- * teach people to delete the check.
+ * CAVEAT: the load class decides what absence means. An `always` file is the chain — it must
+ * exist and it is charged to the mode budget. A `required` file is a member of the mandated doc
+ * set that is read for orientation rather than every session — it must exist, but it is not
+ * charged (`documentation-strategy.md` §The Mandated Doc Set: an absent README is a doc set that
+ * lost a member, not a note). An `on-demand` file is menu — optional, because a project may
+ * legitimately not carry every menu document, which is the reason report-only is the default.
+ * Failing a build because a project has no `DEVTOOLS.md` would teach people to delete the check.
  */
 const DEFAULT_FILES = [
   { rel: 'AGENTS.md', load: 'always' },
   { rel: 'WORLD.md', load: 'always' },
-  { rel: 'README.md', load: 'always' },
+  { rel: 'README.md', load: 'required' },
   { rel: 'DEVTOOLS.md', load: 'on-demand' },
   { rel: 'docs/PRD.md', load: 'on-demand' },
   { rel: 'docs/ROADMAP.md', load: 'on-demand' },
@@ -359,6 +362,7 @@ try {
 const rows = options.files.map((file) => ({ ...measure(options.root, file.rel), load: file.load }));
 const missing = rows.filter((row) => row.missing);
 const missingChain = missing.filter((row) => row.load === 'always');
+const missingRequired = missing.filter((row) => row.load === 'required');
 const missingMenu = missing.filter((row) => row.load === 'on-demand');
 const present = rows.filter((row) => !row.missing);
 const chain = present.filter((row) => row.load === 'always');
@@ -368,9 +372,13 @@ const menuTotal = menu.reduce((s, r) => s + r.tokens, 0);
 
 const problems = [];
 const advisories = [];
-// A missing chain file is a failure; a missing menu file is a note (see DEFAULT_FILES).
+// A missing chain file is a failure; a missing required file is a doc-set failure; a missing
+// menu file is a note (see DEFAULT_FILES).
 for (const row of missingChain) {
   problems.push(`${row.rel}: file not found under ${options.root}`);
+}
+for (const row of missingRequired) {
+  problems.push(`${row.rel}: file not found under ${options.root} — a mandated doc-set member is missing (documentation-strategy.md §The Mandated Doc Set)`);
 }
 if (options.maxTokens !== null && total > options.maxTokens) {
   problems.push(`chain ~${total} tokens > budget ${options.maxTokens}`);
@@ -402,8 +410,10 @@ if (options.json) {
     mode: options.capFromMode ? deriveMode(options.root) : null,
     missingCount: missingChain.length,
     missingFiles: missingChain.map((row) => row.rel),
+    missingRequiredFiles: missingRequired.map((row) => row.rel),
     missingMenuFiles: missingMenu.map((row) => row.rel),
     files: rows.filter((row) => row.load === 'always'),
+    required: rows.filter((row) => row.load === 'required'),
     onDemand: rows.filter((row) => row.load === 'on-demand'),
     problems,
     advisories,
@@ -456,7 +466,16 @@ if (options.json) {
     console.log(`\n  menu total: ~${menuTotal} tokens across ${menu.length} document(s) — a ratchet (rule 4), not a budget`);
   }
 
+  const requiredPresent = rows.filter((r) => r.load === 'required' && !r.missing);
+  if (requiredPresent.length > 0) {
+    console.log(`\n  MANDATED, NOT CHAINED — must exist, not charged to the budget\n`);
+    printTable(requiredPresent);
+  }
+
   console.log(`\n  missing chain files: ${missingChain.length}${missingChain.length ? ` (${missingChain.map((row) => row.rel).join(', ')})` : ''}`);
+  if (missingRequired.length) {
+    console.log(`  missing required files: ${missingRequired.length} (${missingRequired.map((row) => row.rel).join(', ')}) — a mandated doc-set member is missing, not a note`);
+  }
   if (missingMenu.length) {
     console.log(`  absent menu files: ${missingMenu.length} (${missingMenu.map((row) => row.rel).join(', ')}) — a note, not a failure`);
   }

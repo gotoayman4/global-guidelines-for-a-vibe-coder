@@ -40,7 +40,7 @@
  * the exact label `Skills` beats `Skills (mandatory)`.
  *
  * THE BLOCK IS RENDERED FROM THE PROJECT'S OWN `_skills/`, never from the central corpus. The sync
- * delivers a FILTERED set (12–16 of 20), so rendering the whole pool into a project would produce a
+ * delivers a FILTERED set (a subset of the pool), so rendering the whole pool into a project would produce a
  * table of rows whose links resolve to files the project does not have. `collect` reads the delivered
  * files, so the table is exactly what the agent can open, and the links are prefixed `_skills/` to
  * resolve from the project root rather than from inside `_skills/`.

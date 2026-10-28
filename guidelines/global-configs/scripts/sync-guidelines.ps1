@@ -78,7 +78,7 @@ $qoderSkillsDir = "$env:USERPROFILE\.qoder\skills"
 $gitignoreEntries = if (Get-Command Get-GitignoreEntries -ErrorAction SilentlyContinue) {
     Get-GitignoreEntries
 } else {
-    # The module is optional for the mirror step, so the manifest is read directly. The fallback
+    # Non-destructive copying can run without the module, so read the manifest directly. The fallback
     # reads the same source rather than restating the entries — a fallback list would be the defect.
     $manifestPath = Join-Path (Join-Path $guidelinesRepo "global-configs") "sync-manifest.json"
     if (Test-Path $manifestPath) {
@@ -104,15 +104,7 @@ if (-not $GlobalOnly) {
 
     Write-Host "[1/3] Mirroring guidelines into $guidelinesDir ..." -ForegroundColor Yellow
 
-    if (-not (Test-Path -LiteralPath $guidelinesDir)) {
-        if ($DryRun) {
-            Write-Host "  [DRY-RUN] Would create directory: $guidelinesDir" -ForegroundColor Yellow
-        } else {
-            $null = New-Item -ItemType Directory -Path $guidelinesDir -Force
-        }
-    }
-
-    # Use module function if available, otherwise fall back to inline robocopy.
+    # Let robocopy create the target only after preflight so refusals stay write-free.
     #
     # BOTH paths must report the robocopy exit code. Robocopy signals failure through its exit code
     # alone — a partial copy writes nothing to stderr — so a summary printed without reading it is a
@@ -124,13 +116,19 @@ if (-not $GlobalOnly) {
     $mirrorOk = $true
     if (Get-Command Sync-MirrorDirectory -ErrorAction SilentlyContinue) {
         $mirrorResult = Sync-MirrorDirectory -sourceDir $guidelinesRepo -targetDir $guidelinesDir -DryRun:$DryRun -NoMirrorDelete:$NoMirrorDelete
-        if ($null -ne $mirrorResult -and $mirrorResult.Success -eq $false) { $mirrorOk = $false }
+        if ($null -ne $mirrorResult -and $mirrorResult.Success -eq $false) {
+            $mirrorOk = $false
+            if ($mirrorResult.Error) { Write-Host "  ERROR: $($mirrorResult.Error)" -ForegroundColor Red }
+        }
     } else {
+        if (-not $NoMirrorDelete) {
+            Write-Host "  ERROR: GuidelineSync.psm1 is required for mirror preflight. Restore the module before rerunning sync; destructive mirroring is refused." -ForegroundColor Red
+            exit 1
+        }
         if ($DryRun) {
             Write-Host "  [DRY-RUN] robocopy $guidelinesRepo → $guidelinesDir" -ForegroundColor Yellow
         } else {
-            $robocopyArgs = @($guidelinesRepo, $guidelinesDir)
-            if ($NoMirrorDelete) { $robocopyArgs += "/E" } else { $robocopyArgs += "/MIR" }
+            $robocopyArgs = @($guidelinesRepo, $guidelinesDir, "/E")
             $robocopyArgs += @("/NJH", "/NJS", "/NDL", "/NP", "/R:1", "/W:1",
                                "/XD", ".git", ".github")
             # The same 0–7 success / 8+ failure contract the module applies. `robocopy @args` as a bare
@@ -143,6 +141,9 @@ if (-not $GlobalOnly) {
             }
         }
     }
+
+    # Do not install starters, skills, gitignore entries or global configs after a failed mirror.
+    if (-not $mirrorOk) { exit 1 }
 
     if ($DryRun) {
         # Nothing landed, so there is no count worth printing.
@@ -262,10 +263,11 @@ if (-not $SourceOnly) {
         "",
         "## Before Every Session",
         "",
-        "1. If not already loaded via project ``opencode.json``, read ``_index/RETRIEVAL_RULES.md``",
-        "2. Read ``_index/MASTER_INDEX.md`` to map task type to relevant files",
-        "3. Load only files needed for the current task - never the whole repo",
-        "4. Skills live at ``global-configs/skills/<name>/SKILL.md`` - load when trigger matches",
+        "1. In a project, read its ``AGENTS.md`` (binding rules) and ``WORLD.md`` (intent + declared mode) first - they override these global defaults",
+        "2. Open a guideline from ``$guidelinesRepo`` by name when the task needs one",
+        "3. Use ``_index/MASTER_INDEX.md`` only as a lookup when you cannot name the file the task needs",
+        "4. Load only files needed for the current task - never the whole repo",
+        "5. Skills live at ``global-configs/skills/<name>/SKILL.md`` - load when the recorded trigger matches",
         "",
         "## How to Load Guidelines",
         "",
@@ -290,8 +292,9 @@ if (-not $SourceOnly) {
 This machine has a shared guidelines repository at:
 $guidelinesRepo
 
-ALWAYS read `_index/MASTER_INDEX.md` from that path first.
-Then load only the files needed for the current task.
+In a project, read its AGENTS.md (binding rules) and WORLD.md (intent + declared mode) first; they override these defaults.
+Open a guideline by name when the task needs one; use `_index/MASTER_INDEX.md` only as a lookup when you cannot name it.
+Load only the files needed for the current task.
 Use absolute base path `$guidelinesRepo/` when loading files.
 "@
     Write-Utf8NoBom -Path $windsurfGlobalRules -Content ($windsurfContent + "`r`n")
@@ -468,7 +471,7 @@ Write-Host "=== Sync Complete ===" -ForegroundColor Cyan
 Write-Host ""
 if (-not $GlobalOnly) {
     Write-Host "  Guidelines mirrored to: _guidelines/"
-    Write-Host "  Update AGENTS.md to reference: _guidelines/_index/MASTER_INDEX.md"
+    Write-Host "  Update AGENTS.md to name itself and WORLD.md as the entry point; link to _guidelines/ guidelines by name"
 }
 if (-not $SourceOnly) {
     # Report what actually landed, per tool. A tool whose block was skipped names itself as skipped

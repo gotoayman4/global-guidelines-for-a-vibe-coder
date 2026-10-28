@@ -12,7 +12,7 @@ ADRs document WHY decisions were made, preventing AI from reversing them in futu
 
 ## When to Write One
 
-Technology choices (DB, framework, library) · significant architecture patterns (monolith vs services, state management) · conventions differing from defaults · deprecating a prior decision. **Skip for:** minor details, easily reversible decisions, standard conventions.
+Technology choices that are expensive to reverse (DB, framework, library) · significant architecture patterns (monolith vs services, state management) · conventions differing from defaults · deprecating a prior decision. **Skip for:** minor details, easily reversible decisions, standard conventions.
 
 ## Template
 
@@ -41,7 +41,7 @@ Positive / Negative / Neutral bullet lists.
 
 ## Lifecycle & Storage
 
-`Proposed → Accepted → Deprecated → Superseded`. **Never delete ADRs** — deprecate or supersede; historical context explains why patterns exist. Store in `docs/adr/` with sequential numbering (`001-use-zod-validation.md`) plus an index README.
+`Proposed → Accepted → Deprecated → Superseded`. **Never delete ADRs** — deprecate or supersede; historical context explains why patterns exist. Store in `docs/adr/` with sequential numbering (`001-use-zod-validation.md`).
 
 ## Cross-References
 

@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: debug-without-code activated -- Source: _skills/debug-without-code/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -24,10 +22,10 @@ Activate when:
 
 ## Load Guidelines
 
-Load compact extracts (Key Takeaways + Anti-Patterns) from:
+Load compact extracts (Key Takeaways + Anti-Patterns) from the available guides below. Central-only human guides are optional; do not search for them in the downstream mirror.
 
-1. `docs/human/verification-for-non-coders.md` — Visual verification techniques
-2. `docs/human/escalation-protocol.md` — When to escalate beyond AI
+1. `docs/human/verification-for-non-coders.md` (central repository only; not delivered with this skill) — Visual verification techniques
+2. `docs/human/escalation-protocol.md` (central repository only; not delivered with this skill) — When to escalate beyond AI
 3. `01-workflow-methodology/debugging-with-ai.md` — Structured debugging loop (adapted for non-coders)
 
 **Guideline base path:** Use `_guidelines/` if the project mirror exists; otherwise use the central repo path from your machine's global agent config.
@@ -119,8 +117,8 @@ You are a debugging assistant for vibe coders who cannot read code. You diagnose
 
 ## Cross-References
 
-- Visual verification guide: `docs/human/verification-for-non-coders.md`
-- Escalation protocol: `docs/human/escalation-protocol.md`
+- Visual verification guide: `docs/human/verification-for-non-coders.md` (central repository only; not delivered with this skill)
+- Escalation protocol: `docs/human/escalation-protocol.md` (central repository only; not delivered with this skill)
 - Debugging with AI (full): `01-workflow-methodology/debugging-with-ai.md`
-- Plain language prompts: `docs/human/plain-language-prompts.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Plain language prompts: `docs/human/plain-language-prompts.md` (central repository only; not delivered with this skill)
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

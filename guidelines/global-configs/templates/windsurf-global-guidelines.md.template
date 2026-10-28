@@ -11,11 +11,15 @@ when `AGENTS.md` points you at a specific file.
 
 This project references shared guidelines.
 
+Start from the project's own steering files: `AGENTS.md` (binding rules) and `WORLD.md` (product
+intent and the declared `mode`). Read `README.md` for orientation when the project is new to you.
+
 If a `_guidelines/` folder exists in the project root (created by `sync-guidelines.ps1`):
-  - Read `_guidelines/_index/MASTER_INDEX.md` to discover relevant files
+  - Open a guideline there directly when you can name the file the task needs
   - Prefix all file loads with `_guidelines/`
+  - Use `_guidelines/_index/MASTER_INDEX.md` only as a lookup when you cannot name the file
   - These paths are inside the project and always readable
 
 Otherwise, use the canonical source:
   - Base path: `{{GUIDELINES_ROOT}}`
-  - Start with `_index/MASTER_INDEX.md` from that path
+  - Open a guideline by name; use `_index/MASTER_INDEX.md` only as a lookup

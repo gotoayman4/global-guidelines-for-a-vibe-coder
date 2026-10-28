@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: unsaved-changes-protection activated -- Source: _skills/unsaved-changes-protection/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -110,4 +108,4 @@ When generating or modifying form components:
 - Form patterns: `06-frontend-patterns/form-patterns.md`
 - Dialog patterns: `06-frontend-patterns/dialog-patterns.md`
 - UX design principles: `02-engineering-practices/ux-design-principles.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

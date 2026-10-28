@@ -34,7 +34,7 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 
 If the project has path-specific instructions (e.g., `.github/instructions/react.instructions.md`), load those as well.
 
-**Guideline base path:** `[PATH_TO_GLOBAL_GUIDELINES]/`
+**Guideline base path:** Use `_guidelines/` if the project mirror exists; otherwise use the central repo path from your machine's global agent config.
 
 ---
 
@@ -104,4 +104,4 @@ When generating or modifying UI code:
 - Design system governance: `08-governance/design-system-governance.md`
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`
 - Accessibility standards: `02-engineering-practices/accessibility-standards.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

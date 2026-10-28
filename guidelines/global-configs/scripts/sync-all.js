@@ -3,9 +3,9 @@
 /**
  * sync-all.js — Batch-sync every project listed in sync-projects.json.
  *
- * INTENT: one non-interactive entry point for the fleet (D191). The GUI
+ * INTENT: one non-interactive entry point for the fleet. The GUI
  * (sync-manager.ps1) remains for interactive use; this script is what
- * `npm run sync:all` and D192's fleet re-sync call.
+ * `npm run sync:all` calls, and what a fleet re-sync invokes.
  *
  * CONSTRAINT: never invents projects — only entries already in
  * sync-projects.json. A missing path or a failed PowerShell run marks that
@@ -28,6 +28,13 @@
  * `npm run sync:drift` prints, never the registry. The recorded hashes still say what content was
  * delivered, and when.
  *
+ * A DRY RUN RUNS THE REAL PREFLIGHT. `--dry-run` used to return before PowerShell, so it reported
+ * "would sync" for every registered project without executing the one check that can block a sync —
+ * a project command still naming a retired script. `sync-guidelines.ps1 -DryRun` runs the same
+ * source-backed preflight and writes nothing, so the preview now predicts the run instead of
+ * describing an intention. `SYNC_ALL_REGISTRY` points the CLI at another registry; the test suite
+ * uses it so no test asserts the live fleet's state.
+ *
  * CAVEAT: sync-guidelines.ps1 can also write global tool configs under the user profile
  * (opencode/Qoder/Windsurf/Cursor/VS Code). That step is OPT-IN here:
  * `--with-global-configs` (or `SYNC_WITH_GLOBAL_CONFIGS=1`). It is the same content for every
@@ -48,7 +55,7 @@ const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const PROJECTS_PATH = path.join(REPO_ROOT, 'sync-projects.json');
+const PROJECTS_PATH = process.env.SYNC_ALL_REGISTRY || path.join(REPO_ROOT, 'sync-projects.json');
 const SOURCE = path.join(REPO_ROOT, 'guidelines');
 const SYNC_PS1 = path.join(__dirname, 'sync-guidelines.ps1');
 const dryRun = process.argv.includes('--dry-run');
@@ -107,11 +114,6 @@ function syncProject(project, options = {}) {
     return { ok: false, failed: 1, project: { ...project, lastSyncOutcome: 'failed' } };
   }
 
-  if (dryRunFlag) {
-    console.log(`  OK   ${name}: would sync → ${projectPath}`);
-    return { ok: true, failed: 0, project: { ...project, lastSyncOutcome: 'synced' } };
-  }
-
   const args = [
     '-NoProfile',
     '-ExecutionPolicy',
@@ -125,39 +127,50 @@ function syncProject(project, options = {}) {
   // for every project, cannot complete on a restricted host, and is not what the drift checker
   // verifies — so it runs only when the caller explicitly asks for it.
   if (!withGlobalConfigs) args.push('-SourceOnly');
+  // A preview must exercise the mirror preflight; returning before PowerShell reported "would sync"
+  // for projects whose own commands name a deleted source script.
+  if (dryRunFlag) args.push('-DryRun');
 
   const result = run('powershell.exe', args, { windowsHide: true });
 
-  if (result.status === 0) {
-    const source = hashTree(sourceRoot);
-    const mirrorPath = path.join(projectPath, '_guidelines');
-    const delivered = fs.existsSync(mirrorPath) ? hashTree(mirrorPath) : null;
-
-    if (delivered && delivered.hash === source.hash) {
-      project.lastSyncOutcome = 'synced';
-      project.lastSynced = now;
-      project.contentHash = source.hash;
-      project.hashFiles = source.count;
-      // The skills corpus is a second delivered artifact. Recording only the guidelines hash let
-      // the registry keep asserting the previous corpus after a sync that replaced it — a stale
-      // record is the same defect the date-versus-hash rule exists for (check-sync-drift.js).
-      if (skills) {
-        project.skillsHash = skills.hash;
-        project.skillsFiles = skills.count;
-      }
-      console.log(`  OK   ${name}`);
-      return { ok: true, failed: 0, project };
-    }
-
+  if (result.status !== 0) {
     project.lastSyncOutcome = 'failed';
-    project.lastSynced = project.lastSynced || null;
-    console.error(`  FAIL ${name}: sync exited 0 but the mirror does not match the source — verify manually`);
+    // A PowerShell terminating error carries the reason on stderr while stdout ends with ordinary
+    // progress lines; prefer stderr so the failure, not the last thing printed, is what is shown.
+    const detail = result.stderr.trim() ? result.stderr : result.stdout;
+    const tail = detail.trim().split('\n').slice(-6).join(' | ');
+    console.error(`  FAIL ${name} (exit ${result.status}): ${tail}`);
     return { ok: false, failed: 1, project };
   }
 
+  if (dryRunFlag) {
+    console.log(`  OK   ${name}: preflight passed (dry run wrote nothing)`);
+    return { ok: true, failed: 0, project };
+  }
+
+  const source = hashTree(sourceRoot);
+  const mirrorPath = path.join(projectPath, '_guidelines');
+  const delivered = fs.existsSync(mirrorPath) ? hashTree(mirrorPath) : null;
+
+  if (delivered && delivered.hash === source.hash) {
+    project.lastSyncOutcome = 'synced';
+    project.lastSynced = now;
+    project.contentHash = source.hash;
+    project.hashFiles = source.count;
+    // The skills corpus is a second delivered artifact. Recording only the guidelines hash let
+    // the registry keep asserting the previous corpus after a sync that replaced it — a stale
+    // record is the same defect the date-versus-hash rule exists for (check-sync-drift.js).
+    if (skills) {
+      project.skillsHash = skills.hash;
+      project.skillsFiles = skills.count;
+    }
+    console.log(`  OK   ${name}`);
+    return { ok: true, failed: 0, project };
+  }
+
   project.lastSyncOutcome = 'failed';
-  const tail = (result.stderr || result.stdout || '').trim().split('\n').slice(-3).join(' | ');
-  console.error(`  FAIL ${name} (exit ${result.status}): ${tail}`);
+  project.lastSynced = project.lastSynced || null;
+  console.error(`  FAIL ${name}: sync exited 0 but the mirror does not match the source — verify manually`);
   return { ok: false, failed: 1, project };
 }
 

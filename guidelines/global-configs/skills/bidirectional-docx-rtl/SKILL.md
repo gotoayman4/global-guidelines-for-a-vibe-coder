@@ -14,8 +14,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: bidirectional-docx-rtl activated -- Source: _skills/bidirectional-docx-rtl/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -29,7 +27,7 @@ Activate when:
 
 Do NOT activate when:
 - The document is LTR-only (English, French, etc.) with no Arabic/RTL content
-- The task involves only UI rendering (use `../rtl-shadcn-setup/SKILL.md` instead)
+- The task involves only UI rendering (use the `rtl-shadcn-setup` skill instead)
 - The task involves PDF generation (different OOXML pipeline via LibreOffice)
 - User is working with HTML/CSS RTL, not DOCX OOXML
 - The task involves spell-check/proofing language — use `../docx-per-paragraph-language/SKILL.md` instead
@@ -43,7 +41,7 @@ Load full versions from:
 1. `02-engineering-practices/bidirectional-design-principles.md` — RTL architecture requirements (Normative)
 2. `05-stack-guides/rtl-tech-stack.md` — RTL tech stack, numeral policy, bilingual rules (Normative)
 
-Also reference the working implementation in:
+Also reference the working implementation in the reference project (illustrative paths — use your own project's equivalents):
 - `packages/backend/src/modules/export/serializers/docx-serializer.service.ts` — Primary DOCX serializer with full RTL handling
 - `packages/backend/src/modules/export/compile/compile.service.ts` — Compile service (direction normalization)
 - `packages/backend/src/modules/export/compile/compiled-document.interface.ts` — Block type definitions with direction/alignment
@@ -197,11 +195,11 @@ You are an OOXML/bidirectional text specialist for the `docx` npm library (v9.7.
 
 ## Cross-References
 
-- Working implementation: `packages/backend/src/modules/export/serializers/docx-serializer.service.ts`
+- Working implementation (reference project, illustrative): `packages/backend/src/modules/export/serializers/docx-serializer.service.ts`
 - Compile service (direction normalization): `packages/backend/src/modules/export/compile/compile.service.ts`
 - Compiled document interface: `packages/backend/src/modules/export/compile/compiled-document.interface.ts`
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`
 - RTL tech stack: `05-stack-guides/rtl-tech-stack.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)
 - RTL UI setup skill (for frontend RTL): `global-configs/skills/rtl-shadcn-setup/SKILL.md`
 - Per-paragraph/run language skill (fourth layer): `global-configs/skills/docx-per-paragraph-language/SKILL.md`

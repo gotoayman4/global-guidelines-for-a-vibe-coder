@@ -127,7 +127,7 @@
   ],
 
   "skills": {
-    "_comment": "`_skills/` is a FILTERED mirror, not a whole-directory copy: only the skills that fit a project's stack are delivered, and the decision lives in one place — global-configs/scripts/lib/plan-skills.js. So `check-sync-drift.js` verifies each project against the PLAN that selector produces (every planned skill present and byte-identical, nothing left behind), never against this whole source corpus. A whole-corpus hash comparison would report every project as drifted by construction, because 12–16 of 20 skills is the correct delivery.",
+    "_comment": "`_skills/` is a FILTERED mirror, not a whole-directory copy: only the skills that fit a project's stack are delivered, and the decision lives in one place — global-configs/scripts/lib/plan-skills.js. So `check-sync-drift.js` verifies each project against the PLAN that selector produces (every planned skill present and byte-identical, nothing left behind), never against this whole source corpus. A whole-corpus hash comparison would report every project as drifted by construction, because a filtered subset is the correct delivery.",
     "source": "global-configs/skills/*/SKILL.md",
     "target": "_skills",
     "gitignoreEntry": "_skills/",

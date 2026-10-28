@@ -8,26 +8,26 @@ entire directory as `_guidelines/` in their project root.
 
 ## Start Here
 
-1. [`_index/MASTER_INDEX.md`](_index/MASTER_INDEX.md) — complete file registry, task-type routing, dependency graph
-2. [`_index/AGENT_BOOT_PROTOCOL.md`](_index/AGENT_BOOT_PROTOCOL.md) — session initialization procedure
-3. [`_index/RETRIEVAL_RULES.md`](_index/RETRIEVAL_RULES.md) — loading strategies and token budgets
-4. [`_index/GLOSSARY.md`](_index/GLOSSARY.md) — terminology reference
+1. Your project's `AGENTS.md` (constitution) and `WORLD.md` (intent + mode) — the only every-session reads.
+2. [`_index/MASTER_INDEX.md`](_index/MASTER_INDEX.md) — navigation: open it to find the file a task needs, not as a session ritual.
+3. [`_index/GLOSSARY.md`](_index/GLOSSARY.md) — terminology, when a term is unclear.
+4. [`_index/RETRIEVAL_RULES.md`](_index/RETRIEVAL_RULES.md) and [`_index/AGENT_BOOT_PROTOCOL.md`](_index/AGENT_BOOT_PROTOCOL.md) — how to load the rest, on demand.
 
 ## Layout
 
 | Directory | Content |
 |---|---|
 | `_index/` | Entry points and navigation |
-| `00-ai-fundamentals/` | AI mindset, setup, prompt engineering |
+| `00-ai-fundamentals/` | AI mindset, agent orchestration, context, prompt engineering, AI security, multi-tool |
 | `01-workflow-methodology/` | Planning, debugging, refactoring, workflow-friction audits |
 | `02-engineering-practices/` | UX, accessibility, testing, security, performance |
 | `03-git-and-ci/` | Git workflow, local CI strategy, CI/CD, environment management |
 | `04-architecture/` | Frontend/backend/database/API/state/router patterns |
-| `05-stack-guides/` | React, TypeScript, MUI, shadcn, NestJS, Supabase, Playwright, Vite, RTL |
+| `05-stack-guides/` | React, TypeScript, MUI, shadcn, NestJS, Supabase, Playwright, Vite, Electron, RTL |
 | `06-frontend-patterns/` | Forms, tables, dialogs, notifications, responsive, visual design |
-| `07-documentation/` | Documentation strategy, authoring standards, ADR template |
-| `08-governance/` | AI governance, rule extraction, classification, design-system governance |
-| `global-configs/templates/` | Starter files for AGENTS.md, CLAUDE.md, WORLD.md, tool configs |
+| `07-documentation/` | Documentation strategy, ADR template |
+| `08-governance/` | AI governance, design-system governance |
+| `global-configs/templates/` | Starter files for AGENTS.md, WORLD.md, README.md, AI_ARCHITECTURE.md, DEVTOOLS.md and the per-tool configs |
 | `global-configs/skills/` | `<name>/SKILL.md` skill directories installed to project `_skills/` |
 | `global-configs/scripts/` | Sync tooling and validation scripts |
 

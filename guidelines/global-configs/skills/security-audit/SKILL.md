@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: security-audit activated -- Source: _skills/security-audit/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -132,4 +130,4 @@ You are a security engineer performing a focused security audit. You assume all 
 - Security engineering mandates: `02-engineering-practices/security-engineering.md`
 - AI security governance: `00-ai-fundamentals/ai-security-governance.md`
 - Error handling patterns: `02-engineering-practices/error-handling-philosophy.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

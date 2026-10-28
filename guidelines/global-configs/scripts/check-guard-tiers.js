@@ -21,8 +21,9 @@
  * control that exists only in a directory listing.
  *
  * THE ASSERTION THIS GUARD SOFTENED, AND WHY. The proposal said `npm run validate` must EQUAL the
- * `always` + `standard+` set. Measured, it does not, and it should not: six guards are milestone-
- * or fleet-scoped by design (`check-sync-drift` and `check-project-freshness` read the fleet registry). Forcing them into the
+ * `always` + `standard+` set. Measured, it does not, and it should not: three guards are milestone-
+ * or fleet-scoped by design (`check-docs-freshness`, `check-project-freshness` and
+ * `check-sync-drift` — the last two read the fleet registry). Forcing them into the
  * gate would make the gate depend on state it does not own. The enforceable form is therefore:
  * every `always` guard IS in the gate, and every `standard+` guard the gate does not reach is
  * REPORTED — named, so that its absence is a decision rather than an accident. That report is

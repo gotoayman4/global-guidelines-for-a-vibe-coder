@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: test-generation activated -- Source: _skills/test-generation/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -110,4 +108,4 @@ You are a senior QA engineer. Generate tests that verify BEHAVIOR, not implement
 
 - Test philosophy: `02-engineering-practices/testing-philosophy.md`
 - Test patterns: `02-engineering-practices/testing-patterns.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

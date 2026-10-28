@@ -12,8 +12,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: electron-auto-update activated -- Source: _skills/electron-auto-update/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -60,7 +58,7 @@ Companion guidelines, only when the task touches their area:
 - Unsigned builds MAY be published publicly; no owner decision or ADR is required. Windows users see SmartScreen, macOS cannot auto-update an unsigned app, and `sha512` proves integrity, not publisher identity — disclose the unknown publisher and never claim a verified publisher the build does not have.
 - Never force a restart over unsaved work.
 - Keep `allowDowngrade = false`; roll back by publishing a higher version.
-- Never let release notes cross the IPC boundary as markup. `releaseNotes` is GitHub's rendered HTML for the release body: convert it to plain text in main and render it as text. A visible `<li>`, `###` or `&#39;` in the notice is a conversion defect.
+- Never let release notes cross the IPC boundary as markup. `releaseNotes` is GitHub's rendered HTML for the release body: convert it to plain text in main and render it as text — a sanitiser is not a substitute for the converter, because the parser itself is the attack surface (§5.8). A visible `<li>`, `###` or `&#39;` in the notice is a conversion defect.
 - Never gate **Download** on the notes. Fold them by default, expand on click, and pick the language by the app's own setting — not the OS locale — falling back to the whole body rather than to silence.
 - Never compare a raw git tag with a raw package version, and never parse a checked-out file before normalizing `\r\n`: a Windows runner fails the first release on both, before anything is published.
 - Never call an in-workflow draft → latest flip an approval, and never record a release token as scoped without reading its class and scope back.

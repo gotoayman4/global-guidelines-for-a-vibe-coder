@@ -150,12 +150,14 @@ function renderTables(categories) {
  * WHY IT IS NOT THE GUIDELINE ROW. The guideline table's columns are `File | Status | Scope | Tokens |
  * Tags`, and a skill's `scope` says which projects the skill ASSUMES — not which skills a given
  * project receives. That distinction was load-bearing and invisible: the table is inside the
- * `_guidelines/` mirror, and every delivered tool config (Cursor, Windsurf, Trae, Gemini, Qoder,
- * Kilo) points the agent at `_guidelines/_index/MASTER_INDEX.md`. Measured 2026-10-19: an agent
+ * `_guidelines/` mirror, and every delivered tool config at the time (Cursor, Windsurf, Trae, Gemini,
+ * Qoder, Kilo) pointed the agent at `_guidelines/_index/MASTER_INDEX.md`. Measured 2026-10-19: an agent
  * working in a MUI project could follow that table straight to `rtl-shadcn-setup`,
  * `shadcn-design-system` and `tiptap-tailwind-reset` — the three skills `plan-skills.js` excludes
  * from that project precisely because they contradict its constitution. The filter was real, and the
- * table that outranked it had no applicability column to check.
+ * table that outranked it had no applicability column to check. The tool configs now name
+ * `AGENTS.md` as the entry point, but the index is still reachable from `AGENTS.md`, so the column
+ * remains the fix.
  *
  * So the skills table carries `Applies to`, read through `skillScope()` — the SAME function
  * `plan-skills.js` decides with, not a private re-read of `appliesTo`. That distinction is load-

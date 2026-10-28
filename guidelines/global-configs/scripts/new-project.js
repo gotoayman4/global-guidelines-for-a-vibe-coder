@@ -92,13 +92,9 @@ function injectMode(worldContent, mode) {
   const date = new Date().toISOString().split('T')[0];
   const marker = '## What This Project Is';
   const modeLine = `- **mode:** \`${mode}\` — \`vibe | standard | guarded\` per \`_guidelines/01-workflow-methodology/speed-tiered-workflow.md\``;
-  // The Set line is the ONE dated record a boot file keeps: when the mode was set and why.
-  // A scaffold that writes a Transition log block teaches every later session to append to it,
-  // and history in a boot file is paid by every session (speed-tiered-workflow.md §A Release
-  // Escalation Is an Override; documentation-strategy.md rule 6). Mode changes are recorded in
-  // `docs/changelog/`; a release exit escalates through an override the gate reads, not an edit.
-  const setLine = `- **Set:** ${date} — initialized as \`${mode}\` by new-project.js; revisit at every milestone.`;
-  const escalationLine = '- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (GS_RELEASE_GATE=1 or the gitignored `.release-override`); this file changes only when the steady state changes. Transition history lives in `docs/changelog/` — a boot file carries no history.';
+  // Mode history belongs in commits, not in a boot file read every session.
+  const setLine = `- **Set:** ${date} — initialized as \`${mode}\` by new-project.js; revisit at every milestone. A release does not change it: the mode is a loop-speed setting, not a lifecycle stage.`;
+  const escalationLine = '- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (GS_RELEASE_GATE=1 or the gitignored `.release-override`), and records its **release class** — `pilot` (live testing, demo, beta) or `production` (final launch) — in the release tag or commit message; this file changes only when the steady state changes. Record the reason in the commit message — no separate transition log.';
 
   if (worldContent.includes('## Speed Mode')) {
     let next = worldContent.replace(/^[ \t]*- \*\*mode:\*\*.*$/m, modeLine);
@@ -136,7 +132,11 @@ function injectMode(worldContent, mode) {
 function mergeGateScripts(pkg) {
   const scripts = pkg.scripts || {};
   const fast = ['npm run lint', 'npm run type-check'];
-  if (scripts.test || scripts['test:unit']) fast.push('npm test -- --run --changed');
+  // The fast lane names the script the project actually has: a project with only `test:unit`
+  // would otherwise get `npm test -- --run --changed`, which resolves to npm's placeholder and
+  // exits non-zero on a project that has tests.
+  if (scripts.test) fast.push('npm test -- --run --changed');
+  else if (scripts['test:unit']) fast.push('npm run test:unit -- --run --changed');
   const additions = {
     'gate:fast': fast.join(' && '),
     // The dependency audit runs through a wrapper, never a bare `npm audit`: a bare audit that
@@ -159,8 +159,10 @@ function mergeGateScripts(pkg) {
  * The pre-push hook the scaffold writes.
  *
  * It implements the constitution's gate rule (AGENTS.starter.md, "Pre-Commit + Pre-Push Gates"):
- * the DECLARED MODE picks the gate, and BOTH branches add the dependency-audit wrapper and the
- * clean-tree check. Four things the previous skeleton got wrong, each measured:
+ * the DECLARED MODE picks the gate (vibe: `gate:fast`; standard: lint + type-check + the full
+ * suite; guarded: that chain + the build), and EVERY branch adds the always tier, the
+ * dependency-audit wrapper and the clean-tree check. Four things the previous skeleton got wrong,
+ * each measured:
  *
  *   - It read the mode with a `grep` in the hook. A grep here is a SECOND reader of `WORLD.md`, and
  *     a second reader is a second opinion that drifts — it matched `- **Transition mode:**` and
@@ -168,9 +170,9 @@ function mergeGateScripts(pkg) {
  *     reader now, and an unreadable mode FAILS SAFE to the full chain: an unreadable mode must
  *     never buy the fast path.
  *   - It ran the full pipeline with `&& npm test -- --run && npm run build`, so a project without
- *     a `test` or a `build` script died on "Missing script" — a scaffold that blocks a legitimate
- *     project at its first push. A script the project does not have is now SKIPPED WITH A NOTE; a
- *     script that EXISTS and FAILS still fails the push.
+ *     a `test` or a `build` script either died on "Missing script" or learned to skip the gate. A
+ *     required script that is missing now FAILS the push with a message, exactly like one that runs
+ *     and fails: an unexecuted check must never read as green.
  *   - It carried a comment where the always tier should have been ("Add this project's always-tier
  *     guards here"). The tier is now DERIVED from the guards' own `@tier` docblocks, so a guard
  *     that declares itself `always` is in this gate without anybody editing this file.
@@ -193,15 +195,21 @@ function prePushHook() {
     '#     fast path.',
     '#   · A release or milestone exit escalates through the OVERRIDE below (GS_RELEASE_GATE=1 or',
     '#     `.release-override`) — never by editing WORLD.md and editing it back. The declared',
-    '#     mode changes only when the steady state changes.',
+    '#     mode changes only when the steady state changes, and the release CLASS (pilot vs',
+    '#     production) is recorded in the release tag or commit, not in WORLD.md.',
+    '#   · The gate depth follows the mode: vibe runs gate:fast; standard runs lint → type-check',
+    '#     → the full suite and defers the BUILD to the ship boundary (every release builds, and',
+    '#     deploys what it built); guarded adds the build and the path-aware extras per push.',
     '#   · The always tier is DERIVED from the guards\' own `@tier` docblocks, not listed here: a',
     '#     list kept by hand in a hook goes stale, and it fails in the direction nobody notices.',
-    '#   · A step this project does not have is SKIPPED WITH A NOTE, never a hard failure. A step',
-    '#     that EXISTS and FAILS fails the push.',
+    '#   · A missing required script fails the push, just like a script that runs and fails.',
     '#   · The audit and the clean-tree check run in EVERY mode: `vibe` defers the full suite,',
     '#     never the security or the honesty checks.',
     '#',
-    '# `--no-verify` is forbidden in every mode. A step that cannot run must fail, never pass.',
+    '# `--no-verify` is forbidden in every mode. A required npm script that cannot run must fail,',
+    '# never pass. The one honest exception is the always tier before the first sync: with no',
+    '# `_guidelines/` there are no guard tiers to derive, and the hook says so out loud rather',
+    '# than inventing a pass it did not earn.',
     '',
     'set -e',
     '',
@@ -226,10 +234,7 @@ function prePushHook() {
     '  echo "pre-push gate: release override active — running the standard chain"',
     'fi',
     '',
-    '# run_step <script> [args...] — a REQUIRED step: a project that has no such script has no gate,',
-    '# so the hook fails and says which script to wire. Skipping it would report green over a check',
-    '# that never ran. run_optional is for a step that is genuinely additive (the audit wrapper);',
-    '# its absence is printed, never silent.',
+    '# A missing required script must not turn an unexecuted check into a green gate.',
     'has_script() {',
     '  node -e "const s=(require(\'./package.json\').scripts)||{};process.exit(s[process.argv[1]]?0:1)" "$1" 2>/dev/null',
     '}',
@@ -237,19 +242,10 @@ function prePushHook() {
     '  step_script="$1"',
     '  shift',
     '  if ! has_script "$step_script"; then',
-    '    echo "pre-push FAIL: required script \"$step_script\" is missing from package.json — wire it, or declare a cheaper mode" >&2',
+    '    echo "pre-push FAIL: required script \"$step_script\" is missing from package.json — wire it before pushing" >&2',
     '    exit 1',
     '  fi',
     '  npm run "$step_script" "$@"',
-    '}',
-    'run_optional() {',
-    '  step_script="$1"',
-    '  shift',
-    '  if has_script "$step_script"; then',
-    '    npm run "$step_script" "$@"',
-    '  else',
-    '    echo "  (note: $step_script is not wired — this project has no such script)"',
-    '  fi',
     '}',
     '',
     '# The always tier runs in EVERY mode. The set is derived by the guard that owns the tiers, so',
@@ -265,16 +261,21 @@ function prePushHook() {
     '  # ship-boundary step, not a per-push one.',
     '  run_step gate:fast',
     'else',
-    '  # The full pipeline: lint → type-check → test → build.',
+    '  # lint + type-check + the full suite. The BUILD waits for the ship boundary in `standard`:',
+    '  # every release builds, and deploys what it built, so a break surfaces before a user sees',
+    '  # it. `guarded` keeps the build per push — a broken artifact must be found before the',
+    '  # merge lands, not at the next release.',
     '  run_step lint',
     '  run_step type-check',
     '  run_step test -- --run',
-    '  run_step build',
+    '  if [ "$MODE" = "guarded" ]; then',
+    '    run_step build',
+    '  fi',
     'fi',
     '',
     '# The dependency audit, through the project\'s own wrapper. A bare `npm audit` that cannot',
     '# reach the registry reports nothing and exits 0 — a silent pass.',
-    'run_optional audit:gate',
+    'run_step audit:gate',
     '',
     '# Clean-tree: decided on CONTENT, never on git\'s stat cache. A stat-based check reports files',
     '# as modified whose worktree blob is identical to the index, and blocks a genuinely clean push.',

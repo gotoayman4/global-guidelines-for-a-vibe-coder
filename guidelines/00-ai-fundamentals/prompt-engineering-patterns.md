@@ -19,7 +19,7 @@ Every prompt includes all five; omitting any degrades quality predictably. Anti-
 3. **Plan-before-code:** for non-trivial features, force a plan first and forbid code until reviewed. Plans are cheap; rewrites cost 5–10×.
 4. **Incremental scope (1-feature rule):** one prompt = one change. Multi-task prompts multiply hallucination surface and produce unreviewable diffs.
 5. **Force reasoning before generation:** "Before writing code, explain: why this approach, trade-offs, edge cases handled/not, what would make this wrong in production." If the AI can't articulate the why, the code won't be good.
-6. **Reference existing conventions:** point at 2–3 existing files per prompt ("read useApi.ts and ErrorBoundary.tsx; follow these patterns exactly"). AI treats each session as a new project unless told otherwise.
+6. **Reference existing conventions:** point at the existing files that show the pattern ("read useApi.ts and ErrorBoundary.tsx; follow these patterns exactly"). Name only the files the task needs — no fixed count. AI treats each session as a new project unless told otherwise.
 7. **Specify output format:** e.g., summary (≤3 sentences) → modified files inline → files to test → risks to verify manually.
 
 ## Calibration Ladder
@@ -32,7 +32,7 @@ Vague ("add login") → unusable · Goal-only → partial · Constrained (+ patt
 |---|---|
 | "Do it right" | Define right: tests pass, lint clean |
 | Mega-prompt (auth+payments+tests) | Separate focused prompts |
-| No reference files | 2–3 pattern files every time |
+| No reference files | Point at the existing files that show the convention |
 | Accepting first output | Iterate at least once |
 | No acceptance criteria | "This is correct when: [conditions]" |
 | Over-specifying HOW | Specify WHAT, not implementation |

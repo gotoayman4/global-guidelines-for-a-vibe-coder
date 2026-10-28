@@ -32,11 +32,11 @@
 
 - **Mode Sets Test Depth.** vibe: smoke-run each iteration; a regression test when the same path breaks twice or at a milestone. standard: behavioral tests on critical/high-risk code, a regression test with every fix, integration at boundaries. guarded: full pyramid + critical-flow E2E before ship. Ship boundary in ALL modes: login, payments, permissions and persistence verified by automated E2E against the deployed target, LTR and RTL.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. Review AI-written assertions: they pass when the logic is wrong.
+- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. standard/guarded: tests first for critical features, same iteration otherwise. Review AI-written assertions; plausible tests can miss wrong logic.
   → Source: `02-engineering-practices/testing-philosophy.md`
 - **Evidence Before "Done".** A change is unverified until exercised — "it compiled" is false. NEVER claim a check passed without running it. Report WHAT ran, the RESULT, and anything NOT verified. The project's `type-check` is the type verdict, not an editor diagnostic. Detail: `agent-verification-loop.md`.
   → Source: `02-engineering-practices/agent-verification-loop.md`
-- **Pre-Commit + Pre-Push Gates.** Hooks (husky + lint-staged) lint, type-check and format on every commit. The pre-push gate is the declared mode's: `gate:fast` in vibe; `[FILL — e.g., npm run lint && npm run type-check && npm test -- --run && npm run build]` in standard/guarded, plus the dependency-audit wrapper and the clean-tree check. A required step whose script is missing FAILS the gate — never skipped as green. `--no-verify` is forbidden; hooks MUST NOT need real secrets. A release exit runs the full gate via the release override and writes one receipt to `docs/gate-receipts/<UTC-stamp>.md`. Detail: `local-ci-strategy.md`.
+- **Pre-Commit + Pre-Push Gates.** Hooks (husky + lint-staged) lint, type-check and format on every commit. Every mode's pre-push gate also runs the `always` guard tier, the dependency-audit wrapper and the content-based clean-tree check. The mode sets the rest: `gate:fast` in vibe; lint + type-check + the full suite in standard, which defers the build to the ship boundary; that chain plus the build and path-aware extras in guarded — `[FILL: the project's script names]`. A required step whose script is missing FAILS the gate — never skipped as green. `--no-verify` is forbidden; hooks MUST NOT need real secrets. A release exit runs the full gate via the release override and writes one receipt to `docs/gate-receipts/<UTC-stamp>.md`. Detail: `local-ci-strategy.md`.
   → Source: `03-git-and-ci/local-ci-strategy.md`
 
 ## Git (Load for All Code Changes)
@@ -104,7 +104,7 @@ Never keep a hand-maintained copy of a delivered skill in a native store — it 
 
 - **Arabic-First Architecture.** Design every component for bidirectional text from day one — direction handled at shell, document, paragraph and inline-span levels. Arabic support is architectural, not a localization afterthought.
   → Source: `05-stack-guides/rtl-tech-stack.md`
-- **Logical CSS Properties Exclusively.** Only logical properties (Tailwind `ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; Emotion `marginInlineStart`). NEVER `ml-*`, `pl-*`, `left`, `right`, `text-left`. Lint-enforced.
+- **Logical CSS in UI Chrome.** Use logical properties (`ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; `marginInlineStart`). Physical properties are forbidden except in explicit LTR contexts (code, math, URLs, emails). Lint-enforced.
   → Source: `02-engineering-practices/bidirectional-design-principles.md`
 - **Portal `dir` + i18n Keys + Dual-Direction Test.** Portals inherit `direction` from `<html>` — set explicit `dir` only where direction differs. All user-facing strings use i18n keys. vibe: one direction per iteration, both at milestone; standard/guarded: dual-direction E2E before commit. Typography + numerals: `_guidelines/05-stack-guides/rtl-tech-stack.md`.
   → Source: `05-stack-guides/rtl-tech-stack.md`
@@ -120,7 +120,7 @@ Never keep a hand-maintained copy of a delivered skill in a native store — it 
 
 ### Session Bootstrap
 
-Read `AGENTS.md` and `WORLD.md` (intent + `mode`) — always; `README.md` when the project is new to you. Then name the 2–4 files THIS task needs, inside the mode's read budget. `_guidelines/_index/MASTER_INDEX.md` is a lookup for a file you cannot name, not a required read. UI work also loads `_guidelines/02-engineering-practices/bidirectional-design-principles.md`.
+Read `AGENTS.md` and `WORLD.md` (intent + `mode`) — always; `README.md` when the project is new to you. Then load only task-relevant files on demand. `_guidelines/_index/MASTER_INDEX.md` is a lookup for a file you cannot name, not a required read. UI work also loads `_guidelines/02-engineering-practices/bidirectional-design-principles.md`.
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -139,7 +139,7 @@ Read `AGENTS.md` and `WORLD.md` (intent + `mode`) — always; `README.md` when t
 | Auth                 | [FILL]     | [FILL]  |
 | Hosting              | [FILL]     | [FILL]  |
 
-### Forbidden Dependencies and Patterns
+### Forbidden Patterns and Dependencies
 
 - Do not suggest: [FILL — e.g., Next.js, Tailwind, Redux]
 - [FILL — additional forbidden items]
@@ -149,6 +149,7 @@ Read `AGENTS.md` and `WORLD.md` (intent + `mode`) — always; `README.md` when t
 - Shared Components (if applicable): [FILL — e.g., "Use StandardTable for all data tables"]
 - Design System Tokens (if applicable): [FILL — e.g., "Use theme.palette.* tokens, never hex values"]
 - API Design — endpoints under: [FILL — e.g., /api/v1/]; response envelope: [FILL — e.g., { data, pagination?, error? }]
+- [FILL — Additional sections as needed for your project]
 
 ### Build & Validation Commands
 
@@ -163,13 +164,9 @@ npm run test:e2e     # E2E tests
 npm run gate:fast    # lint + type-check + changed tests — the edit loop; the pre-push gate in vibe
 ```
 
-### Forbidden Patterns Quick Scan
-
-No `console.log` in production · no `!important` · no TS `any`/`eslint-disable`/`@ts-ignore` without why · no inline styles when tokens exist · no hardcoded UI strings (i18n keys) · no `TODO`/`FIXME`/`HACK` without permission · no placeholder UI · no physical-direction CSS · no raw hex/pixel/font-family · no `letter-spacing`/text opacity on Arabic · no custom nav-blocking · no non-tuple cache keys.
-
 ### How to Use This File
 
 1. **Mirror** the guidelines into `_guidelines/` with `npm run sync:all` (`npm run sync:drift` fails when the mirror is behind the source); **create** this file as `AGENTS.md` in the project root; replace every `[FILL]`; set `mode` in WORLD.md.
-2. **Review** global rules — remove any that don't apply; add project mandates; commit. AI may freely add, narrow, or retire rules; a MAJOR change (removing a global baseline rule, or editing the security section) needs an explicit recorded owner decision.
+2. **Review** applicability and add project mandates; commit. AI may change project-specific rules; a MAJOR change (removing or editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
 
 **Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`

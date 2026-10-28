@@ -12,8 +12,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: docx-per-paragraph-language activated -- Source: _skills/docx-per-paragraph-language/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -39,9 +37,9 @@ Load full versions from:
 
 1. `02-engineering-practices/bidirectional-design-principles.md` — RTL architecture requirements, bilingual defaults (Normative)
 2. `05-stack-guides/rtl-tech-stack.md` — RTL tech stack, language/numeral policy (Normative)
-3. `../bidirectional-docx-rtl/SKILL.md` — Three-layer RTL DOCX generation (prerequisite knowledge)
+3. the `bidirectional-docx-rtl` skill — Three-layer RTL DOCX generation (prerequisite knowledge)
 
-Also reference the working implementation in:
+Also reference the working implementation in the reference project (illustrative paths — use your own project's equivalents):
 - `packages/backend/src/modules/export/serializers/docx-serializer.service.ts` — Primary DOCX serializer with `getRunLanguage()` and per-run/per-paragraph language
 - `packages/backend/src/modules/export/compile/compiled-document.interface.ts` — Block type definitions with per-block `direction` (used to derive language)
 - `node_modules/docx/dist/file/paragraph/run/language.d.ts` — `ILanguageOptions` type definition
@@ -261,10 +259,10 @@ You distinguish between:
 
 ## Cross-References
 
-- Working implementation: `packages/backend/src/modules/export/serializers/docx-serializer.service.ts`
+- Working implementation (reference project, illustrative): `packages/backend/src/modules/export/serializers/docx-serializer.service.ts`
 - Compiled document interface (per-block `direction`): `packages/backend/src/modules/export/compile/compiled-document.interface.ts`
-- Three-layer RTL skill (prerequisite): `global-configs/skills/bidirectional-docx-rtl/SKILL.md`
+- Three-layer RTL skill (prerequisite): the `bidirectional-docx-rtl` skill
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`
 - RTL tech stack: `05-stack-guides/rtl-tech-stack.md`
 - `docx` library `ILanguageOptions` type: `node_modules/docx/dist/file/paragraph/run/language.d.ts`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

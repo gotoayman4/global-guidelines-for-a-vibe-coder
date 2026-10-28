@@ -36,13 +36,24 @@ test('injectMode inserts a Speed Mode section once and is idempotent', () => {
 test('injectMode records the init on the Set line and never scaffolds a transition log (D428)', () => {
   const world = fs.readFileSync(path.join(STARTERS, 'WORLD.starter.md'), 'utf8');
   const once = injectMode(world, 'vibe');
-  assert.doesNotMatch(once, /Transition log/, 'a boot file carries no history — the changelog owns it');
+  assert.doesNotMatch(once, /Transition log/, 'a boot file carries no history — commits record mode changes');
   assert.match(once, /\*\*Set:\*\* \d{4}-\d{2}-\d{2} — initialized as/, 'the Set line is the one dated record');
   assert.match(once, /\*\*Escalation:\*\* [^]*release override/, 'a release exit escalates via the override');
 
   const twice = injectMode(once, 'guarded');
   assert.match(twice, /\*\*mode:\*\* `guarded`/, 'a re-inject follows the mode argument');
   assert.match(twice, /initialized as `vibe` by new-project\.js/, 'the init record is never rewritten');
+});
+
+test('injectMode records mode changes in commits when seeding missing mode guidance', () => {
+  for (const world of [
+    '## What This Project Is\nA project.\n',
+    '## Speed Mode\n- **mode:** `standard`\n\n## What This Project Is\nA project.\n',
+  ]) {
+    const seeded = injectMode(world, 'vibe');
+    assert.match(seeded, /Record the reason in the commit message/);
+    assert.doesNotMatch(seeded, /docs\/changelog/);
+  }
 });
 
 test('mergeGateScripts adds the fast gate and the audit wrapper, and includes changed tests when a test script exists', () => {
@@ -60,13 +71,26 @@ test('mergeGateScripts adds the fast gate and the audit wrapper, and includes ch
   assert.equal(again, false, 'existing gate scripts are not overwritten');
 });
 
+test('mergeGateScripts names the test script the project actually has', () => {
+  // A project whose only lane is `test:unit` got `npm test`, which resolves to npm's placeholder
+  // (`Error: no test specified`) and fails a project that does have tests.
+  const { pkg } = mergeGateScripts({ name: 'x', scripts: { 'test:unit': 'vitest' } });
+  assert.match(pkg.scripts['gate:fast'], /npm run test:unit -- --run --changed/);
+  assert.doesNotMatch(pkg.scripts['gate:fast'], /npm test/);
+});
+
 test('prePushHook reads the mode through the shipped reader and fails safe', () => {
   const hook = prePushHook();
   assert.match(hook, /read-mode\.js/, 'the mode is read by the shipped reader');
   assert.doesNotMatch(hook, /grep -Eo/, 'a grep in the hook is a second reader of WORLD.md, and it drifts');
   assert.match(hook, /MODE=standard/, 'an unreadable mode falls back to the full chain');
   assert.match(hook, /gate:fast/, 'the vibe branch runs the fast gate');
-  assert.match(hook, /run_step build/, 'the standard branch runs the full pipeline');
+  assert.match(hook, /run_step build/, 'the guarded branch runs the build');
+  const guardedGuard = hook.indexOf('if [ "$MODE" = "guarded" ]');
+  assert.ok(
+    guardedGuard > 0 && guardedGuard < hook.indexOf('run_step build'),
+    'the build sits behind the guarded condition, not in every non-vibe mode',
+  );
 });
 
 test('the hook escalates a release through an override, never a WORLD.md edit (D428)', () => {
@@ -82,14 +106,17 @@ test('the hook escalates a release through an override, never a WORLD.md edit (D
 
 test('the hook runs the audit wrapper and the clean-tree check in every mode', () => {
   const hook = prePushHook();
-  assert.match(hook, /run_optional audit:gate/);
+  assert.match(hook, /run_step audit:gate/);
   assert.match(hook, /git diff --quiet HEAD/, 'the clean-tree check is decided on content');
   // The audit and the clean-tree check sit OUTSIDE the mode branch: `vibe` defers the full
-  // suite, never the security or the honesty checks.
+  // suite, never the security or the honesty checks. Branch bodies are indented in this
+  // scaffold; these two steps are not, and both follow the branch's last step.
   const branch = hook.indexOf('if [ "$MODE" = "vibe" ]');
   assert.ok(branch > 0, 'the mode branch exists');
-  const endOfBranch = hook.indexOf("fi\n", hook.indexOf('run_step build'));
-  assert.ok(hook.indexOf('run_optional audit:gate') > endOfBranch, 'the audit runs after the mode branch');
+  const auditLine = hook.split('\n').find((line) => line.trim() === 'run_step audit:gate');
+  assert.ok(auditLine && !/^\s/.test(auditLine), 'the audit is not indented into a branch');
+  assert.ok(hook.indexOf('run_step audit:gate') > hook.indexOf('run_step build'), 'the audit runs after the mode branch');
+  assert.ok(hook.indexOf('git diff --quiet HEAD') > hook.indexOf('run_step audit:gate'), 'the clean-tree check runs last');
 });
 
 test('the hook derives the always tier instead of asking for it in a comment', () => {
@@ -101,7 +128,7 @@ test('the hook derives the always tier instead of asking for it in a comment', (
 test('a required script the project does not have FAILS the hook — never skipped as green', () => {
   const hook = prePushHook();
   assert.match(hook, /pre-push FAIL: required script/, 'a missing required script is a failure');
-  assert.match(hook, /run_optional audit:gate/, 'the audit wrapper is the only optional step');
+  assert.match(hook, /run_step audit:gate/, 'the audit wrapper is required too');
   assert.doesNotMatch(hook, /npm run lint && npm run type-check/, 'a chained pipeline dies on the first missing script');
 });
 
@@ -241,12 +268,31 @@ test('the hook fails a step that exists and fails', { skip: hasSh ? false : 'no 
   assert.notEqual(result.status, 0, 'a failing step must fail the push');
 });
 
+test('a missing audit wrapper fails the hook in every mode', { skip: hasSh ? false : 'no sh on PATH' }, () => {
+  for (const mode of ['vibe', 'standard', 'guarded']) {
+    const root = makeHookRepo(
+      {
+        'gate:fast': 'node marker.mjs fast',
+        lint: 'node marker.mjs lint',
+        'type-check': 'node marker.mjs type',
+        test: 'node marker.mjs test',
+        build: 'node marker.mjs build',
+      },
+      { 'scripts/read-mode.js': `process.stdout.write('${mode}');\n`, 'marker.mjs': MARKER },
+    );
+    const result = runSync('sh', ['.husky/pre-push'], { cwd: root });
+    assert.notEqual(result.status, 0, `${mode} must not pass without an audit`);
+    assert.match(result.stderr, /required script audit:gate is missing/);
+  }
+});
+
 test('the hook runs the fast gate in vibe and not the full pipeline', { skip: hasSh ? false : 'no sh on PATH' }, () => {
   // The reader is the vendored path the hook looks for; the corpus reader has its own test.
   const reader = 'console.log(process.env.HOOK_TEST_MODE || "standard");\n';
   const root = makeHookRepo(
     {
       'gate:fast': 'node marker.mjs fast',
+      'audit:gate': 'node marker.mjs audit',
       lint: 'node marker.mjs lint',
       test: 'node marker.mjs test',
     },
@@ -256,23 +302,45 @@ test('the hook runs the fast gate in vibe and not the full pipeline', { skip: ha
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   assert.match(result.stdout, /mode=vibe/);
   assert.ok(fs.existsSync(path.join(root, 'node_modules/fast.marker')), 'the vibe branch runs gate:fast');
+  assert.ok(fs.existsSync(path.join(root, 'node_modules/audit.marker')), 'the audit still runs in vibe');
   assert.ok(!fs.existsSync(path.join(root, 'node_modules/lint.marker')), 'the vibe branch must not run the full pipeline');
   assert.ok(!fs.existsSync(path.join(root, 'node_modules/test.marker')), 'the vibe branch must not run the suite');
 });
 
-test('the hook runs the full pipeline in standard', { skip: hasSh ? false : 'no sh on PATH' }, () => {
+test('the hook runs lint, type-check and the full suite in standard — and defers the build', { skip: hasSh ? false : 'no sh on PATH' }, () => {
   const root = makeHookRepo(
     {
       lint: 'node marker.mjs lint',
       'type-check': 'node marker.mjs type',
       test: 'node marker.mjs test',
       build: 'node marker.mjs build',
+      'audit:gate': 'node marker.mjs audit',
     },
     { 'scripts/read-mode.js': 'console.log("standard");\n', 'marker.mjs': MARKER },
   );
   const result = runSync('sh', ['.husky/pre-push'], { cwd: root });
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-  for (const marker of ['lint', 'type', 'test', 'build']) {
-    assert.ok(fs.existsSync(path.join(root, `node_modules/${marker}.marker`)), `the standard branch runs ${marker}`);
+  for (const marker of ['lint', 'type', 'test', 'audit']) {
+    assert.ok(fs.existsSync(path.join(root, `node_modules/${marker}.marker`)), `the standard gate runs ${marker}`);
+  }
+  // The build waits for the ship boundary: every release builds, and deploys what it built.
+  assert.ok(!fs.existsSync(path.join(root, 'node_modules/build.marker')), 'standard defers the build to the ship boundary');
+});
+
+test('the hook adds the build in guarded', { skip: hasSh ? false : 'no sh on PATH' }, () => {
+  const root = makeHookRepo(
+    {
+      lint: 'node marker.mjs lint',
+      'type-check': 'node marker.mjs type',
+      test: 'node marker.mjs test',
+      build: 'node marker.mjs build',
+      'audit:gate': 'node marker.mjs audit',
+    },
+    { 'scripts/read-mode.js': 'console.log("guarded");\n', 'marker.mjs': MARKER },
+  );
+  const result = runSync('sh', ['.husky/pre-push'], { cwd: root });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  for (const marker of ['lint', 'type', 'test', 'build', 'audit']) {
+    assert.ok(fs.existsSync(path.join(root, `node_modules/${marker}.marker`)), `the guarded gate runs ${marker}`);
   }
 });

@@ -10,10 +10,10 @@
 ## Repo Identity
 
 This is **not** an application project. It is a centralized development guidelines repository that:
-- Houses ~80 guideline files organized into domain directories (`guidelines/00-*` through `guidelines/08-*`)
+- Houses 65 guideline files in the domain directories (`guidelines/00-*` through `guidelines/08-*`), ~70 including `guidelines/_index/`
 - Provides templates for steering files (AGENTS.starter.md, WORLD.starter.md, etc.)
 - Ships 23 skills, each a `<name>/SKILL.md` directory, for specialized AI coding workflows
-- Includes sync tooling (`sync-manager.ps1`, `setup-global-references.ps1`) to distribute guidelines to downstream projects
+- Includes sync tooling — `sync-manager.ps1` (GUI, repo root), `guidelines/global-configs/scripts/sync-guidelines.ps1` (CLI), `sync-all.js` (batch) and `setup-global-references.ps1` (machine-global tool configs) — to distribute guidelines to downstream projects
 - Is consumed by projects via a `_guidelines/` mirror and inline rule extraction
 
 ---
@@ -98,7 +98,8 @@ npm run plan:skills     # Print which skills belong in which project, and why (n
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
 npm run sync:drift      # Fail if a project's _guidelines/ mirror or _skills/ copy is not the current source (content hash, not a date)
 npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness
-npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + docs:census + guard:tiers + test:scripts
+npm run benchmark:reform # Measure the lean model: boot cost, rule retention, reach (before ec55a54 → working tree)
+npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + test:scripts
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.
@@ -165,7 +166,7 @@ Renaming or restructuring guideline files MUST update all cross-references and t
 First AI output is ALWAYS a draft. Iterate at least once. Accepting first output without review is an anti-pattern.
 
 ### Reference Existing Files
-Always point AI at 2-3 existing guideline files as pattern templates. Without references, AI invents its own inconsistent patterns.
+Use existing guideline files as patterns when conventions are not obvious. Load only what the task needs; no fixed file count is required.
 
 ### Fresh Session Per Feature
 Use a fresh AI session per guideline area. 100-message threads produce inconsistent output.
@@ -183,8 +184,8 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - No `[FILL]` placeholders in guideline files — only in starter templates
 - No hand-edits to `guidelines/global-configs/templates/AGENTS.starter.md` — it is generated from `global-configs/fragments/`
 - No hardcoded absolute paths in templates — use relative paths or `[FILL]` markers
-- No breaking changes to templates without updating the `sync-manager.ps1` manifest fallback
-- No `console.log` in production scripts
+- No breaking changes to templates without updating the hardcoded fallback in `sync-manager.ps1` (used when `sync-manifest.json` is unreadable)
+- No `console.log` in production application code — repo tooling writes its report to stdout by design
 - No `execSync` / `execFileSync` / piped `spawnSync` in scripts — use `runSync` from `global-configs/scripts/lib/run-sync.js`
 - No unregistered files — every guideline file MUST be in `guidelines/_index/MASTER_INDEX.md`
 - No `// TODO` or `// FIXME` without explicit permission
@@ -194,7 +195,7 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 
 ## Session Bootstrap
 
-1. Read this AGENTS.md — always
+1. Read this AGENTS.md and `WORLD.md` — always (rules + intent/`mode`)
 2. Understand the repo structure: `guidelines/_index/` → `guidelines/0*-` domain directories → `guidelines/global-configs/`
 3. Before editing: identify which category the change falls under (guideline content, template, script, skill)
 4. After editing: run `npm run validate` to verify integrity
@@ -217,4 +218,4 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 - Templates: `guidelines/global-configs/templates/` (AGENTS.starter.md is generated — edit `guidelines/global-configs/fragments/`)
 - Fragments pipeline: `guidelines/global-configs/fragments/README.md`
 - Skills: `guidelines/global-configs/skills/`
-- Sync tooling: `sync-manager.ps1`
+- Sync tooling: repo-root `sync-manager.ps1` (GUI) + `guidelines/global-configs/scripts/` (`sync-guidelines.ps1`, `sync-all.js`, `GuidelineSync.psm1`, `setup-global-references.ps1`)

@@ -28,6 +28,7 @@
     "validate": "npm run audit && npm run check-links && npm run check-index && npm run check-drift && npm run check-index-drift && npm run check-skills-drift && npm run guard:paths && npm run docs:census && npm run guard:tiers && npm run guard:mode && npm run test:scripts",
     "sync:drift": "node guidelines/global-configs/scripts/check-sync-drift.js",
     "audit:friction": "node guidelines/global-configs/scripts/audit-friction.js",
+    "benchmark:reform": "node guidelines/global-configs/scripts/benchmark-reform.js",
     "guard:paths": "node guidelines/global-configs/scripts/check-agents-paths.js"
   },
   "engines": {

@@ -14,10 +14,10 @@ tags: [mindset, philosophy, anti-patterns]
 2. **Speed is a first-class metric alongside accuracy.** Time from intent to first running slice is measured every iteration, not guessed — a process that is correct but slow is a defect, same as a fast process that ships broken auth. Scale ceremony with the mode (`speed-tiered-workflow.md`); never scale security or honesty.
 3. **Own the specification.** Specification quality is the single biggest output lever: happy path · boundaries (what NOT) · constraints · acceptance criteria · failure states.
 4. **Vertical slices, not horizontal layers** — one complete feature UI→DB at a time.
-5. **Tests are behavioral contracts,** not implementation verification. Depth follows mode: smoke + regression-on-second-bite in vibe; full pyramid at the ship boundary.
+5. **Tests are behavioral contracts,** not implementation verification. Depth follows mode (`speed-tiered-workflow.md`); the ship boundary verifies critical flows in every mode.
 6. **All AI output is a draft.** AI gets syntax right ~95%, business logic ~60%. The gap is your responsibility.
 7. **Control context aggressively** — see `context-management-strategy.md`.
-8. **Limit blast radius:** small isolated changes; commit frequently; never >3–5 files per change without a self-review pass (vibe MAY batch micro-edits into one conventional commit — never end a session uncommitted).
+8. **Limit blast radius:** small isolated changes; commit frequently; split when the change cannot be summarised in one sentence, and self-review before continuing (vibe MAY batch micro-edits into one conventional commit — never end a session uncommitted).
 9. **Use AI to reason, not just generate:** edge-case discovery, trade-off analysis, design review.
 10. **Iterate prompts:** first attempts are drafts; refine constraints based on observed output.
 11. **Know when NOT to use AI:** manual is faster for simple well-known patterns; security-critical code gets maximum scrutiny regardless — AI self-review plus automated auth-flow tests.

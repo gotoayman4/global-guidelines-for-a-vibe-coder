@@ -12,8 +12,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: firebase-firestore-practices activated -- Source: _skills/firebase-firestore-practices/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -108,4 +106,4 @@ For changes touching Firestore, report:
 - Security rules auditing: `.agents/skills/firebase-security-rules-auditor/`
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Emulator testing: `02-engineering-practices/testing-philosophy.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

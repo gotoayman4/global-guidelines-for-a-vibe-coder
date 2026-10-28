@@ -318,7 +318,7 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
     # Step 1: Mirror _guidelines/
     $statusLabel.Text = "Mirroring _guidelines/ ..."
     Append-Log $logBox "Step 1: Mirroring _guidelines/ ..."
-    if (-not (Test-Path $guidelinesDir)) { $null = New-Item -ItemType Directory -Path $guidelinesDir -Force }
+    # Robocopy creates the target after preflight; do not write anything before that check.
 
     # Mirror through the SHARED function, not through a second copy of the step.
     #
@@ -335,22 +335,17 @@ function Sync-Project([string]$projectPath, $logBox, $progressBar, $statusLabel)
     if ($moduleImported -and (Get-Command Sync-MirrorDirectory -ErrorAction SilentlyContinue)) {
         $mirror = Sync-MirrorDirectory -sourceDir $syncContentDir -targetDir $guidelinesDir
         if ($mirror.Success -eq $false) {
-            Append-Log $logBox "  ERROR: robocopy failed (exit code $($mirror.ExitCode)). Mirror is INCOMPLETE."
+            if ($mirror.Error) {
+                Append-Log $logBox "  ERROR: $($mirror.Error)"
+            } else {
+                Append-Log $logBox "  ERROR: robocopy failed (exit code $($mirror.ExitCode)). Mirror is INCOMPLETE."
+            }
             return "error"
         }
         Append-Log $logBox "  _guidelines/ mirrored (robocopy: $($mirror.ExitCode))."
     } else {
-        # Fallback for a machine where the module could not be imported. Same 0-7 success / 8+ failure
-        # contract, but it cannot prune — the module path is the one that converges a mirror.
-        $proc = Start-Process -FilePath "robocopy" `
-            -ArgumentList @($syncContentDir, $guidelinesDir, "/MIR", "/NJH", "/NJS", "/NDL", "/NP",
-                            "/R:0", "/W:0", "/XD", ".git", ".github") `
-            -Wait -NoNewWindow -PassThru
-        if ($proc.ExitCode -gt 7) {
-            Append-Log $logBox "  ERROR: robocopy failed (exit code $($proc.ExitCode)). Check permissions."
-            return "error"
-        }
-        Append-Log $logBox "  _guidelines/ mirrored (robocopy: $($proc.ExitCode))."
+        Append-Log $logBox "  ERROR: GuidelineSync.psm1 is required for mirror preflight. Restore the module before rerunning sync; destructive mirroring is refused."
+        return "error"
     }
 
     # Step 2: .gitignore — derived from the manifest, never a literal here (see Add-ProjectGitignoreEntries)
@@ -524,9 +519,10 @@ function Run-NodeScript([string]$scriptPath, $logBox, $statusLabel, $resultLabel
 # `npm run validate` is the ONE definition of the gate — `package.json` §scripts owns it and
 # `AGENTS.md` §Commands documents it. The "Run All Checks" button used to run three scripts of its own
 # choosing (rules audit, links, index coverage) and label the outcome "All checks". It was not: the
-# real gate also runs check-drift, check-index-drift, check-skills-drift, docs:census, guard:tiers and
-# the whole test suite. Six controls and the entire test suite were silently outside a button that
-# said "all" — which is worse than a shorter button, because the operator stops looking for the rest.
+# real gate also runs check-drift, check-index-drift, check-skills-drift, guard:paths, docs:census,
+# guard:tiers, guard:mode and the whole test suite. Controls and the entire test suite were silently
+# outside a button that said "all" — which is worse than a shorter button, because the operator stops
+# looking for the rest.
 # A second, weaker definition of "all checks" is also how the GUI and the pre-push hook drift apart
 # again, so this now invokes the same command the hook runs.
 function Run-NpmGate($logBox, $statusLabel, $resultLabel) {

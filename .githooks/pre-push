@@ -2,7 +2,7 @@
 # Local CI pre-push gate — replaces the former .github/workflows/validate-guidelines.yml
 # (no cloud Actions minutes; see guidelines/03-git-and-ci/local-ci-strategy.md)
 # Enable once per clone: git config core.hooksPath .githooks
-echo "[pre-push] Running npm run validate (audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + docs:census + guard:tiers + test:scripts)..."
+echo "[pre-push] Running npm run validate (audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + test:scripts)..."
 npm run validate
 status=$?
 if [ $status -ne 0 ]; then

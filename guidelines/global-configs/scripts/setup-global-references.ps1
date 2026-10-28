@@ -72,10 +72,11 @@ This machine has a shared guidelines repository at:
 
 ## Before Every Session
 
-1. If not already loaded via project opencode.json, read ``$guidelinesRepo\_index\RETRIEVAL_RULES.md``
-2. Read ``$guidelinesRepo\_index\MASTER_INDEX.md`` to map task type to relevant files
-3. Load only files needed for the current task - never the whole repo
-4. Skills live at ``$guidelinesRepo\global-configs\skills\<name>\SKILL.md`` - load when trigger matches
+1. In a project, read its ``AGENTS.md`` (binding rules) and ``WORLD.md`` (intent + declared mode) first - they override these global defaults
+2. Open a guideline from ``$guidelinesRepo`` by name when the task needs one
+3. Use ``$guidelinesRepo\_index\MASTER_INDEX.md`` only as a lookup when you cannot name the file the task needs
+4. Load only files needed for the current task - never the whole repo
+5. Skills live at ``$guidelinesRepo\global-configs\skills\<name>\SKILL.md`` - load when the recorded trigger matches
 
 ## How to Load Guidelines
 
@@ -98,8 +99,9 @@ $windsurfContent = @"
 This machine has a shared guidelines repository at:
 $guidelinesRepo
 
-ALWAYS read _index/MASTER_INDEX.md from that path first.
-Then load only the files needed for the current task.
+In a project, read its AGENTS.md (binding rules) and WORLD.md (intent + declared mode) first; they override these defaults.
+Open a guideline by name when the task needs one; use _index/MASTER_INDEX.md only as a lookup when you cannot name it.
+Load only the files needed for the current task.
 Use absolute base path $guidelinesRepo/ when loading files.
 "@
 Write-Utf8NoBom -Path $windsurfGlobalRules -Content $windsurfContent

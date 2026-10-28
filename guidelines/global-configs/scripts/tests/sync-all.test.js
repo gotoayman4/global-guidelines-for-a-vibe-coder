@@ -146,16 +146,87 @@ test('syncProject omits -SourceOnly only when machine-global configs are request
   assert.ok(!args.includes('-SourceOnly'), `expected no -SourceOnly when opted in, got: ${args.join(' ')}`);
 });
 
-test('the CLI banner states which mode a run uses', () => {
+// --- dry-run exercises the real preflight (2026-10-28) --------------------------------
+// `--dry-run` used to return before PowerShell, so it reported "would sync" for every project
+// without running the mirror preflight. The live fleet's stale command references were therefore
+// invisible until a real sync failed. The preview now spawns `sync-guidelines.ps1 -DryRun`.
+
+const NO_POWERSHELL = (() => {
+  const probe = runSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'exit 0']);
+  return probe.error || probe.status !== 0 ? 'PowerShell is unavailable' : false;
+})();
+
+function registryFor(projectPath) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-all-registry-'));
+  const file = path.join(root, 'sync-projects.json');
+  fs.writeFileSync(file, `${JSON.stringify([{ name: 'fixture', path: projectPath }], null, 2)}\n`, 'utf8');
+  return file;
+}
+
+function snapshot(root) {
+  const entries = {};
+  const walk = (dir, rel) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      const key = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(full, key);
+      else entries[key] = fs.readFileSync(full, 'utf8');
+    }
+  };
+  walk(root, '');
+  return entries;
+}
+
+function runDryRun(projectPath) {
+  return runSync(process.execPath, [SYNC_ALL, '--dry-run'], {
+    env: { ...process.env, SYNC_ALL_REGISTRY: registryFor(projectPath) },
+  });
+}
+
+test('the CLI banner states which mode a run uses', { skip: NO_POWERSHELL }, () => {
   // The banner is the only place a caller learns the default changed, so it is part of the
-  // contract. A dry run spawns no PowerShell, so this is safe and read-only.
-  const defaults = runSync(process.execPath, [SYNC_ALL, '--dry-run']);
+  // contract. A fixture registry keeps this test off the live fleet.
+  const { projectPath } = buildFixture({ mirrorState: 'match' });
+  fs.writeFileSync(path.join(projectPath, 'package.json'), '{"name":"fixture"}\n');
+  const registry = registryFor(projectPath);
+  const env = { ...process.env, SYNC_ALL_REGISTRY: registry };
+
+  const defaults = runSync(process.execPath, [SYNC_ALL, '--dry-run'], { env });
   assert.equal(defaults.status, 0, `dry-run exited ${defaults.status}: ${defaults.stderr}`);
   assert.match(defaults.stdout, /project-side only/);
   assert.match(defaults.stdout, /--with-global-configs/);
 
-  const optedIn = runSync(process.execPath, [SYNC_ALL, '--dry-run', '--with-global-configs']);
+  const optedIn = runSync(process.execPath, [SYNC_ALL, '--dry-run', '--with-global-configs'], { env });
   assert.equal(optedIn.status, 0, `dry-run exited ${optedIn.status}: ${optedIn.stderr}`);
   assert.match(optedIn.stdout, /machine-global configs/);
   assert.doesNotMatch(optedIn.stdout, /pass --with-global-configs/);
+});
+
+test('a dry run fails on a command naming a retired source script and writes nothing', { skip: NO_POWERSHELL }, () => {
+  const { projectPath } = buildFixture({ mirrorState: 'match' });
+  fs.writeFileSync(
+    path.join(projectPath, 'package.json'),
+    `${JSON.stringify({ scripts: { 'guard:retired': 'node _guidelines/global-configs/scripts/slice-close.js --check' } }, null, 2)}\n`
+  );
+  const before = snapshot(projectPath);
+
+  const result = runDryRun(projectPath);
+
+  assert.equal(result.status, 1, `expected the preflight to block the dry run:\n${result.stdout}`);
+  assert.match(result.stderr, /FAIL fixture/);
+  assert.match(result.stderr, /slice-close\.js/);
+  assert.match(result.stderr, /package\.json scripts\.guard:retired/);
+  assert.deepEqual(snapshot(projectPath), before, 'a refused preview must leave the project untouched');
+});
+
+test('a clean dry run reports that the preflight passed and writes nothing', { skip: NO_POWERSHELL }, () => {
+  const { projectPath } = buildFixture({ mirrorState: 'match' });
+  fs.writeFileSync(path.join(projectPath, 'package.json'), '{"name":"fixture"}\n');
+  const before = snapshot(projectPath);
+
+  const result = runDryRun(projectPath);
+
+  assert.equal(result.status, 0, `dry-run exited ${result.status}: ${result.stderr}`);
+  assert.match(result.stdout, /preflight passed/);
+  assert.deepEqual(snapshot(projectPath), before);
 });

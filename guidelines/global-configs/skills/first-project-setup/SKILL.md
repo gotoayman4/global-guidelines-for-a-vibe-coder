@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: first-project-setup activated -- Source: _skills/first-project-setup/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -28,10 +26,10 @@ Activate when:
 
 ## Load Guidelines
 
-Load compact extracts (Key Takeaways + Anti-Patterns) from:
+Load compact extracts (Key Takeaways + Anti-Patterns) from the available guides below. Central-only human guides are optional; do not search for them in the downstream mirror.
 
-1. `docs/human/day-one-setup.md` — Step-by-step setup guide
-2. `docs/human/beginner-vibe-coder-guide.md` — Simplified development loop
+1. `docs/human/day-one-setup.md` (central repository only; not delivered with this skill) — Step-by-step setup guide
+2. `docs/human/beginner-vibe-coder-guide.md` (central repository only; not delivered with this skill) — Simplified development loop
 3. `03-git-and-ci/git-workflow-strategy.md` — Git initialization and first commit
 4. `02-engineering-practices/cost-optimization-strategy.md` — Free-tier-first tooling
 
@@ -51,8 +49,8 @@ You are a project setup specialist. You guide users with zero coding experience 
 2. **Choose project template:** Based on user's description, select the simplest template (Vite + React + TypeScript by default). Confirm with user before scaffolding.
 3. **Create project:** Run `npm create vite@latest` with the appropriate template. Install dependencies.
 4. **Initialize Git:** `git init`, `git add .`, `git commit -m "feat: initial project setup"`.
-5. **Run sync-guidelines.ps1:** Run `D:\WebApps\global-guidelines-for-a-vibe-coder\global-configs\scripts\sync-guidelines.ps1` from the project root. This mirrors the full guidelines repo into `_guidelines/` in the project and sets up global tool configs (opencode, Windsurf, Cursor, Qoder).
-5a. **Create AGENTS.md:** Load `D:\WebApps\global-guidelines-for-a-vibe-coder\global-configs\templates\AGENTS.starter.md` and create the project's `AGENTS.md` using it as a template. All `[FILL]` fields must be completed. The rules are self-contained — no external references. For deeper context, the `_guidelines/` mirror created by step 5 is available.
+5. **Run sync-guidelines.ps1:** From the project root, run `<central repo>/guidelines/global-configs/scripts/sync-guidelines.ps1` — the machine's global agent config names the central repo path; in the guidelines repo itself the script is `guidelines/global-configs/scripts/sync-guidelines.ps1`. This mirrors the full guidelines repo into `_guidelines/` in the project and sets up global tool configs (opencode, Windsurf, Cursor, Qoder).
+5a. **Create AGENTS.md:** Load `<central repo>/guidelines/global-configs/templates/AGENTS.starter.md` (or `_guidelines/global-configs/templates/AGENTS.starter.md` after step 5) and create the project's `AGENTS.md` using it as a template. All `[FILL]` fields must be completed. The rules are self-contained — no external references. For deeper context, the `_guidelines/` mirror created by step 5 is available.
 5b. **Create tool config files:** For each AI tool used in the project, create the appropriate config file referencing the global guidelines (templates are in `_guidelines/global-configs/templates/` if synced, or from the canonical path):
    - **opencode:** `opencode.json` — use template `global-configs/templates/opencode.json.template`
    - **Cursor:** `.cursor/rules/global-guidelines.mdc` — use template `global-configs/templates/cursor-global-guidelines.mdc.template`
@@ -63,9 +61,9 @@ You are a project setup specialist. You guide users with zero coding experience 
    - **GitHub Copilot:** `.github/copilot-instructions.md` — use template `global-configs/templates/copilot-instructions.starter.md` (pointer to AGENTS.md; VS Code Copilot should read AGENTS.md directly via `vscode-settings.json.template`)
    - **Antigravity:** `GEMINI.md` — use template `global-configs/templates/GEMINI.md.template`
    - **VS Code:** `.vscode/settings.json` — merge with existing, enable AGENTS.md support
-5c. **Create WORLD.md (optional):** If the project needs product intent guardrails, create `WORLD.md` from `global-configs/templates/WORLD.starter.md`
+5c. **Create WORLD.md and README.md (both mandated):** the doc set is `AGENTS.md` + `WORLD.md` + `README.md`, plus `docs/AI_ARCHITECTURE.md` on demand. Create `WORLD.md` from `_guidelines/global-configs/templates/WORLD.starter.md` and declare the mode — an undeclared mode is assumed `standard`, which is the safe default, not the fast one. Create `README.md` from `_guidelines/global-configs/templates/README.starter.md`: what the project is, its structure, and Quick Start. A missing member is a failure, not a note.
 5d. **Configure ESLint:** Add `max-lines` rule to the project's ESLint config: `"max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }]`. Plan new files for ~300 lines; at 400, record the deeper <300 refactor as debt and split before the NEXT feature touches the file. Run `npm run lint` to verify the config is valid.
-5e. **Configure local CI hooks (mandatory):** CI is local — no cloud CI scaffold. Run `npx husky init`; set `.husky/pre-commit` to lint-staged (ESLint, type-check, format), and make `.husky/pre-push` **branch on the declared mode** in `WORLD.md` §Speed Mode: `vibe` runs `gate:fast` + the `always` guard tier and defers the full pipeline to the ship boundary; `standard`/`guarded` run the full pipeline. Map each step to the project's actual scripts. Both branches add the dependency-audit wrapper and a content-hashed clean-tree check. Hooks must not require real secrets. **Read the mode with the SHIPPED reader** (`_guidelines/global-configs/scripts/read-mode.js`, or a vendored `scripts/read-mode.js`) — never with a grep in the hook: a grep is a second reader of `WORLD.md`, and a second reader is a second opinion that drifts (the shipped one matched `- **Transition mode:**` and read a `vibe` out of a sentence about something else). **An unreadable mode FAILS SAFE to the full chain** — a mode nobody can parse must never buy a cheaper gate. **A hook that runs the full pipeline unconditionally is the defect `local-ci-strategy.md` §Tier B names** — it makes `vibe` pay `standard`'s cost on every push, and the project then "fixes" it by skipping the gate. **A release or milestone exit escalates through an OVERRIDE the hook reads** (an env var such as `GS_RELEASE_GATE=1`, or a gitignored marker file, lifting `vibe` → `standard`) — never by editing `WORLD.md` back and forth; the declared mode changes only when the steady state changes, and the override can never make a gate cheaper. See `03-git-and-ci/local-ci-strategy.md`.
+5e. **Configure local CI hooks (mandatory):** CI is local — no cloud CI scaffold. Run `npx husky init`; set `.husky/pre-commit` to lint-staged (ESLint, type-check, format), and make `.husky/pre-push` **branch on the declared mode** in `WORLD.md` §Speed Mode: `vibe` runs `gate:fast` + the `always` guard tier and defers the full pipeline to the ship boundary; `standard` runs lint + type-check + the full suite and defers the build to the ship boundary (every release builds, and deploys what it built); `guarded` adds the build and the path-aware extras per push. Map each step to the project's actual scripts. Every branch adds the dependency-audit wrapper and a content-based clean-tree check. Hooks must not require real secrets. **Read the mode with the SHIPPED reader** (`_guidelines/global-configs/scripts/read-mode.js`, or a vendored `scripts/read-mode.js`) — never with a grep in the hook: a grep is a second reader of `WORLD.md`, and a second reader is a second opinion that drifts (the shipped one matched `- **Transition mode:**` and read a `vibe` out of a sentence about something else). **An unreadable mode FAILS SAFE to the full chain** — a mode nobody can parse must never buy a cheaper gate. **A hook that runs the full pipeline unconditionally is the defect `local-ci-strategy.md` §Tier B names** — it makes `vibe` pay `standard`'s cost on every push, and the project then "fixes" it by skipping the gate. **A release or milestone exit escalates through an OVERRIDE the hook reads** (an env var such as `GS_RELEASE_GATE=1`, or a gitignored marker file, lifting `vibe` → `standard`) — never by editing `WORLD.md` back and forth; the declared mode changes only when the steady state changes, and the override can never make a gate cheaper. **A release does not change the mode:** a `vibe` or `standard` project ships a `pilot` (live testing, demo, beta) from its declared mode; the release class is recorded in the tag or commit. See `03-git-and-ci/local-ci-strategy.md`.
 5f. **Declare a tier on every guard (mandatory):** each guard states its own tier in a file-level docblock (`@tier always | standard+ | ship`), and the pre-push hook **derives the set it runs from the guards** — keyed on the declared mode — rather than listing steps by hand. `always` = security, honesty and structural invariants (every push, every mode); `standard+` = contract and parity guards; `ship` = critical-flow E2E and the deny matrix. A hand-kept step list is a list that goes stale, and it fails in the direction nobody notices. See `03-git-and-ci/local-ci-strategy.md` §Guard Tiers.
 6. **Run and verify:** Start dev server (`npm run dev`), confirm the app loads in the browser.
 7. **First commit with constitution:** `git add .`, `git commit -m "feat: add project constitution and configuration"`.
@@ -93,7 +91,8 @@ You are a project setup specialist. You guide users with zero coding experience 
 ### Constitution Files
 - [ ] sync-guidelines.ps1 run — `_guidelines/` created (mirrors full guidelines repo)
 - [ ] AGENTS.md created from template (self-contained rules, no external file references)
-- [ ] WORLD.md created and filled in (optional)
+- [ ] WORLD.md created, mode declared (mandatory)
+- [ ] README.md created from template (description, structure, Quick Start)
 - [ ] All [FILL] placeholders replaced
 
 ### AI Tool Config Files
@@ -113,7 +112,7 @@ You are a project setup specialist. You guide users with zero coding experience 
 
 ### Local CI Hooks
 - [ ] husky installed; pre-commit hook runs lint-staged
-- [ ] pre-push hook branches on the declared mode (`vibe`: `gate:fast` + the `always` tier; `standard`/`guarded`: the full pipeline), with a release override (env var / marker file) that lifts `vibe` → `standard` for a release exit instead of editing `WORLD.md`
+- [ ] pre-push hook branches on the declared mode (`vibe`: `gate:fast` + the `always` tier; `standard`: lint + type-check + the full suite; `guarded`: that chain + the build and the path-aware extras), with a release override (env var / marker file) that lifts `vibe` → `standard` for a release exit instead of editing `WORLD.md`
 - [ ] No real secrets required by hooks
 
 ### Git Initialized
@@ -160,9 +159,9 @@ You are a project setup specialist. You guide users with zero coding experience 
 
 ## Cross-References
 
-- Day one setup guide: `docs/human/day-one-setup.md`
-- Beginner vibe coder guide: `docs/human/beginner-vibe-coder-guide.md`
+- Day one setup guide: `docs/human/day-one-setup.md` (central repository only; not delivered with this skill)
+- Beginner vibe coder guide: `docs/human/beginner-vibe-coder-guide.md` (central repository only; not delivered with this skill)
 - Git workflow: `03-git-and-ci/git-workflow-strategy.md`
 - Local CI strategy: `03-git-and-ci/local-ci-strategy.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)
 - File organization rules: `02-engineering-practices/file-organization.md`

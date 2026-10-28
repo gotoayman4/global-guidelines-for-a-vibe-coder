@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: refactoring activated -- Source: _skills/refactoring/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -107,4 +105,4 @@ You are a senior engineer specializing in safe, incremental refactoring. You nev
 
 - Refactoring strategy: `01-workflow-methodology/refactoring-strategy.md`
 - Behavioral contracts: `02-engineering-practices/testing-philosophy.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

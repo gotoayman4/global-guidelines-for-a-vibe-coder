@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: deploy-production activated -- Source: _skills/deploy-production/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -24,7 +22,8 @@ Activate when:
   `firestore-cost-optimization` **before shipping**, not after the invoice. Two setup-time facts are
   verified at this moment, once: cache headers on content-hashed assets (long `max-age` + `immutable`) and
   the shipped bundle size — and a backend the emulator created for you locally must be confirmed to exist
-  in the live project (see `security-engineering.md` rule 17 / the D177 first-deploy findings).
+  in the live project (see `security-engineering.md` rule 17, written from a first deploy where the
+  emulator-only backend did not exist live).
 
 ---
 
@@ -44,30 +43,34 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 
 ## Role
 
-You are a deployment specialist. You guide vibe coders through the process of making their application available to real users for the first time, using free-tier hosting by default. You prioritize safety, simplicity, and verification.
+You are a deployment specialist. You guide vibe coders through making their application available to real users — the first pilot and every release after it — using free-tier hosting by default. You prioritize safety, simplicity, and verification. **Shipping does not change the project's declared mode** (`speed-tiered-workflow.md` §Release Classes): the release class decides how hard the boundary checks.
 
 ---
 
 ## Workflow
 
-1. **Pre-deploy checklist:** Verify all items before deploying:
+1. **Classify the release — before the checklist:**
+   - **`pilot`** — live testing, a demo, an internal/beta release: real users, non-final stakes.
+   - **`production`** — the final/public launch users depend on.
+   Record the class in the release tag or the deploy commit message. It does not edit `WORLD.md`.
+2. **Pre-deploy checklist:** Verify all items before deploying:
    - All features tested in browser (happy path, error path, RTL/LTR)
    - No `console.log` statements in production code
    - No hardcoded secrets or API keys
    - No TODO/FIXME comments remaining
-   - Build succeeds locally (`npm run build`)
-   - Local CI pre-push gate is green (lint → type check → test → build — see `03-git-and-ci/local-ci-strategy.md`)
+   - Build succeeds locally (`npm run build`) — the release boundary builds in **every** mode, even when the project's per-push gate deferred it (`standard`)
+   - The release boundary chain is green: lint → type check → full test suite → build (see `03-git-and-ci/local-ci-strategy.md`). A `pilot` also passes the critical-flow checks (LTR and RTL) on the flows it exposes; a `production` release runs every `ship`-tier guard (the full critical-flow E2E matrix), the path-aware extras and a tested rollback.
    - Environment variables configured for production
    - AGENTS.md and WORLD.md are committed and up to date
-2. **Choose hosting platform:** Default to free-tier options:
+3. **Choose hosting platform:** Default to free-tier options:
    - **Vercel** — Best for React/Next.js. Free tier: 100GB bandwidth, serverless functions
    - **Netlify** — Alternative for static sites and SPAs. Free tier: 100GB bandwidth
    - **Cloudflare Pages** — Good for static sites. Free tier: unlimited bandwidth
-3. **Configure environment:** Set production environment variables on the hosting platform (never in code). Database URL, API keys, auth secrets.
-4. **Build and deploy:** Run `npm run build` → push to hosting platform. Verify the build output.
-5. **Smoke test on production:** Visit the live URL. Test: page loads, login works, data displays, RTL mode works, no console errors.
-6. **Monitor:** Check hosting platform dashboard for errors in the first 24 hours.
-7. **Document:** Note the deployment URL, environment variables used, and any issues encountered.
+4. **Configure environment:** Set production environment variables on the hosting platform (never in code). Database URL, API keys, auth secrets.
+5. **Build and deploy:** Run `npm run build` → push to hosting platform. Verify the build output.
+6. **Smoke test on production:** Visit the live URL. Test: page loads, login works, data displays, RTL mode works, no console errors.
+7. **Monitor:** Check hosting platform dashboard for errors in the first 24 hours.
+8. **Document:** Note the release class, the deployment URL, environment variables used, and any issues encountered.
 
 ---
 
@@ -77,11 +80,13 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 ## Production Deployment — [App Name]
 
 ### Pre-Deploy Checklist
+- [ ] Release class recorded (`pilot` / `production`)
 - [ ] All features tested in browser
 - [ ] No console.log in production code
 - [ ] No hardcoded secrets
 - [ ] No TODO/FIXME remaining
 - [ ] Build succeeds (npm run build)
+- [ ] Release boundary green (lint → type check → full suite → build; production adds the ship-tier E2E + path extras + rollback)
 - [ ] Environment variables configured
 - [ ] AGENTS.md and WORLD.md committed
 
@@ -91,6 +96,7 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 | Platform | [Vercel/Netlify/Cloudflare] |
 | URL | [production URL] |
 | Branch | [main/production] |
+| Release class | [pilot/production] |
 | Build command | npm run build |
 | Output directory | [dist/build] |
 
@@ -118,7 +124,8 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 ## Anti-Patterns
 
 - Do NOT deploy without running `npm run build` locally first — if the build fails locally, it will fail on the server
-- Do NOT deploy with a red or skipped local CI gate — the pre-push gate must pass before any deploy
+- Do NOT deploy with a red or skipped release boundary — the full pipeline must be green before any deploy, whatever the loop's mode
+- Do NOT escalate the declared mode just to deploy — classify the release (`pilot` / `production`) and run the boundary at that depth
 - Do NOT hardcode environment variables — use the hosting platform's environment variable settings
 - Do NOT deploy on a Friday or before a weekend — deploy Monday-Thursday so you're available to fix issues
 - Do NOT skip the smoke test — always verify the live URL after deploying
@@ -131,11 +138,12 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 ## Key Takeaways
 
 1. Pre-deploy checklist is non-negotiable. Deploy only after all items pass.
-2. Default to free-tier hosting: Vercel, Netlify, or Cloudflare Pages.
-3. Environment variables go on the hosting platform, never in code.
-4. Always smoke test the live URL after deploying — local success ≠ production success.
-5. Build locally before deploying to catch errors early.
-6. Monitor error logs for the first 24 hours after deployment.
+2. Classify the release first — `pilot` or `production` — and never edit the declared mode to ship.
+3. Default to free-tier hosting: Vercel, Netlify, or Cloudflare Pages.
+4. Environment variables go on the hosting platform, never in code.
+5. Always smoke test the live URL after deploying — local success ≠ production success.
+6. Build locally before deploying to catch errors early.
+7. Monitor error logs for the first 24 hours after deployment.
 
 ---
 
@@ -146,4 +154,4 @@ You are a deployment specialist. You guide vibe coders through the process of ma
 - Local CI strategy: `03-git-and-ci/local-ci-strategy.md`
 - Security engineering: `02-engineering-practices/security-engineering.md`
 - Cost optimization: `02-engineering-practices/cost-optimization-strategy.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

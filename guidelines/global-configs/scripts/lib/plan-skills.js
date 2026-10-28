@@ -19,7 +19,7 @@
  *   5. Otherwise it is copied, and the plan names the tokens that matched.
  *
  * WHERE A SKILL'S SCOPE COMES FROM — and the one judgement call in this file. `appliesTo` is the
- * declared home, and it is authoritative. But it is declared on 1 of 20 skills, and a rule that only
+ * declared home, and it is authoritative. But it is declared on a single skill in the pool, and a rule that only
  * fires for one skill is a rule that does not exist yet. So an UNDECLARED scope is inferred from the
  * skill's existing `tags`, intersected with the technology vocabulary. Measured on the corpus
  * 2026-10-12: that inference splits the 20 skills 8 stack-scoped / 12 stack-agnostic, and the split

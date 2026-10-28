@@ -16,7 +16,9 @@ tags: [testing, philosophy, contracts]
 |---|---|
 | **vibe** | Smoke run per behavior-changing iteration (app starts, happy path works); Tier 0 changes need only lint/type-check (`agent-verification-loop.md`). Regression test only when a bug bites the same path twice, or when stabilizing at a milestone. No suite requirement while iterating; the per-push gate runs only the changed tests (`gate:fast`). |
 | **standard** | Behavioral tests with code for critical/high-risk changes; regression test with every fix; integration at boundaries; E2E on critical flows. |
-| **guarded** | Full pyramid (below) + critical-flow E2E before ship; security-sensitive paths get an explicit security pass (self-review + automated tests). |
+| **guarded** | Full pyramid (below) + critical-flow E2E before ship; security depth is never mode-scaled (`security-engineering.md`). |
+
+**Test timing (standard/guarded):** write tests first for critical features and in the same iteration for other changes; never defer required tests to a later sprint.
 
 **Ship boundary (all modes):** before any release or milestone exit, critical flows (login/auth · payments · permissions · data persistence) MUST be verified by automated E2E against the deployed target — in both LTR and RTL. Vibe mode never ships unverified critical flows.
 
@@ -32,15 +34,7 @@ tags: [testing, philosophy, contracts]
 
 ## Guard Tiers — Cost Follows Risk, Not Repo Age
 
-A suite that runs every test on every push grows into a tax: its cost tracks how long the repo has existed, not how risky the change is. Tag each guard with a tier in its own file-level docblock and let the gate derive the set from the guards themselves (`local-ci-strategy.md` §Guard Tiers):
-
-| Tier | Runs | Belongs here |
-|---|---|---|
-| `always` | every push, every mode | security controls, honesty guards, structural invariants |
-| `standard+` | `standard`/`guarded` pushes, plus an escalated `vibe` slice | contract and parity guards |
-| `ship` | the ship boundary, in every mode | critical-flow E2E, the deny matrix, the full suite |
-
-**Tiering changes *when* a test runs, never *whether* it runs before a release.** The ship boundary runs the full pyramid in every mode, and a `vibe` slice auto-escalates the moment its diff touches auth, rules, or a mail path.
+A suite that runs every test on every push grows into a tax: its cost tracks how long the repo has existed, not how risky the change is. Tag each guard with a tier in its own file-level docblock and let the gate derive the set from the guards themselves — the tiers (`always` | `standard+` | `ship`) and the control have one home in `local-ci-strategy.md` §Guard Tiers. **Tiering changes *when* a test runs, never *whether* it runs before a release.** The ship boundary runs the full pyramid in every mode, and a `vibe` slice auto-escalates on the triggers owned by `speed-tiered-workflow.md` §Mode Transitions.
 
 **A docs-subject guard is not an app test.** A guard whose corpus is the steering docs or repo config — parity, drift, freshness, budget, guard inventory — belongs to the **docs lane**: a script or `node --test` suite that `docs:check` / the docs gate runs when the docs or its owned paths change. It never lives in the app suite's hot lane, because a prose check that reddens a behavior slice is a tax on the inner loop and an fs-bound flake source with no product signal. The app lane tests app behavior; the docs lane polices documents; each runs at the cadence its trigger needs.
 

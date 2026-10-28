@@ -3,15 +3,15 @@
 **Purpose:** Define what this project exists to do — and what it must NOT become. This file prevents AI (and humans) from adding features that violate the product vision.
 
 **Source:** `global-configs/templates/WORLD.starter.md`
-**How to use:** Search for `[FILL]` and replace with project-specific values. Copy to your project root and commit. Reference from AGENTS.md / CLAUDE.md as the product intent guardrail.
+**How to use:** Search for `[FILL]` and replace with project-specific values. Copy to your project root and commit. Reference from `AGENTS.md` as the product intent guardrail.
 
 ---
 
 ## Speed Mode
 
 - **mode:** `vibe` — `vibe | standard | guarded` per `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`
-- **Set:** [FILL: date + reason]. Default is `vibe` until first ship; revisit at every milestone.
-- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (branch/tag/env); this file changes only when the steady state changes. Transition history lives in `docs/changelog/` — a boot file carries no history.
+- **Set:** [FILL: date + reason]. Default is `vibe`; a release never escalates this line — the mode is a loop-speed setting, not a lifecycle stage. Revisit when the steady state changes.
+- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (`GS_RELEASE_GATE=1` or the gitignored `.release-override`), and records its **release class** — `pilot` (live testing, demo, beta) or `production` (final launch) — in the release tag or commit message; this file changes only when the steady state changes. Record the reason in the commit message — no separate transition log.
 
 ---
 

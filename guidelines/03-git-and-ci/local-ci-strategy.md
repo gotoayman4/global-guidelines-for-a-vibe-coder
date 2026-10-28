@@ -26,22 +26,16 @@ The two named tiers are the boundaries; almost all agent time is spent between t
 | Script | Contents | Cost | When |
 |---|---|---|---|
 | `gate:fast` | `lint` + `type-check` + `test -- --run --changed` (only tests touched by the diff) | seconds | After every edit batch, during the slice |
-| the pre-push hook | **the declared mode's gate** (§Which Gate Runs): `gate:fast` + the `always` guard tier in `vibe`; the full pipeline in `standard`/`guarded` | seconds (vibe) to minutes | Once, before the push |
+| the pre-push hook | **the declared mode's gate**: `gate:fast` plus the `always` guard tier, the dependency audit and the clean-tree check in every mode; the rest per `speed-tiered-workflow.md` §The Gate Scales With the Mode | seconds (vibe) to minutes | Once, before the push |
 
-- **`gate:fast` has two roles, and only one is evidence.** Run ad hoc after an edit batch, it is a convenience that moves cheap failures earlier — never cited as evidence of "verified". Run *as the declared pre-push hook* in `vibe`, it **is** that mode's gate: its result may be reported as the per-push gate result, and no further. What `vibe` defers — the full suite, the build, the ship-tier guards — it defers to the **ship boundary**, which runs the full pipeline in every mode. Nothing is skipped; it is *deferred to a named boundary*.
+- **`gate:fast` has two roles, and only one is evidence.** Run ad hoc after an edit batch, it is a convenience that moves cheap failures earlier — never cited as evidence of "verified". Run *as the declared pre-push hook* in `vibe`, it **is** that mode's gate: its result may be reported as the per-push gate result, and no further. What a mode defers — `vibe`: the full suite, the build, the ship-tier guards; `standard`: the build — is deferred to the **ship boundary**, which runs the full pipeline in every mode. Nothing is skipped; it is *deferred to a named boundary*.
 - `--changed` trusts the diff to name the dependents. Anything a shared file can break without appearing in the diff (contracts, i18n parity, path-scoped suites) is exactly what the full gate is for.
 
 ## Which Gate Runs — the Mode Decides
 
-The gate's *construction* is fixed; **how much of it runs is the declared mode's decision** (`speed-tiered-workflow.md` §The Gate Scales With the Mode):
+The gate's *construction* is fixed here; **how much of it runs is the declared mode's decision**. The mode-to-gate mapping has one home — `speed-tiered-workflow.md` §The Gate Scales With the Mode — and it is not restated here: a second copy is how the `guarded` ship-boundary cell came to contradict the owner file.
 
-| Mode | Per push | At the ship boundary |
-|---|---|---|
-| `vibe` | `gate:fast` + the `always` guard tier | the full pipeline |
-| `standard` | the full pipeline | the full pipeline |
-| `guarded` | the full pipeline + the path-aware extras | the full pipeline |
-
-`--no-verify` is forbidden in all three. Deferring a step to the ship boundary is not skipping it — it is running it where it can still catch something, instead of forty times where it cannot. **A step that runs on every edit but only detects what a per-push run also detects is mis-tiered, not slow** (`workflow-friction-audit.md`).
+`--no-verify` is forbidden in every mode. Deferring a step to the ship boundary is not skipping it — it is running it where it can still catch something, instead of forty times where it cannot. **A step that runs on every edit but only detects what a per-push run also detects is mis-tiered, not slow** (`workflow-friction-audit.md`).
 
 ## Guard Tiers — a Guard Declares When It Must Run
 
@@ -53,9 +47,9 @@ A suite whose every test runs on every push grows without bound, because its cos
 | `standard+` | `standard`/`guarded` pushes, plus any `vibe` slice whose mode escalated | contract and parity guards |
 | `ship` | the ship boundary, in every mode | critical-flow E2E, the deny matrix, the full suite |
 
-The tier is declared in the guard's own file-level docblock, and **`npm run guard:tiers` is the control**: it fails a guard with no `@tier`, a guard no npm script runs, an `always` guard the gate never reaches, and a `ship` guard the `vibe` chain reaches. A `standard+` guard the gate does not reach is *reported, never failed* — six guards in this repo are milestone- or fleet-scoped by design, and naming them is what makes that a decision instead of an accident. **Derive the set from the guards themselves** — a list kept by hand in the hook is a list that goes stale, and it fails in the direction nobody notices. Measured when the control was written (2026-10-12): 9 guards, 1 tier declared, 3 reached by the gate.
+The tier is declared in the guard's own file-level docblock, and **`npm run guard:tiers` is the control**: it fails a guard with no `@tier`, a guard no npm script runs, an `always` guard the gate never reaches, and a `ship` guard the `vibe` chain reaches. A `standard+` guard the gate does not reach is *reported, never failed* — three guards in this repo are milestone- or fleet-scoped by design, and naming them is what makes that a decision instead of an accident. **Derive the set from the guards themselves** — a list kept by hand in the hook is a list that goes stale, and it fails in the direction nobody notices. Measured when the control was written (2026-10-12): 9 guards, 1 tier declared, 3 reached by the gate.
 
-**The `standard+` tier needs a command, or it is a tier nobody can enter.** `npm run validate` is the `always` gate; `npm run validate:standard` is what reaches the `standard+` guards against this repo's own corpus. Run it before a milestone exit. It is deliberately **not** part of `validate`: folding it in would make `always` and `standard+` the same tier and delete the distinction the `@tier` field exists to express.
+**The `standard+` tier needs a command, or it is a tier nobody can enter.** `npm run validate` is the repo's always-run gate (both `always` guards plus four `standard+` ones). The three `standard+` guards it does not reach are run on their own before a milestone exit — `npm run docs:check` (documentation freshness), `npm run status:projects` (project freshness) and `npm run sync:drift` (delivered mirror) — and `npm run guard:tiers` names that set, so the obligation is visible rather than remembered. They are deliberately **not** folded into `validate`: that would make `always` and `standard+` one tier and delete the distinction the `@tier` field exists to express. A project's pre-push hook derives its own `standard+` set from the guards themselves (§Tier B).
 
 ## Suite Scope — the Same Derivation One Level Down
 
@@ -75,23 +69,31 @@ Before every push, run that mode's gate locally. This gate replaces the cloud CI
 1. Install husky once per project: `npx husky init`, then define `.husky/pre-push`. **The hook branches on the declared `mode`** — it is not the full pipeline unconditionally:
 
    ```sh
-   # mode = vibe      → the fast loop + the always tier
-   npm run gate:fast                  # lint + type-check + changed tests
-   # always-tier guards: run the project's derived set here (§Guard Tiers)
-   # mode = standard  → the full pipeline
-   npm run lint && npm run type-check && npm test -- --run && npm run build
-   # mode = guarded   → the full pipeline + the path-aware extras
+   if [ "$MODE" = "vibe" ]; then
+     run_step gate:fast               # lint + type-check + changed tests
+     # always-tier guards: run the project's derived set here (§Guard Tiers)
+   else
+     run_step lint
+     run_step type-check
+     run_step test -- --run           # the full suite — a mode defers the BUILD, never the suite
+     if [ "$MODE" = "guarded" ]; then
+       run_step build
+       # path-triggered extras: run each only when its subtree changed
+     fi
+   fi
+   run_step audit:gate                # every mode
+   # clean-tree, content-based (rule 4) — every mode
    ```
 
-   The `vibe` branch MUST NOT call the full suite (`npm test -- --run`): `gate:fast` already runs the tests the diff touches, and the suite is a ship-boundary step.
+   The `vibe` branch MUST NOT call the full suite (`npm test -- --run`): `gate:fast` already runs the tests the diff touches, and the suite is a ship-boundary step. The `standard` branch MUST NOT call the build: every release builds the artifact it deploys, so a build break surfaces at the ship boundary, never in front of a user. `guarded` adds the build and the path-aware extras — it is the mode chosen where an unbuilt artifact must not reach the merge. Each step goes through the `run_step` helper (the scaffold writes it), never an `&&` chain: a chain reports a generic npm failure and cannot name the required script that is missing.
 
    Map each step to the project's actual script names (`[FILL]` in starter templates). Read the mode from `WORLD.md` (the sole owner of the value) rather than hard-coding a second copy of it. **Writing the full pipeline unconditionally is the defect this branch exists to prevent:** it makes `vibe` pay `standard`'s cost on every push, and a project then "fixes" the slowness by skipping the gate — the one outcome that is forbidden.
-2. **The hook header comment is the normative list.** Write the step order once, as a `# Order: a → b → c` comment at the top of `.husky/pre-push`; the constitution restates it (and a guard compares the two token-for-token), every other document links to it. Measured in production: two hand-kept copies of one step list had already drifted apart.
+2. **The hook header comment is the normative list.** Write the step order once, as a `# Order: a → b → c` comment at the top of `.husky/pre-push`; every other document links to it. Measured in production: two hand-kept copies of one step list had already drifted apart.
 3. **The dependency audit runs through the project's own wrapper** (`npm run audit:gate`), never a bare `npm audit`. A bare `npm audit` that cannot reach the registry reports nothing and exits 0 — an unreachable registry MUST exit non-zero, never a silent pass.
    The wrapper owns the reasoned, expiring allowlist (each entry: why, what, review-by date) and the npm flags its sandbox needs: `npm audit` inside a lifecycle script needs script execution disabled, so pin that env var in the wrapper, not in the developer's shell.
-4. **Clean-tree check:** `git status --porcelain` must be empty after the build. It belongs in the hook, not a cloud job.
+4. **Clean-tree check:** the working tree must be clean after the gate (after the build, in `guarded`), decided on content — `git diff --quiet HEAD` plus untracked `git ls-files --others --exclude-standard` — never on git's stat cache, which reports a file as modified when its worktree blob matches the index. It belongs in the hook, not a cloud job.
 5. **Conditional steps, two conditions.** A step that takes minutes and protects a subtree (E2E over the data layer, the desktop shell's IPC tests) runs only when that subtree changed; a step whose tier is `ship` runs only at the ship boundary. Put the trigger in the hook **next to the step it gates**, so trigger and check cannot drift apart. A security-relevant pin is not a convenience: if it is the only place a check runs, it stays in the gate.
-6. **Skip is forbidden:** `git push --no-verify` is forbidden exactly like `--no-verify` on commit hooks. If the gate is slow, fix the gate (tier it, scope it by path or mode, cache it) — never skip it. **A required step whose npm script is missing FAILS the gate with a message**, in `standard` and `guarded`: skipping it and reporting green is how a project with no `build` script ships unbuilt code under a passing gate.
+6. **Skip is forbidden:** `git push --no-verify` is forbidden exactly like `--no-verify` on commit hooks. If the gate is slow, fix the gate (tier it, scope it by path or mode, cache it) — never skip it. **A required step whose npm script is missing FAILS the gate with a message**, in every mode — the `vibe` branch requires `gate:fast`; `standard` requires `lint`, `type-check` and `test`; `guarded` also requires `build`. Skipping it and reporting green is how a project with no `build` script ships unbuilt code under a passing gate.
 7. **Fail fast locally:** the gate runs in seconds-to-minutes, not queue-minutes — iterate freely with `gate:fast`, push only green.
 
 ## Gate Receipts — Evidence Is an Artifact, Not a Sentence
@@ -108,7 +110,7 @@ Rules for the instrument:
 - **Receipts are append-only and dated.** Never rewrite one to make a slice look green; the next run writes a new file.
 - **A receipt is a bounded summary, never a pasted tool log.** Per-step exit codes, key figures, and the verdict are the artifact. The raw logs of an investigation — repro dumps, repeat-run captures, contention traces — are session scratch: they belong to the gitignored `scratch/` home, never to `docs/gate-receipts/` and never to a commit. A hundred-kilobyte `.txt` committed as "evidence" is a log file wearing a receipt's name, and the guards that police receipts then inherit a corpus nobody should have committed.
 - Cite only a receipt that exists and whose verdict is GREEN; a pointer to a file the gate never wrote is a false record.
-- **A cached step is keyed on content and says it was cached.** Memoising a gate step is legitimate only where the step's signal is a function of the content the key covers — a tree hash (`git write-tree`) for anything that walks the working tree, a lockfile hash for the dependency audit — never a timestamp, an mtime heuristic, or "the last run was recent". The receipt records the key and marks the step `cached (<key>)`, so a cached green is distinguishable from a run green. **A step whose soundness was never measured at the gate is not eligible:** the loop may cache a step freely, a gate caches only what has been measured sound where it runs. A receipt that caches nothing prints `cached: none` — the absence of that line is what a silent cache looks like.
+- **A cached step is keyed on content and says it was cached.** Memoising a gate step is legitimate only where the step's signal is a function of the content the key covers — a tree hash (`git write-tree`) for anything that walks the working tree, a lockfile hash for the dependency audit — never a timestamp, an mtime heuristic, or "the last run was recent". **The audit key expires:** its real input is the advisory database, which changes while the lockfile does not, so a cache may shortcut the loop and the ship boundary re-audits regardless of the key. The receipt records the key and marks the step `cached (<key>)`, so a cached green is distinguishable from a run green. **A step whose soundness was never measured at the gate is not eligible:** the loop may cache a step freely, a gate caches only what has been measured sound where it runs. A receipt that caches nothing prints `cached: none` — the absence of that line is what a silent cache looks like.
 - **A gate that cannot run is not a gate.** Any step whose pass depends on an external tool exits a distinct code when the tool never executed, and is verified through its real invocation path (hook → `npm run` → child), never only by running the underlying command by hand. Nested invocations inherit the parent toolchain's exported config; where a child refuses an inherited key, sanitize the child environment explicitly and document which keys were dropped and why dropping them cannot weaken the check. Exit-0 with unparsed, empty, or absent output is a failure, not a pass.
 - **A step that cannot START is not a step that found nothing.** On a Windows host where a filesystem filter driver intercepts them, libuv's *synchronous pipe* path (`execSync`, `execFileSync`, piped `spawnSync`) returns `EBUSY` while async `spawn` and `stdio:'ignore'` both succeed. A harness built on the sync forms therefore fails to *collect* rather than to *fail*, and its empty output reads as a pass. Capture a child through the async path or an inherited file handle (`global-configs/scripts/lib/run-sync.js` exists for exactly this), and give a start failure its own exit code — never an empty result set.
 - **Never surface a single tool field as the whole error.** Print the tool's machine-readable code plus its human summary, with a fallback for blank values — a formatter that can emit `""` leaves the operator nothing to act on.
@@ -135,7 +137,7 @@ Requires Docker Desktop. Some marketplace actions fail locally — treat act as 
 
 - Local hooks run with full machine access: **never** read or require real secrets in hooks. Hooks use only public config, `.env` (gitignored), or dummy values.
 - A "CI secret" no longer exists as a platform concept — every secret is a local `.env` secret governed by `environment-management.md`.
-- The clean-working-tree gate (`git status --porcelain` must be empty post-build) runs in the pre-push hook, not in a cloud job — and stays out of any pre-commit artifact's verdict (see Gate Receipts).
+- The clean-working-tree gate (content-based — `git diff --quiet HEAD` plus untracked `git ls-files --others --exclude-standard`, rule 4) runs in the pre-push hook in every mode, not in a cloud job — and stays out of any pre-commit artifact's verdict (see Gate Receipts).
 
 ## When a Team Demands Cloud CI
 

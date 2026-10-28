@@ -19,16 +19,16 @@ Define how AI coding assistants should discover, prioritize, and load guideline 
 1. **Load only what the task requires.** Never load the entire knowledge base.
 2. **Use `MASTER_INDEX.md` as the map, not the required first read.** The project's `AGENTS.md` is the always-loaded floor; open the index only to discover files the task needs.
 3. **Match by tags, not by guessing.** Use the tag system to find relevant guidelines.
-4. **Load primary before secondary.** Primary files are mandatory for the task; secondary are supporting.
+4. **Load primary before secondary.** The index recommends candidates; select only those needed for the task.
 5. **Prefer compact extracts when context is tight.** Use the rule-extraction pattern to derive compact versions.
-6. **Traverse dependencies intelligently.** If file A depends on file B, load B first.
+6. **Follow dependencies only to resolve a task-relevant gap.** A cross-reference is not a mandatory reading list; do not recursively load the graph.
 
 ## Loading Paths (Priority Order)
 
-Load guidelines in this order:
+Resolve the files the task needs through these sources:
 
-1. **Project `AGENTS.md`** — self-contained, all rules inline. Always loaded first, together with `WORLD.md` (intent + `mode`) and `README.md` (orientation). There is no `docs/AI_CONTEXT.md` to load — the facts have one home in those three, and `docs/AI_ARCHITECTURE.md` is pulled only when a task needs subsystem detail.
-2. **`_guidelines/_index/MASTER_INDEX.md`** — if the project has a `_guidelines/` mirror (created by `sync-guidelines.ps1`). Use relative paths starting with `_guidelines/` to load files — these are guaranteed to be accessible since they're inside the project.
+1. **Project `AGENTS.md`** — always loaded first, together with `WORLD.md` (intent + `mode`). Read `README.md` for orientation when the project is new to you; load `docs/AI_ARCHITECTURE.md` only for relevant subsystem detail.
+2. **`_guidelines/` mirror** — open a known guideline directly. Use `_guidelines/_index/MASTER_INDEX.md` only when you cannot name the file you need; read the matching rows, not the whole index.
 3. **Global tool configs** — `~/.config/opencode/AGENTS.md` (opencode), `~/.codeium/windsurf/memories/global_rules.md` (Windsurf), `~/.cursor/rules/*.mdc` (Cursor). These load automatically per tool and provide fallback guidelines.
 4. **Absolute path** — the central repo path from the machine's global agent config — last resort. Agents may fail to read files outside the project.
 
@@ -69,17 +69,17 @@ Extract keywords from the user's request to identify task type:
 | "Multiple tools", "Cursor + Copilot", "Claude Code" | Multi-tool setup | `#multi-tool` `#cursor` |
 | "Speed mode", "vibe mode", "guarded", "scale ceremony", "milestone ship" | Speed mode / ceremony | `#speed` `#modes` `#workflow` |
 
-### Step 2: Look Up Task in MASTER_INDEX.md
+### Step 2: Select Task Files
 
-Navigate to the "Task-Type → Recommended Files" table in MASTER_INDEX.md. Find the matching task type and note the Primary and Secondary files.
+Open the known files directly. If their names are unclear, use search or the matching "Task-Type → Recommended Files" rows in `MASTER_INDEX.md` to select candidates.
 
-### Step 3: Resolve Dependencies
+### Step 3: Resolve Relevant Dependencies
 
-For each primary file, check the "Cross-Reference Graph" section of MASTER_INDEX.md. Load all dependencies first, then the primary files.
+Read the selected file first. Follow a dependency only when its contract or rule is needed to answer the task; stop when that gap is resolved. Do not traverse all cross-references before editing.
 
 ### Step 4: Apply the Read Budget
 
-The budget is the declared mode's cap (`speed-tiered-workflow.md` §The Context Budget), not a fixed tier table. Within it: load primary files first, add secondary files only while the cap allows, and switch to compact extracts rather than exceeding it.
+The declared mode's cap applies to the mandatory boot chain (`speed-tiered-workflow.md` §The Context Budget). Task-specific files are on-demand reading, not another mandatory chain; keep them focused and prefer compact extracts when context is tight.
 
 ### Step 5: Progressive Disclosure
 
@@ -96,7 +96,7 @@ If unsure about task scope:
 | Anti-Pattern | Why It's Wrong |
 |---|---|
 | Loading all guidelines for every task | Wastes 15K+ tokens on irrelevant content |
-| Guessing file names without consulting index | May load wrong version or miss critical dependencies |
+| Guessing a file name instead of searching when you cannot name one | A wrong guess loads a stale or unrelated file; use search or the index's matching rows |
 | Loading only stack-specific files | May miss universal engineering patterns that apply |
 | Loading full versions when context is tight | Compact extracts exist for this exact reason |
 | Treating `MASTER_INDEX.md` as required reading | It is a map, not guidance; a self-contained `AGENTS.md` may already answer the task — open the index only to discover files |
@@ -106,18 +106,10 @@ If unsure about task scope:
 ## Special Retrieval Paths
 
 ### Beginner Mode (Non-Coder)
-When the user has zero coding experience:
-1. Load `beginner-vibe-coder-guide.md` (~1,400 tokens)
-2. Load `MASTER_INDEX.md`
-3. Load `WORLD.md` (project-specific product intent)
-4. Expand to `development-workflow.md` and `cost-optimization-strategy.md` as needed
+After the project steering files, load `beginner-vibe-coder-guide.md` when onboarding a new coder. Expand to `development-workflow.md` or `cost-optimization-strategy.md` only as needed; no additional index read is required.
 
 ### Multi-Tool Mode
-When the project uses multiple AI tools simultaneously:
-1. Load `multi-tool-workflows.md` (~1,800 tokens)
-2. Load `MASTER_INDEX.md` for tool-specific guideline lookups
-3. Load `ai-agent-orchestration.md` for parallel agent patterns
-4. Load project's AGENTS.md, CLAUDE.md, and tool-specific configs
+After the project steering files, load `multi-tool-workflows.md` for multi-tool setup and the relevant tool configs. Load `ai-agent-orchestration.md` only when the task involves agent coordination; use the index only for an unresolved file lookup.
 
 ---
 

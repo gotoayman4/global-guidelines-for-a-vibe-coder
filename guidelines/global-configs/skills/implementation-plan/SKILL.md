@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: implementation-plan activated -- Source: _skills/implementation-plan/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -35,7 +33,7 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 1. `01-workflow-methodology/planning-and-scoping.md` — Planning methodology, vertical slice principle
 2. `01-workflow-methodology/development-workflow.md` — Iteration workflow, validation
 3. `08-governance/ai-governance-framework.md` — Authority hierarchy, rule precedence
-4. `docs/repo-meta/classification-system.md` — Normative vs Advisory classification
+4. `docs/repo-meta/classification-system.md` (optional central-repository reference; not delivered with this skill) — Normative vs Advisory classification
 5. `02-engineering-practices/testing-philosophy.md` — Behavioral contracts, validation
 
 If the project has an `AGENTS.md`, `CLAUDE.md`, `WORLD.md`, or similar steering file, load it and reference its rules in the plan.
@@ -64,7 +62,7 @@ You are a senior technical planner specializing in execution-optimized implement
 
 6. **Generate the plan document** — Produce the implementation plan using the Output Format below.
 
-7. **Execute tasks one at a time** — Read the entire plan first. Execute tasks in order. After completing each task, validate it against its criteria, check that no file exceeds 500 lines (refactor any that do), update its status in the checklist, and commit the changes to Git before starting the next task.
+7. **Execute tasks one at a time** — Read the entire plan first. Execute tasks in order. After completing each task, validate it against its criteria, check that no file exceeds 400 lines (refactor any that do), update its status in the checklist, and commit the changes to Git before starting the next task.
 
 8. **Track progress and re-evaluate** — After each milestone (phase), pause to re-evaluate remaining tasks. Adjust ordering if new information emerged. Preserve completed tasks. Add discovered tasks when necessary.
 
@@ -140,7 +138,7 @@ Read this entire plan before starting implementation. Execute tasks in the defin
 - Do NOT reorder tasks during execution without updating the plan — changes must be documented
 - Do NOT skip validation steps — every task must have verifiable completion criteria
 - Do NOT plan tasks that would create files exceeding 300 lines per file. If estimated output exceeds 300 lines across a single file, split into smaller tasks or decompose across more files before implementing. File size enforcement: `02-engineering-practices/file-organization.md`
-- Do NOT skip refactoring files that exceed 500 lines after implementation. After completing any task, check if the modified files exceed 500 lines. Refactor any such file into smaller modules and re-verify before committing.
+- Do NOT skip refactoring files that exceed 400 lines after implementation. After completing any task, check if the modified files exceed 400 lines. Refactor any such file into smaller modules and re-verify before committing.
 - Do NOT mark tasks complete without running their validation criteria
 - Do NOT skip committing a completed and validated task before starting the next one
 
@@ -153,7 +151,7 @@ Read this entire plan before starting implementation. Execute tasks in the defin
 3. Every task must specify: objective, outcome, dependencies, and validation criteria.
 4. Steering files (AGENTS.md, CLAUDE.md, WORLD.md) contain mandatory rules — discover and summarize them.
 5. Ambiguity is a blocker — stop and clarify rather than assume.
-6. Every task must list the files it will create or modify with estimated line counts per file. Plan for ≤300 lines per file. The hard limit is 500 — any file exceeding 500 lines MUST be refactored after implementation. See `02-engineering-practices/file-organization.md`.
+6. Every task must list the files it will create or modify with estimated line counts per file. Plan for ≤300 lines per file. The hard limit is 400 (ESLint `max-lines`) — any file exceeding 400 lines MUST be refactored after implementation. See `02-engineering-practices/file-organization.md`.
 7. Each task must be committed to Git after validation and before starting the next task — no stacking uncommitted changes.
 8. The completion checklist is the final gate — run it before declaring done.
 
@@ -164,7 +162,7 @@ Read this entire plan before starting implementation. Execute tasks in the defin
 - Planning methodology: `01-workflow-methodology/planning-and-scoping.md`
 - Development workflow: `01-workflow-methodology/development-workflow.md`
 - AI governance framework: `08-governance/ai-governance-framework.md`
-- Classification system: `docs/repo-meta/classification-system.md`
+- Classification system: `docs/repo-meta/classification-system.md` (optional central-repository reference; not delivered with this skill)
 - Testing philosophy: `02-engineering-practices/testing-philosophy.md`
 - File organization rules: `02-engineering-practices/file-organization.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

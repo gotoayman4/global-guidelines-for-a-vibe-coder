@@ -1,32 +1,32 @@
 ---
 status: "Normative"
 scope: "Global"
-tags: [speed, modes, vibe, standard, guarded, ceremony, ship-boundary, context-budget, escalation]
+tags: [speed, modes, vibe, standard, guarded, ceremony, ship-boundary, release-class, context-budget, escalation]
 ---
 
 # Speed-Tiered Workflow — Vibe / Standard / Guarded Modes
 
 ---
 
-Speed is a first-class metric alongside accuracy: time from intent to first running slice is measured, not felt. One process does not fit a throwaway prototype and a payment system — a declared mode scales **context, plan, test, verification, steering and gate** ceremony. The ship boundary, not every loop iteration, is where quality hardens.
+Speed is a first-class metric alongside accuracy: when a loop feels slow, the fix starts from a measurement of where the minutes went, never from adding ceremony. One process does not fit a throwaway prototype and a payment system — a declared mode scales **context, plan, test, verification, steering and gate** ceremony. The ship boundary, not every loop iteration, is where quality hardens — and the release class sets how hard (§Release Classes).
 
 ## Mode Declaration
 
-The project declares its mode in `WORLD.md` (`mode: vibe | standard | guarded`). A starter project begins at `vibe` — the default until the first ship/milestone, after which escalation is a dated decision recorded in WORLD.md. A project that declares no mode at all is assumed `standard`: its stage is unknown, and an undeclared project must not silently receive the loosest tier (`global-configs/scripts/read-mode.js` — the ONE reader every mode-aware gate calls; exit 2 means the caller pays the full chain). Mode changes are recorded in WORLD.md with date and reason.
+The project declares its current mode in `WORLD.md` (`mode: vibe | standard | guarded`). **The mode is a loop-speed setting, not a lifecycle stage.** It measures how much ceremony the steady inner loop pays; it is not a statement that the app is unshipped. A project MAY run `vibe` or `standard` after its first release — most apps ship early for live testing or a pilot, and that release does not change what the loop should cost. A starter defaults to `vibe`; a release never changes that line — the release override deepens the boundary push, not the declared mode. A project with no declared mode is assumed `standard`: its stage is unknown, so it must not silently receive the loosest tier (`global-configs/scripts/read-mode.js` — the shared reader; exit 2 means the caller runs the full chain). Record the reason for a steady-state mode change in its commit message, not as history in `WORLD.md`.
 
 ## The Mode Matrix
 
-**A mode that does not change how much you read, how many files you write, or what the gate runs is a label, not a mode.** Every row below is a cost a session actually pays — not a description of how carefully it thinks.
+**A mode that does not change how much you read, how deeply you plan and test, or what the gate runs is a label, not a mode.** Every row below is a cost a session actually pays — not a description of how carefully it thinks.
 
 | Dimension | vibe | standard | guarded |
 |---|---|---|---|
-| **Context** — tokens read before the first edit | **≤40K** — the task's 2–4 files | **≤90K** — the task files + the contracts they touch | **≤160K** — the full boot chain |
+| **Context** — mandatory boot-chain cap | **≤40K** | **≤90K** | **≤160K** |
 | **Plan** | 3-bullet intent; no plan gate | feature plan for non-trivial; AI reviews | standard plan + architecture review |
 | **Tests** | smoke run + regression test only when a bug bites twice or at milestone | behavioral tests with code; regression every fix | full pyramid + critical-flow E2E before ship |
-| **Verification** | run it once + one-line report at the cheapest sufficient tier | evidence table by change type | full evidence + security pass on auth/data changes |
-| **Steering writes** | one home per trigger; an ADR only for an irreversible decision | same | same |
-| **Gate** — per push | **`gate:fast`** + the `always` guard tier | the full pipeline | the full pipeline + the path-aware extras |
-| **Commits** | conventional, coarser increments | every working increment | every increment + checkpoint discipline |
+| **Verification** | run it once + one-line report at the cheapest sufficient tier | evidence table by change type | full evidence for the whole change (security depth is never mode-scaled — Absolute Rule 1) |
+| **Steering writes** | one home per trigger (identical in every mode); an ADR only for an irreversible decision | same | same |
+| **Gate** — per push | **`gate:fast`** + the `always` guard tier | lint + type-check + the full suite | that chain + the build + the path-aware extras |
+| **Commits** | conventional; related micro-edits MAY batch | every working increment | every working increment |
 
 ## The Context Budget — the row most projects ignore
 
@@ -44,29 +44,44 @@ The reading a session does before its first edit is the largest single cost it p
 
 | Mode | What the hook runs per push | What it defers to the ship boundary |
 |---|---|---|
-| vibe | `gate:fast` (lint + type-check + the changed tests) + every guard in the `always` tier | the full suite, e2e, the desktop pair, the build |
-| standard | the full pipeline | — |
-| guarded | the full pipeline + the path-aware extras | — |
+| vibe | `gate:fast` (lint + type-check + the changed tests) + every guard in the `always` tier | the full suite, the ship-tier e2e, the build |
+| standard | lint + type-check + the full suite | the build (the release builds anyway), the ship-tier e2e |
+| guarded | standard's chain + the build + the path-aware extras | the ship-tier e2e |
 
-The hook reads the declared `mode`, so a project escalates its gate by escalating its mode — a dated, recorded act, not a hand-edit to the hook. **Removing a check is never the optimisation**: the optimisation is running each check at the frequency its trigger actually needs (`workflow-friction-audit.md`).
+The hook reads the declared `mode`, so a project changes its per-push cost by changing its mode — a dated, recorded act, not a hand-edit to the hook. **The build is the one pipeline step a push may defer without exposing a user to an unbuilt artifact:** every release builds, and deploys what it built, so a build break in `standard` surfaces at the ship boundary — never in front of a user. `guarded` keeps the build per push: it is the mode chosen where a broken artifact must be found before the merge lands, not at the next release. **Removing a check is never the optimisation**: the optimisation is running each check at the frequency its trigger actually needs (`workflow-friction-audit.md`).
 
-**Receipt cadence is separate from gate cadence.** Routine slices use the mode's loop and pre-push gate without generating a full `gate:receipt`. Run one full receipt at a milestone or release exit, after the code is final; use `--e2e` when that boundary requires the end-to-end matrix. This reduces repeated full runs and artifacts, not the checks required by the hook or any security tier.
+**Receipt cadence is separate from gate cadence.** A full `gate:receipt` is a milestone or release artifact, never a per-slice one; `local-ci-strategy.md` §Gate Receipts owns what it records and when it runs.
+
+## Release Classes — Shipping Does Not Change the Mode
+
+Most apps ship long before they are final: a first deploy to test in the live environment, a demo, an internal pilot, a beta. Escalating the declared mode at each of those turns the mode into a lifecycle label that flips twice a week, and it stops measuring what it exists to measure — the loop's speed. The declared mode and the release class are separate decisions:
+
+| Class | What it is | The boundary it owes |
+|---|---|---|
+| **pilot** | live testing, a demo, an internal/beta release — real users, non-final stakes | the full pipeline (lint → type-check → full suite → build) + the critical-flow checks (LTR and RTL) on the flows the pilot exposes |
+| **production** | the final/public launch users depend on | the pilot chain + every `ship`-tier guard (the full critical-flow E2E matrix) + the path-aware extras + rollback readiness |
+
+- **The declared mode does not change because you shipped.** A `vibe` or `standard` project ships a pilot from its declared mode; the class sets the boundary's depth, and the boundary runs in every mode.
+- **Record the class at the release, not in `WORLD.md`:** the release tag, the commit message, or the gate receipt says `pilot` or `production`. The class describes one release; `WORLD.md` describes the steady loop.
+- **A production release does not make the project permanently `guarded`.** After it ships, the loop returns to the declared mode. Escalate the declared mode on evidence about the loop — repeated silent regressions — never because a release happened.
+- **Nothing is skipped — it is paid at the boundary.** A `vibe` loop defers the suite to the boundary; a `standard` loop defers the build. Both run there before a user sees the release.
 
 ## Absolute Rules (All Modes)
 
 1. **Security never relaxes.** SQLi prevention, secrets, input validation, auth review, CORS, security headers, and magic-byte upload checks apply identically in every mode.
 2. **No fake evidence.** NEVER claim tests pass without running them; NEVER present predictions as observations.
-3. **Ship boundary hardens quality.** Before any release or milestone exit: critical-flow checks (login, payments, data persistence) verified in both LTR and RTL, and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A vibe loop may be loose; a ship may not.
+3. **Ship boundary hardens quality — the release class sets the depth.** Before any release or milestone exit: critical-flow checks (login, payments, data persistence) verified in both LTR and RTL, and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A `production` release adds the full critical-flow E2E matrix, the path-aware extras and rollback readiness. A vibe loop may be loose; a ship may not.
 4. **Fix the change; revert the approach.** A failing check on a sound change is fixed and re-run (two attempts — `agent-verification-loop.md`). Wrong output — the approach itself is broken, or fixes keep landing on new breakage — is reverted or stashed and regenerated with better constraints. Never debug forward past the second failed fix.
 5. **Speed is measured, not felt.** If a mode feels slow, measure where the minutes went (reading, gate, rework) before adding or removing ceremony (`workflow-friction-audit.md`).
 
 ## Mode Transitions
 
-Escalation is **automatic and evidence-based**. The last four triggers escalate the **slice**, not the project: the declared mode returns when the slice closes. Every escalation writes one line naming its trigger — a mode that must be remembered is a mode that will be wrong.
+Escalation is **automatic and evidence-based**. The table distinguishes permanent project changes from temporary slice verification. A slice escalation leaves the declared mode unchanged; state its trigger in the verification report.
 
 | Trigger | Action |
 |---|---|
-| First ship or milestone | escalate the project to `standard` or `guarded`; `vibe` remains only for throwaway work |
+| First release — pilot or production | nothing to `WORLD.md` — ship through the ship boundary at the class's depth (§Release Classes); the declared mode does not change |
+| A `production` release | run the boundary at guarded depth; the declared mode still does not change |
 | Same bug path bites twice | add the regression test immediately, regardless of mode |
 | Auth, payments, or permissions touched | run that change's verification at guarded tier even while the loop runs in vibe |
 | A `ship`-tier guard owns a changed path | run that guard set for this slice, in any mode |
@@ -75,9 +90,9 @@ Escalation is **automatic and evidence-based**. The last four triggers escalate 
 
 ### A Release Escalation Is an Override, Not an Edit
 
-A milestone or release exit that owes the full chain runs it through a **release override the gate reads** — a release branch, tag, env var, or override file — instead of editing the declared `mode` in `WORLD.md` and editing it back a day later. The declared mode changes only when the project's **steady state** changes; a flip that lasts one release is an override. A project that flip-flops its declared mode every release pays two boot-file edits, a hook-behavior change and a transition-log entry per release, and its mode line stops meaning anything.
+A release exit owes the full chain in two ways, and neither edits `WORLD.md`: the release process runs the boundary chain and writes the evidence (`gate:receipt --e2e` — `local-ci-strategy.md` §Gate Receipts), and the push that carries the release runs the standard chain through a **release override the gate reads** — an env var or a gitignored marker — instead of editing the declared `mode` and editing it back a day later. The declared mode changes only when the project's **steady state** changes; a lift that lasts one release is an override. A project that flip-flops its declared mode every release pays two boot-file edits and a hook-behavior change per release, and its mode line stops meaning anything.
 
-**The transition log lives in the changelog, not in `WORLD.md`.** Mode-change lines are dated history; a boot file carries no history (`documentation-strategy.md` §Directives rule 6). `WORLD.md` states only the current mode and how a release escalates.
+**The commit records a mode change; `WORLD.md` states the current mode and release override.** Git supplies the date and history. A separate transition log is not required (`documentation-strategy.md` §What Gets Recorded, and Where).
 
 ## Accepted Trade-offs by Mode
 
@@ -85,7 +100,7 @@ A milestone or release exit that owes the full chain runs it through a **release
 |---|---|---|
 | vibe | no suite → silent regressions between milestones | milestone critical-flow checks; regression-on-second-bite |
 | vibe | the fast loop can pass what the full pipeline would catch | the ship boundary runs the full pipeline; nothing is *skipped*, it is *deferred* to a named boundary |
-| vibe | staler steering prose | non-trigger prose defers to the milestone; a trigger still writes its one home in the same iteration |
+| standard | a build break surfaces at the ship boundary, not on the push | every release builds, and deploys what it built |
 | standard | slower inner loop than vibe | `gate:fast` two-loop pattern |
 | guarded | slowest loop | path-aware gates keep unrelated subtrees fast |
 
@@ -93,23 +108,23 @@ A milestone or release exit that owes the full chain runs it through a **release
 
 | Anti-Pattern | Fix |
 |---|---|
-| vibe mode shipping to production | escalate the project before crossing the ship boundary |
+| Flip-flopping the declared mode for every release — or escalating it to ship | ship through the ship boundary at the release class's depth, with the release override; the mode is a loop-speed choice, not a lifecycle stage |
+| Treating a pilot as a lower-quality release | a pilot owes the full pipeline + critical-flow checks in LTR and RTL; only the class's extra depth differs |
 | guarded ceremony on a throwaway spike | demote to vibe — the ceremony protects nothing here |
 | Treating mode as an excuse to skip security or honesty rules | Absolute Rules apply in every mode |
 | Mode declared at bootstrap, never revisited | revisit at every milestone; record the change |
-| Flip-flopping the declared mode for every release | run the release chain on a release override; edit the declared mode only when the steady state changes |
 | A per-slice write to a plan document (PRD/ROADMAP/sprint plan) | plan docs close at the sprint boundary; a slice's record is its commit message (`planning-and-scoping.md`) |
-| **A vibe session that reads the whole boot chain and writes six steering files** | the mode is not wired to Context or Steering — the boot chain is three files, and a trigger writes one home |
-| **Reading everything "because the bootstrap mandates it"** | the chain is a menu; name the 2–4 files the task needs |
+| **A vibe session that reads the entire guideline corpus or duplicates steering facts** | Read the two mandatory steering files, then only task-relevant material; write each fact in its one home |
+| **Reading everything "because the bootstrap mandates it"** | The on-demand corpus is a menu; name the files the task needs |
 | **A cap re-based upward every time its file grows** | re-base only against live measurement; freeze the chain total |
-| **A slice that escalates on several unrelated classes** | unrelated verification regimes do not share evidence — split the slice, or name the shared root cause in one line |
 
 ## Key Takeaways
 
 1. Declare the mode; let it scale context, plan, tests, verification, steering and gate — never security or honesty.
-2. The ship boundary is the hard quality gate; the loop inside is where speed is won.
-3. Budget the reading and give every fact one home — that is most of the difference between a fast mode and a relabelled slow one.
-4. Escalate on evidence, and measure where the minutes went before changing the process.
+2. The mode is a loop-speed setting, not a lifecycle stage: `vibe` and `standard` keep shipping, and the release class — pilot or production — sets how hard the boundary checks.
+3. The ship boundary is the hard quality gate; the loop inside is where speed is won.
+4. Budget the reading and give every fact one home — that is most of the difference between a fast mode and a relabelled slow one.
+5. Escalate on evidence, and measure where the minutes went before changing the process.
 
 ---
 

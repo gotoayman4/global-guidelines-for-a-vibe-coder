@@ -230,7 +230,8 @@ test('fails a deliberately over-budget fixture in strict mode', () => {
 });
 
 /** The instrument's default reading set, split by the doctrine's own load policy. */
-const CHAIN = ['AGENTS.md', 'WORLD.md', 'README.md'];
+const CHAIN = ['AGENTS.md', 'WORLD.md'];
+const REQUIRED = ['README.md'];
 const MENU = [
   'DEVTOOLS.md',
   'docs/PRD.md',
@@ -246,7 +247,7 @@ const MENU = [
 /** A corpus that satisfies the default list, with a deliberately heavy on-demand spec. */
 function defaultCorpus() {
   const files = {};
-  for (const rel of [...CHAIN, ...MENU]) files[rel] = `# ${rel}\n\nInstruction.\n`;
+  for (const rel of [...CHAIN, ...REQUIRED, ...MENU]) files[rel] = `# ${rel}\n\nInstruction.\n`;
   // Heavy, but in short lines: a long paragraph would trip the unwrappable-prose finding
   // and mask the budget behaviour this fixture exists to exercise.
   files['docs/PRD.md'] = `# Spec\n\n${'xxxx\n'.repeat(800)}`;
@@ -259,9 +260,10 @@ test('charges the mode budget for the always-read chain, not the on-demand menu'
 
   assert.equal(json.missingCount, 0);
   assert.deepEqual(json.files.map((file) => file.rel), CHAIN);
+  assert.deepEqual(json.required.map((file) => file.rel), REQUIRED);
   assert.deepEqual([...json.onDemand.map((file) => file.rel)].sort(), [...MENU].sort());
   assert.ok(json.onDemandTokens > 1000, `expected the menu to carry the spec, got ${json.onDemandTokens}`);
-  assert.ok(json.totalTokens < 100, `the chain is three short files, got ${json.totalTokens}`);
+  assert.ok(json.totalTokens < 100, `the chain is two short files, got ${json.totalTokens}`);
 });
 
 test('the menu is not charged to the chain budget (reversal proof)', () => {
@@ -269,7 +271,7 @@ test('the menu is not charged to the chain budget (reversal proof)', () => {
   const measured = runBudget(root, ['--json']).json;
   const budget = String(measured.totalTokens);
 
-  // As declared: three short files, so the budget fits and strict mode passes.
+  // As declared: two short files, so the budget fits and strict mode passes.
   const declared = runBudget(root, ['--max-tokens', budget, '--strict', '--json']);
   assert.equal(declared.status, 0);
 
@@ -294,23 +296,27 @@ test('reports the chain and the menu as separate sections in the human output', 
   assert.match(result.stdout, /ON-DEMAND MENU — read by choice, NOT charged to the mode budget/);
   assert.match(result.stdout, /chain total: ~\d+ tokens/);
   assert.match(result.stdout, /menu total: ~\d+ tokens across 9 document\(s\)/);
+  assert.match(result.stdout, /MANDATED, NOT CHAINED/);
 });
 
-test('an absent menu file is a note, an absent chain file is a failure', () => {
-  // Only the three chain documents exist: the whole menu is absent.
+test('an absent menu file is a note, an absent required or chain file is a failure', () => {
   const root = makeFixture({
     'AGENTS.md': '# Rules\n\nInstruction.\n',
     'WORLD.md': '# Product\n\n## Speed Mode\n\n- **mode:** `vibe`\n',
-    'README.md': '# Readme\n\nInstruction.\n',
   });
-  const json = runBudget(root, ['--cap-from-mode', '--strict', '--json']).json;
+  const result = runBudget(root, ['--cap-from-mode', '--strict', '--json']);
+  const json = result.json;
 
-  // Nine absent menu documents do not fail the check...
+  // README is a member of the mandated doc set, so its absence is a finding — never a note.
+  assert.equal(result.status, 1);
+  assert.deepEqual(json.missingRequiredFiles, ['README.md']);
+  assert.match(json.problems.join('\n'), /README\.md: file not found/);
+  // The rest of the menu is genuinely optional and stays a note.
   assert.equal(json.missingMenuFiles.length, 9);
+  assert.ok(!json.missingMenuFiles.includes('README.md'));
   assert.deepEqual(json.missingFiles, []);
-  assert.deepEqual(json.problems, []);
 
-  // ...but the same absence in the chain does. Same corpus, one file moved into the floor.
+  // ...and the same absence in the chain does. Same corpus, one file moved into the floor.
   const chainGap = runBudget(root, ['--files', 'AGENTS.md,GHOST.md', '--strict', '--json']);
   assert.equal(chainGap.status, 1);
   assert.match(chainGap.json.problems.join('\n'), /GHOST\.md: file not found/);

@@ -56,7 +56,7 @@ The audit is a **scheduled act**, not a reflex: monthly, as an automation, writi
 | Always-read doc carries its own history | Relocate to dated archives, leave a pointer heading that keeps the old anchor | `documentation-strategy.md` §History |
 | Prose stuffed into a table cell (rows of thousands of characters) | The prose leaves the table; the table stays a lookup | `documentation-strategy.md` §Directives 11 |
 | Rule restated in N files | One canonical copy; every other site links | Guards refuse the restatement |
-| Full gate per edit | Add a fast loop (lint + type-check + changed tests); keep the full gate per push | `local-ci-strategy.md` §Two Loops |
+| Full gate per edit | Add a fast loop (lint + type-check + changed tests); keep the mode's gate per push (`standard`: lint + type-check + suite; `guarded` adds the build) and the full pipeline at the ship boundary in every mode | `local-ci-strategy.md` §The Loop Inside Tier A and Tier B |
 | Machine numbers in prose | Write a receipt artifact; prose cites its path | `local-ci-strategy.md` §Receipts |
 | Minutes-long suite on every push | Make the step path-aware; keep the path list in the hook | `local-ci-strategy.md` |
 | Guard that fails on an improvement | The guard follows the change in the same iteration, and gains a non-vacuity probe | `documentation-strategy.md` §Guards |
@@ -78,14 +78,14 @@ The audit is a **scheduled act**, not a reflex: monthly, as an automation, writi
 | "The workflow feels slow" with no numbers | Guesses target the wrong bucket; effort spent on a step nobody waits for | Measure chars, seconds, and turns first |
 | Optimising the one-off cost | A 20-minute twice-a-month job is not the bottleneck | Rank by frequency × duration |
 | Adding more onboarding docs to fix slow onboarding | Grows the boot chain that caused it | Move history out; add a pointer |
-| Making the gate shorter by removing steps | Loses the coverage it existed for | Tier it: fast loop + per-push full gate |
+| Making the gate shorter by removing steps | Loses the coverage it existed for | Tier it: fast loop + the mode's per-push gate; full pipeline at the ship boundary |
 | Recording verification results by hand | Goes stale silently, and reads as evidence | Machine-written receipt, cited by path |
 
 ## Key Takeaways
 
 1. Audit the process on a schedule, with an instrument — `npm run audit:friction -- . --write --check-cadence`, monthly. No correctness gate will ever report it as a failure.
 2. Measure tokens, seconds, and intent → first running slice — a felt bottleneck and the real one are usually different files, and the measurement's own heuristics need auditing too.
-3. Tier every verification step by how often it must run and what the current mode's risk tier needs; the full gate is per push or per ship boundary, the loop is per edit, accepted-risk steps may be dropped with a note.
+3. Tier every verification step by how often it must run and what the current mode's risk tier needs; the loop is per edit, the mode's gate is per push, and the full pipeline runs at the ship boundary in every mode. Accepted-risk steps may be dropped with a note.
 4. One canonical copy per rule; the guard refuses restatements instead of rewarding them.
 5. Machine output is referenced, never transcribed — including the steering writes themselves.
 6. **Check delivery before you check anything else.** A project running a stale mirror has measured every other number against the wrong rules.

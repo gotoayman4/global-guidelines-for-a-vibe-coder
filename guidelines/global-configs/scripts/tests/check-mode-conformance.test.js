@@ -141,7 +141,7 @@ test('a docs-only fast path is not a mode branch', () => {
 });
 
 test('another package\'s own suite is not the project suite', () => {
-  // The desktop lane is a security step that runs in every mode by design; the mode governs
+  // The desktop lane is governed by its own path trigger, not by the mode; the mode governs
   // the PROJECT's suite.
   const hook = [
     '#!/bin/sh',
@@ -168,6 +168,115 @@ test('a narrower lane is not the full suite', () => {
     '',
   ].join('\n');
   assert.deepEqual(pipeline(hook), ['the full test suite → inside the non-vibe branch']);
+});
+
+test('a build behind a nested guarded condition is not charged to vibe', () => {
+  // The shape the scaffold writes: the build sits on the non-vibe side AND behind a guarded
+  // test. A parser that reads only the innermost branch sees a `guarded` branch and, if it
+  // charges anything not labelled non-vibe, bills the fast mode for a step it cannot reach.
+  const hook = [
+    '#!/bin/sh',
+    'if [ "$MODE" = "vibe" ]; then',
+    '  run_step gate:fast',
+    'else',
+    '  run_step lint',
+    '  run_step test -- --run',
+    '  if [ "$MODE" = "guarded" ]; then',
+    '    run_step build',
+    '  fi',
+    'fi',
+    '',
+  ].join('\n');
+  assert.deepEqual(pipeline(hook), [
+    'the full test suite → inside the non-vibe branch',
+    'the build → inside the non-vibe branch',
+  ]);
+  assert.equal(analyseHook(hook).fullPipeline[1].runsInVibe, false);
+});
+
+test('a nested guarded guard does not excuse a vibe-reachable step', () => {
+  const hook = [
+    '#!/bin/sh',
+    'if [ "$MODE" = "vibe" ]; then',
+    '  if [ "$MODE" = "guarded" ]; then',
+    '    run_step build',
+    '  fi',
+    '  run_step test -- --run',
+    'fi',
+    '',
+  ].join('\n');
+  const analysis = analyseHook(hook);
+  assert.equal(analysis.fullPipeline[0].runsInVibe, false, 'the inner guarded test makes the build unreachable in vibe');
+  assert.equal(analysis.fullPipeline[1].runsInVibe, true, 'the suite still sits in the vibe branch');
+});
+
+test('an elif chain is evaluated branch by branch', () => {
+  const hook = [
+    '#!/bin/sh',
+    'if [ "$MODE" = "vibe" ]; then',
+    '  run_step gate:fast',
+    'elif [ "$MODE" = "guarded" ]; then',
+    '  run_step test -- --run',
+    '  run_step build',
+    'else',
+    '  run_step test -- --run',
+    'fi',
+    '',
+  ].join('\n');
+  assert.deepEqual(pipeline(hook), [
+    'the full test suite → inside the non-vibe branch',
+    'the build → inside the non-vibe branch',
+    'the full test suite → inside the non-vibe branch',
+  ]);
+});
+
+test('the scaffold spelling `run_step test` / `run_step build` is read as the full pipeline', () => {
+  // The scaffold's hook wraps every step in a `run_step` helper that fails on a missing script.
+  // A reader that knew only `npm test` read that hook as carrying no full pipeline at all, so a
+  // scaffolded project could move `run_step test` into its vibe branch and pass.
+  const hook = [
+    '#!/bin/sh',
+    'if [ "$MODE" = "vibe" ]; then',
+    '  run_step gate:fast',
+    '  run_step test -- --run',
+    'else',
+    '  run_step build',
+    'fi',
+    '',
+  ].join('\n');
+  assert.deepEqual(pipeline(hook), [
+    'the full test suite → inside the vibe branch — the fast mode pays the full cost',
+    'the build → inside the non-vibe branch',
+  ]);
+});
+
+test('REVERSAL PROOF: moving `run_step test` into the vibe branch FAILS a vibe project', () => {
+  const dir = project({
+    mode: 'vibe',
+    hook: [
+      '#!/bin/sh',
+      'if [ "$MODE" = "vibe" ]; then',
+      '  run_step gate:fast',
+      '  run_step test -- --run',
+      'else',
+      '  run_step test -- --run',
+      '  run_step build',
+      'fi',
+      '',
+    ].join('\n'),
+  });
+  const report = examine(dir);
+  assert.match(report.failures.join('\n'), /the full test suite runs in a vibe push — inside the vibe branch/);
+});
+
+test('the scaffold\'s own hook conforms: its full pipeline sits in the non-vibe branch', () => {
+  const { prePushHook } = require('../new-project.js');
+  const hook = prePushHook();
+  assert.deepEqual(pipeline(hook), [
+    'the full test suite → inside the non-vibe branch',
+    'the build → inside the non-vibe branch',
+  ]);
+  assert.deepEqual(examine(project({ mode: 'vibe', hook })).failures, []);
 });
 
 test('comments are stripped, and only the code is read', () => {

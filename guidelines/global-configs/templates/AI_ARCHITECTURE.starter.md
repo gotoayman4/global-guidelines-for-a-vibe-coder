@@ -1,6 +1,6 @@
 # AI_ARCHITECTURE.md — Detailed Technical Reference (On Demand)
 
-**Purpose:** Deep reference for all subsystems. Agents load sections of this file per task — it is NOT read whole every session (that is `README.md` + `AGENTS.md`).
+**Purpose:** Deep reference for all subsystems. Agents load relevant sections per task; the always-read files are `AGENTS.md` and `WORLD.md`, with `README.md` for initial orientation.
 
 **Source:** `global-configs/templates/AI_ARCHITECTURE.starter.md`
 **How to use:** Copy to `docs/AI_ARCHITECTURE.md` in your project root. Replace every `[FILL]`. One row per subsystem/endpoint — tables over prose.
@@ -54,6 +54,6 @@ Per domain: what to read first, then the pattern to copy. This is the one home f
 
 ## Maintenance
 
-- Update in the SAME iteration as the code (Trigger table in `07-documentation/documentation-strategy.md`).
-- New subsystem/endpoint/table = new row here + header bump, same commit.
-- Non-trigger change: leave this file, report `Docs: N/A (<reason>)`.
+- Update in the SAME iteration as the code (Trigger table in `_guidelines/07-documentation/documentation-strategy.md`).
+- New subsystem/endpoint/table = new row here, same commit.
+- Non-trigger change: write nothing — no N/A note.

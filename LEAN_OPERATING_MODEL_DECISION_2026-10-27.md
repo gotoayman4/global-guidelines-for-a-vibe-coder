@@ -44,8 +44,10 @@ Keep what makes agents correct — security rules, behavioural testing, verifica
 
 Security fragment; behavioural-testing and verification-evidence rules; mode-scaled gate (`gate:fast` in vibe, full pipeline otherwise, release override); `docs:census` (one home per fact, quarterly archive); `check-drift` / `check-index-drift` / `check-skills-drift`; `sync:drift`; `guard:tiers`; `guard:mode`; RTL/Arabic rules; the skills corpus and its stack-fit delivery.
 
+**Superseded in part (2026-10-28):** the mode-scaled-gate entry above is replaced by `SHIP_CLASS_AND_GATE_DECISION_2026-10-28.md` §2 — `standard` defers the build to the ship boundary, and a release no longer escalates the declared mode.
+
 ## 3. What is not in this decision
 
 - Downstream project hooks (`GAMS`, `property-management-app`) remain as they are; conforming them is each project's own slice.
 - No skill content was removed. The skills' *delivery* and the always-loaded instructions around them changed.
-- The benchmark recommended by the audit (12–20 representative tasks, before/after on cost and first-run correctness) is still to be run; this decision ships the leaner model so there is something to measure.
+- The benchmark recommended by the audit has been run (2026-10-28): 18 tasks, before `ec55a54` → after the working tree; 18/18 rules retained, all task files indexed, all mapped skills loadable. Full reading chain 22,250 → 5,589 tokens (−74.9%); declared every-session set 7,837 → 5,589 (−28.7%). A live-agent first-run run (scored first-file choice) remains unrun. Results and limits: `LEAN_REFORM_BENCHMARK_2026-10-28.md`; re-measure with `npm run benchmark:reform`.

@@ -20,7 +20,7 @@ From the project root:
 2. `WORLD.md` — product intent and the declared speed mode (`vibe | standard | guarded`); undeclared means `standard`.
 3. `README.md` — orientation when the project is new to you: what it is, its structure, the quick start. It holds no rules.
 
-`CLAUDE.md`, if present, is the tool-specific companion; otherwise `AGENTS.md` is authoritative. Subsystem and API detail lives in `docs/AI_ARCHITECTURE.md`, loaded on demand — never at boot.
+`AGENTS.md` is authoritative. `CLAUDE.md`, if present, is a tool-specific companion that points at it and never restates rules. Subsystem and API detail lives in `docs/AI_ARCHITECTURE.md`, loaded on demand — never at boot.
 
 ### Step 2: Name the Files This Task Needs
 
@@ -53,7 +53,7 @@ With no project steering file and no `_guidelines/` mirror:
 
 ## Anti-Patterns
 
-- Do NOT load the knowledge base at session start — the boot chain is three files.
+- Do NOT load the knowledge base at session start — read `AGENTS.md` and `WORLD.md`, with `README.md` for initial orientation.
 - Do NOT read `MASTER_INDEX.md` as a ritual; open it only to find a file the task needs.
 - Do NOT guess file names when the index can name them.
 - **Who May Change What in AGENTS.md.** AI MAY freely ADD, narrow, or retire project-specific rules. The ONE governance gate: a **MAJOR** change to AGENTS.md — removing or editing an existing **global/baseline** rule, or changing the security section — requires an explicit, recorded owner decision. This is a governance choice, not a code review; no human reviewer is required. Adding or narrowing rules never triggers the gate.

@@ -68,7 +68,7 @@ It is a **content distribution hub** — not an application. Its primary value i
 
 1. **Correctness** — Guidelines must be technically accurate; errors propagate to all downstream projects
 2. **Consistency** — Same terminology, structure, and tone across all files
-3. **Discoverability** — `_index/MASTER_INDEX.md` must make any file findable in seconds
+3. **Discoverability** — `guidelines/_index/MASTER_INDEX.md` must make any file findable in seconds
 4. **Syncing Reliability** — Sync tooling must never corrupt downstream project files
 5. **Maintainability** — Adding a new guideline should require updating exactly 2-3 places
 
@@ -78,10 +78,10 @@ It is a **content distribution hub** — not an application. Its primary value i
 
 | Metric | Current | 12-Month Projection |
 |---|---|---|
-| Guideline files | ~80 (68 content + _index) | ~120 |
+| Guideline files | ~70 (66 content + `_index`) | ~120 |
 | Starter templates | 16 | 25 |
-| Skill files | 20 | 30 |
-| Downstream projects using sync | — | 5-20 |
+| Skill files | 23 | 30 |
+| Downstream projects using sync | 7 | 5-20 |
 
 ---
 
@@ -105,6 +105,6 @@ It is a **content distribution hub** — not an application. Its primary value i
 ---
 
 **Cross-References:**
-- MASTER_INDEX: `_index/MASTER_INDEX.md`
-- Retrieval rules: `_index/RETRIEVAL_RULES.md`
+- MASTER_INDEX: `guidelines/_index/MASTER_INDEX.md`
+- Retrieval rules: `guidelines/_index/RETRIEVAL_RULES.md`
 - Starter templates: `guidelines/global-configs/templates/`

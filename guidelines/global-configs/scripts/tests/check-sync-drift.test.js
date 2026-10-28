@@ -289,7 +289,7 @@ test('a missing or stale COMPANION is drift, not a current skill', () => {
 
 test('compareSkills compares against the PLAN, not the whole source corpus — the false-drift fix', () => {
   // THE BUG THIS CLOSES. `_skills/` is a FILTERED mirror: the sync writes only the skills that fit
-  // the project's stack (12–16 of 20 on the fleet). Comparing its hash to the source's whole-corpus
+  // the project's stack (a filtered subset of the pool). Comparing its hash to the source's whole-corpus
   // hash reported every project as drifted the moment the filter was applied — while every one of
   // them was correct. The verdict must come from `plan-skills.js`, the one home for the decision.
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-skills-filter-'));

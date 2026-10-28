@@ -14,28 +14,20 @@ CI is the first reviewer of every AI-generated change — it catches what a quic
 
 ## The Minimum Pipeline (in order)
 
-The order below is fixed; **how much of it a push runs is the mode's decision**, and the ship boundary runs all of it in every mode.
+The order below is fixed; **how much of it a push runs is the declared mode's decision** — the mapping has one home in `speed-tiered-workflow.md` §The Gate Scales With the Mode — and the ship boundary runs all of it in every mode. The **release class** sets the boundary's depth: a `pilot` (live testing, demo, beta) runs this pipeline plus critical-flow checks in LTR and RTL; a `production` release adds the ship-tier E2E matrix, the path-aware extras and rollback readiness (`speed-tiered-workflow.md` §Release Classes).
 
 ```
 PUSH (pre-push gate, local) → LINT → TYPE CHECK → TEST → BUILD → SECURITY SCAN → CLEAN TREE → DEPLOY PREVIEW
 ```
 
-| Push scope | Runs |
-|---|---|
-| `vibe` per push | LINT → TYPE CHECK → changed tests (`gate:fast`), plus every `always`-tier guard |
-| `standard` / `guarded` per push | the whole pipeline |
-| ship boundary (every mode) | the whole pipeline |
-
-`vibe` runs only the tests its diff touches; the full suite and E2E are ship-boundary steps, not per-push steps (`local-ci-strategy.md` §Which Gate Runs).
-
 | Gate | Command | Catches |
 |---|---|---|
 | Lint | `eslint . --max-warnings 0` + `prettier --check` | Style violations, forbidden patterns |
 | Type check | `tsc --noEmit` | Type errors AI misses |
-| Tests | full suite: `vitest run --coverage` + `playwright test`; a `vibe` push runs the `--changed` slice only | Silent regressions |
+| Tests | full suite: `vitest run --coverage` + `playwright test` | Silent regressions |
 | Build | `vite build` | Import errors, config issues |
 | Security | `npm audit --audit-level=high` + secret scan | Vulnerable deps, hardcoded secrets |
-| Clean tree | fail if `git status --porcelain` non-empty post-build | Tool/build artifact pollution |
+| Clean tree | fail if `git diff --quiet HEAD` or `git ls-files --others --exclude-standard` reports anything after the gate — decided on content, never on `git status --porcelain`'s stat cache | Tool/build artifact pollution |
 | Deploy preview | staging/preview environment | Issues only visible when running |
 
 ## Pipeline Design Principles
@@ -43,7 +35,7 @@ PUSH (pre-push gate, local) → LINT → TYPE CHECK → TEST → BUILD → SECUR
 1. **Fail fast:** order fastest → slowest; don't run tests on a lint failure.
 2. **Block merge on ANY gate failure.** No exceptions, no "fix later."
 3. **Same pipeline for AI and human code** — no AI shortcut.
-4. **At the ship boundary, the pipeline IS the executable definition of done:** "Is this ready?" = "Did the full pipeline pass?" Inside a `vibe` slice, the mode's gate is the per-push definition; the full pipeline is deferred, not skipped.
+4. **At the ship boundary, the pipeline IS the executable definition of done:** "Is this ready?" = "Did the full pipeline pass?" Inside an iterating slice, the mode's gate is the per-push definition; whatever that gate defers — `vibe` defers the full suite and the build, `standard` only the build — the ship boundary runs it. Deferred, never skipped.
 
 ## AI-Specific Additions
 

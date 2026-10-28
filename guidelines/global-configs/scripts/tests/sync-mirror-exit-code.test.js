@@ -1,7 +1,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { runSync } = require('../lib/run-sync.js');
 
 const REPO = path.resolve(__dirname, '../../../../');
 const SCRIPTS = path.join(REPO, 'guidelines/global-configs/scripts');
@@ -32,10 +34,9 @@ const read = (file) => fs.readFileSync(file, 'utf8');
  * applied to one of two writers leaves the other one lying, and the un-fixed one here is the path
  * `sync-all.js` drives for all seven fleet projects.
  *
- * The scan is STATIC — it reads the PowerShell as text. That is deliberate: these scripts write into
- * seven live project directories and open a WinForms window, so a test cannot execute them. The
- * shapes asserted below are the ones the defect took, so a regression has to reproduce a shape this
- * file already names.
+ * The original exit-code checks below are static. The preflight regressions at the end also execute
+ * PowerShell against temporary source/project folders with Start-Process stubbed. GUI tests load
+ * only the sync functions through the parser, never the window or real project registry.
  */
 
 /** The body of `function Sync-MirrorDirectory { ... }`, to the next top-level `function`. */
@@ -210,3 +211,265 @@ test('REVERSAL PROOF: an unguarded summary is named', () => {
   const guard = mutated.lastIndexOf('elseif ($mirrorOk)', complete);
   assert.equal(guard, -1, 'the mutation left the guard in place');
 });
+
+// Stub Start-Process so even a broken preflight cannot launch robocopy.
+const psQuote = (value) => `'${value.replace(/'/g, "''")}'`;
+const hosts = ['powershell.exe', 'pwsh'].filter((host) => {
+  const probe = runSync(host, ['-NoProfile', '-NonInteractive', '-Command', 'exit 0']);
+  return !probe.error && probe.status === 0;
+});
+if (hosts.length === 0) test('mirror preflight behavior', { skip: 'PowerShell is unavailable' }, () => {});
+
+function put(root, relative, content) {
+  const file = path.join(root, relative);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, content);
+}
+
+function fixture(t) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mirror-preflight-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
+  const source = path.join(root, 'source');
+  const project = path.join(root, 'project');
+  const profile = path.join(root, 'profile');
+  for (const dir of [source, project, profile]) fs.mkdirSync(dir);
+  put(project, '_guidelines/.github/workflows/keep.yml', 'must survive preflight\r\n');
+  put(project, '_guidelines/global-configs/scripts/removed.js', 'old mirror copy\n');
+  put(project, '.gitignore', 'project-owned\r\n');
+  put(source, 'global-configs/scripts/active.js', '// surviving check\n');
+  return { root, source, project, profile };
+}
+
+// Include directories as well as file bytes: creating an empty mirror is also a write.
+function tree(root) {
+  const result = {};
+  function visit(dir) {
+    for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, item.name);
+      const relative = path.relative(root, full).replace(/\\/g, '/');
+      // PowerShell itself creates startup caches here; no sync outputs live in AppData.
+      if (relative === 'profile/AppData') continue;
+      result[relative] = item.isDirectory() ? null : fs.readFileSync(full).toString('base64');
+      if (item.isDirectory()) visit(full);
+    }
+  }
+  visit(root);
+  return result;
+}
+
+function powershell(host, f, code) {
+  return runSync(host, ['-NoProfile', '-NonInteractive', '-EncodedCommand',
+    Buffer.from(`$ErrorActionPreference = 'Stop'\n${code}`, 'utf16le').toString('base64')], {
+    cwd: f.root,
+    env: { ...process.env, USERPROFILE: f.profile, HOME: f.profile },
+    timeout: 30000,
+  });
+}
+
+const processStub = `
+$global:mirrorCalls = 0
+function global:Start-Process {
+    $global:mirrorCalls++
+    [pscustomobject]@{ ExitCode = 0 }
+}`;
+
+function mirror(host, f, dryRun = false, repeat = 1) {
+  const run = powershell(host, f, `
+Import-Module ${psQuote(MODULE)} -Force -DisableNameChecking
+${processStub}
+$results = @(1..${repeat} | ForEach-Object {
+    Sync-MirrorDirectory -sourceDir ${psQuote(f.source)} -targetDir ${psQuote(path.join(f.project, '_guidelines'))} -DryRun:$${dryRun}
+})
+[pscustomobject]@{ Results = $results; Calls = $global:mirrorCalls } | ConvertTo-Json -Depth 5 -Compress
+`);
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  const json = run.stdout.trim().split(/\r?\n/).at(-1);
+  return JSON.parse(json);
+}
+
+function blocked(outcome, dryRun, callers) {
+  assert.equal(outcome.Results.length, 1);
+  const result = outcome.Results[0];
+  assert.equal(result.Success, false, 'missing source references must block the mirror');
+  assert.equal(result.ExitCode, 2);
+  assert.equal(result.DryRun, dryRun);
+  assert.equal(outcome.Calls, 0, 'preflight must run before robocopy');
+  for (const caller of callers) assert.ok(result.Error.includes(caller), result.Error);
+  assert.match(result.Error, /remove or replace.*retired commands.*composite callers.*rerunning/is);
+}
+
+for (const host of hosts) {
+  for (const dryRun of [false, true]) {
+    test(`${host}: renamed npm aliases block before pruning or robocopy (DryRun=${dryRun})`, (t) => {
+      const f = fixture(t);
+      put(f.project, 'package.json', JSON.stringify({ scripts: {
+        'quality:renamed': 'node _guidelines/global-configs/scripts/removed.js',
+        'other:renamed': 'node "_guidelines\\global-configs/scripts\\checks/retired-2.js"',
+        validate: 'npm run lint && npm run quality:renamed && npm run other:renamed',
+        lint: 'eslint .',
+      } }, null, 4) + '\r\n');
+      const before = tree(f.root);
+      blocked(mirror(host, f, dryRun), dryRun, ['package.json', 'quality:renamed', 'other:renamed',
+        'global-configs/scripts/removed.js', 'global-configs/scripts/checks/retired-2.js']);
+      assert.deepEqual(tree(f.root), before, 'failure must preserve all source/project bytes and directories');
+    });
+  }
+
+  test(`${host}: both hook directories and mixed-separator nested targets are checked`, (t) => {
+    const f = fixture(t);
+    put(f.project, 'package.json', '{"scripts":{"lint":"eslint ."}}\n');
+    put(f.project, '.husky/pre-commit', 'node "./_guidelines\\global-configs/scripts\\checks/check-old.js"\r\n');
+    put(f.project, '.githooks/pre-push', 'node _guidelines/global-configs\\scripts/check-other.js; npm run lint\n');
+    const before = tree(f.root);
+    blocked(mirror(host, f), false, ['.husky/pre-commit', '.githooks/pre-push',
+      'global-configs/scripts/checks/check-old.js', 'global-configs/scripts/check-other.js']);
+    assert.deepEqual(tree(f.root), before);
+  });
+
+  test(`${host}: surviving targets allow repeated DryRuns without rewriting anything`, (t) => {
+    const f = fixture(t);
+    put(f.source, 'global-configs/scripts/checks.v2/check_active-2.js', '// active nested target\n');
+    put(f.project, 'package.json', JSON.stringify({ scripts: {
+      active: 'node "./_guidelines\\global-configs/scripts\\checks.v2/check_active-2.js" && node _guidelines/global-configs/scripts/active.js',
+      validate: 'npm run active && npm run lint',
+      lint: 'eslint .',
+      unrelated: 'node scripts/local.js',
+    } }, null, 2) + '\r\n');
+    put(f.project, '.husky/pre-commit', 'node _guidelines/global-configs/scripts/active.js\n');
+    put(f.project, '.githooks/pre-push', 'node _guidelines\\global-configs\\scripts\\checks.v2\\check_active-2.js\r\n');
+    const before = tree(f.root);
+    assert.deepEqual(mirror(host, f, true, 2), {
+      Results: [{ Success: true, ExitCode: 0, DryRun: true }, { Success: true, ExitCode: 0, DryRun: true }], Calls: 0,
+    });
+    assert.deepEqual(tree(f.root), before);
+  });
+
+  test(`${host}: only bounded literal JS paths in scripts are mirror references`, (t) => {
+    const f = fixture(t);
+    put(f.project, 'package.json', JSON.stringify({
+      description: '_guidelines/global-configs/scripts/not-a-command.js',
+      scripts: { unrelated: [
+        'node other_guidelines/global-configs/scripts/missing.js',
+        'node _guidelines/global-configs/scripts/missing.json',
+        'node _guidelines/global-configs/scripts/missing.js.bak',
+        'node _guidelines/global-configs/scripts/missing.js/other',
+        'node _guidelines/global-configs/scripts/../outside.js',
+      ].join(' && ') },
+    }));
+    const before = tree(f.root);
+    assert.equal(mirror(host, f, true).Results[0].Success, true);
+    assert.deepEqual(tree(f.root), before);
+  });
+
+  test(`${host}: a source directory named like a script does not satisfy the reference`, (t) => {
+    const f = fixture(t);
+    fs.mkdirSync(path.join(f.source, 'global-configs/scripts/removed.js'));
+    put(f.project, 'package.json', '{"scripts":{"check":"node _guidelines/global-configs/scripts/removed.js"}}');
+    const before = tree(f.root);
+    blocked(mirror(host, f), false, ['package.json', 'check', 'global-configs/scripts/removed.js']);
+    assert.deepEqual(tree(f.root), before);
+  });
+
+  test(`${host}: invalid package JSON fails before any deletion, including in DryRun`, (t) => {
+    const f = fixture(t);
+    for (const raw of ['{"scripts":', '', 'null', '[{}]']) {
+      put(f.project, 'package.json', raw);
+      const before = tree(f.root);
+      for (const dryRun of [false, true]) {
+        const outcome = mirror(host, f, dryRun);
+        assert.equal(outcome.Results[0].Success, false, `must reject ${JSON.stringify(raw)}`);
+        assert.equal(outcome.Results[0].ExitCode, 2);
+        assert.equal(outcome.Results[0].DryRun, dryRun);
+        assert.match(outcome.Results[0].Error, /package\.json.*JSON.*(?:fix|correct).*rerun/is);
+        assert.equal(outcome.Calls, 0);
+        assert.deepEqual(tree(f.root), before);
+      }
+    }
+  });
+
+  test(`${host}: a project without package.json or hooks can preview a new mirror`, (t) => {
+    const f = fixture(t);
+    fs.rmSync(path.join(f.project, '_guidelines'), { recursive: true });
+    const before = tree(f.root);
+    assert.deepEqual(mirror(host, f, true), {
+      Results: [{ Success: true, ExitCode: 0, DryRun: true }], Calls: 0,
+    });
+    assert.deepEqual(tree(f.root), before);
+  });
+
+  for (const moduleAvailable of [true, false]) {
+    test(`${host}: CLI stops before project/global writes (module=${moduleAvailable})`, (t) => {
+      const f = fixture(t);
+      fs.rmSync(path.join(f.project, '_guidelines'), { recursive: true });
+      put(f.project, 'package.json', '{"scripts":{"renamed":"node _guidelines/global-configs/scripts/removed.js"}}');
+      put(f.source, 'global-configs/scripts/sync-guidelines.ps1', fs.readFileSync(CLI));
+      if (moduleAvailable) put(f.source, 'global-configs/scripts/GuidelineSync.psm1', fs.readFileSync(MODULE));
+      const before = tree(f.root);
+      const run = powershell(host, f, `${processStub}
+& ${psQuote(path.join(f.source, 'global-configs/scripts/sync-guidelines.ps1'))} -ProjectPath ${psQuote(f.project)}
+`);
+      assert.equal(run.status, 1, `${run.stdout}\n${run.stderr}`);
+      assert.match(run.stdout, moduleAvailable ? /renamed.*removed\.js/s : /GuidelineSync\.psm1.*(?:required|restore)/is);
+      assert.doesNotMatch(run.stdout, /Installing starter files|Syncing global tool configs|Sync Complete/);
+      assert.deepEqual(tree(f.root), before);
+    });
+
+    test(`${host}: GUI logic returns the preflight error without starting the UI (module=${moduleAvailable})`, (t) => {
+      const f = fixture(t);
+      fs.rmSync(path.join(f.project, '_guidelines'), { recursive: true });
+      put(f.project, '.githooks/pre-push', 'node _guidelines/global-configs/scripts/removed.js\n');
+      const before = tree(f.root);
+      const run = powershell(host, f, `
+Import-Module ${psQuote(MODULE)} -Force -DisableNameChecking
+${processStub}
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(${psQuote(GUI)}, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors | Out-String) }
+$functions = $ast.FindAll({ param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+    $node.Name -in @('Sync-Project', 'Test-Project', 'Resolve-ProjectName')
+}, $false)
+foreach ($definition in $functions) { . ([scriptblock]::Create($definition.Extent.Text)) }
+$global:messages = @()
+function Append-Log($box, [string]$message) { $global:messages += $message }
+$moduleImported = $${moduleAvailable}
+$syncContentDir = ${psQuote(f.source)}
+$result = Sync-Project ${psQuote(f.project)} $null $null ([pscustomobject]@{ Text = '' })
+[pscustomobject]@{ Result = $result; Calls = $global:mirrorCalls; Messages = $global:messages } | ConvertTo-Json -Compress
+`);
+      assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+      const outcome = JSON.parse(run.stdout.trim().split(/\r?\n/).at(-1));
+      assert.equal(outcome.Result, 'error');
+      assert.equal(outcome.Calls, 0);
+      assert.match(outcome.Messages.join('\n'), moduleAvailable
+        ? /\.githooks\/pre-push.*removed\.js/s : /GuidelineSync\.psm1.*(?:required|restore)/is);
+      assert.doesNotMatch(outcome.Messages.join('\n'), /robocopy failed/);
+      assert.deepEqual(tree(f.root), before);
+    });
+  }
+}
+
+// --- handled child exits stay handled (2026-10-28) -------------------------------------
+// Both node helpers signal "a change is due" with exit 1 + stderr (`--check` in a preview). Under
+// `$ErrorActionPreference = 'Stop'`, `2>&1` turned that stderr into a terminating error before the
+// exit code was read: the fleet preview aborted on projects that simply needed a refresh, and
+// sync-all reported them as failed syncs.
+
+for (const host of hosts) {
+  test(`${host}: a stale ## Skills block is a preview finding, not an abort`, (t) => {
+    const f = fixture(t);
+    put(f.project, 'package.json', '{"name":"probe","dependencies":{"react":"^18.0.0"}}\r\n');
+    put(f.project, 'AGENTS.md', '# AGENTS.md\r\n\r\n## Skills\r\n\r\n- stale pointer\r\n');
+    put(f.project, '_skills/demo/SKILL.md', '---\nname: demo\ndescription: demo skill\n---\n\n# demo\n');
+    const before = tree(f.root);
+
+    const run = powershell(host, f, `
+Import-Module ${psQuote(MODULE)} -Force -DisableNameChecking
+Sync-Skills -guidelinesRepo ${psQuote(path.join(REPO, 'guidelines'))} -projectPath ${psQuote(f.project)} -DryRun
+`);
+
+    assert.equal(run.status, 0, `a pending refresh must not abort the preview:\n${run.stdout}\n${run.stderr}`);
+    assert.match(run.stdout, /Would refresh the generated ## Skills block/);
+    assert.deepEqual(tree(f.root), before, 'a preview must not write');
+  });
+}

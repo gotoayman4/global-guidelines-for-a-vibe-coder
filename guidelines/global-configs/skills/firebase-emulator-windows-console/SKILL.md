@@ -10,8 +10,6 @@ metadata:
 
 # Skill: Hide Firebase Emulator Consoles on Windows
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: firebase-emulator-windows-console activated -- Source: _skills/firebase-emulator-windows-console/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -98,7 +96,7 @@ Treat the CLI's internal entry filename and `spawn` shapes as version-sensitive:
 5. If the test suite has a port preflight, run it after shutdown. If a Java process remains, inspect its PID and full command line first; stop it only after confirming it is the orphan emulator for this project's demo/test project. Never kill Java processes by image name or assume a green test process exit means its emulator JVM has exited.
 6. Report the test result and whether popup suppression was directly observed separately. Do not claim visual confirmation unless the user or a desktop-capable check confirms it.
 
-**Measured evidence (gs-coordinator-helper, D331, 2026-10-19):** the Java-only hook removed the JVM tabs (four `javaw.exe`, zero `java.exe`), but a blank Windows Terminal tab titled `C:\Program Files\nodejs\node.exe` still appeared; its PID's command line was the CLI's `functionsEmulatorRuntime` child, started with piped stdio and no `windowsHide`. Adding `windowsHide` to every CLI child removed it — a fresh boot then showed no Windows Terminal process at all.
+**Measured evidence (gs-coordinator-helper, 2026-10-19):** the Java-only hook removed the JVM tabs (four `javaw.exe`, zero `java.exe`), but a blank Windows Terminal tab titled `C:\Program Files\nodejs\node.exe` still appeared; its PID's command line was the CLI's `functionsEmulatorRuntime` child, started with piped stdio and no `windowsHide`. Adding `windowsHide` to every CLI child removed it — a fresh boot then showed no Windows Terminal process at all.
 
 ## Anti-Patterns
 

@@ -9,8 +9,6 @@ metadata:
 
 # Skill: Arabic RTL PDF Export
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: arabic-rtl-pdf-export activated -- Source: _skills/arabic-rtl-pdf-export/SKILL.md`
-
 ---
 
 ## Trigger
@@ -80,4 +78,4 @@ Every route renders HTML/CSS in Chromium. That is deliberate: Chromium performs 
 - RTL tech stack: `05-stack-guides/rtl-tech-stack.md`
 - Bidirectional design principles: `02-engineering-practices/bidirectional-design-principles.md`
 - DOCX RTL sibling skill: `global-configs/skills/bidirectional-docx-rtl/SKILL.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

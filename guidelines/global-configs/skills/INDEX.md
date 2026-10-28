@@ -20,8 +20,8 @@ for skills. A skill could therefore only be found by guessing its filename, whic
 `code-review` and fails for `firestore-cost-optimization`.
 
 **How to read a row.** `Load when` is the skill's own declared trigger. `Applies to` is the stack the
-skill assumes; `—` means no stack was declared, which is a gap to close rather than a licence to
-apply the skill anywhere.
+skill assumes; `—` means no stack was declared, so the skill claims to be stack-agnostic — verify
+that against its body before applying it.
 
 <!-- GENERATED:skills-index — run `npm run render:skills` -->
 
@@ -44,7 +44,7 @@ hand-maintained copy of a delivered skill in a native store (`.qoder/skills/`, `
 | [electron-auto-update](electron-auto-update/SKILL.md) | Electron auto-update and desktop release. Activate when an Electron app must update itself from GitHub Releases or Netlify, when the source repository must stay private while installers are public, when old release assets must be pruned, when a tag-driven release workflow or release-notes feed must be built, or when update notes show HTML, wrong language, or unbilled full-installer downloads. Triggers on "electron auto-update", "electron-updater", "latest.yml", "update feed", "release notes", "code signing", "prune old releases". | `electron` | Advisory |
 | [firebase-emulator-windows-console](firebase-emulator-windows-console/SKILL.md) | Activate when Firebase Local Emulator Suite tests on Windows open a Java/JDK terminal, a Node/Functions-runtime console, or any other emulator console popup, or when making emulator tests run without that popup while preserving test output and behavior. Triggers on "Firebase emulator popup", "Java terminal during tests", "node.exe popup during emulator tests", "Functions runtime console", "hide emulator console", "firebase emulators:exec window". | `firebase` | Advisory |
 | [firebase-firestore-practices](firebase-firestore-practices/SKILL.md) | Firebase and Cloud Firestore engineering practices — data modelling, modular SDK usage, queries and indexes, least-privilege security rules, Cloud Functions triggers, and emulator testing. Use when writing or reviewing any Firestore data layer, rules file or trigger. | `firebase` `firestore` | Advisory |
-| [firestore-cost-optimization](firestore-cost-optimization/SKILL.md) | Firestore and Firebase Hosting cost control — minimising reads, writes and deletes, staying inside the free tier, and cutting hosting download volume. Use when a backend bills per operation, when setting up or deploying a Firebase project, or when a bill or a quota is a concern. | `firebase` `firestore` | Advisory — with an enforced core |
+| [firestore-cost-optimization](firestore-cost-optimization/SKILL.md) | Firestore and Firebase Hosting cost control — minimising reads, writes and deletes, staying inside the free tier, and cutting hosting download volume. Use when a backend bills per operation, when setting up or deploying a Firebase project, or when a bill or a quota is a concern. | `firebase` `firestore` | Advisory |
 | [first-project-setup](first-project-setup/SKILL.md) | Zero-to-running project bootstrap for a first-time vibecoder. Use when starting a new project from scratch or when the user asks how to begin. Covers scaffolding, Git, the constitution files, the local CI hooks, and the first feature. | — | Advisory |
 | [implementation-plan](implementation-plan/SKILL.md) | Execution-optimised implementation plans for an AI agent — vertical slices, ordered tasks, per-task validation and a completion checklist. Use when a feature, PRD or spec needs a step-by-step execution plan. Triggers on "create a plan", "break this down into tasks", "implementation plan". | — | Advisory |
 | [inno-setup](inno-setup/SKILL.md) | Windows installer packaging with Inno Setup. Use when bundling a desktop, Electron or web-to-desktop app as a distributable .exe installer, including shortcuts, architecture detection and uninstall support. Triggers on "create installer", "Windows installer", "package as exe". | `inno-setup` | Advisory |
@@ -65,5 +65,5 @@ hand-maintained copy of a delivered skill in a native store (`.qoder/skills/`, `
 ## Cross-References
 
 - **Generated from:** the `name`, `description` and `appliesTo` front-matter of every skill in this directory — one `<name>/SKILL.md` per skill
-- **Applied by:** `AGENTS.md` §Skills — the load-and-announce obligation this table serves
+- **Applied by:** `AGENTS.md` §Skills — the task-activation inventory this table serves
 - **Depends on:** `skill-design-patterns.md` — the front-matter contract every skill must satisfy

@@ -72,7 +72,7 @@ If duplication is found:
 Duplication is acceptable ONLY when:
 - **Different domains:** The logic appears identical but serves fundamentally different business rules (document the difference in a comment).
 - **Stabilization layer:** Backend and frontend each need a copy for type safety at compile time (e.g., enum values must exist in both TypeScript and SQL). Document the canonical source.
-- **Temporary parallelism:** Two features under active development that will converge. Mark with a dated ADR reference and a plan to deduplicate.
+- **Temporary parallelism:** Two features under active development that will converge. Mark with a dated comment naming the canonical source and the plan to deduplicate.
 
 ---
 

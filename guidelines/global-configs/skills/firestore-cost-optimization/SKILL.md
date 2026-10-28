@@ -2,7 +2,7 @@
 name: firestore-cost-optimization
 description: Firestore and Firebase Hosting cost control — minimising reads, writes and deletes, staying inside the free tier, and cutting hosting download volume. Use when a backend bills per operation, when setting up or deploying a Firebase project, or when a bill or a quota is a concern.
 metadata:
-  status: Advisory — with an enforced core
+  status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, firestore, firebase, cost, quota
   appliesTo: firebase, firestore
@@ -12,10 +12,7 @@ metadata:
 
 The tactics below are judgment; the three bans named in "Enforced by" are gate-checked in projects that
 adopted them. Name which kind a line is: an agent that cannot tell a wish from a wall will treat both as
-optional, and a skill whose trigger the session never fires constrains nothing at all (see "Enforced by",
-D201-class lesson).
-
-**Activation announcement:** When this skill activates, output in chat: `Skill: firestore-cost-optimization activated -- Source: _skills/firestore-cost-optimization/SKILL.md`
+optional, and a skill whose trigger the session never fires constrains nothing at all (see "Enforced by").
 
 ## Trigger
 
@@ -223,4 +220,4 @@ The two paste-ready files — the ESLint `no-restricted-syntax` rule for the lis
 - Paste-ready hosting header block: `global-configs/templates/firebase-hosting-headers.json.template`
 - SDK/query reference (progressive disclosure): `.agents/skills/firebase-firestore/`
 - Conflict resolution: `global-configs/skills/performance-audit/SKILL.md` (when cost and speed conflict, cost wins unless UX is measurably broken)
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

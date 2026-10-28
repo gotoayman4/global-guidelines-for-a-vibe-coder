@@ -11,8 +11,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: code-review activated -- Source: _skills/code-review/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -120,4 +118,4 @@ You are the independent AI reviewer. There is no human reviewer: the operator ca
 
 - Review workflow methodology: `01-workflow-methodology/code-review-workflow.md`
 - Security governance framework: `00-ai-fundamentals/ai-security-governance.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)

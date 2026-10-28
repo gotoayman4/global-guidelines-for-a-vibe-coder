@@ -7,15 +7,15 @@ Centralized development guidelines + sync tools for AI-assisted coding projects.
 ```
 guidelines/
   _index/            — MASTER_INDEX.md, RETRIEVAL_RULES.md, GLOSSARY.md, AGENT_BOOT_PROTOCOL.md
-  00-ai-fundamentals/   — mindset, setup, beginner guide
+  00-ai-fundamentals/   — mindset, context management, prompt patterns
   01-workflow-methodology/ — planning, speed modes, debugging, refactoring
-  02-engineering-practices/ — UX, accessibility, testing, security
-  03-git-and-ci/         — git workflow, CI templates
-  04-architecture/      — patterns, decision records
-  05-stack-guides/      — React, MUI, shadcn, RTL, NestJS, Supabase
-  06-frontend-patterns/ — shared components, page patterns
-  07-documentation/     — writing standards, changelog
-  08-governance/        — AI governance, design system governance, classification
+  02-engineering-practices/ — UX, accessibility, testing, security, performance
+  03-git-and-ci/         — git workflow, local CI, CI/CD, environment management
+  04-architecture/      — frontend/backend/database/API/state/router patterns
+  05-stack-guides/      — React, TypeScript, MUI, shadcn, NestJS, Supabase, Playwright, Vite, Electron, RTL
+  06-frontend-patterns/ — forms, tables, dialogs, notifications, responsive, visual design
+  07-documentation/     — documentation strategy, ADR template
+  08-governance/        — AI governance, design system governance
   global-configs/
     templates/   — starter files for AGENTS.md, WORLD.md, README.md, tool configs
     fragments/   — single-source rule sections; rendered into templates/AGENTS.starter.md
@@ -24,8 +24,9 @@ guidelines/
                    inject-skills-block.js), scaffolders (new-*.js), and
                    setup-global-references.ps1 — run `npm run` with no argument for the full list
     skills/      — one <name>/SKILL.md directory per skill (code-review, refactoring, security-audit, …)
+docs/          — repo-meta standards and the human-readable guides
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
-.github/workflows/       — optional cloud workflows (CI is local by default — see 03-git-and-ci/local-ci-strategy.md)
+.githooks/     — the local pre-push gate (`git config core.hooksPath .githooks`); no cloud CI
 ```
 
 ## Quick Start
@@ -64,12 +65,18 @@ Also available: `-DryRun` (preview, write nothing), `-Backup` (dated backup befo
 > source, and it exits 1 if any project fails. The batch runs the **project-side** sync (`-SourceOnly`) —
 > the machine-global configs are identical for every project and are not what `check-sync-drift.js`
 > verifies. Pass `--with-global-configs` (or set `SYNC_WITH_GLOBAL_CONFIGS=1`) to include them.
+> A batch `--dry-run` runs each project's mirror preflight and writes nothing, so a project command that
+> still names a retired source script is reported before a real sync is attempted.
 
 ## Commands
 
+> This table covers the day-to-day commands. `package.json` §scripts is the complete inventory — it
+> also carries `validate:standard`, `docs:check`, `guard:paths`, `guard:mode`, `sync:drift`,
+> `audit:friction` and `benchmark:reform`.
+
 | Command | What it does |
 |---|---|
-| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + docs:census + guard:tiers + test:scripts. Runs on every push (local pre-push hook). The authoritative list is `AGENTS.md` §Commands and `package.json` §scripts — this row restates it. |
+| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + test:scripts. Runs on every push (local pre-push hook). The authoritative list is `package.json` §scripts; this row restates it. |
 | `npm run audit` | Verifies extracted rules in starter templates still match their source guideline files. |
 | `npm run check-links` | Checks internal links across all `.md` files. |
 | `npm run check-index` | Verifies every file is registered in `guidelines/_index/MASTER_INDEX.md`. |
@@ -80,7 +87,7 @@ Also available: `-DryRun` (preview, write nothing), `-Backup` (dated backup befo
 | `npm run render:skills` | Regenerates `global-configs/skills/INDEX.md` — the `Skill → Load when → Applies to` trigger inventory — from each skill's front-matter. |
 | `npm run check-skills-drift` | Fails if `skills/INDEX.md` was hand-edited — regenerate it instead. |
 | `npm run plan:skills` | Prints which skills belong in which project and why, from each project's stack profile (no argument = the whole fleet; `--apply` writes). |
-| `npm run docs:census` | Fails if a canonical fact (stack table, commands block, forbidden-pattern list, "How to Change Safely") appears in more than one mandated project doc — one home per fact. |
+| `npm run docs:census` | Fails if a canonical fact (stack table, commands block, forbidden-pattern list, "How to Change Safely") appears in more than one mandated project doc — one home per fact; also fails a per-document changelog archive or a resurrected `AI_CONTEXT.md` / `ARCHITECTURE_INDEX.md`. |
 | `npm run guard:tiers` | Reads every guard's `@tier` docblock and reports the gate set — an `always` guard the gate never reaches is a failure. |
 | `npm run status:projects` | Reports which rules each synced project's `AGENTS.md` is missing (informational, never fails). |
 | `npm run sync:all` | Batch-syncs every project in `sync-projects.json` via `sync-guidelines.ps1` (non-interactive; project-side only — `--with-global-configs` adds the machine-global tool configs; updates `lastSynced` only on verified delivery; exits 1 if any fail). |
@@ -92,10 +99,13 @@ Also available: `-DryRun` (preview, write nothing), `-Backup` (dated backup befo
 ## Speed Modes
 
 Projects declare a process mode in `WORLD.md` (`vibe | standard | guarded`) — see
-`guidelines/01-workflow-methodology/speed-tiered-workflow.md`. A starter project begins at
-`vibe` until its first ship/milestone; a project that declares no mode is assumed `standard`.
-Modes scale context, plan, test depth, steering writes, and the per-push gate; security,
-honesty, and the ship boundary apply in every mode.
+`guidelines/01-workflow-methodology/speed-tiered-workflow.md`. The mode is a **loop-speed
+setting, not a lifecycle stage**: a starter begins at `vibe`, `vibe` and `standard` keep
+shipping, and a release does not change the declared mode. A project that declares no mode is
+assumed `standard`. Modes scale context, plan, test depth and the per-push gate (`vibe`:
+`gate:fast` + the `always` guards; `standard`: lint + type-check + the full suite; `guarded`:
+that chain + the build + the path-aware extras). Security, honesty, and the ship boundary —
+whose extra depth is set by the release class, `pilot` or `production` — apply in every mode.
 
 ## The Single-Source Pipeline (how the rules are maintained)
 
@@ -117,10 +127,11 @@ fails if the template and the fragments diverge.
 edit the fragment  →  npm run render:starters  →  npm run validate  →  commit fragment + template together
 ```
 
-**4. Adding a rule costs budget.** The always-loaded constitution is capped (~5,000 tokens,
-estimated at chars/4 — see `maxTokens` in `fragments/manifest.json`). A new rule must retire,
-narrow, or demote an existing one; detail that isn't needed every session belongs in a
-guideline file under `guidelines/0X-*`, reached via the `_guidelines/` mirror, not inlined.
+**4. Adding a rule costs budget.** The always-loaded constitution is capped (**4,000 tokens**,
+estimated at chars/4 — `maxTokens` in `fragments/manifest.json`, enforced by `npm run check-drift`).
+A new rule must retire, narrow, or demote an existing one; detail that isn't needed every session
+belongs in a guideline file under `guidelines/0X-*`, reached via the `_guidelines/` mirror, not
+inlined.
 
 **5. Downstream projects own their copy.** `sync-manager` creates a project's `AGENTS.md`
 once (create-if-missing) and never overwrites it — the project may have filled `[FILL]`

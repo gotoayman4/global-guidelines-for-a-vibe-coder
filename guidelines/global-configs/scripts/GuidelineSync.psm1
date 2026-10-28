@@ -176,7 +176,8 @@ function Sync-MirrorDirectory {
         seven fleet projects and `check-sync-drift.js` is not part of a manual CLI run.
 
     .OUTPUTS
-        [pscustomobject] Success (bool), ExitCode (int), DryRun (bool)
+        [pscustomobject] Success (bool), ExitCode (int), DryRun (bool).
+        Preflight failures return ExitCode 2 and an actionable Error before any writes.
     #>
     param(
         [string]$sourceDir,
@@ -184,6 +185,61 @@ function Sync-MirrorDirectory {
         [switch]$DryRun,
         [switch]$NoMirrorDelete
     )
+
+    # Project-owned commands must not lose their targets during mirroring.
+    $projectDir = Split-Path -Path $targetDir -Parent
+    $commands = @()
+    $caller = "package.json"
+    try {
+        $packagePath = Join-Path $projectDir $caller
+        if (Test-Path -LiteralPath $packagePath) {
+            $raw = Get-Content -LiteralPath $packagePath -Raw -Encoding UTF8 -ErrorAction Stop
+            $package = $raw | ConvertFrom-Json -ErrorAction Stop
+            if ($package -isnot [System.Management.Automation.PSCustomObject] -or -not $raw.TrimStart().StartsWith('{')) {
+                throw "package.json must contain a JSON object"
+            }
+            foreach ($entry in $package.scripts.PSObject.Properties) {
+                if ($entry.Value -is [string]) {
+                    $commands += [pscustomobject]@{ Caller = "package.json scripts.$($entry.Name)"; Text = $entry.Value }
+                }
+            }
+        }
+        foreach ($hookDir in @('.husky', '.githooks')) {
+            $caller = $hookDir
+            $hookRoot = Join-Path $projectDir $hookDir
+            if (-not (Test-Path -LiteralPath $hookRoot)) { continue }
+            foreach ($hook in Get-ChildItem -LiteralPath $hookRoot -File -Recurse -Force -ErrorAction Stop) {
+                $caller = $hook.FullName.Replace('\', '/')
+                $commands += [pscustomobject]@{
+                    Caller = $caller
+                    Text = Get-Content -LiteralPath $hook.FullName -Raw -Encoding UTF8 -ErrorAction Stop
+                }
+            }
+        }
+    } catch {
+        return [pscustomobject]@{
+            Success = $false; ExitCode = 2; DryRun = [bool]$DryRun
+            Error = "Mirror preflight failed reading ${caller} (package.json JSON / hook text): $($_.Exception.Message). Fix the file before rerunning sync. No files were changed."
+        }
+    }
+
+    # Bound literal JS paths to exclude lookalike extensions and directory traversal.
+    $scriptPattern = '(?<![\w.-])_guidelines[\\/](?<relative>global-configs[\\/]scripts[\\/](?:(?!\.{1,2}[\\/])[\w.-]+[\\/])*[\w.-]+\.js)(?![\w./\\-])'
+    $missing = @()
+    foreach ($command in $commands) {
+        foreach ($match in [regex]::Matches([string]$command.Text, $scriptPattern)) {
+            $relative = $match.Groups['relative'].Value.Replace('\', '/')
+            if (-not (Test-Path -LiteralPath (Join-Path $sourceDir $relative) -PathType Leaf)) {
+                $missing += "$($command.Caller): _guidelines/$relative"
+            }
+        }
+    }
+    if ($missing.Count -gt 0) {
+        return [pscustomobject]@{
+            Success = $false; ExitCode = 2; DryRun = [bool]$DryRun
+            Error = "Mirror preflight failed; source scripts are missing:`n  $($missing -join "`n  ")`nRemove or replace retired commands and their composite callers before rerunning sync. No files were changed."
+        }
+    }
 
     $robocopyArgs = @($sourceDir, $targetDir)
     if ($NoMirrorDelete) {
@@ -362,6 +418,22 @@ function Install-ToolConfigFile {
     }
 }
 
+function Invoke-NodeCapture {
+    param([string[]]$Arguments)
+
+    # The node helpers signal "a change is due" with exit 1 + stderr (`--check` in a preview). Under
+    # $ErrorActionPreference = 'Stop', `2>&1` turns that stderr into a terminating error before the
+    # exit code is read, aborting the whole sync on a message the caller already knows how to handle.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & node @Arguments 2>&1
+        return [pscustomobject]@{ Output = @($output); ExitCode = $LASTEXITCODE }
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+}
+
 function Update-ToolConfigEntryPoint {
     <#
     .SYNOPSIS
@@ -401,9 +473,9 @@ function Update-ToolConfigEntryPoint {
 
     $patcherArgs = @($patcher, $projectPath)
     if ($DryRun) { $patcherArgs += '--check' }
-    $output = & node @patcherArgs 2>&1
-    $patcherExit = $LASTEXITCODE
-    foreach ($line in $output) { Write-Host "  $line" }
+    $patcherRun = Invoke-NodeCapture -Arguments $patcherArgs
+    $patcherExit = $patcherRun.ExitCode
+    foreach ($line in $patcherRun.Output) { Write-Host "  $line" }
     if ($DryRun) {
         if ($patcherExit -eq 1) {
             Write-Host "  [DRY-RUN] Would point the tool configs at AGENTS.md" -ForegroundColor Yellow
@@ -481,9 +553,9 @@ function Sync-Skills {
     $plannerArgs = @($planner, $projectPath, '--quiet')
     if (-not $DryRun) { $plannerArgs += '--apply' }
 
-    $output = & node @plannerArgs 2>&1
-    $exitCode = $LASTEXITCODE
-    foreach ($line in $output) { Write-Host "  $line" }
+    $plannerRun = Invoke-NodeCapture -Arguments $plannerArgs
+    $exitCode = $plannerRun.ExitCode
+    foreach ($line in $plannerRun.Output) { Write-Host "  $line" }
     if ($exitCode -ne 0) {
         Write-Host "  ERROR: skill selection failed (plan-skills.js exit $exitCode) -- _skills/ left unchanged." -ForegroundColor Red
         return
@@ -514,9 +586,9 @@ function Sync-Skills {
     # dry run edited AGENTS.md. Check mode answers the same question and exits 1 when a change is due.
     $injectorArgs = @($injector, $projectPath)
     if ($DryRun) { $injectorArgs += '--check' }
-    $output = & node @injectorArgs 2>&1
-    $injectorExit = $LASTEXITCODE
-    foreach ($line in $output) { Write-Host "  $line" }
+    $injectorRun = Invoke-NodeCapture -Arguments $injectorArgs
+    $injectorExit = $injectorRun.ExitCode
+    foreach ($line in $injectorRun.Output) { Write-Host "  $line" }
     if ($DryRun) {
         if ($injectorExit -eq 1) {
             Write-Host "  [DRY-RUN] Would refresh the generated ## Skills block in AGENTS.md" -ForegroundColor Yellow

@@ -13,8 +13,6 @@ metadata:
 
 ---
 
-**Activation announcement:** When this skill activates, output in chat: `Skill: architect activated -- Source: _skills/architect/SKILL.md`
-
 ## Trigger
 
 Activate when:
@@ -44,7 +42,7 @@ Load compact extracts (Key Takeaways + Anti-Patterns) from:
 5. `04-architecture/api-design-standards.md` — API contract requirements
 6. `08-governance/ai-governance-framework.md` — Authority hierarchy, rule precedence
 
-If the project has a WORLD.md, load it for product intent and boundaries. If it has an AGENTS.md or CLAUDE.md, load architectural rules from it.
+If the project has a WORLD.md, load it for product intent and boundaries. If it has an `AGENTS.md`, load architectural rules from it (a legacy project with only `CLAUDE.md` uses that file as its rule source).
 
 **Guideline base path:** Use `_guidelines/` if the project mirror exists; otherwise use the central repo path from your machine's global agent config.
 
@@ -106,7 +104,7 @@ Saved plans must be concise and actionable. Use this structure:
 ## Implementation Tasks
 - [ ] [Ordered, actionable tasks for the implementation agent]
 - [ ] [Each task assumes design decisions above]
-- [ ] [Each task MUST include expected files with estimated line counts (e.g., `src/CheckoutForm.tsx ~150 lines`). Plan for ≤300 lines per file. Files exceeding 500 lines after implementation MUST be refactored. See `02-engineering-practices/file-organization.md`.]
+- [ ] [Each task MUST include expected files with estimated line counts (e.g., `src/CheckoutForm.tsx ~150 lines`). Plan for ≤300 lines per file. Files exceeding 400 lines after implementation MUST be refactored. See `02-engineering-practices/file-organization.md`.]
 
 ## Open Questions
 [Any unresolved items explicitly marked out of scope]
@@ -149,5 +147,5 @@ Saved plans must be concise and actionable. Use this structure:
 - API design standards: `04-architecture/api-design-standards.md`
 - AI governance framework: `08-governance/ai-governance-framework.md`
 - Implementation plan skill (execution phase): `global-configs/skills/implementation-plan/SKILL.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md`
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)
 - File organization rules: `02-engineering-practices/file-organization.md`

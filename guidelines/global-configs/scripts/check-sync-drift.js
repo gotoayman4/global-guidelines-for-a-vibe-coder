@@ -202,7 +202,7 @@ function sameContent(a, b) {
  * Compare one project's `_skills/` against what the selector says it must carry.
  *
  * THE CONTRACT IS THE PLAN, NOT AN EQUALITY WITH THE SOURCE. `_skills/` is a FILTERED mirror: the
- * sync writes only the skills that fit this project's stack (12–16 of 20 on the fleet), so hashing
+ * sync writes only the skills that fit this project's stack (a filtered subset of the pool), so hashing
  * the project's directory and comparing it to the source's whole-corpus hash is a contract no project
  * can ever satisfy. Measured 2026-10-13: that equality reported all 7 projects as drifted the moment
  * the filter was applied — while every one of them was in fact correct. A false red on the one
