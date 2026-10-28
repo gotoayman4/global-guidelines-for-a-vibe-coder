@@ -61,7 +61,7 @@ The audit is a **scheduled act**, not a reflex: monthly, as an automation, writi
 | Minutes-long suite on every push | Make the step path-aware; keep the path list in the hook | `local-ci-strategy.md` |
 | Guard that fails on an improvement | The guard follows the change in the same iteration, and gains a non-vacuity probe | `documentation-strategy.md` §Guards |
 | Project runs a stale copy of the rules | Compare content hashes on every run; record the hash the sync delivered | `documentation-strategy.md` §Delivery, `npm run sync:drift` |
-| A lesson with no failing check | The proposal names its target file **and** the guard | `documentation-strategy.md` §Guards, `npm run audit:friction` |
+| A lesson with no failing check | The proposal names its target file **and** the guard | `README.md` §For AI Agents in Downstream Projects, `npm run audit:friction` |
 
 ## Do Not
 

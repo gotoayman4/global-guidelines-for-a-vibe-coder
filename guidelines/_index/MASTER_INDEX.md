@@ -44,7 +44,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [planning-and-scoping.md](../01-workflow-methodology/planning-and-scoping.md) | Normative | Global | ~818 | `#planning` `#scoping` `#prd` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~566 | `#refactoring` `#maintenance` `#technical-debt` |
 | [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~3789 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
-| [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2619 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
+| [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2623 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
 
 ### 02 — Engineering Practices
 
