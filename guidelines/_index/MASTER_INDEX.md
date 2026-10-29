@@ -72,7 +72,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~892 | `#ci-cd` `#pipelines` `#automation` |
 | [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~934 | `#environments` `#secrets` `#config` |
 | [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~771 | `#git` `#branching` `#commits` |
-| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~5453 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
+| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~5513 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
 
 ### 04 — Architecture
 

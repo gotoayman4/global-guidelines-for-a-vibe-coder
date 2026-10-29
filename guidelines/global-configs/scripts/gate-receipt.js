@@ -23,7 +23,10 @@
  * its last line rather than implying coverage. The release class is recorded here, never in WORLD.md.
  *
  * Usage:
- *   node scripts/gate-receipt.js --class pilot|production [--e2e]
+ *   node scripts/gate-receipt.js --class pilot|production [--e2e] [--chain <npm-script>]
+ *
+ * `--chain` runs a project-owned ship script (`gate:ship`) as the whole pipeline instead of the
+ * default five steps — for a project whose boundary already has a bespoke command.
  *
  * Output: docs/gate-receipts/<UTC-stamp>.md. Exit codes: 0 = verdict PASS; 1 = FAIL (the receipt
  * is still written, so the failure is on record); 2 = usage error.
@@ -38,16 +41,25 @@ const { runSync, npmSync } = require('./lib/run-sync.js');
 const CLASSES = ['pilot', 'production'];
 const RECEIPT_DIR = path.join('docs', 'gate-receipts');
 
-/** The chain the boundary owes. `test:e2e` joins it for a production release or an explicit `--e2e`. */
-function buildSteps(releaseClass, e2e) {
-  const steps = [
-    { name: 'lint', script: 'lint', args: ['run', 'lint'] },
-    { name: 'type-check', script: 'type-check', args: ['run', 'type-check'] },
-    { name: 'test', script: 'test', args: ['run', 'test', '--', '--run'] },
-    { name: 'build', script: 'build', args: ['run', 'build'] },
-    { name: 'audit', script: 'audit:gate', args: ['run', 'audit:gate'] },
-  ];
-  if (e2e || releaseClass === 'production') steps.push({ name: 'e2e', script: 'test:e2e', args: ['run', 'test:e2e'] });
+/**
+ * The chain the boundary owes. `test:e2e` joins it for a production release or an explicit `--e2e`.
+ *
+ * `chain` names a project-owned script that IS the ship pipeline (`gate:ship`, `verify` + build +
+ * audit, a packaged smoke…). A project that already has one keeps it: the receipt then records that
+ * single step, and nothing is implied beyond it — in particular `production` no longer adds
+ * `test:e2e` by itself, because the project's chain owns what its boundary contains.
+ */
+function buildSteps(releaseClass, e2e, chain = null) {
+  const steps = chain
+    ? [{ name: chain, script: chain, args: ['run', chain] }]
+    : [
+        { name: 'lint', script: 'lint', args: ['run', 'lint'] },
+        { name: 'type-check', script: 'type-check', args: ['run', 'type-check'] },
+        { name: 'test', script: 'test', args: ['run', 'test', '--', '--run'] },
+        { name: 'build', script: 'build', args: ['run', 'build'] },
+        { name: 'audit', script: 'audit:gate', args: ['run', 'audit:gate'] },
+      ];
+  if (e2e || (!chain && releaseClass === 'production')) steps.push({ name: 'e2e', script: 'test:e2e', args: ['run', 'test:e2e'] });
   return steps;
 }
 
@@ -110,7 +122,7 @@ function parseReceipt(text) {
  *
  * @returns {{ok: boolean, file: string|null, reason: string|null, verdict: string|null}}
  */
-function run({ root, releaseClass, e2e = false, now = new Date() }) {
+function run({ root, releaseClass, e2e = false, chain = null, now = new Date() }) {
   const commit = git(root, ['rev-parse', 'HEAD']);
   if (!commit) return { ok: false, file: null, reason: 'not a git repository with a commit — a receipt must describe one', verdict: null };
   if (git(root, ['status', '--porcelain']) !== '') {
@@ -121,7 +133,7 @@ function run({ root, releaseClass, e2e = false, now = new Date() }) {
 
   const results = [];
   let failed = false;
-  for (const step of buildSteps(releaseClass, e2e)) {
+  for (const step of buildSteps(releaseClass, e2e, chain)) {
     const command = `npm ${step.args.join(' ')}`;
     if (failed) {
       results.push({ name: step.name, command, result: 'not run', seconds: '—' });
@@ -157,19 +169,21 @@ function main() {
   const argv = process.argv.slice(2);
   let releaseClass = null;
   let e2e = false;
+  let chain = null;
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--class') releaseClass = argv[(i += 1)];
     else if (argv[i] === '--e2e') e2e = true;
+    else if (argv[i] === '--chain') chain = argv[(i += 1)];
     else {
       console.error(`❌ unknown argument ${argv[i]}`);
       process.exit(2);
     }
   }
-  if (!CLASSES.includes(releaseClass)) {
-    console.error('Usage: node scripts/gate-receipt.js --class pilot|production [--e2e]');
+  if (!CLASSES.includes(releaseClass) || chain === undefined || (chain !== null && !chain)) {
+    console.error('Usage: node gate-receipt.js --class pilot|production [--e2e] [--chain <npm-script>]');
     process.exit(2);
   }
-  const result = run({ root: process.cwd(), releaseClass, e2e });
+  const result = run({ root: process.cwd(), releaseClass, e2e, chain });
   if (result.reason) {
     console.error(`❌ ${result.reason}`);
     process.exit(1);

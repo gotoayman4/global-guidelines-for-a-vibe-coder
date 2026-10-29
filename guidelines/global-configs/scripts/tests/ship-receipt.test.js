@@ -102,6 +102,22 @@ test('a production receipt needs test:e2e; a pilot one does not', () => {
   assert.equal(run({ root: withE2e, releaseClass: 'production', now: later() }).ok, true);
 });
 
+test('a project-owned chain replaces the default pipeline and owns what production means', () => {
+  assert.deepEqual(buildSteps('production', false, 'gate:ship').map((step) => step.name), ['gate:ship']);
+  assert.deepEqual(buildSteps('pilot', true, 'gate:ship').map((step) => step.name), ['gate:ship', 'e2e']);
+
+  const root = project({ 'gate:ship': OK });
+  const result = run({ root, releaseClass: 'production', chain: 'gate:ship', now: later() });
+  assert.equal(result.ok, true, result.reason);
+  const text = fs.readFileSync(result.file, 'utf8');
+  assert.match(text, /\| gate:ship \|/);
+  assert.doesNotMatch(text, /\| lint \|/, 'the default steps are not run beside the project chain');
+
+  const missing = run({ root: project({}), releaseClass: 'pilot', chain: 'gate:ship', now: later() });
+  assert.equal(missing.ok, false);
+  assert.match(fs.readFileSync(missing.file, 'utf8'), /script "gate:ship" is missing/);
+});
+
 test('the wrapper CLI rejects a missing or unknown class with a usage error', () => {
   const root = project({ ...CHAIN });
   assert.equal(runSync(process.execPath, [WRAPPER], { cwd: root }).status, 2);
