@@ -18,7 +18,7 @@ tags: [mui, rtl, i18n, bidirectional]
 4. **i18n:** react-i18next; all user-visible strings from translation files — never hardcoded in JSX. Load MUI locale (pickers, DataGrid) on language change. Centralize date/locale helpers — no scattered `toLocaleDateString()`.
 5. **Numerals:** Western Arabic (0–9) in both languages. **v9:** override `TablePagination` labels with `Intl.NumberFormat('ar-u-nu-latn')` (locale default yields Eastern digits).
 6. **Fonts per direction:** Tajawal/Cairo for Arabic, Inter/system for Latin — declared via `html[dir]` selectors.
-7. **Portals may not inherit dir:** set globally on `<html>` (recommended); where needed pass explicit dir via `slotProps={{ paper: { dir } }}` (both v7/v9 — legacy `PaperProps` removed in v9).
+7. **Portals inherit direction from `<html>`; pass `dir` only where it must DIFFER.** A portal leaves its React parent but stays under `document.body`, so it inherits `direction` from a document-level `dir` (directive 1). Pass `dir` where the content must differ from the page (a quoted Latin extract, a bilingual preview) or where direction lives only in React state — `slotProps={{ paper: { dir } }}` (both v7/v9; legacy `PaperProps` removed in v9). Do not restate what the document already says.
 8. **Icon mirroring:** directional SVG icons are NOT auto-mirrored — conditional L/R variants or `style={{ transform: theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }}`.
 9. **Accessibility:** `lang` on `<html>` always; tab order follows visual RTL order; mixed content wrapped in `lang="ar"`; dual-calendar pickers label both calendars accessibly.
 
@@ -26,6 +26,7 @@ tags: [mui, rtl, i18n, bidirectional]
 
 | Pitfall | Fix |
 |---|---|
+| Empty `dir="auto"` field puts the caret on the LTR side of an RTL page | `auto` is value-derived — map it: the UI language's direction while empty, `auto` once typed (`useWatch` under React Hook Form), passed through `slotProps={{ htmlInput: { dir } }}`; see `../rtl-tech-stack.md` directive 7 |
 | TextField label overlaps placeholder | `slotProps={{ inputLabel: { shrink: true } }}` |
 | **v9:** Autocomplete custom slotProps drops input ref | Spread first: `slotProps={{ ...params.slotProps, inputLabel: { ...params.slotProps.inputLabel, shrink: true } }}` |
 | **v9:** Dialog `disableEscapeKeyDown` removed | Handle `reason === 'escapeKeyDown'` inside `onClose` |

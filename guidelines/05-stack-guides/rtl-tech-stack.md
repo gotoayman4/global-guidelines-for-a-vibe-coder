@@ -18,11 +18,12 @@ tags: [rtl, arabic, bidirectional, numerals]
 4. **Logical CSS everywhere in UI chrome:** Tailwind `ms-* me-* ps-* pe-* start-* end-* text-start text-end border-s rounded-s`; Emotion/styled-components `margin-inline-start`, `padding-inline-end`, `border-inline-start`. Physical properties (`ml-* pl-* left-* right-* text-left`) FORBIDDEN outside explicit LTR contexts (code, URLs, emails, phone numbers, math, logos).
 5. **Single direction state** ('rtl'/'ltr') applied BEFORE first render (inline script sets `document.documentElement.dir`) — never hardcoded 'ltr', never dir set only in React.
 6. **Portal `dir` is per-stack, not global.** Portals escape the React parent; they still inherit `direction` from `<html>` when the app owns direction on `document.documentElement`. Pass explicit `dir` where direction must differ from the page, or where the stack keeps direction in a React context only (e.g. shadcn `DirectionProvider` without `documentElement.dir`). Record which the project uses.
-7. **Icons:** directional (arrows, chevrons) MUST flip (`rtl:rotate-180` or centralized scaleX(-1) helper); non-directional (home, search, settings), logos, media controls MUST NOT flip. Never maintain separate LTR/RTL icon sets.
-8. **Fonts:** always Arabic + Latin fallbacks (Tajawal/Cairo/Noto Sans Arabic for UI; Noto Naskh/Amiri for long-form). Load with `unicode-range` subsetting (Arabic fonts are 3–5x larger). Arabic typography: line-height 1.6–1.8 · weight ≥400 · NO tracking/letter-spacing · NO opacity on Arabic text · underline-offset ≥4px · no break-all.
-9. **Dates/numbers/currency ALWAYS via Intl formatters or React Aria I18nProvider** — never manual strings. Hijri: `calendar: "islamic-umalqura"`.
-10. **i18n keys for all user-facing strings** (react-i18next / next-intl); URL strategy `/en/*` and `/ar/*`.
-11. **Testing scales with mode (see `../01-workflow-methodology/speed-tiered-workflow.md`):** always-on cheap gate = logical-properties lint (cross-platform ESLint rule — unlike `rtlify-ai`, which is POSIX-only and scans 0 files on Windows). vibe = one direction per iteration, both directions at the milestone/ship boundary; standard/guarded = dual Playwright projects (ar-SA + en-US) before commit, Storybook direction toolbar for shared components. Visual regression is a milestone/ship-boundary activity, never routine.
+7. **An editable field's `auto` needs an empty state.** `dir="auto"` derives direction from the first strong character of the VALUE, so an empty field has none and every browser resolves it LTR whatever `<html dir>` says (measured 2026-10-29 in Chromium: the caret starts on the left in an RTL page and jumps right at the first Arabic keystroke). A content-derived field MUST take the UI language's direction while its value is empty or whitespace and `auto` once it holds a value: ONE shared helper (value + language → `'ltr' | 'rtl' | 'auto'`), adopted at every such control, plus a source census that refuses a literal `dir: 'auto'` at an input. Never replace `auto` with the page direction — a Latin name typed in an Arabic UI must still turn the field LTR.
+8. **Icons:** directional (arrows, chevrons) MUST flip (`rtl:rotate-180` or centralized scaleX(-1) helper); non-directional (home, search, settings), logos, media controls MUST NOT flip. Never maintain separate LTR/RTL icon sets.
+9. **Fonts:** always Arabic + Latin fallbacks (Tajawal/Cairo/Noto Sans Arabic for UI; Noto Naskh/Amiri for long-form). Load with `unicode-range` subsetting (Arabic fonts are 3–5x larger). Arabic typography: line-height 1.6–1.8 · weight ≥400 · NO tracking/letter-spacing · NO opacity on Arabic text · underline-offset ≥4px · no break-all.
+10. **Dates/numbers/currency ALWAYS via Intl formatters or React Aria I18nProvider** — never manual strings. Hijri: `calendar: "islamic-umalqura"`.
+11. **i18n keys for all user-facing strings** (react-i18next / next-intl); URL strategy `/en/*` and `/ar/*`.
+12. **Testing scales with mode (see `../01-workflow-methodology/speed-tiered-workflow.md`):** always-on cheap gate = logical-properties lint (cross-platform ESLint rule — unlike `rtlify-ai`, which is POSIX-only and scans 0 files on Windows). vibe = one direction per iteration, both directions at the milestone/ship boundary; standard/guarded = dual Playwright projects (ar-SA + en-US) before commit, Storybook direction toolbar for shared components. Visual regression is a milestone/ship-boundary activity, never routine.
 
 ---
 
@@ -59,6 +60,7 @@ npm run lint:rtl                    # CI gate — logical-properties ESLint rule
 | Manual date/number formatting | Intl formatters |
 | `tracking-*` / opacity on Arabic | letter-spacing 0; opaque tokens |
 | Portal needing `dir` (differs from document / context-only stack) without one | Set `dir` where the mechanism requires it; document-driven stacks inherit from `<html>` |
+| Empty `dir="auto"` field (cursor starts on the LTR side of an RTL page) | UI-language direction while empty, `auto` once typed — one shared helper |
 
 ---
 

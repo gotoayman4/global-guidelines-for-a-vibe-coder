@@ -53,7 +53,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [accessibility-standards.md](../02-engineering-practices/accessibility-standards.md) | Normative | Global | ~563 | `#a11y` `#wcag` `#aria` |
 | [agent-verification-loop.md](../02-engineering-practices/agent-verification-loop.md) | Normative | Global | ~2912 | `#verification` `#agent` `#testing` `#evidence` `#done-criteria` `#cost-control` |
 | [ai-code-documentation.md](../02-engineering-practices/ai-code-documentation.md) | Normative | Global | ~851 | `#documentation` `#comments` `#ai-context` `#icdc` |
-| [bidirectional-design-principles.md](../02-engineering-practices/bidirectional-design-principles.md) | Normative | Global — All Projects (Bilingual by Default) | ~1221 | `#rtl` `#bidirectional` `#arabic` `#design` |
+| [bidirectional-design-principles.md](../02-engineering-practices/bidirectional-design-principles.md) | Normative | Global — All Projects (Bilingual by Default) | ~1435 | `#rtl` `#bidirectional` `#arabic` `#design` |
 | [code-duplication-prevention.md](../02-engineering-practices/code-duplication-prevention.md) | Normative | Global | ~991 | `#deduplication` `#dry` `#code-smells` `#ai` |
 | [cost-optimization-strategy.md](../02-engineering-practices/cost-optimization-strategy.md) | Normative | Global | ~900 | `#cost` `#hosting` `#tokens` `#free-tier` |
 | [error-handling-philosophy.md](../02-engineering-practices/error-handling-philosophy.md) | Normative | Global | ~711 | `#error` `#contracts` `#recovery` |
@@ -92,15 +92,15 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 |---|---|---|---|---|
 | [arabic-rtl-pdf-generation.md](../05-stack-guides/arabic-rtl-pdf-generation.md) | Normative | Global — Web and Electron Apps (Arabic PDF output) | ~4777 | `#rtl` `#arabic` `#pdf` `#chromium` `#electron` `#print` `#bidi` `#fonts` `#paged-media` `#accessibility` |
 | [electron-auto-update.md](../05-stack-guides/electron/electron-auto-update.md) | Normative | Stack (Electron) | ~11424 | `#electron` `#auto-update` `#release` `#github-releases` `#netlify` `#code-signing` `#changelog` |
-| [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~803 | `#mui` `#rtl` `#i18n` `#bidirectional` |
+| [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~953 | `#mui` `#rtl` `#i18n` `#bidirectional` |
 | [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 7+ / 9+) | ~773 | `#mui` `#styling` `#theme` |
 | [nestjs-architecture.md](../05-stack-guides/nestjs/nestjs-architecture.md) | Normative | Stack (NestJS) | ~703 | `#nestjs` `#backend` `#modules` |
 | [playwright-e2e.md](../05-stack-guides/playwright/playwright-e2e.md) | Normative | Stack (Playwright) | ~711 | `#playwright` `#e2e` `#testing` |
 | [react-architecture.md](../05-stack-guides/react/react-architecture.md) | Normative | Stack (React) | ~648 | `#react` `#hooks` `#components` |
 | [react-performance.md](../05-stack-guides/react/react-performance.md) | Normative | Stack (React) | ~587 | `#react` `#performance` `#memo` |
 | [react-testing.md](../05-stack-guides/react/react-testing.md) | Normative | Stack (React) | ~675 | `#react` `#testing` `#rtl` |
-| [rtl-tech-stack.md](../05-stack-guides/rtl-tech-stack.md) | Normative | Global — All Projects (Bilingual by Default) | ~1306 | `#rtl` `#arabic` `#bidirectional` `#numerals` |
-| [shadcn-rtl-bidirectional.md](../05-stack-guides/shadcn/shadcn-rtl-bidirectional.md) | Normative | Stack (shadcn/ui + Tailwind CSS v4) | ~1538 | `#shadcn` `#tailwind` `#rtl` `#i18n` `#bidirectional` `#radix` `#base-ui` `#logical-properties` |
+| [rtl-tech-stack.md](../05-stack-guides/rtl-tech-stack.md) | Normative | Global — All Projects (Bilingual by Default) | ~1535 | `#rtl` `#arabic` `#bidirectional` `#numerals` |
+| [shadcn-rtl-bidirectional.md](../05-stack-guides/shadcn/shadcn-rtl-bidirectional.md) | Normative | Stack (shadcn/ui + Tailwind CSS v4) | ~1631 | `#shadcn` `#tailwind` `#rtl` `#i18n` `#bidirectional` `#radix` `#base-ui` `#logical-properties` |
 | [supabase-auth.md](../05-stack-guides/supabase/supabase-auth.md) | Normative | Stack (Supabase Auth) | ~633 | `#supabase` `#auth` `#jwt` `#grants` |
 | [supabase-database.md](../05-stack-guides/supabase/supabase-database.md) | Normative | Stack (Supabase / PostgreSQL) | ~974 | `#supabase` `#postgresql` `#rls` `#grants` `#postgrest` |
 | [typescript-conventions.md](../05-stack-guides/typescript/typescript-conventions.md) | Normative | Stack (TypeScript) | ~614 | `#typescript` `#types` `#strict` |
@@ -219,10 +219,10 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~3268 | `#skill` `#setup` `#beginner` `#onboarding` |
 | [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2570 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1625 | `#skill` `#inno-setup` `#installer` `#windows` |
-| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~1555 | `#skill` `#mui` `#design-system` `#shared-components` |
+| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~1679 | `#skill` `#mui` `#design-system` `#shared-components` |
 | [performance-audit/SKILL.md](../global-configs/skills/performance-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1281 | `#skill` `#performance` `#optimization` |
 | [refactoring/SKILL.md](../global-configs/skills/refactoring/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~984 | `#skill` `#refactoring` `#maintenance` |
-| [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` `tailwind` | ~2150 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
+| [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` `tailwind` | ~2172 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
 | [security-audit/SKILL.md](../global-configs/skills/security-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1366 | `#skill` `#security` `#owasp` |
 | [shadcn-design-system/SKILL.md](../global-configs/skills/shadcn-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` | ~1531 | `#skill` `#shadcn` `#design-system` `#shared-components` |
 | [test-generation/SKILL.md](../global-configs/skills/test-generation/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1033 | `#skill` `#testing` `#generation` |

@@ -54,7 +54,7 @@ You are a senior frontend engineer specializing in MUI v7+ design systems for bi
    - `Select` inside `Dialog`/`Drawer` → `MenuProps={{ disablePortal: true }}`
    - `Select` outside `Dialog` → consider `<TextField select SelectProps={{ native: true }}>` to avoid portal issues
 6. **Apply dialog focus restoration** — capture trigger element, set `disableRestoreFocus`, restore focus in `TransitionProps.onExited`.
-7. **Verify RTL/LTR** — use MUI logical spacing properties (`marginInlineStart`, `paddingInlineEnd`, etc.) and test in both directions.
+7. **Verify RTL/LTR** — use MUI logical spacing properties (`marginInlineStart`, `paddingInlineEnd`, etc.) and test in both directions. A free-text field is not verified until its EMPTY state is: `dir="auto"` is value-derived, so an empty field resolves LTR on an RTL page and the caret starts on the wrong side. Give it the UI language's direction while empty and `auto` once typed — one shared helper, passed through `slotProps={{ htmlInput: { dir } }}`.
 8. **Verify dark mode** — all colors from `theme.palette.*`, never raw hex values.
 9. **Verify WCAG 2.1 AA** — contrast ratios in both light and dark modes.
 
@@ -93,7 +93,7 @@ When generating or modifying UI code:
 3. Shared components (e.g., `StandardTable`, `StandardAccordion`) are the default — raw MUI is the exception.
 4. MUI Portal/aria-hidden rules prevent accessibility warnings — always apply the correct pattern.
 5. All colors MUST come from `theme.palette.*` tokens for dark mode support.
-6. RTL/LTR is non-negotiable — use logical spacing properties and test both directions.
+6. RTL/LTR is non-negotiable — use logical spacing properties, test both directions, and make a text field's EMPTY state part of the test: an empty `dir="auto"` field resolves LTR on an RTL page, so it starts on the UI language's side and turns `auto` once typed.
 
 ---
 

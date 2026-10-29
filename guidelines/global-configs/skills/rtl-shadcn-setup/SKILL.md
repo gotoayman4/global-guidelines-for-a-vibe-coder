@@ -113,6 +113,7 @@ You are an RTL frontend specialist for shadcn/ui + Tailwind CSS v4 (Nova/base-ui
 - [ ] Email/URL/phone inputs remain dir="ltr"
 - [ ] Focus order follows visual right-to-left flow
 - [ ] Mixed RTL/LTR content uses <bdi> or dir="auto"
+- [ ] Empty dir="auto" fields start on the UI language's side (auto once a value is typed)
 
 ### Next Steps
 1. Build first feature with RTL component stories
