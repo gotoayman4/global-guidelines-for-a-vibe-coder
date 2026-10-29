@@ -50,6 +50,11 @@ const SEEDED = [
     dest: path.join('scripts', 'lib', 'run-sync.js'),
     what: 'the capture helper the wrapper needs (no pipes — see its docblock)',
   },
+  {
+    src: path.join(SCRIPTS, 'gate-receipt.js'),
+    dest: path.join('scripts', 'gate-receipt.js'),
+    what: 'the ship-boundary wrapper that runs the full chain and writes the receipt',
+  },
 ];
 
 function usage(msg) {
@@ -94,7 +99,7 @@ function injectMode(worldContent, mode) {
   const modeLine = `- **mode:** \`${mode}\` — \`vibe | standard | guarded\` per \`_guidelines/01-workflow-methodology/speed-tiered-workflow.md\``;
   // Mode history belongs in commits, not in a boot file read every session.
   const setLine = `- **Set:** ${date} — initialized as \`${mode}\` by new-project.js; revisit at every milestone. A release does not change it: the mode is a loop-speed setting, not a lifecycle stage.`;
-  const escalationLine = '- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (GS_RELEASE_GATE=1 or the gitignored `.release-override`), and records its **release class** — `pilot` (live testing, demo, beta) or `production` (final launch) — in the release tag or commit message; this file changes only when the steady state changes. Record the reason in the commit message — no separate transition log.';
+  const escalationLine = '- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (`GS_RELEASE_GATE=pilot|production` or the gitignored `.release-override`) and needs a passing `gate:receipt` for the code it ships; the **release class** — `pilot` (live testing, demo, beta) or `production` (final launch) — is recorded in the receipt and the release tag or commit message; this file changes only when the steady state changes. Record the reason in the commit message — no separate transition log.';
 
   if (worldContent.includes('## Speed Mode')) {
     let next = worldContent.replace(/^[ \t]*- \*\*mode:\*\*.*$/m, modeLine);
@@ -131,18 +136,30 @@ function injectMode(worldContent, mode) {
 
 function mergeGateScripts(pkg) {
   const scripts = pkg.scripts || {};
+  const warnings = [];
   const fast = ['npm run lint', 'npm run type-check'];
   // The fast lane names the script the project actually has: a project with only `test:unit`
   // would otherwise get `npm test -- --run --changed`, which resolves to npm's placeholder and
-  // exits non-zero on a project that has tests.
+  // exits non-zero on a project that has tests. `--run` and `--changed` are Vitest flags.
   if (scripts.test) fast.push('npm test -- --run --changed');
   else if (scripts['test:unit']) fast.push('npm run test:unit -- --run --changed');
+  else warnings.push('no `test` or `test:unit` script — `gate:fast` runs lint and type-check only, so the vibe gate verifies no behavior until a test runner is wired (`--run`/`--changed` assume Vitest)');
+  const mirror = '_guidelines/global-configs/scripts';
   const additions = {
     'gate:fast': fast.join(' && '),
     // The dependency audit runs through a wrapper, never a bare `npm audit`: a bare audit that
     // cannot reach the registry reports nothing and exits 0 — a silent pass. The wrapper is seeded
     // into `scripts/` below, so this script always resolves.
     'audit:gate': 'node scripts/audit-gate.js',
+    // The ship boundary: a real receipt, seeded like the audit wrapper, never an echo placeholder.
+    'gate:receipt': 'node scripts/gate-receipt.js',
+    // The always tier is derived from the mirror's guards, but a guard only runs when an npm script
+    // names it — so the scaffold wires the fleet's names. They resolve once the mirror is synced
+    // (the hook says so and fails safe until then); `guard:ship` runs only on a release push.
+    'guard:tiers': `node ${mirror}/check-guard-tiers.js .`,
+    'guard:mode': `node ${mirror}/check-mode-conformance.js .`,
+    'guard:ship': `node ${mirror}/check-ship-receipt.js .`,
+    'docs:census': `node ${mirror}/check-doc-census.js .`,
   };
   let changed = false;
   pkg.scripts = scripts;
@@ -152,7 +169,7 @@ function mergeGateScripts(pkg) {
       changed = true;
     }
   }
-  return { pkg, changed };
+  return { pkg, changed, warnings };
 }
 
 /**
@@ -184,7 +201,7 @@ function prePushHook() {
     '#!/bin/sh',
     '# Pre-push gate — the declared mode decides how much runs (`local-ci-strategy.md` §Tier B).',
     '#',
-    '# Order: mode → always-tier → gate → audit → clean-tree',
+    '# Order: mode → always-tier → gate → audit → ship receipt (release push only) → clean-tree',
     '#',
     '# Five rules that are easy to get wrong here:',
     '#   · The mode is READ BY THE SHIPPED READER, never by a grep in this file: a grep here is a',
@@ -193,10 +210,11 @@ function prePushHook() {
     '#     vendored `scripts/read-mode.js`. If neither is there — or the declaration is not',
     '#     legible — the gate FAILS SAFE to the full chain: an unreadable mode must never buy the',
     '#     fast path.',
-    '#   · A release or milestone exit escalates through the OVERRIDE below (GS_RELEASE_GATE=1 or',
-    '#     `.release-override`) — never by editing WORLD.md and editing it back. The declared',
-    '#     mode changes only when the steady state changes, and the release CLASS (pilot vs',
-    '#     production) is recorded in the release tag or commit, not in WORLD.md.',
+    '#   · A release or milestone exit escalates through the OVERRIDE below (GS_RELEASE_GATE=pilot |',
+    '#     production | 1, or a `.release-override` file holding the class) — never by editing',
+    '#     WORLD.md and editing it back. The declared mode changes only when the steady state',
+    '#     changes; the release CLASS (pilot vs production) is recorded in the release tag or',
+    '#     commit, not in WORLD.md. A release push also owes a passing receipt (see below).',
     '#   · The gate depth follows the mode: vibe runs gate:fast; standard runs lint → type-check',
     '#     → the full suite and defers the BUILD to the ship boundary (every release builds, and',
     '#     deploys what it built); guarded adds the build and the path-aware extras per push.',
@@ -226,12 +244,27 @@ function prePushHook() {
     'echo "pre-push gate: mode=$MODE"',
     '',
     '# Release override: a release or milestone exit escalates WITHOUT editing WORLD.md — set',
-    '# GS_RELEASE_GATE=1 for one push, or leave a `.release-override` file at the repo root for',
-    '# the release week (gitignore it). The lift is one-way and one-deep: vibe becomes standard;',
-    '# a declared standard/guarded is untouched, and it can never make a gate cheaper.',
-    'if [ "$MODE" = "vibe" ] && { [ "$GS_RELEASE_GATE" = "1" ] || [ -f .release-override ]; }; then',
+    '# GS_RELEASE_GATE for one push (`pilot`, `production`, or `1` for pilot), or leave a',
+    '# `.release-override` file at the repo root holding the class for the release week (gitignore',
+    '# it). The lift is one-way: a `pilot` push lifts vibe to standard; a `production` push runs at',
+    '# guarded depth. A declared mode that is already deeper is untouched — it never makes a gate',
+    '# cheaper. The ship boundary itself is the receipt: a release push must carry a passing',
+    '# `gate:receipt` for the code it ships (checked below).',
+    'RELEASE_CLASS=""',
+    'case "${GS_RELEASE_GATE:-}" in',
+    '  production) RELEASE_CLASS=production ;;',
+    '  pilot|1) RELEASE_CLASS=pilot ;;',
+    'esac',
+    'if [ -z "$RELEASE_CLASS" ] && [ -f .release-override ]; then',
+    '  RELEASE_CLASS=pilot',
+    '  if grep -qi production .release-override; then RELEASE_CLASS=production; fi',
+    'fi',
+    'if [ "$RELEASE_CLASS" = "production" ]; then',
+    '  MODE=guarded',
+    '  echo "pre-push gate: production release override active — running the guarded chain"',
+    'elif [ "$RELEASE_CLASS" = "pilot" ] && [ "$MODE" = "vibe" ]; then',
     '  MODE=standard',
-    '  echo "pre-push gate: release override active — running the standard chain"',
+    '  echo "pre-push gate: pilot release override active — running the standard chain"',
     'fi',
     '',
     '# A missing required script must not turn an unexecuted check into a green gate.',
@@ -277,6 +310,17 @@ function prePushHook() {
     '# reach the registry reports nothing and exits 0 — a silent pass.',
     'run_step audit:gate',
     '',
+    '# A release push owes the ship boundary: a passing receipt, at least as deep as the class being',
+    '# shipped, for exactly this code. The modes defer the build and the suite to this point — a',
+    '# boundary nobody checks is a comment. The guard comes from the synced mirror.',
+    'if [ -n "$RELEASE_CLASS" ]; then',
+    '  if [ ! -f "_guidelines/global-configs/scripts/check-ship-receipt.js" ]; then',
+    '    echo "pre-push FAIL: a release push needs _guidelines/ synced so the ship receipt can be checked" >&2',
+    '    exit 1',
+    '  fi',
+    '  run_step guard:ship -- --class "$RELEASE_CLASS"',
+    'fi',
+    '',
     '# Clean-tree: decided on CONTENT, never on git\'s stat cache. A stat-based check reports files',
     '# as modified whose worktree blob is identical to the index, and blocks a genuinely clean push.',
     'if ! git diff --quiet HEAD || [ -n "$(git ls-files --others --exclude-standard)" ]; then',
@@ -316,6 +360,7 @@ function main() {
   const hookDest = path.join(hooksDir, 'pre-push');
 
   const actions = [];
+  const warnings = [];
   if (fs.existsSync(agentsDest)) {
     actions.push({ file: 'AGENTS.md', status: 'exists — skipped (create-if-missing)' });
   } else {
@@ -339,11 +384,12 @@ function main() {
     try {
       const pkg = JSON.parse(fs.readFileSync(pkgDest, 'utf8'));
       if (args.name) pkg.name = args.name;
-      const { pkg: merged, changed } = mergeGateScripts(pkg);
+      const { pkg: merged, changed, warnings: gateWarnings } = mergeGateScripts(pkg);
+      warnings.push(...gateWarnings);
       if (changed) {
         actions.push({
           file: 'package.json',
-          status: 'would write (merge the gate:fast script)',
+          status: 'would write (merge the gate, receipt and guard scripts)',
           write: () => fs.writeFileSync(pkgDest, `${JSON.stringify(merged, null, 2)}\n`, 'utf8'),
         });
       } else {
@@ -417,6 +463,7 @@ function main() {
   if (dryRun) {
     console.log('── dry run — no files written ──');
     for (const a of actions) console.log(`  ${a.file}: ${a.status}`);
+    for (const w of warnings) console.log(`  ⚠️  ${w}`);
     process.exit(0);
   }
 
@@ -424,6 +471,7 @@ function main() {
     if (a.write) a.write();
     console.log(`✅ ${a.file}: ${a.status.replace('would write', 'written')}`);
   }
+  for (const w of warnings) console.log(`⚠️  ${w}`);
 
   console.log('\nNext steps:');
   console.log('  1. Search [FILL] in AGENTS.md — fill the stack table + project mandates (the only home for rules)');
@@ -431,8 +479,10 @@ function main() {
   console.log('  3. Complete README.md — what this is, structure tree, quick start');
   console.log('  4. npx husky init   # install hooks; the generated pre-push reads the declared mode through');
   console.log('     the shipped reader and runs the always tier, the mode\'s gate, the audit and the clean-tree check');
-  console.log('  5. Wire a real gate:receipt script: run the full pipeline and write docs/gate-receipts/<UTC-stamp>.md —');
-  console.log('     an echo-only placeholder is not evidence (local-ci-strategy.md §Gate Receipts).');
+  console.log('  5. Release boundary: `npm run gate:receipt -- --class pilot|production` runs lint → type-check → suite →');
+  console.log('     build → audit (+ test:e2e for production) and writes docs/gate-receipts/<UTC-stamp>.md; commit it, then push with');
+  console.log('     GS_RELEASE_GATE=pilot|production — the hook checks the receipt (local-ci-strategy.md §Gate Receipts).');
+  console.log('     Add your own `test:e2e` before a production release; a missing script fails the receipt.');
   console.log('  6. pwsh -File <central-repo>\\guidelines\\global-configs\\scripts\\sync-guidelines.ps1 -ProjectPath .  # mirror _guidelines/');
   console.log('     (until then the hook cannot read the mode through the shipped reader and cannot derive the always tier —');
   console.log('     it fails safe to the full chain and says so)');

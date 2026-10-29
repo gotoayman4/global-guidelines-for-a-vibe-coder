@@ -6,6 +6,13 @@ guideline corpus — not this repo's own `AGENTS.md`.
 release-class and gate-ladder work recorded in `SHIP_CLASS_AND_GATE_DECISION_2026-10-28.md`.
 **Instrument:** `npm run benchmark:reform` (`--json`, `--check`, `--fleet`).
 
+> **These tables are a dated measurement, not a live one.** Every doctrine edit moves them (the
+> release-class and receipt rules of 2026-10-29 grew `WORLD.starter.md` and `speed-tiered-workflow.md`
+> again). The current figures are whatever `npm run benchmark:reform` prints; `npm run benchmark:check`
+> is part of `npm run validate`, so a lost rule, an unindexed task file or an unloadable skill fails
+> the gate. The constitution is the one number worth watching: it sits within ~60 tokens of its
+> 4,000-token cap, so the next rule MUST retire or narrow an existing one.
+
 This closes the benchmark still open in `LEAN_OPERATING_MODEL_DECISION_2026-10-27.md` §3: 18
 representative tasks, before/after on reading cost and on the two measurable preconditions of
 first-run correctness — the rule is still present, and the file that carries it is still reachable.
@@ -142,8 +149,15 @@ refuses to deliver a mirror whose commands cannot run, and the fix belongs to ea
 - **That the 22,250-token figure is what every agent actually read.** It is the prescribed chain at
   its widest. The narrow band is 7,837 — both are reported above.
 
-**Known cost of the reform:** five projects are blocked at the sync preflight until their hooks stop
-naming retired scripts. That is a deliberate, visible migration cost, not a silent failure.
+**Known cost of the reform:** five projects were blocked at the sync preflight until their hooks stopped
+naming retired scripts. That was a deliberate, visible migration cost, not a silent failure.
+
+**Update 2026-10-29 — the block is cleared.** `npm run sync:all -- --dry-run` passes the preflight for
+all seven projects, and no downstream `package.json` or hook names a retired script. What remains is
+re-syncing the mirrors (`npm run sync:drift` reports each as BEHIND — the mirror is the last delivered
+copy and the source has moved on, not an edit) and `property-management-app`, which has no pre-push
+hook at all (`npm run guard:mode -- --fleet` names it). All seven declare `vibe`, so the `standard` and
+`guarded` branches of the gate ladder have no field evidence yet.
 
 ## Reproduce
 

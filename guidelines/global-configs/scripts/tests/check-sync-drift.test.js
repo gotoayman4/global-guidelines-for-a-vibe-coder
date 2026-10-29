@@ -92,6 +92,19 @@ test('compareProjects flags a file left behind in the mirror as drift', () => {
   assert.equal(rows[0].mirrorFiles, 3);
 });
 
+test('a drifted mirror that still equals its recorded hash is BEHIND; one that differs from it is DIVERGED', () => {
+  const ok = fixture('ok');
+  const edited = fixture('edited');
+  const source = hashTree(ok.source);
+  const [behind] = compareProjects(ok.source, source, [{ name: 'p', path: edited.project, contentHash: hashTree(path.join(edited.project, '_guidelines')).hash }]);
+  assert.equal(behind.state, 'drift', 'behind is still a failure — the project lacks the current rules');
+  assert.equal(behind.cause, 'behind');
+  const [diverged] = compareProjects(ok.source, source, [{ name: 'p', path: edited.project, contentHash: 'a'.repeat(64) }]);
+  assert.equal(diverged.cause, 'diverged');
+  const [sync] = compareProjects(ok.source, source, [{ name: 'p', path: ok.project }]);
+  assert.equal(sync.cause, null);
+});
+
 test('compareProjects reports a project with no mirror at all', () => {
   const ok = fixture('ok');
   const missing = fixture('missing');

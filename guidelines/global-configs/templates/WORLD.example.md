@@ -11,7 +11,7 @@
 
 - **mode:** `vibe` — `vibe | standard | guarded` per `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`
 - **Set:** 2026-05-26 — bootstrapped on the fast track; the pilot release that followed did not change this line, because the mode is a loop-speed setting, not a lifecycle stage. Revisit at every milestone.
-- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (`GS_RELEASE_GATE=1` or the gitignored `.release-override`), and records its **release class** — `pilot` (live testing, demo, beta) or `production` (final launch) — in the release tag or commit message; this file changes only when the steady state changes. Record the reason in the commit message — no separate transition log.
+- **Escalation:** a release/milestone exit runs the full chain on a **release override** the gate reads (`GS_RELEASE_GATE=pilot|production` or the gitignored `.release-override`) and needs a passing `gate:receipt` for the code it ships; the **release class** — `pilot` (live testing, demo, beta) or `production` (final launch) — is recorded in the receipt and the release tag or commit message; this file changes only when the steady state changes. Record the reason in the commit message — no separate transition log.
 
 ---
 

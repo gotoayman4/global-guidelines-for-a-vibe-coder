@@ -98,8 +98,8 @@ npm run plan:skills     # Print which skills belong in which project, and why (n
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
 npm run sync:drift      # Fail if a project's _guidelines/ mirror or _skills/ copy is not the current source (content hash, not a date)
 npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness
-npm run benchmark:reform # Measure the lean model: boot cost, rule retention, reach (before ec55a54 → working tree)
-npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + test:scripts
+npm run benchmark:reform # Measure the lean model: boot cost, rule retention, reach (before ec55a54 → working tree); `benchmark:check` fails on a lost rule, unindexed file or unloadable skill
+npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + benchmark:check + test:scripts
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.

@@ -73,6 +73,7 @@
 const fs = require('fs');
 const path = require('path');
 const { npmSync } = require('./lib/run-sync.js');
+const { codeText } = require('./lib/shell-code.js');
 
 /** The three tiers, exactly as `local-ci-strategy.md` §Guard Tiers names them. */
 const TIERS = ['always', 'standard+', 'ship'];
@@ -145,7 +146,15 @@ function alwaysRunners(report) {
  */
 function runAlways(report, repo) {
   const ran = [];
-  for (const name of alwaysRunners(report)) {
+  const names = alwaysRunners(report);
+  if (names.length === 0) {
+    // An empty derivation is not a pass. With a package.json it means no npm script runs any
+    // `always` guard — the tier exists and nothing executes it. Without one there is no npm chain
+    // to run, which is reported, never failed (the same rule `check-sync-drift.js` applies).
+    const wanted = report.guards.filter((guard) => guard.tier === 'always').map((guard) => guard.file);
+    return { ok: report.scripts === null, ran, empty: true, wanted };
+  }
+  for (const name of names) {
     const result = npmSync(['run', name], { cwd: repo });
     ran.push({ name, status: result.status, stderr: result.stderr });
     if (result.status !== 0) return { ok: false, ran };
@@ -250,7 +259,7 @@ function resolveGate(repo, scripts) {
 
   const hook = path.join(repo, HOOK);
   if (fs.existsSync(hook)) {
-    const text = fs.readFileSync(hook, 'utf8');
+    const text = codeText(fs.readFileSync(hook, 'utf8'));
     const names = new Set([...text.matchAll(/(?:npm run|run_step)\s+([A-Za-z0-9:_-]+)/g)].map((match) => match[1]));
     const files = new Set([...text.matchAll(/check-[A-Za-z0-9._-]+\.js/g)].map((match) => match[0]));
     const derivesAlways = files.has('check-guard-tiers.js') && text.includes('--run-always');
@@ -437,8 +446,15 @@ function main() {
     }
     if (runAlwaysFlag) {
       const result = runAlways(report, repo);
-      if (json) console.log(JSON.stringify({ alwaysRunners: names, ran: result.ran }, null, 2));
-      else {
+      if (json) console.log(JSON.stringify({ alwaysRunners: names, ran: result.ran, empty: Boolean(result.empty) }, null, 2));
+      else if (result.empty) {
+        const wired = result.wanted.map((file) => `node _guidelines/global-configs/scripts/${file} .`).join('\n     ');
+        if (result.ok) console.error('⚠️  always tier: no package.json here, so no npm script can run its guards');
+        else {
+          console.error(`❌ always tier is EMPTY: no npm script runs ${result.wanted.join(', ')} — the tier is declared and nothing executes it.`);
+          console.error(`   Wire each as an npm script (fleet names: guard:tiers, guard:mode), for example:\n     ${wired}`);
+        }
+      } else {
         for (const entry of result.ran) {
           console.log(`${entry.status === 0 ? '✅' : '❌'} npm run ${entry.name}`);
           if (entry.status !== 0 && entry.stderr.trim()) console.error(entry.stderr.trim());

@@ -326,6 +326,24 @@ for (const host of hosts) {
     assert.deepEqual(tree(f.root), before);
   });
 
+  test(`${host}: a retired script named in a hook comment is not a command and does not block`, (t) => {
+    const f = fixture(t);
+    put(f.project, 'package.json', '{"scripts":{"lint":"eslint ."}}\n');
+    put(f.project, '.husky/pre-push', [
+      '#!/bin/sh',
+      '# retired: node _guidelines/global-configs/scripts/slice-close.js',
+      'npm run lint # was: node _guidelines/global-configs/scripts/check-old.js',
+      'echo "# node _guidelines/global-configs/scripts/kept-in-a-string.js"',
+      '',
+    ].join('\n'));
+    const outcome = mirror(host, f, true);
+    // The string on the echo line is not a comment, so it is still read — and still blocks.
+    assert.equal(outcome.Results[0].Success, false);
+    assert.ok(outcome.Results[0].Error.includes('kept-in-a-string.js'), outcome.Results[0].Error);
+    assert.ok(!outcome.Results[0].Error.includes('slice-close.js'), 'a commented reference must not block');
+    assert.ok(!outcome.Results[0].Error.includes('check-old.js'), 'a trailing comment must not block');
+  });
+
   test(`${host}: surviving targets allow repeated DryRuns without rewriting anything`, (t) => {
     const f = fixture(t);
     put(f.source, 'global-configs/scripts/checks.v2/check_active-2.js', '// active nested target\n');

@@ -4,7 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const { runSync } = require('../lib/run-sync.js');
-const { analyse, expand, readTier, leadingDocblock, render, resolveGate, TIERS, SCRIPTS } = require('../check-guard-tiers.js');
+const { analyse, expand, readTier, leadingDocblock, render, resolveGate, runAlways, TIERS, SCRIPTS } = require('../check-guard-tiers.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const SCRIPT = path.join(REPO_ROOT, 'guidelines/global-configs/scripts/check-guard-tiers.js');
@@ -296,6 +296,52 @@ test('REVERSAL PROOF: running the reporter without `--run-always` does not claim
   assert.equal(misses.length, 2, JSON.stringify(report.advisories));
   assert.deepEqual(report.problems, [], 'against a hook the `always` promise stays advisory');
   assert.equal(resolveGate(path.join(dir, 'nowhere'), {}).derivesAlways, false);
+});
+
+test('a commented-out derivation or step is not a step', () => {
+  // A hook's header names scripts and flags in prose. Read as code, a commented-out
+  // `--run-always` told the report the always tier was wired when the hook ran nothing.
+  const dir = fixture({
+    guards: { 'check-alpha.js': 'always' },
+    scripts: { 'guard:alpha': runner('check-alpha.js') },
+    hook: [
+      '#!/bin/sh',
+      '# node "_guidelines/global-configs/scripts/check-guard-tiers.js" --root . --run-always',
+      '# run_step guard:alpha',
+      'echo "no gate here" # run_step guard:alpha',
+      '',
+    ].join('\n'),
+    layout: 'mirror',
+  });
+  const gate = resolveGate(dir, { 'guard:alpha': runner('check-alpha.js') });
+  assert.equal(gate.derivesAlways, false);
+  assert.equal(gate.names.has('guard:alpha'), false);
+  assert.equal(gate.files.has('check-guard-tiers.js'), false);
+  const report = inspect(dir, 'mirror');
+  assert.deepEqual(report.reachedByGate, []);
+});
+
+test('REVERSAL PROOF: an empty always tier FAILS where there is an npm chain — it is not a silent pass', () => {
+  // The hook derives the tier and runs what comes back. A derivation that finds nothing because no
+  // npm script names an `always` guard used to exit 0: the tier was declared and nothing ran it.
+  const dir = fixture({ guards: { 'check-alpha.js': 'always' }, scripts: { lint: 'echo' }, layout: 'mirror' });
+  const report = inspect(dir, 'mirror');
+  const outcome = runAlways(report, dir);
+  assert.equal(outcome.ok, false);
+  assert.equal(outcome.empty, true);
+  assert.deepEqual(outcome.wanted, ['check-alpha.js']);
+
+  const noPackage = runAlways({ scripts: null, guards: report.guards }, dir);
+  assert.equal(noPackage.ok, true, 'no package.json means no npm chain — reported, never failed');
+  assert.equal(noPackage.empty, true);
+});
+
+test('the CLI says what to wire when the always tier is empty, and exits 1', () => {
+  const dir = fixture({ scripts: { lint: 'echo' } });
+  const result = runSync(process.execPath, [SCRIPT, '--root', dir, '--run-always'], { cwd: REPO_ROOT });
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stderr, /always tier is EMPTY/);
+  assert.match(result.stderr, /guard:tiers, guard:mode/);
 });
 
 test('the report tells a missing `gate:fast` from one that wires no guard', () => {

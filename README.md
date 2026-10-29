@@ -71,12 +71,12 @@ Also available: `-DryRun` (preview, write nothing), `-Backup` (dated backup befo
 ## Commands
 
 > This table covers the day-to-day commands. `package.json` §scripts is the complete inventory — it
-> also carries `validate:standard`, `docs:check`, `guard:paths`, `guard:mode`, `sync:drift`,
-> `audit:friction` and `benchmark:reform`.
+> also carries `validate:standard`, `docs:check`, `guard:paths`, `guard:mode`, `guard:ship`,
+> `sync:drift`, `audit:friction`, `benchmark:reform` and `benchmark:check`.
 
 | Command | What it does |
 |---|---|
-| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + test:scripts. Runs on every push (local pre-push hook). The authoritative list is `package.json` §scripts; this row restates it. |
+| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + benchmark:check + test:scripts. Runs on every push (local pre-push hook). The authoritative list is `package.json` §scripts; this row restates it. |
 | `npm run audit` | Verifies extracted rules in starter templates still match their source guideline files. |
 | `npm run check-links` | Checks internal links across all `.md` files. |
 | `npm run check-index` | Verifies every file is registered in `guidelines/_index/MASTER_INDEX.md`. |

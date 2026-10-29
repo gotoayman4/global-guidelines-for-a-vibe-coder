@@ -47,6 +47,8 @@
 const fs = require('fs');
 const path = require('path');
 const { readMode, MODES } = require('./lib/project-mode.js');
+// A hook's header names modes and steps in prose; only its code is read (see lib/shell-code.js).
+const { stripInline, codeLines } = require('./lib/shell-code.js');
 const { analyse, alwaysRunners } = require('./check-guard-tiers.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -69,45 +71,6 @@ const FULL_PIPELINE = [
   { re: /\brun_step\s+test(\s|$|--)/i, what: 'the full test suite' },
   { re: /\brun_step\s+build(\s|$|--)/i, what: 'the build' },
 ];
-
-/**
- * Cut an inline comment off a line, leaving a `#` inside a quoted string alone.
- *
- * A `#` inside a string is not a comment, and a hook line like `echo "npm test -- --run"` is a
- * string, not a step. Stripping it would report a command the hook never runs.
- */
-function stripInline(line) {
-  let quote = null;
-  for (let i = 0; i < line.length; i += 1) {
-    const ch = line[i];
-    if (quote) {
-      if (ch === quote) quote = null;
-      continue;
-    }
-    if (ch === '"' || ch === "'") {
-      quote = ch;
-      continue;
-    }
-    if (ch === '#' && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i);
-  }
-  return line;
-}
-
-/**
- * The code of a hook: comments removed.
- *
- * A hook's header is a NORMATIVE LIST of its steps, and it names the modes in prose ("vibe
- * defers the build"). Matching that prose would report a mode branch in a hook that has none —
- * which is exactly what the fleet's mode-blind hooks do. So the comment lines go first, and only
- * what remains is read as code.
- */
-function codeLines(text) {
-  return text.split(/\r?\n/).map((line) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('#')) return '';
-    return stripInline(line).trimEnd();
-  });
-}
 
 /** Three-valued mode logic — a condition we cannot evaluate is `unknown`, and never a pass. */
 const NOT = { true: 'false', false: 'true', unknown: 'unknown' };
@@ -140,19 +103,24 @@ function isModeCondition(condition) {
  */
 function evalModeCondition(condition, mode) {
   const comparison = /(?:\$\{?MODE\}?|\bmode\b)["']?\s*(?:={1,2}|!=)\s*("[^"]*"|'[^']*'|[\w.-]+)/gi;
-  const results = [];
-  for (const match of condition.matchAll(comparison)) {
-    const value = match[1].replace(/^["']|["']$/g, '');
-    const holds = match[0].includes('!=') ? mode !== value : mode === value;
-    results.push(holds ? 'true' : 'false');
-  }
-  if (results.length === 0) return 'unknown';
   const joinsAnd = condition.includes('&&');
   const joinsOr = condition.includes('||');
   if (joinsAnd && joinsOr) return 'unknown';
+
+  // A term with no mode comparison (`[ -f flag ]`) is `unknown`: leaving it out would let
+  // `MODE=vibe && [ -f flag ]` read as plain `MODE=vibe`, and so charge the else-branch to nobody.
+  const evalTerm = (term) => {
+    const first = [...term.matchAll(comparison)][0];
+    if (!first) return 'unknown';
+    const value = first[1].replace(/^["']|["']$/g, '');
+    const holds = first[0].includes('!=') ? mode !== value : mode === value;
+    return holds ? 'true' : 'false';
+  };
+
+  const separator = joinsOr ? '||' : '&&';
+  const results = condition.split(separator).map(evalTerm);
   if (joinsOr) return any(results);
-  if (joinsAnd) return every(results);
-  return results[0];
+  return every(results);
 }
 
 /** The condition text of an `if` / `elif` line, without the keyword and the trailing `then`. */

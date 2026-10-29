@@ -155,6 +155,34 @@ function Restore-Backup([string]$projectPath, [string]$timestamp) {
     return $true
 }
 
+function Remove-ShellComments {
+    <#
+    .SYNOPSIS
+        A hook's code with its comments removed, so the preflight reads only what the hook RUNS.
+
+    .DESCRIPTION
+        A hook's header names scripts in prose, and a retired script named in a comment is not a
+        command that can fail. A `#` inside a quoted string is not a comment. Mirrors
+        lib/shell-code.js, which the Node-side readers share.
+    #>
+    param([string]$Text)
+
+    $kept = New-Object System.Collections.Generic.List[string]
+    foreach ($line in ($Text -split "`r?`n")) {
+        if ($line.TrimStart().StartsWith('#')) { $kept.Add(''); continue }
+        $quote = $null
+        $cut = $line.Length
+        for ($i = 0; $i -lt $line.Length; $i++) {
+            $ch = $line[$i]
+            if ($quote) { if ($ch -eq $quote) { $quote = $null }; continue }
+            if ($ch -eq '"' -or $ch -eq "'") { $quote = $ch; continue }
+            if ($ch -eq '#' -and ($i -eq 0 -or [char]::IsWhiteSpace($line[$i - 1]))) { $cut = $i; break }
+        }
+        $kept.Add($line.Substring(0, $cut))
+    }
+    return ($kept -join "`n")
+}
+
 function Sync-MirrorDirectory {
     <#
     .SYNOPSIS
@@ -212,7 +240,7 @@ function Sync-MirrorDirectory {
                 $caller = $hook.FullName.Replace('\', '/')
                 $commands += [pscustomobject]@{
                     Caller = $caller
-                    Text = Get-Content -LiteralPath $hook.FullName -Raw -Encoding UTF8 -ErrorAction Stop
+                    Text = Remove-ShellComments (Get-Content -LiteralPath $hook.FullName -Raw -Encoding UTF8 -ErrorAction Stop)
                 }
             }
         }

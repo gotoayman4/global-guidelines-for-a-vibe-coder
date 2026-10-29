@@ -43,7 +43,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [development-workflow.md](../01-workflow-methodology/development-workflow.md) | Normative | Global | ~1146 | `#workflow` `#process` `#lifecycle` |
 | [planning-and-scoping.md](../01-workflow-methodology/planning-and-scoping.md) | Normative | Global | ~818 | `#planning` `#scoping` `#prd` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~566 | `#refactoring` `#maintenance` `#technical-debt` |
-| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~3789 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
+| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~3928 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
 | [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2623 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
 
 ### 02 — Engineering Practices
@@ -72,7 +72,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~892 | `#ci-cd` `#pipelines` `#automation` |
 | [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~934 | `#environments` `#secrets` `#config` |
 | [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~771 | `#git` `#branching` `#commits` |
-| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~5243 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
+| [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~5453 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
 
 ### 04 — Architecture
 
@@ -172,10 +172,12 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [lib/stack-profile.js](../global-configs/scripts/lib/stack-profile.js) | Script | Global | ~3,700 (run it; read it only to change it) | `#script` `#skills` `#stack` `#declared-vs-measured` `#shared` `#mirror-safe` |
 | [lib/plan-skills.js](../global-configs/scripts/lib/plan-skills.js) | Script | Global | ~2,300 (run it; read it only to change it) | `#script` `#skills` `#selection` `#fit-rule` `#shared` `#mirror-safe` |
 | [lib/run-sync.js](../global-configs/scripts/lib/run-sync.js) | Script | Global | ~250 | `#script` `#subprocess` `#portability` `#windows` `#ebusy` |
+| [lib/shell-code.js](../global-configs/scripts/lib/shell-code.js) | Script | Global | ~450 | `#script` `#hook` `#comments` `#shared` `#single-source` |
 | [lib/project-mode.js](../global-configs/scripts/lib/project-mode.js) | Script | Global | ~50 | `#script` `#mode` `#world-md` `#shared` `#single-source` |
 | [lib/context-caps.js](../global-configs/scripts/lib/context-caps.js) | Script | Global | ~50 | `#script` `#token-budget` `#shared` `#single-source` `#mirror-safe` |
 | [read-mode.js](../global-configs/scripts/read-mode.js) | Script | Global | ~50 (run it; read it only to change it) | `#script` `#mode` `#speed-mode` `#gate` `#shared` `#single-source` |
 | [audit-gate.js](../global-configs/scripts/audit-gate.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#audit` `#dependencies` `#gate` `#allowlist` |
+| [gate-receipt.js](../global-configs/scripts/gate-receipt.js) | Script | Global | ~1,900 (run it; read it only to change it) | `#script` `#gate` `#receipt` `#ship-boundary` `#release-class` |
 | [measure-boot-budget.js](../global-configs/scripts/measure-boot-budget.js) | Script | Global | ~2,600 (run it; read it only to change it) | `#script` `#measurement` `#token-budget` `#changelog-history` `#steering-docs` |
 | [benchmark-reform.js](../global-configs/scripts/benchmark-reform.js) | Script | Global | ~5,600 (run it; read it only to change it) | `#script` `#measurement` `#benchmark` `#reform` `#rule-retention` `#token-budget` |
 | [check-project-freshness.js](../global-configs/scripts/check-project-freshness.js) | Script | Global | ~150 | `#script` `#report` `#drift-detection` `#sync` |
@@ -188,6 +190,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-guard-tiers.js](../global-configs/scripts/check-guard-tiers.js) | Script | Global | ~4,400 (run it; read it only to change it) | `#script` `#guard` `#tiers` `#gate` `#derived` `#single-source` |
 | [check-agents-paths.js](../global-configs/scripts/check-agents-paths.js) | Script | Global | ~3,000 (run it; read it only to change it) | `#script` `#guard` `#bootstrap` `#tracked-ness` `#portability` `#gate` |
 | [check-mode-conformance.js](../global-configs/scripts/check-mode-conformance.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#guard` `#mode` `#speed-mode` `#gate` `#fleet` |
+| [check-ship-receipt.js](../global-configs/scripts/check-ship-receipt.js) | Script | Global | ~1,600 (run it; read it only to change it) | `#script` `#guard` `#ship` `#receipt` `#release-class` `#gate` |
 | [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
@@ -213,7 +216,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` | ~2728 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` `#node` `#console` |
 | [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1624 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~3805 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
-| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~3186 | `#skill` `#setup` `#beginner` `#onboarding` |
+| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~3268 | `#skill` `#setup` `#beginner` `#onboarding` |
 | [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2570 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1625 | `#skill` `#inno-setup` `#installer` `#windows` |
 | [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~1555 | `#skill` `#mui` `#design-system` `#shared-components` |

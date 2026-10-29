@@ -230,6 +230,40 @@ test('an elif chain is evaluated branch by branch', () => {
   ]);
 });
 
+test('a non-mode term in a compound condition is unknown, never silently dropped', () => {
+  // `vibe && [ -f flag ]` is not plain `vibe`: when the flag is absent the ELSE side runs in vibe.
+  // Dropping the flag made the else-branch build read as unreachable and the vibe push read as cheap.
+  const hook = [
+    '#!/bin/sh',
+    'if [ "$MODE" = "vibe" ] && [ -f flag ]; then',
+    '  run_step gate:fast',
+    'else',
+    '  run_step build',
+    'fi',
+    '',
+  ].join('\n');
+  const [build] = analyseHook(hook).fullPipeline;
+  assert.equal(build.runsInVibe, true, 'a vibe push without the flag reaches the build');
+
+  const orHook = [
+    '#!/bin/sh',
+    'if [ "$MODE" = "standard" ] || [ -f flag ]; then',
+    '  run_step build',
+    'fi',
+    '',
+  ].join('\n');
+  assert.equal(analyseHook(orHook).fullPipeline[0].runsInVibe, true, 'the flag alone can reach the build in vibe');
+
+  const decided = [
+    '#!/bin/sh',
+    'if [ "$MODE" = "guarded" ] && [ -f flag ]; then',
+    '  run_step build',
+    'fi',
+    '',
+  ].join('\n');
+  assert.equal(analyseHook(decided).fullPipeline[0].runsInVibe, false, 'a false mode term decides an && whatever the flag says');
+});
+
 test('the scaffold spelling `run_step test` / `run_step build` is read as the full pipeline', () => {
   // The scaffold's hook wraps every step in a `run_step` helper that fails on a missing script.
   // A reader that knew only `npm test` read that hook as carrying no full pipeline at all, so a

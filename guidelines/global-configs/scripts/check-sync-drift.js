@@ -425,10 +425,16 @@ function compareProjects(sourceDir, source, projects, skills = null) {
       return { name, path: project.path, state: 'no-mirror', recorded, lastSynced: project.lastSynced, skills: skillsVerdict, skillsBlock: blockVerdict, competingStores: stores };
     }
     const theirs = hashTree(mirror);
+    const state = theirs.hash === source.hash ? 'sync' : 'drift';
+    // A mirror that still equals what the last sync recorded is BEHIND: nothing is wrong with the
+    // project, the source moved on (every central commit does this). One that differs from the
+    // record was edited or half-written after delivery. Both fail; only the second needs a look.
+    const cause = state === 'sync' ? null : theirs.hash.slice(0, 12) === recorded ? 'behind' : 'diverged';
     return {
       name,
       path: project.path,
-      state: theirs.hash === source.hash ? 'sync' : 'drift',
+      state,
+      cause,
       mirrorHash: theirs.hash,
       mirrorFiles: theirs.count,
       recorded,
@@ -555,7 +561,10 @@ function main() {
     } else {
       drifted.add(row.name);
       if (!quiet) {
-        console.log(`  ❌ ${row.name}: DRIFT — mirror ${row.mirrorHash.slice(0, 12)} (${row.mirrorFiles} files) ≠ source ${source.hash.slice(0, 12)} (${source.count} files)`);
+        const why = row.cause === 'behind'
+          ? 'BEHIND — the mirror is exactly the last delivered copy; the source has changed since'
+          : 'DIVERGED — the mirror differs from what the last sync recorded (edited or half-written)';
+        console.log(`  ❌ ${row.name}: DRIFT (${why}) — mirror ${row.mirrorHash.slice(0, 12)} (${row.mirrorFiles} files) ≠ source ${source.hash.slice(0, 12)} (${source.count} files)`);
         console.log(`       recorded: ${row.recorded}${row.lastSynced ? ` · lastSynced: ${row.lastSynced}` : ''}`);
         // The mirror is local: sync-guidelines.ps1 writes `_guidelines/` AND adds it to the
         // project's .gitignore, so a refresh needs no commit. Saying "re-commit the project"

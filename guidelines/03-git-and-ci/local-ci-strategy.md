@@ -82,6 +82,7 @@ Before every push, run that mode's gate locally. This gate replaces the cloud CI
      fi
    fi
    run_step audit:gate                # every mode
+   # release push only (GS_RELEASE_GATE / .release-override): run_step guard:ship -- --class "$RELEASE_CLASS"
    # clean-tree, content-based (rule 4) — every mode
    ```
 
@@ -98,14 +99,14 @@ Before every push, run that mode's gate locally. This gate replaces the cloud CI
 
 ## Gate Receipts — Evidence Is an Artifact, Not a Sentence
 
-A project-owned `npm run gate:receipt` runs the same steps and writes `docs/gate-receipts/<UTC-stamp>.md`: timestamp, branch/commit, per-step exit code and key figures, and one verdict line. Steering prose then **cites the file path** and copies nothing (see `documentation-strategy.md`). An echo-only placeholder is not a receipt — it writes no evidence.
+`npm run gate:receipt -- --class pilot|production` runs the boundary chain and writes `docs/gate-receipts/<UTC-stamp>.md`: timestamp, branch/commit, release class, per-step result, and one verdict line. `new-project.js` seeds a working `scripts/gate-receipt.js` (lint → type-check → full suite → build → audit wrapper, plus `test:e2e` for `production` or `--e2e`; a missing script FAILS the receipt, and the first failure stops the run). Steering prose then **cites the file path** and copies nothing (see `documentation-strategy.md`). An echo-only placeholder is not a receipt — it writes no evidence. **A release push is checked against it:** the hook runs the `ship`-tier `check-ship-receipt.js`, which passes only when the newest receipt says PASS, is at least as deep as the class being shipped, and describes this code (its commit is HEAD, or only `docs/gate-receipts/` changed since).
 
-**Cadence — a receipt is a boundary artifact, not an iteration check.** Routine slices use the fast loop and the declared pre-push gate; do not run `gate:receipt` after every slice or edit batch. Run it once at a milestone or release exit, after the code is final. Add `--e2e` when that boundary requires the end-to-end matrix. This changes only how often the full evidence artifact is generated: it does not defer or remove any per-push, path-triggered, or other security check. If a record cites full-gate figures, cite a receipt from the exact tree those figures describe; never reuse a stale receipt or imply that a fast-loop result proves the full gate.
+**Cadence — a receipt is a boundary artifact, not an iteration check.** Routine slices use the fast loop and the declared pre-push gate; do not run `gate:receipt` after every slice or edit batch. Run it once at a milestone or release exit, after the code is final and committed. Add `--e2e` when that boundary requires the end-to-end matrix. This changes only how often the full evidence artifact is generated: it does not defer or remove any per-push, path-triggered, or other security check. If a record cites full-gate figures, cite a receipt from the exact tree those figures describe; never reuse a stale receipt or imply that a fast-loop result proves the full gate. The wrapper cannot run the critical-flow checks (LTR and RTL) or rollback readiness — it says so in the receipt, and those need the project's own evidence.
 
 Rules for the instrument:
 
 - **Strip ANSI escapes** from captured output before parsing or writing it. A tool that colorizes for a terminal writes `\e[32m105 passed` into the artifact — unreadable to a reader and unparseable by a guard.
-- **A step that cannot be green before the commit is informational.** The receipt is written while the work is still dirty, so a clean-tree check would make every honest receipt RED. Mark it informational, print what it found, keep it out of the verdict and the exit code.
+- **The seeded wrapper refuses a dirty tree**, because a receipt must describe one commit. A project-owned receipt that tolerates one must mark any step that cannot be green before the commit (a clean-tree check) as informational: print what it found, keep it out of the verdict and the exit code.
 - **Nested npm inherits the parent's env.** A step that shells out to `npm run …` must re-apply the wrapper's own env handling (the audit case above), or it fails for reasons that have nothing to do with the code.
 - **Receipts are append-only and dated.** Never rewrite one to make a slice look green; the next run writes a new file.
 - **A receipt is a bounded summary, never a pasted tool log.** Per-step exit codes, key figures, and the verdict are the artifact. The raw logs of an investigation — repro dumps, repeat-run captures, contention traces — are session scratch: they belong to the gitignored `scratch/` home, never to `docs/gate-receipts/` and never to a commit. A hundred-kilobyte `.txt` committed as "evidence" is a log file wearing a receipt's name, and the guards that police receipts then inherit a corpus nobody should have committed.
