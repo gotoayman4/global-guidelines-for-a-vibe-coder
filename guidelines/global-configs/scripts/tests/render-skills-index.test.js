@@ -203,3 +203,44 @@ test('renderBlock terse mode carries the firing words, not the verbatim descript
   const full = renderBlock(rows);
   assert.match(full, /Full alpha description/, 'the corpus INDEX keeps the verbatim description');
 });
+
+// ─── the authored `metadata.trigger` field (owner decision 2026-10-31, "yes add the trigger") ──
+
+const DECLARED = {
+  alpha: 'name: alpha\ndescription: Full alpha description for the catalog. Triggers on "derived phrase".\nmetadata:\n  status: "Advisory"\n  trigger: authored alpha trigger',
+};
+
+test('collect reads metadata.trigger as triggerShort', () => {
+  const rows = collect(fixture(DECLARED).dir);
+  assert.equal(rows[0].triggerShort, 'authored alpha trigger');
+  assert.equal(rows[0].trigger, 'Full alpha description for the catalog. Triggers on "derived phrase".',
+    'the full description is untouched — the corpus INDEX still shows it');
+});
+
+test('collect leaves triggerShort null when no trigger field is declared', () => {
+  const rows = collect(fixture(TWO).dir);
+  assert.equal(rows[0].triggerShort, null);
+});
+
+test('an authored trigger beats the Triggers-on derivation', () => {
+  // The declared field is the owner's words; the derivation is a guess at them. A guess must never
+  // overwrite a declaration.
+  assert.equal(
+    terseTrigger('Full alpha description for the catalog. Triggers on "derived phrase".', 'authored alpha trigger'),
+    'authored alpha trigger'
+  );
+});
+
+test('an authored trigger is used verbatim — the 100-char cap applies only to derived values', () => {
+  const authored = 'a'.repeat(60) + ' ' + 'b'.repeat(60); // 121 chars, no natural break under 100
+  assert.equal(terseTrigger('Some description that would derive something else.', authored), authored);
+  assert.ok(!terseTrigger(null, authored).includes('…'), 'never truncated');
+});
+
+test('renderBlock terse mode shows the authored trigger and skips the derivation', () => {
+  const rows = collect(fixture(DECLARED).dir);
+  const terse = renderBlock(rows, { terse: true });
+  assert.match(terse, /authored alpha trigger/);
+  assert.doesNotMatch(terse, /derived phrase/, 'the derivation must not fire when a trigger is declared');
+  assert.doesNotMatch(terse, /Full alpha description/);
+});

@@ -6,6 +6,7 @@ metadata:
   scope: Global (Task-Type Skill)
   tags: skill, mui, design-system, shared-components
   appliesTo: mui
+  trigger: MUI project, MUI component or theme, MUI dialog, RTL with MUI
 ---
 
 # Skill: MUI Design System

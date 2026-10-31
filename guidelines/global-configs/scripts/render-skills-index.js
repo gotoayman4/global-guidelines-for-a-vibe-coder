@@ -72,12 +72,13 @@ const appliesCell = (appliesTo) =>
  * native loader injects the SAME description text into its own context — the verbatim cell was a
  * second copy of a fact the tool already carries, at 1,800–2,850 tokens per project per boot.
  *
- * DERIVATION, never authorship — the same rule as the rest of the block: prefer the description's
- * explicit `Triggers on …` clause (the phrases that name the firing moment), falling back to its
- * first sentence. Capped at 100 characters; the full description stays one link away in the
- * skill file and in each tool's own catalog.
+ * PRECEDENCE: an authored `metadata.trigger` wins verbatim (it is the owner's words — never
+ * capped); otherwise the description's explicit `Triggers on …` clause (the phrases that name the
+ * firing moment), falling back to its first sentence. Derived values are capped at 100 characters;
+ * the full description stays one link away in the skill file and in each tool's own catalog.
  */
-function terseTrigger(description) {
+function terseTrigger(description, declared) {
+  if (declared) return String(declared).trim();
   if (!description) return null;
   const text = String(description).replace(/\s+/g, ' ').trim();
   const pick = (value) => {
@@ -114,6 +115,7 @@ function collect(skillsDir = SKILLS_DIR) {
       file: skill.file,
       name: fm && fm.name ? fm.name : skill.name,
       trigger: fm && fm.description ? fm.description : null,
+      triggerShort: meta(fm, 'trigger') || null,
       appliesTo: appliesTo.length ? appliesTo : null,
       status: meta(fm, 'status') || '—',
     };
@@ -149,7 +151,7 @@ function renderBlock(skills, { linkPrefix = '', terse = false } = {}) {
   lines.push('|---|---|---|---|');
   for (const skill of skills) {
     const name = `[${skill.name}](${linkPrefix}${skill.file})`;
-    const trigger = terse ? terseTrigger(skill.trigger) : skill.trigger;
+    const trigger = terse ? terseTrigger(skill.trigger, skill.triggerShort) : skill.trigger;
     lines.push(`| ${name} | ${cell(trigger || '— *no trigger declared*')} | ${appliesCell(skill.appliesTo)} | ${cell(skill.status)} |`);
   }
   return lines.join('\n');

@@ -6,6 +6,7 @@ metadata:
   scope: Global (Task-Type Skill)
   tags: skill, shadcn, design-system, shared-components
   appliesTo: shadcn
+  trigger: shadcn/ui project, shadcn component or theme, shadcn dialog, dark mode with shadcn
 ---
 
 # Skill: shadcn/ui Design System

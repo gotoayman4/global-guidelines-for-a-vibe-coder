@@ -6,6 +6,7 @@ metadata:
   scope: Global (Task-Type Skill)
   tags: skill, rtl, shadcn, tailwind, setup, arabic
   appliesTo: shadcn, tailwind
+  trigger: start an Arabic or bilingual app on shadcn/ui, RTL setup, shadcn RTL
 ---
 
 # Skill: RTL App Setup with shadcn/ui + Tailwind

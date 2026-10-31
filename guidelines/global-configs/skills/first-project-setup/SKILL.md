@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, setup, beginner, onboarding
+  trigger: start a new project from scratch, how do I begin, set up my first project
 ---
 
 # Skill: First Project Setup

@@ -6,6 +6,7 @@ metadata:
   scope: Global (Task-Type Skill)
   tags: skill, tiptap, tailwind, rich-text, css
   appliesTo: tiptap, tailwind
+  trigger: TipTap renders plain text, headings or lists unstyled, useEditor recreates, rich text lost formatting
 ---
 
 # Skill: Fix Tiptap v3 + Tailwind CSS v4 Rich Text Formatting

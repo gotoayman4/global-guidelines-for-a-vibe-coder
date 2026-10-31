@@ -6,6 +6,7 @@ metadata:
   scope: Global (Task-Type Skill)
   tags: skill, firebase, firestore, rules, practices
   appliesTo: firebase, firestore
+  trigger: Firestore data layer, Firestore rules, Functions trigger, Firestore query or index
 ---
 
 # Skill: Firebase & Firestore Practices

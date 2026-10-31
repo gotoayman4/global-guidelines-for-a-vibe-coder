@@ -6,6 +6,7 @@ metadata:
   scope: Global (Task-Type Skill)
   tags: skill, firestore, firebase, cost, quota
   appliesTo: firebase, firestore
+  trigger: Firebase bill or quota, per-operation billing, deploy Firebase project, cut reads or writes
 ---
 
 # Skill: Firestore Cost Optimization
