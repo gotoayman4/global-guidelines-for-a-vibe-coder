@@ -78,20 +78,27 @@ test('materialiseStore refuses a store that holds skills but no marker, and writ
   assert.ok(!fs.existsSync(path.join(store, markerNameFor(store))), 'no marker claimed');
 });
 
-test('adopt coexists: foreign bytes survive, collisions are skipped, the marker claims only ours', () => {
+test('source of truth wins: a same-named foreign skill is replaced and claimed; others keep their bytes', () => {
   const src = sourceSkills({ agnostic: ['alpha', 'beta'] });
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-stores-out-'));
   const store = path.join(root, 'skills');
-  // A foreign `alpha` with bytes that are NOT the source's — the user's own skill of the same name.
-  fs.mkdirSync(path.join(store, 'alpha'), { recursive: true });
+  // A foreign `alpha` with bytes that are NOT the source's (and a companion the source does not
+  // carry), and a differently named foreign skill the corpus does not carry at all.
+  fs.mkdirSync(path.join(store, 'alpha', 'references'), { recursive: true });
   fs.writeFileSync(path.join(store, 'alpha', SKILL_FILE), '---\nname: alpha\ndescription: the user own\n---\ntheirs\n');
+  fs.writeFileSync(path.join(store, 'alpha', 'references', 'user-note.md'), 'user companion\n');
+  fs.mkdirSync(path.join(store, 'theirs'), { recursive: true });
+  fs.writeFileSync(path.join(store, 'theirs', SKILL_FILE), '---\nname: theirs\ndescription: theirs\n---\ntheirs\n');
 
   const result = materialiseStore(store, planAll(src), { sourceRoot: src, adopt: true });
   assert.deepEqual(result.refused, null);
-  assert.deepEqual(result.collisions, ['alpha'], 'collision named, never overwritten');
-  assert.equal(fs.readFileSync(path.join(store, 'alpha', SKILL_FILE), 'utf8').includes('the user own'), true, 'foreign bytes intact');
-  assert.deepEqual(readMarker(store).names, ['beta'], 'marker claims only what we delivered');
-  assert.ok(fs.existsSync(path.join(store, 'beta', SKILL_FILE)), 'non-colliding skill written');
+  assert.deepEqual(result.overridden, ['alpha'], 'the override is reported by name');
+  assert.equal(fs.readFileSync(path.join(store, 'alpha', SKILL_FILE), 'utf8').includes('body alpha'), true, 'source bytes won');
+  assert.ok(!fs.existsSync(path.join(store, 'alpha', 'references', 'user-note.md')), 'a replaced skill is replaced whole');
+  assert.ok(fs.existsSync(path.join(store, 'alpha', 'references', 'note.md')), 'the source companion delivered');
+  assert.ok(fs.existsSync(path.join(store, 'theirs', SKILL_FILE)), 'differently named foreign skill untouched');
+  assert.deepEqual(readMarker(store).names.sort(), ['alpha', 'beta'], 'the marker claims exactly what we deliver');
+  assert.ok(fs.existsSync(path.join(store, 'beta', SKILL_FILE)), 'delivered skill written');
 });
 
 test('materialiseStore prunes an owned skill the plan dropped, and never a foreign one', () => {
@@ -148,15 +155,21 @@ test('verifyStore: absent, unmanaged, sync and drift are the four verdicts that 
   assert.ok(verdict.missing.length === 0);
 });
 
-test('verifyStore reports a foreign same-name collision without calling it drift', () => {
-  const src = sourceSkills({ agnostic: ['alpha'] });
+test('verifyStore: a stale same-named copy is drift, a current one is in sync even before its marker claims it', () => {
+  const src = sourceSkills({ agnostic: ['alpha', 'beta'] });
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-stores-out-'));
   const store = path.join(root, 'skills');
-  fs.mkdirSync(path.join(store, 'alpha'), { recursive: true });
-  fs.writeFileSync(path.join(store, 'alpha', SKILL_FILE), 'theirs\n');
-  // Adopted coexistence: the marker claims nothing (collision excluded), the store stays un-drifted.
-  materialiseStore(store, planAll(src), { sourceRoot: src, adopt: true });
-  const verdict = verifyStore(store, planAll(src));
-  assert.deepEqual(verdict.collisions, ['alpha']);
-  assert.equal(verdict.state, 'sync', 'a collision is an owner decision, not drift the guard can fix');
+  // The marker claims only beta; `alpha` exists as a foreign same-named skill.
+  materialiseStore(store, planAll(src).filter((p) => p.name !== 'alpha'), { sourceRoot: src });
+  // A foreign `alpha` whose bytes match the source: content is what the guard verifies, so the
+  // store is in sync — the next sync only adds the name to its marker.
+  fs.cpSync(path.join(src, 'alpha'), path.join(store, 'alpha'), { recursive: true });
+  const current = verifyStore(store, planAll(src));
+  assert.deepEqual(current.overridden, ['alpha']);
+  assert.equal(current.state, 'sync', 'matching bytes are current, whatever the marker claims');
+
+  fs.writeFileSync(path.join(store, 'alpha', SKILL_FILE), '---\nname: alpha\ndescription: stale downstream\n---\ntheirs\n');
+  const stale = verifyStore(store, planAll(src));
+  assert.equal(stale.state, 'drift', 'differing bytes are a stale downstream copy');
+  assert.ok(stale.stale.some((f) => f.startsWith('alpha/')));
 });

@@ -254,3 +254,97 @@ test('a real change to the region wording is still a change', () => {
   const { action } = applyRegion(doc, `${BEGIN}\n**Read \`AGENTS.md\` first.**\n${END}`);
   assert.equal(action, 'refreshed');
 });
+// ─── create-if-missing ───────────────────────────────────────────────────────
+
+/**
+ * A repo whose manifest declares ONE create-if-missing entry with no detect gate — the CLAUDE.md
+ * pointer shape (owner decision 2026-10-31): a gitignored, untracked pointer must be recreated by
+ * the CLI in a fresh clone, or "ignored AND updated" orphans the file.
+ */
+function fixtureRepoWithCreation() {
+  const root = fixtureRepo();
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'guidelines', 'global-configs', 'sync-manifest.json'), 'utf8'));
+  // The template carries BOTH substitution shapes: a hardcoded absolute path (the legacy fallback
+  // a template in the wild may hold) and the {{GUIDELINES_ROOT}} token.
+  const guidelinesDir = path.join(root, 'guidelines');
+  fs.writeFileSync(
+    path.join(root, 'guidelines', 'global-configs', 'templates', 'pointer.md.template'),
+    `${BEGIN}\nEntry point: AGENTS.md. Fallback: ${guidelinesDir + '\\'}x.md. Root: {{GUIDELINES_ROOT}}\n${END}\n`
+  );
+  manifest.toolConfigs.push({
+    template: 'global-configs/templates/pointer.md.template',
+    target: 'CLAUDE.md',
+    mode: 'create-if-missing',
+    detect: null,
+    pathSubstitution: false,
+  });
+  manifest.toolConfigs.push({
+    template: 'global-configs/templates/pointer.md.template',
+    target: 'gated.md',
+    mode: 'create-if-missing',
+    detect: '.cursor',
+    pathSubstitution: false,
+  });
+  manifest.toolConfigs.push({
+    template: 'global-configs/templates/pointer.md.template',
+    target: 'substituted.md',
+    mode: 'create-if-missing',
+    detect: null,
+    pathSubstitution: true,
+  });
+  fs.writeFileSync(
+    path.join(root, 'guidelines', 'global-configs', 'sync-manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`
+  );
+  return root;
+}
+
+test('create-if-missing: an absent target is created from its template, and --check reports it as due', () => {
+  const repo = fixtureRepoWithCreation();
+  const root = project({});
+  assert.equal(fs.existsSync(path.join(root, 'CLAUDE.md')), false, 'absent to begin with');
+
+  const check = run(repo, root, '--check', '--quiet');
+  assert.equal(check.status, 1, 'a missing create-if-missing config is a change due');
+  assert.equal(fs.existsSync(path.join(root, 'CLAUDE.md')), false, '--check does not write');
+
+  const applied = run(repo, root, '--quiet');
+  assert.equal(applied.status, 0, applied.stderr.toString());
+  const guidelinesDir = path.join(repo, 'guidelines');
+  assert.equal(
+    fs.readFileSync(path.join(root, 'CLAUDE.md'), 'utf8'),
+    `${BEGIN}\nEntry point: AGENTS.md. Fallback: ${guidelinesDir + '\\'}x.md. Root: {{GUIDELINES_ROOT}}\n${END}\n`,
+    'created verbatim from the template (pathSubstitution: false keeps even the absolute fallback)'
+  );
+
+  const again = run(repo, root, '--check', '--quiet');
+  assert.equal(again.status, 0, 'a second run is a no-op');
+});
+
+test('create-if-missing: the detect gate keeps a config for a tool the project does not use', () => {
+  const repo = fixtureRepoWithCreation();
+  const root = project({});
+  run(repo, root, '--quiet');
+  assert.equal(fs.existsSync(path.join(root, 'gated.md')), false, 'no .cursor/ — no gated config');
+  assert.equal(fs.existsSync(path.join(root, 'CLAUDE.md')), true, 'detect: null always creates');
+});
+
+test('create-if-missing: pathSubstitution rewrites the guidelines path and expands the token', () => {
+  const repo = fixtureRepoWithCreation();
+  const root = project({});
+  run(repo, root, '--quiet');
+  const content = fs.readFileSync(path.join(root, 'substituted.md'), 'utf8');
+  const guidelinesDir = path.join(repo, 'guidelines');
+  assert.ok(content.includes(`Root: ${guidelinesDir}`), 'the token expanded to the guidelines dir');
+  assert.ok(!content.includes(guidelinesDir + '\\'), 'no absolute mirror path survived');
+  assert.ok(content.includes('Fallback: _guidelines\\x.md'), 'the absolute path was rewritten to the mirror name');
+  assert.ok(!content.includes('{{GUIDELINES_ROOT}}'), 'no token survives delivery');
+});
+
+test('an entry without the create mode keeps the old absence behaviour', () => {
+  const repo = fixtureRepo(); // no mode declared on any entry
+  const root = project({});
+  const applied = run(repo, root, '--quiet');
+  assert.equal(applied.status, 0, applied.stderr.toString());
+  assert.equal(fs.existsSync(path.join(root, '.cursor/rules/global-guidelines.mdc')), false, 'absent stays absent');
+});

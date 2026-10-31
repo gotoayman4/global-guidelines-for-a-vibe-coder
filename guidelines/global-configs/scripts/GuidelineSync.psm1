@@ -94,34 +94,39 @@ function Get-GitignoreEntries {
         @($manifest.PSObject.Properties.Value)
     }
 
+    # The gitignoreEntry of ONE object, in either manifest shape. Emits nothing when the object
+    # does not declare the field.
+    $entryOf = {
+        param($obj)
+        if ($null -eq $obj) { return }
+        if ($obj -is [System.Collections.IDictionary]) {
+            if ($obj.Contains('gitignoreEntry')) { $obj['gitignoreEntry'] }
+        } elseif ($obj -is [PSCustomObject] -and $obj.PSObject.Properties.Name -contains 'gitignoreEntry') {
+            $obj.gitignoreEntry
+        }
+    }
+
     $entries = foreach ($section in $sections) {
         if ($null -eq $section) { continue }
-        # Nested sections (skills.globalPool, skills.nativeAdapters) carry their own entries, and
-        # they are walked whether or not the parent declares one — gating the walk on the parent
-        # is how a nested-only entry ships unignored. The adapter dirs a native loader scans are
-        # exactly the paths a project must not track, and a top-level-only walk is the same shape
-        # of gap the `.guidelines-backups/` case was. One level deep: that is how far the manifest
-        # nests today.
-        if ($section -is [System.Collections.IDictionary]) {
-            if ($section.Contains('gitignoreEntry')) { $section['gitignoreEntry'] }
-            foreach ($nested in $section.Values) {
-                if ($null -eq $nested) { continue }
-                if ($nested -is [System.Collections.IDictionary]) {
-                    if ($nested.Contains('gitignoreEntry')) { $nested['gitignoreEntry'] }
-                } elseif ($nested -is [PSCustomObject] -and
-                          $nested.PSObject.Properties.Name -contains 'gitignoreEntry') {
-                    $nested.gitignoreEntry
-                }
-            }
+        # Nested sections (skills.globalPool, skills.nativeAdapters) and ARRAY elements
+        # (toolConfigs[]) carry their own entries, and they are walked whether or not the parent
+        # declares one — gating the walk on the parent is how a nested-only entry ships unignored.
+        # The adapter dirs a native loader scans, and the pointer file a project must not track,
+        # are exactly the paths a project must not track; a top-level-only walk is the same shape
+        # of gap the `.guidelines-backups/` case was. One level deep, plus array elements: that is
+        # how far the manifest nests today.
+        & $entryOf $section
+        $children = if ($section -is [System.Collections.IDictionary]) {
+            @($section.Values)
         } else {
-            if ($section.PSObject.Properties.Name -contains 'gitignoreEntry') { $section.gitignoreEntry }
-            foreach ($nested in $section.PSObject.Properties) {
-                if ($nested.Value -is [System.Collections.IDictionary]) {
-                    if ($nested.Value.Contains('gitignoreEntry')) { $nested.Value['gitignoreEntry'] }
-                } elseif ($nested.Value -is [PSCustomObject] -and
-                          $nested.Value.PSObject.Properties.Name -contains 'gitignoreEntry') {
-                    $nested.Value.gitignoreEntry
-                }
+            @($section.PSObject.Properties.Value)
+        }
+        foreach ($nested in $children) {
+            if ($null -eq $nested) { continue }
+            if ($nested -is [System.Array]) {
+                foreach ($element in $nested) { & $entryOf $element }
+            } else {
+                & $entryOf $nested
             }
         }
     }

@@ -40,7 +40,8 @@ const read = (file) => fs.readFileSync(file, 'utf8');
 /**
  * Every `gitignoreEntry` the manifest declares — the same set `Get-GitignoreEntries` returns. The
  * walk mirrors the module's: top-level sections, then one level of nesting (skills.globalPool,
- * skills.nativeAdapters), and a value may be a string or an array of strings.
+ * skills.nativeAdapters) plus array elements (toolConfigs[]), and a value may be a string or an
+ * array of strings.
  */
 function manifestEntries(manifest = JSON.parse(read(MANIFEST))) {
   const flat = [];
@@ -48,11 +49,19 @@ function manifestEntries(manifest = JSON.parse(read(MANIFEST))) {
     if (typeof value === 'string') flat.push(value);
     else if (Array.isArray(value)) value.forEach(collect);
   };
+  const entryOf = (obj) => {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
+    collect(obj.gitignoreEntry);
+  };
   for (const section of Object.values(manifest)) {
     if (!section || typeof section !== 'object') continue;
-    collect(section.gitignoreEntry);
+    entryOf(section);
     for (const nested of Object.values(section)) {
-      if (nested && typeof nested === 'object' && !Array.isArray(nested)) collect(nested.gitignoreEntry);
+      if (Array.isArray(nested)) {
+        nested.forEach(entryOf);
+      } else {
+        entryOf(nested);
+      }
     }
   }
   return flat;
@@ -111,11 +120,19 @@ function coverage(sources, entries) {
  * THE SECOND INVARIANT: a writer must not carry its own copy of an entry. A quoted entry literal is
  * the shape a second home takes, and a second home is what the defect WAS — not the missing string,
  * but three lists that could each be edited without the others.
+ *
+ * An entry that equals a tool-config TARGET is exempt: `sync-manager.ps1`'s fallback TOOL_CONFIGS
+ * table is the sanctioned copy of the manifest's toolConfigs (the fallback exists for a machine
+ * where the manifest is unreadable), so the file NAME it carries is the target decision, not the
+ * ignore decision — "CLAUDE.md is ignored" lives only in the manifest.
  */
 function secondHomes(sources, entries) {
+  const manifest = JSON.parse(read(MANIFEST));
+  const targets = new Set((manifest.toolConfigs || []).map((c) => c.target).filter(Boolean));
   const hits = [];
   for (const [name, text] of Object.entries(sources)) {
     for (const entry of entries) {
+      if (targets.has(entry)) continue;
       for (const literal of [`"${entry}"`, `'${entry}'`]) {
         if (text.includes(literal)) hits.push(`${name} hardcodes ${literal}`);
       }
@@ -183,6 +200,9 @@ test('the manifest declares every entry the sync writes, including the backup di
   // the sync writes them, native loaders scan them, and untracked they fail `clean-tree`.
   assert.ok(entries.includes('.agents/skills/'), JSON.stringify(entries));
   assert.ok(entries.includes('.claude/skills/'), JSON.stringify(entries));
+  // The CLAUDE.md pointer, declared inside a toolConfigs[] element (owner decision 2026-10-31,
+  // midad first): sync-maintained like `_skills/`, so untracked is the honest state.
+  assert.ok(entries.includes('CLAUDE.md'), JSON.stringify(entries));
 });
 
 test('every nested section with project-relative targets ignores them all', () => {

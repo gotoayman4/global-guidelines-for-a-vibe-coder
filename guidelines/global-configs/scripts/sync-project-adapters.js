@@ -29,18 +29,23 @@
  * the mirror. Building from the corpus instead would create a third artifact whose freshness is
  * nobody's checked business.
  *
- * A FOREIGN STORE IS REFUSED, NOT ADOPTED. A native directory that already holds skills without
+ * A FOREIGN STORE IS REFUSED UNTIL ADOPTED. A native directory that already holds skills without
  * our marker (a project that wrote its own skills — alsael1's `.agents/skills` is the recorded
- * case) is left untouched and reported: writing over it would be a destructive act taken on an
- * inference. The refusal is a warning, not a failure — declining to destroy work is not an error;
- * the drift guard reports the competing store either way.
+ * case) is left untouched and reported: writing into it needs the owner's recorded decision
+ * (`adoptForeignStores`, or `--adopt` per run). Once adopted, the source-of-truth doctrine
+ * applies (owner decision 2026-10-31): a same-named skill is replaced with the `_skills/` bytes
+ * and reported; differently named project-authored skills keep their bytes. The refusal is a
+ * warning, not a failure — declining to touch undecided work is not an error; the drift guard
+ * reports the competing store either way.
  *
  * Usage:
  *   node sync-project-adapters.js <projectRoot>            # print what would change (dry run)
  *   node sync-project-adapters.js <projectRoot> --apply    # write
- *   node sync-project-adapters.js <projectRoot> --adopt    # with --apply: coexist with an
- *                                                          # unmarked native store — claim only
- *                                                          # the names we deliver, never overwrite
+ *   node sync-project-adapters.js <projectRoot> --adopt    # with --apply: deliver into an
+ *                                                          # unmarked native store — claim only the
+ *                                                          # names we deliver; same-named skills are
+ *                                                          # replaced (`_skills/` wins), differently
+ *                                                          # named ones keep their bytes
  *   node sync-project-adapters.js <projectRoot> --check    # exit 1 if a change is due
  *   node sync-project-adapters.js <projectRoot> --quiet    # one line per store
  *
@@ -158,12 +163,12 @@ function main() {
     changeDue = changeDue || changed;
 
     if (quiet) {
-      console.log(`  ${target}: ${changed ? `${result.copied.length} written, ${result.removed.length} pruned` : 'up to date'}${result.collisions.length ? `, ${result.collisions.length} foreign collision(s) skipped` : ''}`);
+      console.log(`  ${target}: ${changed ? `${result.copied.length} written, ${result.removed.length} pruned` : 'up to date'}${result.overridden.length ? `, ${result.overridden.length} same-named replaced` : ''}`);
       continue;
     }
     console.log(`  ${changed ? '•' : '✅'} ${target}: ${changed ? `${result.copied.length} written, ${result.unchanged.length} unchanged, ${result.removed.length} pruned` : 'up to date'}`);
-    if (result.collisions.length) {
-      console.log(`     ⚠️  foreign skill(s) with the same name — skipped, never overwritten: ${result.collisions.join(', ')}`);
+    if (result.overridden.length) {
+      console.log(`     ⚠️  same-named foreign skill(s) replaced with the _skills/ copy — the central repo is the source of truth: ${result.overridden.join(', ')}`);
     }
     for (const file of result.copied.slice(0, 6)) console.log(`     wrote  ${file}`);
     if (result.copied.length > 6) console.log(`     … and ${result.copied.length - 6} more`);

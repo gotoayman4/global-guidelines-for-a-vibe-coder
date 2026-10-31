@@ -24,6 +24,15 @@
  *     template's order. Every other entry, and every other byte of the file, is left exactly as it
  *     is. A project that wrote its own instructions keeps them.
  *
+ * A MISSING CONFIG IS CREATED (owner decision 2026-10-31). The manifest declares every entry
+ * `mode: "create-if-missing"`, but creation used to be GUI-only (`Install-ToolConfigFile`) — a
+ * project whose CLAUDE.md is gitignored and untracked (midad, 2026-10-31) has no file after a
+ * fresh clone, and "ignored AND updated" needs the CLI to create it too. The CLI therefore creates
+ * an absent target from its template, honouring the entry's `detect` gate (a config for a tool the
+ * project does not use is not installed) and its `pathSubstitution` flag. This does not widen the
+ * patch into an installer for every tool on every project: the detect gate keeps e.g. Cursor rules
+ * off a project that has no `.cursor/`.
+ *
  * The region text is read from the TEMPLATE, never restated here: the template is the single home
  * for the wording, and a second copy of it in this script would be a second home that drifts.
  *
@@ -95,7 +104,20 @@ function toolConfigPairs(manifestFile) {
   const configs = Array.isArray(manifest.toolConfigs) ? manifest.toolConfigs : [];
   return configs
     .filter((c) => c && typeof c.template === 'string' && typeof c.target === 'string')
-    .map((c) => ({ template: c.template, target: c.target }));
+    .map((c) => ({ template: c.template, target: c.target, mode: c.mode, detect: c.detect, pathSubstitution: c.pathSubstitution }));
+}
+
+/**
+ * The substitution a delivered template carries: the absolute guidelines directory becomes the
+ * project's relative mirror name, and the `{{GUIDELINES_ROOT}}` token expands to the absolute
+ * guidelines directory — the same two rules `Install-ToolConfigFile` applies in the GUI, in the
+ * same order, so a fallback reference is not clobbered into a relative path first.
+ */
+function substitutePaths(content, root) {
+  const guidelinesDir = path.join(root, 'guidelines');
+  return content
+    .split(guidelinesDir).join('_guidelines')
+    .split('{{GUIDELINES_ROOT}}').join(guidelinesDir);
 }
 
 /**
@@ -339,10 +361,27 @@ function patchProject(projectRoot, options = {}) {
   for (const pair of pairs) {
     const targetPath = path.join(projectRoot, pair.target);
 
-    // The installer creates a tool config; a project that has none is not broken, it is not set up
-    // for that tool yet. Nothing to say about it.
     if (!fs.existsSync(targetPath)) {
-      results.push({ target: pair.target, action: 'absent' });
+      // create-if-missing: the file a fresh clone lacks is created from its template — the same
+      // thing `Install-ToolConfigFile` does in the GUI. The entry's `detect` gate still applies: a
+      // config for a tool the project does not use is not installed, and an entry that does not
+      // declare the mode keeps the old behaviour (absence is not brokenness, nothing to say).
+      if (pair.mode !== 'create-if-missing') {
+        results.push({ target: pair.target, action: 'absent' });
+        continue;
+      }
+      if (pair.detect && !fs.existsSync(path.join(projectRoot, pair.detect))) {
+        results.push({ target: pair.target, action: 'absent' });
+        continue;
+      }
+      const templatePath = resolveTemplate(root, pair.template);
+      if (!templatePath) {
+        results.push({ target: pair.target, action: 'error', reason: `template not found: ${pair.template}` });
+        continue;
+      }
+      let content = fs.readFileSync(templatePath, 'utf8');
+      if (pair.pathSubstitution !== false) content = substitutePaths(content, root);
+      results.push({ target: pair.target, action: 'created', content });
       continue;
     }
 
@@ -352,7 +391,12 @@ function patchProject(projectRoot, options = {}) {
       continue;
     }
 
-    const template = fs.readFileSync(templatePath, 'utf8');
+    // The patch compares against what the sync DELIVERS, not the raw template: creation applies
+    // the entry's path substitution, so a token inside a managed region must be expanded here too
+    // — otherwise the first patch after a created file re-writes the raw token back over the
+    // delivered path, and the two writers fight forever.
+    const raw = fs.readFileSync(templatePath, 'utf8');
+    const template = pair.pathSubstitution !== false ? substitutePaths(raw, root) : raw;
     const original = fs.readFileSync(targetPath, 'utf8');
     let outcome;
 
@@ -425,14 +469,17 @@ function main() {
   const results = patchProject(projectRoot);
   const failures = results.filter((r) => r.action === 'error');
   const kept = results.filter((r) => r.action === 'kept');
-  const due = results.filter((r) => ['inserted', 'refreshed', 'aligned'].includes(r.action));
+  const due = results.filter((r) => ['inserted', 'refreshed', 'aligned', 'created'].includes(r.action));
 
   for (const result of kept) {
     if (!quiet) console.log(`  ℹ️  ${name}: ${result.target} — left alone (${result.reason})`);
   }
 
   if (checkOnly) {
-    for (const result of due) console.error(`❌ ${name}: ${result.target} — needs ${result.action} — run the sync`);
+    for (const result of due) {
+      const what = result.action === 'created' ? 'created (the file is missing — the sync makes it from its template)' : `needs ${result.action}`;
+      console.error(`❌ ${name}: ${result.target} — ${what} — run the sync`);
+    }
     if (due.length === 0 && !quiet) console.log(`  ✅ ${name}: the tool configs already point at AGENTS.md`);
   } else {
     for (const result of due) {
@@ -464,6 +511,7 @@ module.exports = {
   patchProject,
   renderArray,
   resolveTemplate,
+  substitutePaths,
   templateInstructions,
   templateRegion,
   toolConfigPairs,

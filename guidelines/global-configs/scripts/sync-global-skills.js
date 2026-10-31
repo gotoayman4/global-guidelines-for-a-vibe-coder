@@ -17,12 +17,13 @@
  * for the per-project mirror. The rule is: a skill whose scope resolves to ZERO technology tokens
  * is copied; anything with even one token stays per-project.
  *
- * THE STORES ARE NOT OURS. `~/.agents/skills` on this machine carries user-installed skills this
- * repo did not write (a `code-review` whose bytes are not the corpus's, among others). Every
- * target is therefore MARKER-SCOPED (`lib/skill-stores.js`): only the names our marker lists are
- * ever written or pruned; a foreign skill with the same name is a collision — skipped, named,
- * never overwritten; a store with skills but no marker is refused outright. The sync that
- * delivers must never be the sync that destroys.
+ * THE CENTRAL REPO IS THE SOURCE OF TRUTH (owner decision, 2026-10-31). Every target is
+ * MARKER-SCOPED (`lib/skill-stores.js`): only the names this sync delivers are written, claimed
+ * or pruned. A foreign skill with a DIFFERENT name is never touched. A foreign skill with the
+ * SAME name is replaced with the corpus bytes and reported — a same-named downstream copy is
+ * either this corpus's skill gone stale or a name the corpus now owns. A store with skills but
+ * no marker is refused until the run carries the owner's recorded decision (`--adopt`, or the
+ * manifest's `adoptForeignStores`): adoption claims only the delivered names.
  *
  * THE TARGETS COME FROM THE MANIFEST (`sync-manifest.json` §skills.globalPool) — a second
  * hand-kept list here would be a second home for the same decision. `GLOBAL_SKILLS_TARGETS`
@@ -37,9 +38,10 @@
  * Usage:
  *   node sync-global-skills.js                # print what would change, per store (dry run)
  *   node sync-global-skills.js --apply        # write
- *   node sync-global-skills.js --adopt        # with --apply: coexist with an unmarked store —
- *                                             # claim only the names we deliver; foreign skills
- *                                             # keep their bytes and their names are never taken
+ *   node sync-global-skills.js --adopt        # with --apply: deliver into an unmarked store —
+ *                                             # claim only the names we deliver; same-named
+ *                                             # foreign skills are replaced (source of truth),
+ *                                             # differently named foreign skills keep their bytes
  *   node sync-global-skills.js --check        # exit 1 if a change is due
  *   node sync-global-skills.js --quiet        # one line per store
  *
@@ -175,12 +177,12 @@ function main() {
     changeDue = changeDue || changed;
 
     if (quiet) {
-      console.log(`  ${label}: ${changed ? `${result.copied.length} written, ${result.removed.length} pruned` : 'up to date'}${result.collisions.length ? `, ${result.collisions.length} foreign collision(s) skipped` : ''}`);
+      console.log(`  ${label}: ${changed ? `${result.copied.length} written, ${result.removed.length} pruned` : 'up to date'}${result.overridden.length ? `, ${result.overridden.length} same-named replaced` : ''}`);
       continue;
     }
     console.log(`  ${apply ? '✅' : changed ? '•' : '✅'} ${label}: ${changed ? `${result.copied.length} written, ${result.unchanged.length} unchanged, ${result.removed.length} pruned` : 'up to date'}`);
-    if (result.collisions.length) {
-      console.log(`     ⚠️  foreign skill(s) with the same name — skipped, never overwritten: ${result.collisions.join(', ')}`);
+    if (result.overridden.length) {
+      console.log(`     ⚠️  same-named foreign skill(s) replaced with the source copy — the central repo is the source of truth: ${result.overridden.join(', ')}`);
     }
     for (const file of result.copied.slice(0, 6)) console.log(`     wrote  ${file}`);
     if (result.copied.length > 6) console.log(`     … and ${result.copied.length - 6} more`);

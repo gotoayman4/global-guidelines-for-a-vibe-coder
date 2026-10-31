@@ -79,10 +79,11 @@ trigger matches, which is why the trigger has to be visible *before* the file is
   conformant tool scans those dirs natively. The stack-scoped subset is generated per project into
   its own `.agents/skills` and `.claude/skills` as MARKER-STAMPED adapters of `_skills/` —
   generated stores that follow upstream, never hand-maintained copies that shadow it. Every store
-  is marker-scoped (`lib/skill-stores.js`): only names our marker lists are written or pruned;
-  foreign skills — a user's own `code-review`, a project-authored skill — are skipped and named,
-  never overwritten, and a store is adopted only by an explicit owner decision (`--adopt` /
-  `adoptForeignStores`).
+  is marker-scoped (`lib/skill-stores.js`): only names this repo delivers are written or pruned.
+  **This repo is the source of truth** (owner decision 2026-10-31): a foreign skill with the SAME
+  name is replaced with the source bytes and reported; a foreign skill with a DIFFERENT name — a
+  user's own tooling, a project-authored skill — is never touched, and a store is first delivered
+  into only by an explicit owner decision (`--adopt` / `adoptForeignStores`).
 - **The starter seeds the pointer.** `AGENTS.starter.md` ships a `## Skills` section whose managed
   region holds a POINTER — where the skills live, and that the table lists them — because a
   project that has never been synced has no inventory to show. The first sync replaces that region

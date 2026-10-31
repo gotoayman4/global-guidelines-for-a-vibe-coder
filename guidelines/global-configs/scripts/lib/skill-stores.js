@@ -16,9 +16,15 @@
  * the exact skill names the sync wrote and the source those bytes came from. Ownership is
  * per-NAME, never per-directory: the sync may create, refresh and prune only the names its own
  * marker lists (plus the names it is about to list), and every other skill in the store is
- * foreign — left byte-for-byte alone, and reported by name when a planned skill collides with it.
- * A store with skills but NO marker is entirely foreign: the writer refuses it outright and the
- * caller reports, because adopting it by writing a marker would claim work nobody transferred.
+ * foreign — left byte-for-byte alone.
+ *
+ * THE CENTRAL REPO IS THE SOURCE OF TRUTH (owner decision, 2026-10-31). A planned skill whose
+ * name already exists in the store as a foreign skill is OVERWRITTEN with the source bytes and
+ * reported by name — a same-named downstream copy is either the corpus's own skill gone stale or
+ * a name the corpus now owns, and in neither case does the older downstream byte win. A foreign
+ * skill with a DIFFERENT name is still never touched: the corpus claims only the names it
+ * delivers. A store with skills but NO marker is refused outright until the caller carries the
+ * owner's recorded decision (`adopt`), because adopting it writes a marker nobody transferred.
  *
  * THE WRITTEN SHAPE IS THE STANDARD ONE: `<name>/SKILL.md` plus the whole payload
  * (`references/`, `scripts/`, `assets/`) — the same rule `plan-skills.js` §applyPlan applies to
@@ -99,13 +105,13 @@ function sameContent(a, b) {
  *
  * ADOPTING A FOREIGN STORE. By default a store that holds skills but no marker is refused: it is
  * somebody else's work, and writing a marker over it would claim ownership nobody transferred.
- * `adopt: true` is the owner's recorded decision to coexist — the marker is written claiming ONLY
- * the names this sync delivers, existing foreign skills keep their bytes untouched, and a planned
- * name that already exists as a foreign skill is still a collision: skipped and named, never
- * overwritten, now and in every later run. Adoption therefore changes who the store BELONGS to,
- * never what a foreign skill SAYS. This machine's user stores needed exactly one `--adopt` run
- * each (2026-10-31): they carry a user-installed `code-review` whose bytes are not the corpus's,
- * and it stays theirs.
+ * `adopt: true` is the owner's recorded decision to deliver into it — the marker is written
+ * claiming ONLY the names this sync delivers, foreign skills with different names keep their
+ * bytes untouched, and a planned name that already exists as a foreign skill is OVERWRITTEN with
+ * the source bytes and reported (the central repo is the source of truth; owner decision
+ * 2026-10-31). This machine's user stores were adopted exactly once each (2026-10-31): the
+ * user-installed `code-review` they carried was replaced by the corpus's, and every differently
+ * named user skill stayed.
  *
  * @param {string} storeDir the store directory; created when missing
  * @param {Array<{name: string, entry: string}>} planned the skills to own, `entry` being the abs
@@ -115,18 +121,18 @@ function sameContent(a, b) {
  *        it must be the directory the VERIFIER will compare against (the corpus root for a global
  *        pool, the project's `_skills` for a native adapter)
  * @returns {{refused: {reason: string, foreign: string[]}|null, copied: string[], unchanged: string[],
- *           removed: string[], collisions: string[], marker: 'written'|'unchanged'|'absent'}}
+ *           removed: string[], overridden: string[], marker: 'written'|'unchanged'|'absent'}}
  */
 function materialiseStore(storeDir, planned, { dryRun = false, sourceRoot, adopt = false } = {}) {
-  const result = { refused: null, copied: [], unchanged: [], removed: [], collisions: [], marker: 'absent' };
+  const result = { refused: null, copied: [], unchanged: [], removed: [], overridden: [], marker: 'absent' };
   const exists = fs.existsSync(storeDir);
   const present = exists ? new Set(storeSkillNames(storeDir)) : new Set();
   const marker = exists ? readMarker(storeDir) : null;
 
   // A store holding skills but no marker is not ours and will not be adopted unless the caller
-  // carries the owner's decision (`adopt: true`) — see the docblock for what adoption does not do.
+  // carries the owner's decision (`adopt: true`) — see the docblock for what adoption covers.
   if (exists && present.size > 0 && !marker && !adopt) {
-    return { ...result, refused: { reason: 'store has skills but no marker — not ours to manage (pass --adopt to coexist)', foreign: [...present].sort() } };
+    return { ...result, refused: { reason: 'store has skills but no marker — not ours to manage (pass --adopt to deliver into it)', foreign: [...present].sort() } };
   }
 
   const owned = new Set(marker ? marker.names : []);
@@ -134,14 +140,11 @@ function materialiseStore(storeDir, planned, { dryRun = false, sourceRoot, adopt
 
   if (!dryRun) fs.mkdirSync(storeDir, { recursive: true });
 
-  // 1. Planned skills. A name that exists but is not ours is a collision: skipped, named, and
-  //    never overwritten — the same doctrine `competingStores` applies when it REPORTS.
+  // 1. Planned skills. A name that exists but is not ours is still delivered: the source bytes
+  //    win (owner decision 2026-10-31), and the override is reported by name.
   for (const { name, entry } of planned) {
     const destDir = path.join(storeDir, name);
-    if (present.has(name) && !owned.has(name)) {
-      result.collisions.push(name);
-      continue;
-    }
+    if (present.has(name) && !owned.has(name)) result.overridden.push(name);
     const payload = skillPayload(entry);
     const expected = new Set(payload.map((item) => item.rel));
     for (const item of payload) {
@@ -157,9 +160,11 @@ function materialiseStore(storeDir, planned, { dryRun = false, sourceRoot, adopt
       }
       result.copied.push(`${name}/${item.rel}`);
     }
-    // Companions the source no longer carries, inside an owned skill: a stale instruction is
-    // worse than a missing one, because the agent will follow it. Owned dirs only.
-    if (owned.has(name) && fs.existsSync(destDir)) {
+    // Companions the source no longer carries, inside a skill this run owns — one the marker
+    // already claimed, or one just overridden (a replaced skill is replaced whole, or the
+    // directory keeps offering the foreign skill's stale instructions). A stale instruction is
+    // worse than a missing one, because the agent will follow it.
+    if ((owned.has(name) || result.overridden.includes(name)) && fs.existsSync(destDir)) {
       for (const rel of listFiles(destDir)) {
         if (expected.has(rel)) continue;
         if (!dryRun) fs.unlinkSync(path.join(destDir, rel));
@@ -184,7 +189,7 @@ function materialiseStore(storeDir, planned, { dryRun = false, sourceRoot, adopt
   //    idempotency `inject-skills-block.js` grants AGENTS.md.
   const nextMarker = {
     source: path.resolve(sourceRoot || '.'),
-    names: planned.filter((p) => !result.collisions.includes(p.name)).map((p) => p.name).sort(),
+    names: planned.map((p) => p.name).sort(),
   };
   const markerFile = path.join(storeDir, markerNameFor(storeDir));
   const currentMarker = fs.existsSync(markerFile) ? fs.readFileSync(markerFile, 'utf8') : '';
@@ -201,17 +206,20 @@ function materialiseStore(storeDir, planned, { dryRun = false, sourceRoot, adopt
 
 /**
  * Verify a store against what the plan says it must hold — the read-only half, used by the drift
- * guard. The verdict covers only what the sync OWNS: a foreign skill is never drift, and a store
- * with skills but no marker is `unmanaged` (reported, never failed — resolving it is an owner
- * decision, exactly as `competingStores` decides).
+ * guard. Content is verified for every PLANNED name regardless of who wrote it: under the
+ * source-of-truth doctrine a same-named foreign skill with different bytes is a STALE downstream
+ * copy (drift — the remedy is a sync, which overwrites it), and one with matching bytes is in
+ * sync even before its marker claims it. A foreign skill with a different name is never drift,
+ * and a store with skills but no marker is `unmanaged` (reported, never failed — adopting it is
+ * an owner decision).
  *
  * @param {string} storeDir
  * @param {Array<{name: string, entry: string}>} planned
  * @returns {{state: 'absent'|'unmanaged'|'sync'|'drift', marker: boolean, missing: string[],
- *           stale: string[], extraOwned: string[], collisions: string[], foreign: string[]}}
+ *           stale: string[], extraOwned: string[], overridden: string[], foreign: string[]}}
  */
 function verifyStore(storeDir, planned) {
-  const empty = { state: 'absent', marker: false, missing: [], stale: [], extraOwned: [], collisions: [], foreign: [] };
+  const empty = { state: 'absent', marker: false, missing: [], stale: [], extraOwned: [], overridden: [], foreign: [] };
   if (!fs.existsSync(storeDir)) return empty;
 
   const present = new Set(storeSkillNames(storeDir));
@@ -225,14 +233,11 @@ function verifyStore(storeDir, planned) {
   const plannedNames = new Set(planned.map((p) => p.name));
   const missing = [];
   const stale = [];
-  const collisions = [];
+  const overridden = [];
 
   for (const { name, entry } of planned) {
     const destDir = path.join(storeDir, name);
-    if (present.has(name) && !owned.has(name)) {
-      collisions.push(name);
-      continue;
-    }
+    if (present.has(name) && !owned.has(name)) overridden.push(name);
     if (!fs.existsSync(path.join(destDir, SKILL_FILE))) {
       missing.push(`${name}/${SKILL_FILE}`);
       continue;
@@ -253,7 +258,7 @@ function verifyStore(storeDir, planned) {
     missing: missing.sort(),
     stale: stale.sort(),
     extraOwned: extraOwned.sort(),
-    collisions: collisions.sort(),
+    overridden: overridden.sort(),
     foreign,
   };
 }
