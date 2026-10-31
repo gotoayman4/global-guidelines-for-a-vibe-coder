@@ -65,12 +65,16 @@
 
 const crypto = require('crypto');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 // The one home for "which skills this project receives". Imported, never re-implemented: a second
 // copy of the selection rule would drift from the first exactly on the project whose Stack table was
 // just edited — the case this guard exists to catch.
-const { planSkills } = require('./lib/plan-skills.js');
+const { planSkills, globalPoolSkills } = require('./lib/plan-skills.js');
 const { skillPayload, listFiles, listSkills } = require('./lib/skill-files.js');
+// The store verifier is the read-only half of the writer the sync uses (`sync-global-skills.js`),
+// so the guard and the sync cannot disagree about what an owned store must hold.
+const { verifyStore } = require('./lib/skill-stores.js');
 // The inventory verifier lives with the writer that produces the inventory, so the guard and the
 // sync cannot disagree about what "the block names every delivered skill" means. Importing the
 // injector is safe: it runs `main()` only when it IS the entry point.
@@ -447,6 +451,65 @@ function compareProjects(sourceDir, source, projects, skills = null) {
 }
 
 /**
+ * The MACHINE-GLOBAL skill pools: the stack-agnostic corpus, delivered once per machine into the
+ * user-level Agent Skills directories, and verified here against the same selection.
+ *
+ * WHY THIS PASS EXISTS. The pools are the one delivered artifact whose store lives OUTSIDE every
+ * project — so the per-project loop above never looks at them, and a pool could go silently stale
+ * the moment a stack-agnostic skill was edited centrally. A copy that nothing compares is exactly
+ * the defect this guard was written for; the pools were that copy.
+ *
+ * THE CONTRACT IS THE MARKER, via `verifyStore`: only what the pool's own
+ * `.agents-skill-sync.json` marker claims is verified (missing/stale/extra-owned → drift), and the
+ * verdict covers an INSTALLED pool only. An ABSENT store is information, not drift — the
+ * machine-global step is opt-in (`sync-guidelines.ps1` step 2, `--with-global-configs` from
+ * `sync:all`), and a host that never ran it is not stale, it is unconfigured. An UNMANAGED store
+ * (skills but no marker) and a foreign same-name COLLISION are warnings, never failures: both are
+ * owner decisions about work this sync must not overwrite.
+ *
+ * @param {string} sourceRoot the guidelines source tree (the skills dir inside it is the pool's source)
+ * @param {object|null} skills the `skillsMirror()` result — null when the manifest declares no skills
+ * @returns {Array<{target: string, state: 'absent'|'unmanaged'|'sync'|'drift', missing?: string[], stale?: string[], extraOwned?: string[], collisions?: string[], foreign?: string[]}>}
+ */
+function globalPoolVerdicts(sourceRoot, skills) {
+  if (!skills) return [];
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
+  } catch {
+    return [];
+  }
+  const pool = manifest?.skills?.globalPool;
+  if (!pool || !Array.isArray(pool.targets) || pool.targets.length === 0) return [];
+
+  let targets = pool.targets;
+  if (process.env.GLOBAL_SKILLS_TARGETS) {
+    try {
+      const override = JSON.parse(process.env.GLOBAL_SKILLS_TARGETS);
+      if (Array.isArray(override)) targets = override;
+    } catch {
+      // A malformed override falls through to the manifest — the guard still speaks.
+    }
+  }
+
+  const poolPlan = globalPoolSkills(skills.source);
+  // `row.file` is `<name>/SKILL.md` in the standard layout or the legacy flat name; either way it
+  // is the entry `skillPayload` reads for the whole directory.
+  const planned = poolPlan.copy.map((row) => ({ name: row.name, entry: path.join(skills.source, row.file) }));
+
+  const expand = (target) => {
+    if (target === '~') return os.homedir();
+    if (target.startsWith('~/') || target.startsWith('~\\')) return path.join(os.homedir(), target.slice(2));
+    return path.resolve(target);
+  };
+
+  return targets.map((target) => {
+    const verdict = verifyStore(expand(target), planned);
+    return { target, ...verdict };
+  });
+}
+
+/**
  * The guard files a project must expose, read from the manifest that declares them. Null when the
  * manifest is absent or declares none — a repo that has not adopted the tier control is not drift,
  * it is a repo that has not adopted the tier control.
@@ -552,6 +615,33 @@ function main() {
   // is still ONE project failing the delivery check.
   const drifted = new Set();
   const controlsTally = { referenced: 0, notApplicable: 0 };
+
+  // The machine-global pools, before the project loop so the header can name them. Verdicts are
+  // printed with the project rows; an installed pool that drifted fails the run, an absent one is
+  // information (the step is opt-in), and an unmanaged store or a foreign collision is a warning.
+  const pools = globalPoolVerdicts(SOURCE, skills);
+  let globalPoolDrift = false;
+  for (const pool of pools) {
+    if (pool.state === 'absent') {
+      if (!quiet) console.log(`  ℹ️  global pool ${pool.target}: not installed (opt-in — run the sync with --with-global-configs)`);
+    } else if (pool.state === 'unmanaged') {
+      if (!quiet) console.log(`  ⚠️  global pool ${pool.target}: carries skills with no marker — not ours to manage (${(pool.foreign || []).slice(0, 4).join(', ')})`);
+    } else if (pool.state === 'drift') {
+      globalPoolDrift = true;
+      if (!quiet) {
+        const reasons = [];
+        if (pool.missing.length) reasons.push(`${pool.missing.length} missing`);
+        if (pool.stale.length) reasons.push(`${pool.stale.length} stale`);
+        if (pool.extraOwned.length) reasons.push(`${pool.extraOwned.length} no longer planned`);
+        console.log(`  ❌ global pool ${pool.target}: DRIFT (${reasons.join(', ')})`);
+        for (const file of [...pool.missing, ...pool.stale, ...pool.extraOwned].slice(0, 6)) console.log(`       ${file}`);
+        console.log('       → run `node guidelines/global-configs/scripts/sync-global-skills.js --apply`');
+      }
+    } else if (!quiet) {
+      console.log(`  ✅ global pool ${pool.target}: in sync`);
+    }
+  }
+
   for (const row of compareProjects(SOURCE, source, projects, skills)) {
     if (row.state === 'no-mirror') {
       drifted.add(row.name);
@@ -684,12 +774,20 @@ function main() {
     }
   }
 
-  if (drifted.size > 0) {
-    if (!quiet) console.log(`\n❌ ${drifted.size} of ${projects.length} project(s) failed the delivery check (mirror, skills, or guard discovery).\n`);
+  if (drifted.size > 0 || globalPoolDrift) {
+    if (!quiet) {
+      const lead = globalPoolDrift
+        ? `${drifted.size ? `${drifted.size} of ${projects.length} project(s)` : 'no project'} failed the delivery check (mirror, skills, or guard discovery); a machine-global skill pool drifted`
+        : `${drifted.size} of ${projects.length} project(s) failed the delivery check (mirror, skills, or guard discovery)`;
+      console.log(`\n❌ ${lead}.\n`);
+    }
     process.exit(1);
   }
   if (!quiet) {
     console.log(`\n✅ delivered copies are current for all ${projects.length} project(s) (guidelines + skills).`);
+    if (pools.length) {
+      console.log(`   global pool: ${pools.length} store(s) verified against the stack-agnostic selection.`);
+    }
     if (!required) {
       console.log('   controls: not declared — nothing to discover.');
     } else {
@@ -706,4 +804,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { hashTree, compareProjects, compareSkills, skillsMirror, requiredGuards, controlsOf, skillsBlockVerdict, competingStores, NATIVE_SKILL_STORES, MIRROR_NAME };
+module.exports = { hashTree, compareProjects, compareSkills, skillsMirror, globalPoolVerdicts, requiredGuards, controlsOf, skillsBlockVerdict, competingStores, NATIVE_SKILL_STORES, MIRROR_NAME };

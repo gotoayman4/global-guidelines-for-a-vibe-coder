@@ -72,6 +72,17 @@ trigger matches, which is why the trigger has to be visible *before* the file is
   never reaches the inventory that says when to open a skill. `npm run sync:drift` verifies the
   `_skills/` copy against this source — a skill edited here is not the skill a project loads — and
   reports whether the project's inventory names every skill it was delivered.
+- **Delivery is three-channel, by scope** (fleet review 2026-10-31): the stack-agnostic skills
+  (scope names no technology) are delivered ONCE per machine into the user-level Agent Skills
+  directories (`~/.agents/skills`, `~/.claude/skills`, `~/.zcode/skills` — `npm run skills:global`,
+  opt-in step of the sync), because they cannot contradict any project's constitution and every
+  conformant tool scans those dirs natively. The stack-scoped subset is generated per project into
+  its own `.agents/skills` and `.claude/skills` as MARKER-STAMPED adapters of `_skills/` —
+  generated stores that follow upstream, never hand-maintained copies that shadow it. Every store
+  is marker-scoped (`lib/skill-stores.js`): only names our marker lists are written or pruned;
+  foreign skills — a user's own `code-review`, a project-authored skill — are skipped and named,
+  never overwritten, and a store is adopted only by an explicit owner decision (`--adopt` /
+  `adoptForeignStores`).
 - **The starter seeds the pointer.** `AGENTS.starter.md` ships a `## Skills` section whose managed
   region holds a POINTER — where the skills live, and that the table lists them — because a
   project that has never been synced has no inventory to show. The first sync replaces that region
@@ -97,9 +108,11 @@ npm run check-skills-drift # Fail if skills/INDEX.md was hand-edited — regener
 npm run plan:skills     # Print which skills belong in which project, and why (no arg = the whole fleet; --apply to write)
 npm run status:projects # Report which rules each synced project's AGENTS.md is missing (report-only)
 npm run sync:drift      # Fail if a project's _guidelines/ mirror or _skills/ copy is not the current source (content hash, not a date)
+npm run sync:stale      # Report-only: how much of the registered fleet the latest central change made stale (runs in validate)
+npm run skills:global   # Dry-run the machine-global skill pool — stack-agnostic skills into the user-level Agent Skills dirs (--apply to write)
 npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness
 npm run benchmark:reform # Measure the lean model: boot cost, rule retention, reach (before ec55a54 → working tree); `benchmark:check` fails on a lost rule, unindexed file or unloadable skill
-npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + benchmark:check + test:scripts
+npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + sync:stale + benchmark:check + test:scripts (sync:stale is report-only — the fleet-staleness announcement)
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.

@@ -626,6 +626,33 @@ function Sync-Skills {
     } elseif ($injectorExit -ne 0) {
         Write-Host "  WARNING: ## Skills section not written (inject-skills-block.js exit $injectorExit)" -ForegroundColor Yellow
     }
+
+    # The native adapters are generated AFTER the mirror is applied, from the mirror: they are the
+    # stack-scoped subset rebuilt into the directories native loaders scan (`.agents/skills`,
+    # `.claude/skills`), marker-scoped so they follow upstream instead of shadowing it. Ordering is
+    # the contract — the adapter's bytes are `_skills/`'s bytes, so anything else must be written
+    # first. `--check` in a preview, exactly like the injector above. A refused foreign store is a
+    # warning, not a failure: declining to overwrite work is not an error, and the drift guard
+    # reports the competing store either way.
+    $adapterScript = Join-Path $guidelinesRepo "global-configs\scripts\sync-project-adapters.js"
+    if (-not (Test-Path $adapterScript)) {
+        Write-Host "  WARNING: sync-project-adapters.js not found -- native skill adapters NOT written." -ForegroundColor Yellow
+        return
+    }
+    $adapterArgs = @($adapterScript, $projectPath, '--quiet')
+    if ($DryRun) { $adapterArgs += '--check' } else { $adapterArgs += '--apply' }
+    $adapterRun = Invoke-NodeCapture -Arguments $adapterArgs
+    $adapterExit = $adapterRun.ExitCode
+    foreach ($line in $adapterRun.Output) { Write-Host "  $line" }
+    if ($DryRun) {
+        if ($adapterExit -eq 1) {
+            Write-Host "  [DRY-RUN] Would refresh the native skill adapters" -ForegroundColor Yellow
+        } elseif ($adapterExit -ne 0) {
+            Write-Host "  WARNING: native adapter preview failed (sync-project-adapters.js exit $adapterExit)" -ForegroundColor Yellow
+        }
+    } elseif ($adapterExit -ne 0) {
+        Write-Host "  WARNING: native skill adapters not written (sync-project-adapters.js exit $adapterExit)" -ForegroundColor Yellow
+    }
 }
 
 function Sync-SkillPool {

@@ -122,6 +122,7 @@ if ($manifest -and $manifest.toolConfigs) {
         @{ template = "global-configs\templates\trae-global-guidelines.md.template";          target = ".trae\rules\global-guidelines.md";      detect = ".trae" }
         @{ template = "global-configs\templates\windsurf-global-guidelines.md.template";      target = ".windsurf\rules\global-guidelines.md"; detect = ".windsurf" }
         @{ template = "global-configs\templates\qoder-global-guidelines.md.template";         target = "qoder-global-guidelines.md";            detect = $null }
+        @{ template = "global-configs\templates\CLAUDE.starter.md";                           target = "CLAUDE.md";                             detect = $null }
     )
 }
 

@@ -441,6 +441,40 @@ Use absolute base path `$guidelinesRepo/` when loading files.
         $globalSkips += "Qoder"
     }
 
+    # --- Machine-global skill pool: stack-agnostic skills into the user-level Agent Skills dirs ---
+    #
+    # The opencode and Qoder pools above predate the pool and deliver the WHOLE corpus unfiltered;
+    # their narrowing is recorded as an open decision in sync-manifest.json §skills.globalPool.
+    # This step is the review-of-2026-10-31 delivery model: the skills that name no technology —
+    # and therefore cannot contradict any project's constitution — go to the directories every
+    # conformant tool scans on this machine, once, with no project context at all. The selection is
+    # `globalPoolSkills` (lib/plan-skills.js), never re-implemented here; the stores are
+    # MARKER-SCOPED (lib/skill-stores.js), because ~/.agents/skills and ~/.zcode/skills hold
+    # user-installed skills this sync must skip and report, never overwrite.
+    Write-Host "  Global skill pool ..." -ForegroundColor Gray
+    try {
+        $globalPoolScript = Join-Path $PSScriptRoot "sync-global-skills.js"
+        if (-not (Test-Path -LiteralPath $globalPoolScript)) {
+            throw "sync-global-skills.js not found; the global pool was not updated."
+        }
+        $nodeArgs = @($globalPoolScript, '--quiet')
+        if ($DryRun) { $nodeArgs += '--check' } else { $nodeArgs += '--apply' }
+        $globalPoolRun = Invoke-NodeCapture -Arguments $nodeArgs
+        foreach ($line in $globalPoolRun.Output) { Write-Host "    $line" }
+        if ($globalPoolRun.ExitCode -ne 0) {
+            if ($DryRun) {
+                Write-Host "    [DRY-RUN] Would refresh the machine-global skill pool" -ForegroundColor Yellow
+            } else {
+                throw "sync-global-skills.js exited $($globalPoolRun.ExitCode)"
+            }
+        } else {
+            Write-Host "    Global pool: stack-agnostic skills delivered (see sync-global-skills.js for detail)" -ForegroundColor Green
+        }
+    } catch {
+        Write-Host "    SKIPPED global pool: $($_.Exception.Message)" -ForegroundColor Yellow
+        $globalSkips += "global-pool"
+    }
+
     if ($globalSkips.Count -gt 0) {
         Write-Host ""
         Write-Host "  WARNING: machine-global config skipped for: $($globalSkips -join ', ')" -ForegroundColor Yellow

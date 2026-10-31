@@ -33,6 +33,10 @@ const path = require('path');
 const { parseFrontMatter, missingKeys, meta, asList } = require('./lib/front-matter.js');
 const { isToken, TOKEN_NAMES } = require('./lib/tech-tokens.js');
 const { SKILL_FILE, SKILL_EXT, listSkills } = require('./lib/skill-files.js');
+// The scope rule — declared `appliesTo`, tags-inferred otherwise — is the selector's decision, and
+// the catalog report below reads it rather than re-deriving it: a second scope rule here would
+// disagree with the delivery rule exactly when a skill's front-matter changed.
+const { skillScope } = require('./lib/plan-skills.js');
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -476,6 +480,12 @@ function audit() {
   console.log('📖 Parsing skill files...');
   const skillPaths = findSkillFiles();
   let totalSkillRefs = 0;
+  // Catalog hygiene (the fleet review of 2026-10-31, §catalog hygiene): the stack-agnostic subset
+  // is the machine-global pool — every session in every tool pays for its name+description on
+  // startup, whether or not the skill fires. Dormant global skills cost catalog tokens and fire
+  // wrongly, so the pool's size is measured here where every skill is already parsed.
+  let poolCount = 0;
+  let poolCatalogChars = 0;
   for (const skill of skillPaths) {
     const skillPath = path.join(REPO_ROOT, skill);
     if (!fs.existsSync(skillPath)) {
@@ -492,6 +502,15 @@ function audit() {
     if (missing.length) {
       console.log(`   ❌ UNLOADABLE SKILL: ${relativePath} is missing ${missing.join(', ')}`);
       driftCount++;
+    }
+    // Catalog accounting: a skill that names no technology is a global-pool skill, and its
+    // name+description is what every native loader shows on startup for it.
+    const scope = skillScope(fm);
+    if (scope.tokens.length === 0) {
+      poolCount += 1;
+      const name = typeof fm?.name === 'string' ? fm.name : '';
+      const description = typeof fm?.description === 'string' ? fm.description : '';
+      poolCatalogChars += name.length + description.length;
     }
     // The two missing-key cases are already reported above; do not double-count them.
     for (const problem of skillConformance(relativePath, fm).filter((p) => !/^no (name|description) declared/.test(p))) {
@@ -538,7 +557,17 @@ function audit() {
     totalSkillRefs += fileRefs;
     console.log(`   ${relativePath}: ${fileRefs} guideline references`);
   }
-  console.log(`   ${skillPaths.length} skills scanned, ${totalSkillRefs} guideline references total\n`);
+  console.log(`   ${skillPaths.length} skills scanned, ${totalSkillRefs} guideline references total`);
+  // The advisory budget: Codex caps skill-catalog context (~10k tokens) and Zed caps the catalog
+  // at 50KB, and a dormant global skill does not just cost tokens — it fires on tasks it was
+  // never written for. 4,000 tokens for the pool's catalog lines leaves room for project-native
+  // skills in the same catalogs. Advisory, not a gate: retiring a skill is an owner decision.
+  const poolCatalogTokens = Math.ceil(poolCatalogChars / 4);
+  console.log(`   global skill pool: ${poolCount} stack-agnostic skill(s), catalog cost ~${poolCatalogTokens} tokens (name+description)`);
+  if (poolCatalogTokens > 4000) {
+    console.log(`   ⚠️  the global pool's catalog exceeds ~4,000 tokens — retire dormant skills before adding new ones`);
+  }
+  console.log('');
 
   // 3. Audit: rules without source guidelines
   console.log('🔍 Checking rule source references...\n');

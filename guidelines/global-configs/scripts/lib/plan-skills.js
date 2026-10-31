@@ -119,6 +119,47 @@ function fitVerdict(scope, profile) {
 }
 
 /**
+ * Plan the MACHINE-GLOBAL pool: the skills every tool on this machine may see, in every project,
+ * with no project context at all.
+ *
+ * WHY THE RULE IS "NAMES NO TECHNOLOGY". A machine-global skill is visible to projects whose stack
+ * was never consulted — the one case the per-project selector exists to prevent. The only skill
+ * that cannot contradict a project's constitution is one that names no technology: the same
+ * two-sided logic as `fitVerdict` collapses to its agnostic case. A skill that declares or infers
+ * even one technology token stays per-project, wherever the filter that knows the project can
+ * apply it. This is the delivery split the corpus was measured into on 2026-10-12 (8 stack-scoped /
+ * 12 stack-agnostic), now used as a DISTRIBUTION rule and not only a selection rule.
+ *
+ * An UNRESOLVED `appliesTo` still falls through to tag inference exactly as `skillScope` does, and
+ * the rows still carry `unknownTokens` — a typo must not silently make a skill universal here
+ * either. The pool CLI prints the warning; `audit-rules.js` counts the unresolved values.
+ *
+ * NOT a guard: no `@tier`. It derives a value rather than asserting a property.
+ *
+ * @param {string} skillsDir the source skills directory
+ * @returns {{copy: object[], skip: object[], skillsDir: string}}
+ */
+function globalPoolSkills(skillsDir) {
+  const skills = listSkills(skillsDir);
+  const copy = [];
+  const skip = [];
+  for (const skill of skills) {
+    const fm = parseFrontMatter(fs.readFileSync(skill.abs, 'utf8'));
+    const scope = skillScope(fm);
+    const row = { file: skill.file, name: skill.name, scope: scope.tokens, basis: scope.basis };
+    if (scope.unknown.length) row.unknownTokens = scope.unknown;
+    if (scope.tokens.length === 0) {
+      row.reason = 'stack-agnostic — the skill names no technology, safe on every machine';
+      copy.push(row);
+    } else {
+      row.reason = `stack-scoped (${scope.tokens.join(', ')}) — per-project only, where the stack filter can apply`;
+      skip.push(row);
+    }
+  }
+  return { copy, skip, skillsDir: path.resolve(skillsDir) };
+}
+
+/**
  * Plan the skill set for one project.
  *
  * @param {string} projectRoot
@@ -247,4 +288,4 @@ function removeEmptyDirectories(dir) {
   }
 }
 
-module.exports = { planSkills, applyPlan, skillScope, inferFromTags, fitVerdict, asList, SKILL_FILE, SKILL_EXT, listSkills };
+module.exports = { planSkills, globalPoolSkills, applyPlan, skillScope, inferFromTags, fitVerdict, asList, SKILL_FILE, SKILL_EXT, listSkills };

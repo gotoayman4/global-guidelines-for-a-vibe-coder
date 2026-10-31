@@ -150,6 +150,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 |---|---|---|---|---|
 | [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~5,000 | `#template` `#rules` `#agents` |
 | [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~50 | `#template` `#rules` `#copilot` |
+| [CLAUDE.starter.md](../global-configs/templates/CLAUDE.starter.md) | Starter | Global | ~70 | `#template` `#rules` `#claude` `#pointer` `#entry-point` |
 | [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~1,300 | `#template` `#product-intent` `#guardrail` |
 | [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~1,200 | `#template` `#product-intent` `#example` |
 | [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~600 | `#template` `#devtools` `#gitignore` |
@@ -191,6 +192,9 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-agents-paths.js](../global-configs/scripts/check-agents-paths.js) | Script | Global | ~3,000 (run it; read it only to change it) | `#script` `#guard` `#bootstrap` `#tracked-ness` `#portability` `#gate` |
 | [check-mode-conformance.js](../global-configs/scripts/check-mode-conformance.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#guard` `#mode` `#speed-mode` `#gate` `#fleet` |
 | [check-ship-receipt.js](../global-configs/scripts/check-ship-receipt.js) | Script | Global | ~1,600 (run it; read it only to change it) | `#script` `#guard` `#ship` `#receipt` `#release-class` `#gate` |
+| [check-fleet-staleness.js](../global-configs/scripts/check-fleet-staleness.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#fleet` `#staleness` `#report-only` `#delivery` |
+| [sync-global-skills.js](../global-configs/scripts/sync-global-skills.js) | Script | Global | ~350 | `#script` `#skills` `#global-pool` `#stack-agnostic` `#marker-scoped` `#delivery` |
+| [sync-project-adapters.js](../global-configs/scripts/sync-project-adapters.js) | Script | Global | ~350 | `#script` `#skills` `#adapter` `#stack-scoped` `#marker-scoped` `#delivery` |
 | [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
