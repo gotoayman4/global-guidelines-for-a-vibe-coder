@@ -37,12 +37,50 @@ const trim = (p) => p.replace(/\/+$/, '');
 
 const read = (file) => fs.readFileSync(file, 'utf8');
 
-/** Every `gitignoreEntry` the manifest declares, by section. The single home for the fact. */
-function manifestEntries() {
-  const manifest = JSON.parse(read(MANIFEST));
-  return Object.values(manifest)
-    .filter((section) => section && typeof section === 'object' && typeof section.gitignoreEntry === 'string')
-    .map((section) => section.gitignoreEntry);
+/**
+ * Every `gitignoreEntry` the manifest declares — the same set `Get-GitignoreEntries` returns. The
+ * walk mirrors the module's: top-level sections, then one level of nesting (skills.globalPool,
+ * skills.nativeAdapters), and a value may be a string or an array of strings.
+ */
+function manifestEntries(manifest = JSON.parse(read(MANIFEST))) {
+  const flat = [];
+  const collect = (value) => {
+    if (typeof value === 'string') flat.push(value);
+    else if (Array.isArray(value)) value.forEach(collect);
+  };
+  for (const section of Object.values(manifest)) {
+    if (!section || typeof section !== 'object') continue;
+    collect(section.gitignoreEntry);
+    for (const nested of Object.values(section)) {
+      if (nested && typeof nested === 'object' && !Array.isArray(nested)) collect(nested.gitignoreEntry);
+    }
+  }
+  return flat;
+}
+
+/**
+ * A nested section that declares `targets` promises that every PROJECT-RELATIVE target lands
+ * ignored — the native adapter dirs are created by the sync and must never ship untracked, because
+ * the `clean-tree` pre-push step fails on an untracked directory. The demand does not depend on the
+ * section ALSO declaring `gitignoreEntry`: a section that dropped the entry while keeping the
+ * targets is precisely the regression this names. `~` targets are machine-global paths, not
+ * project-local, so no project gitignore covers them.
+ */
+function nestedTargetsNotIgnored(manifest = JSON.parse(read(MANIFEST))) {
+  const ignored = new Set(manifestEntries(manifest).map(trim));
+  const misses = [];
+  for (const section of Object.values(manifest)) {
+    if (!section || typeof section !== 'object') continue;
+    for (const nested of Object.values(section)) {
+      if (!nested || typeof nested !== 'object' || Array.isArray(nested)) continue;
+      if (!Array.isArray(nested.targets)) continue;
+      for (const target of nested.targets) {
+        if (typeof target !== 'string' || target.startsWith('~')) continue;
+        if (!ignored.has(trim(target))) misses.push(target);
+      }
+    }
+  }
+  return misses;
 }
 
 const createdPaths = (text) => [...new Set([...text.matchAll(CREATED)].map((match) => match[1]))];
@@ -141,6 +179,35 @@ test('the manifest declares every entry the sync writes, including the backup di
   assert.ok(entries.includes('_guidelines/'), JSON.stringify(entries));
   assert.ok(entries.includes('_skills/'), JSON.stringify(entries));
   assert.ok(entries.includes('.guidelines-backups/'), JSON.stringify(entries));
+  // The native adapter dirs, declared one level deep inside §skills.nativeAdapters (2026-10-31):
+  // the sync writes them, native loaders scan them, and untracked they fail `clean-tree`.
+  assert.ok(entries.includes('.agents/skills/'), JSON.stringify(entries));
+  assert.ok(entries.includes('.claude/skills/'), JSON.stringify(entries));
+});
+
+test('every nested section with project-relative targets ignores them all', () => {
+  assert.deepEqual(
+    nestedTargetsNotIgnored(),
+    [],
+    'a declared sync target that no gitignoreEntry covers ships untracked'
+  );
+});
+
+test('REVERSAL PROOF: dropping the adapter gitignoreEntry names both targets', () => {
+  const manifest = JSON.parse(read(MANIFEST));
+  delete manifest.skills.nativeAdapters.gitignoreEntry;
+  assert.deepEqual(nestedTargetsNotIgnored(manifest), ['.agents/skills', '.claude/skills']);
+});
+
+test('REVERSAL PROOF: a machine-global target is exempt, a project-relative one is not', () => {
+  const manifest = JSON.parse(read(MANIFEST));
+  delete manifest.skills.nativeAdapters.gitignoreEntry;
+  manifest.skills.nativeAdapters.targets.push('~/.cursor/skills');
+  assert.deepEqual(
+    nestedTargetsNotIgnored(manifest),
+    ['.agents/skills', '.claude/skills'],
+    'the ~ target is not a project path, so it is not demanded; the project-relative two are'
+  );
 });
 
 test('every path the sync creates is ignored, or tracked on purpose', () => {

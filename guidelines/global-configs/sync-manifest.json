@@ -159,6 +159,10 @@
       "targets": [
         ".agents/skills",
         ".claude/skills"
+      ],
+      "gitignoreEntry": [
+        ".agents/skills/",
+        ".claude/skills/"
       ]
     }
   },
