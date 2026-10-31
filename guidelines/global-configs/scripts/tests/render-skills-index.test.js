@@ -165,3 +165,41 @@ test('CLI exits 1 when the generated region was deleted rather than silently re-
   assert.equal(result.status, 1);
   assert.match(result.stderr, /marker not found/);
 });
+
+// ─── terse triggers (the AGENTS.md block shape, owner decision 2026-10-31) ──────────────────
+
+const { terseTrigger } = require('../render-skills-index.js');
+
+test('terseTrigger prefers the Triggers-on clause, and survives periods inside quoted filenames', () => {
+  assert.equal(
+    terseTrigger('Electron auto-update. Use when an app must update itself. Triggers on "electron auto-update", "electron-updater", "latest.yml".'),
+    'electron auto-update, electron-updater, latest.yml'
+  );
+});
+
+test('terseTrigger falls back to the first sentence when no Triggers-on clause exists', () => {
+  assert.equal(
+    terseTrigger('Safe, incremental refactoring that never changes behaviour. Use when restructuring existing code.'),
+    'Safe, incremental refactoring that never changes behaviour'
+  );
+});
+
+test('terseTrigger caps at 100 characters on a word boundary', () => {
+  const long = 'a'.repeat(60) + ' ' + 'b'.repeat(60);
+  const out = terseTrigger(long);
+  assert.ok(out.length <= 101, `capped: ${out.length}`);
+  assert.ok(out.endsWith('…'), 'the cap is visible');
+});
+
+test('renderBlock terse mode carries the firing words, not the verbatim description', () => {
+  const f = fixture({
+    alpha: 'name: alpha\ndescription: Full alpha description for the catalog. Triggers on "run alpha", "alpha now".\nstatus: "Advisory"',
+  });
+  const rows = collect(f.dir);
+  const terse = renderBlock(rows, { terse: true });
+  assert.match(terse, /run alpha, alpha now/, 'the firing phrases are the trigger');
+  assert.doesNotMatch(terse, /Full alpha description/, 'the verbatim description is gone from the block');
+
+  const full = renderBlock(rows);
+  assert.match(full, /Full alpha description/, 'the corpus INDEX keeps the verbatim description');
+});

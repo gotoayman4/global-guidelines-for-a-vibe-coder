@@ -358,7 +358,10 @@ function main() {
     process.exit(0);
   }
 
-  const block = renderBlock(collect(skillsDir), { linkPrefix: LINK_PREFIX });
+  // `terse: true` — the AGENTS.md block is paid for on every boot in every tool that reads it, and
+  // a native loader already injects the full description from its own catalog (owner decision
+  // 2026-10-31). The corpus INDEX keeps the full text: read on demand, never loaded per session.
+  const block = renderBlock(collect(skillsDir), { linkPrefix: LINK_PREFIX, terse: true });
   const before = fs.readFileSync(agentsPath, 'utf8');
   const { content, action } = applyBlock(before, block);
 

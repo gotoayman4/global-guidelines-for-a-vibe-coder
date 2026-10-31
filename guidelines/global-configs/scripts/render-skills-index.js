@@ -66,6 +66,34 @@ const appliesCell = (appliesTo) =>
   Array.isArray(appliesTo) && appliesTo.length ? appliesTo.map((a) => `\`${a}\``).join(' ') : '—';
 
 /**
+ * A terse trigger for the AGENTS.md block: the few words that make a row fire, not the whole
+ * description. WHY NOT THE FULL DESCRIPTION (owner decision 2026-10-31): the block is paid for on
+ * every session boot in every tool that reads AGENTS.md, and since the native adapters + pool, a
+ * native loader injects the SAME description text into its own context — the verbatim cell was a
+ * second copy of a fact the tool already carries, at 1,800–2,850 tokens per project per boot.
+ *
+ * DERIVATION, never authorship — the same rule as the rest of the block: prefer the description's
+ * explicit `Triggers on …` clause (the phrases that name the firing moment), falling back to its
+ * first sentence. Capped at 100 characters; the full description stays one link away in the
+ * skill file and in each tool's own catalog.
+ */
+function terseTrigger(description) {
+  if (!description) return null;
+  const text = String(description).replace(/\s+/g, ' ').trim();
+  const pick = (value) => {
+    let t = value.replace(/"/g, '').trim().replace(/\.$/, '');
+    if (t.length > 100) t = `${t.slice(0, 100).replace(/\s+\S*$/, '')}…`;
+    return t;
+  };
+  // The clause runs to the end of the description; `[^.]` would cut it at the first period INSIDE
+  // a quoted filename (`latest.yml`, `node.exe` are real trigger phrases). Lazy-to-end captures the
+  // whole clause, stripping only the final sentence period.
+  const triggers = text.match(/Triggers? on:?\s+(.+?)\.?$/i);
+  if (triggers) return pick(triggers[1]);
+  return pick(text.split(/(?<=\.)\s/)[0]);
+}
+
+/**
  * Every skill on disk, with the three facts the inventory renders.
  *
  * The skill's own directory name is the fallback `name`, because that is what a loader registers
@@ -101,21 +129,28 @@ function collect(skillsDir = SKILLS_DIR) {
  * Rendering the row link from the file's own location, rather than hard-coding one of the two, is the
  * difference between a navigable inventory and a table of broken links — and it is why the injector
  * can reuse this function instead of growing a second, drifting copy of the table.
+ *
+ * `terse: true` is the AGENTS.md shape (owner decision 2026-10-31): the trigger cell carries the
+ * few firing words, not the verbatim description — the description is paid for on every boot in
+ * every AGENTS.md-reading tool, and a native loader already injects it from its own catalog. The
+ * corpus INDEX keeps the full text: it is read on demand, not loaded per session.
  */
-function renderBlock(skills, { linkPrefix = '' } = {}) {
+function renderBlock(skills, { linkPrefix = '', terse = false } = {}) {
   const lines = [];
   lines.push('**Skills are task-activated.** Scan the `Load when` column when a task starts; when a row');
-  lines.push('matches, open `_skills/<name>/SKILL.md` and follow it. A skill never outranks `AGENTS.md`, and a');
-  lines.push('row whose `Applies to` does not cover this stack is not applicable — skip it. `_skills/` is the');
-  lines.push('synced, stack-filtered copy of the central corpus (absent until the first sync); do not keep a');
-  lines.push('hand-maintained copy of a delivered skill in a native store (`.qoder/skills/`, `.claude/skills/`,');
-  lines.push('…) — it shadows `_skills/` and cannot follow upstream.');
+  lines.push('matches, open the linked SKILL.md and follow it. A skill never outranks `AGENTS.md`, and a row');
+  lines.push("whose `Applies to` does not cover this stack is not applicable — skip it. The trigger here is");
+  lines.push('terse; the full description lives in the skill file, and a native loader lists these skills in');
+  lines.push('its own catalog. `_skills/` is the synced, stack-filtered copy of the central corpus (absent');
+  lines.push('until the first sync); do not keep a hand-maintained copy of a delivered skill in a native');
+  lines.push('store (`.qoder/skills/`, `.claude/skills/`, …) — it shadows `_skills/` and cannot follow upstream.');
   lines.push('');
   lines.push(`| Skill | Load when | Applies to | Status |`);
   lines.push('|---|---|---|---|');
   for (const skill of skills) {
     const name = `[${skill.name}](${linkPrefix}${skill.file})`;
-    lines.push(`| ${name} | ${cell(skill.trigger || '— *no trigger declared*')} | ${appliesCell(skill.appliesTo)} | ${cell(skill.status)} |`);
+    const trigger = terse ? terseTrigger(skill.trigger) : skill.trigger;
+    lines.push(`| ${name} | ${cell(trigger || '— *no trigger declared*')} | ${appliesCell(skill.appliesTo)} | ${cell(skill.status)} |`);
   }
   return lines.join('\n');
 }
@@ -178,4 +213,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { collect, renderBlock, replaceRegion, cell, appliesCell, SKILL_EXT, INDEX_PATH, MARKER, BEGIN, END };
+module.exports = { collect, renderBlock, terseTrigger, replaceRegion, cell, appliesCell, SKILL_EXT, INDEX_PATH, MARKER, BEGIN, END };

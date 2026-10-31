@@ -26,11 +26,12 @@ that against its body before applying it.
 <!-- GENERATED:skills-index — run `npm run render:skills` -->
 
 **Skills are task-activated.** Scan the `Load when` column when a task starts; when a row
-matches, open `_skills/<name>/SKILL.md` and follow it. A skill never outranks `AGENTS.md`, and a
-row whose `Applies to` does not cover this stack is not applicable — skip it. `_skills/` is the
-synced, stack-filtered copy of the central corpus (absent until the first sync); do not keep a
-hand-maintained copy of a delivered skill in a native store (`.qoder/skills/`, `.claude/skills/`,
-…) — it shadows `_skills/` and cannot follow upstream.
+matches, open the linked SKILL.md and follow it. A skill never outranks `AGENTS.md`, and a row
+whose `Applies to` does not cover this stack is not applicable — skip it. The trigger here is
+terse; the full description lives in the skill file, and a native loader lists these skills in
+its own catalog. `_skills/` is the synced, stack-filtered copy of the central corpus (absent
+until the first sync); do not keep a hand-maintained copy of a delivered skill in a native
+store (`.qoder/skills/`, `.claude/skills/`, …) — it shadows `_skills/` and cannot follow upstream.
 
 | Skill | Load when | Applies to | Status |
 |---|---|---|---|
