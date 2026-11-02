@@ -30,6 +30,8 @@
     "sync:drift": "node guidelines/global-configs/scripts/check-sync-drift.js",
     "sync:stale": "node guidelines/global-configs/scripts/check-fleet-staleness.js",
     "skills:global": "node guidelines/global-configs/scripts/sync-global-skills.js",
+    "guardrails:install": "node guidelines/global-configs/scripts/install-guardrails.js",
+    "scan:secrets": "node guidelines/global-configs/scripts/scan-secrets.js",
     "audit:friction": "node guidelines/global-configs/scripts/audit-friction.js",
     "benchmark:reform": "node guidelines/global-configs/scripts/benchmark-reform.js",
     "benchmark:check": "node guidelines/global-configs/scripts/benchmark-reform.js --check",

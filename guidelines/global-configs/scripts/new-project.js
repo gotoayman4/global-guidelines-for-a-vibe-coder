@@ -29,6 +29,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const STARTERS = path.join(REPO_ROOT, 'global-configs', 'templates');
 const SCRIPTS = path.join(REPO_ROOT, 'global-configs', 'scripts');
 const { stripSourceCitations, filterByCapabilities } = require('./inject-constitution-block.js');
+const { installGuardrails } = require('./install-guardrails.js');
 const dryRun = process.argv.includes('--dry-run');
 
 /**
@@ -415,6 +416,14 @@ function main() {
         fs.writeFileSync(hookDest, prePushHook(), 'utf8');
       },
     });
+  }
+
+  for (const g of installGuardrails(projectPath, { dryRun: true })) {
+    if (/skipped|not modified|unparseable/.test(g.status)) {
+      actions.push(g);
+    } else {
+      actions.push({ file: g.file, status: g.status, write: () => installGuardrails(projectPath) });
+    }
   }
 
   for (const seeded of SEEDED) {

@@ -52,7 +52,7 @@
 ## Git (Load for All Code Changes)
 
 - **Commit Every Working Increment; Never Broken Code.** Commit green increments for cheap rollbacks — unless the user or tool forbids unrequested commits, then stage by path and report. Stash/WIP unfinished work; never commit broken code (`vibe` MAY batch micro-edits). Conventional `type(scope): summary`. Scratch files live in gitignored `scratch/`; never `git add -A`. Checkpoint before multi-file edits; revert a broken approach after two failed fixes.
-- **Destructive Git Safety & Protect Main.** NEVER run `git reset --hard`, `git checkout --`, or `git clean -f` on a dirty tree without stashing or explicit permission. Single-agent work stays on the current branch (parallel agents branch + merge sequentially). Main stays deployable: no force-push, green local gate. `.env` gitignored, `.env.example` committed.
+- **Destructive Git Safety & Protect Main.** NEVER run `git reset --hard`, `git checkout --`, or `git clean -f` on a dirty tree without stashing or explicit permission. Single-agent work stays on the current branch (parallel agents branch + merge sequentially). Main stays deployable: no force-push, green local gate. `.env` gitignored, `.env.example` committed. Hooks enforce these where installed (`npm run guardrails:install`); never bypass with `--no-verify`.
 
 ## Architecture (Load for New Features)
 

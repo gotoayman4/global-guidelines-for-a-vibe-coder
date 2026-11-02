@@ -196,6 +196,9 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [check-fleet-staleness.js](../global-configs/scripts/check-fleet-staleness.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#fleet` `#staleness` `#report-only` `#delivery` |
 | [sync-global-skills.js](../global-configs/scripts/sync-global-skills.js) | Script | Global | ~350 | `#script` `#skills` `#global-pool` `#stack-agnostic` `#marker-scoped` `#delivery` |
 | [sync-project-adapters.js](../global-configs/scripts/sync-project-adapters.js) | Script | Global | ~350 | `#script` `#skills` `#adapter` `#stack-scoped` `#marker-scoped` `#delivery` |
+| [guard-command.js](../global-configs/scripts/guard-command.js) | Script | Global | ~300 (run it; read it only to change it) | `#script` `#guardrail` `#hook` `#destructive-commands` `#pre-tool-use` |
+| [scan-secrets.js](../global-configs/scripts/scan-secrets.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#guardrail` `#secrets` `#pre-commit` |
+| [install-guardrails.js](../global-configs/scripts/install-guardrails.js) | Script | Global | ~250 | `#script` `#guardrail` `#hook` `#project-setup` `#idempotent` |
 | [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->
