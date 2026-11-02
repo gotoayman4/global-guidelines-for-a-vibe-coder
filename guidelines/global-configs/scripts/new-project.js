@@ -28,6 +28,7 @@ const path = require('path');
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const STARTERS = path.join(REPO_ROOT, 'global-configs', 'templates');
 const SCRIPTS = path.join(REPO_ROOT, 'global-configs', 'scripts');
+const { stripSourceCitations } = require('./inject-constitution-block.js');
 const dryRun = process.argv.includes('--dry-run');
 
 /**
@@ -364,7 +365,8 @@ function main() {
   if (fs.existsSync(agentsDest)) {
     actions.push({ file: 'AGENTS.md', status: 'exists — skipped (create-if-missing)' });
   } else {
-    actions.push({ file: 'AGENTS.md', status: 'would write', write: () => fs.copyFileSync(agentsSrc, agentsDest) });
+    const cleanAgents = stripSourceCitations(fs.readFileSync(agentsSrc, 'utf8'));
+    actions.push({ file: 'AGENTS.md', status: 'would write', write: () => fs.writeFileSync(agentsDest, cleanAgents, 'utf8') });
   }
 
   if (fs.existsSync(worldDest)) {

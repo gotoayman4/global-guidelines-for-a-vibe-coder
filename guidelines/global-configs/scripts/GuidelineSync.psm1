@@ -370,6 +370,11 @@ function Install-StarterFile {
     if ($guidelinesRoot) {
         $starterContent = $starterContent -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRoot
     }
+    # Strip central-repo extraction provenance (`→ Source:`) when installing into a downstream project
+    # so every session saves ~250 tokens of context window while the central starter keeps them for audit.
+    if ((Split-Path $targetPath -Leaf) -eq "AGENTS.md") {
+        $starterContent = $starterContent -replace '(?m)^[ \t]*→[ \t]*(?:Source|Guideline):[^\r\n]*\r?\n?', ''
+    }
 
     if (Test-Path $targetPath) {
         if ($mode -eq "create-if-missing") {
@@ -563,6 +568,20 @@ function Sync-Skills {
     # `_skills/` source, no planner, no node), and a repair that depends on an unrelated step is a
     # repair that silently does not happen.
     Update-ToolConfigEntryPoint -guidelinesRepo $guidelinesRepo -projectPath $projectPath -DryRun:$DryRun
+
+    # Refresh the managed `generated:constitution-core` region in AGENTS.md when the project carries
+    # the markers. Unmarked hand-maintained AGENTS.md files are left untouched (`kept`), and the
+    # project-owned `## Reference & Project Setup` (`[FILL]` tables and mandates) is never overwritten.
+    $constitutionInjector = Join-Path $guidelinesRepo "global-configs\scripts\inject-constitution-block.js"
+    if ((Test-Path $constitutionInjector) -and (Get-Command node -ErrorAction SilentlyContinue)) {
+        $constArgs = @($constitutionInjector, $projectPath)
+        if ($DryRun) { $constArgs += '--check' }
+        $constRun = Invoke-NodeCapture -Arguments $constArgs
+        foreach ($line in $constRun.Output) { Write-Host "  $line" }
+        if ($DryRun -and $constRun.ExitCode -eq 1) {
+            Write-Host "  [DRY-RUN] Would refresh the generated constitution-core block in AGENTS.md" -ForegroundColor Yellow
+        }
+    }
 
     # WHICH skills a project receives is decided by `plan-skills.js`, never here.
     #

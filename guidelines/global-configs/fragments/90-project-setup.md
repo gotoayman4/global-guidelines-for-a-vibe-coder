@@ -48,7 +48,7 @@ npm run gate:fast    # lint + type-check + changed tests — the edit loop; the 
 
 ### How to Use This File
 
-1. **Mirror** the guidelines into `_guidelines/` with `npm run sync:all` (`npm run sync:drift` fails when the mirror is behind the source); **create** this file as `AGENTS.md` in the project root; replace every `[FILL]`; set `mode` in WORLD.md.
-2. **Review** applicability and add project mandates; commit. AI may change project-specific rules; a MAJOR change (removing or editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
+1. **Mirror & Sync:** Run `npm run sync:all` (or `sync-guidelines.ps1`). The `generated:constitution-core` and `generated:skills-block` regions above refresh on sync; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]` and set `mode` in `WORLD.md`.
+2. **Customize:** Add project mandates above; commit. AI may change project-specific rules; a MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
 
 **Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`

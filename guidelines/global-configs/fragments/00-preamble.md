@@ -1,11 +1,12 @@
 # AGENTS.md — Project Constitution
 
-**Purpose:** The always-loaded rules for this project, self-contained. Deeper guidance lives in the `_guidelines/` mirror and is read only when a task needs it.
+**Purpose:** Always-loaded project rules, self-contained. Deeper guidance in `_guidelines/` loads on demand.
 
-**Guideline source:** `{{GUIDELINES_ROOT}}` (the sync script expands this token automatically)
-**Rule precedence:** Security rules override all others. When two rules conflict, the more restrictive wins. When a rule is ambiguous, ask the user — never guess.
+**Guideline source:** `{{GUIDELINES_ROOT}}` (expanded by sync)
+**Rule precedence:** Security overrides all. More restrictive rule wins on conflict. Inspect local codebase patterns first; ask the user only when product intent, security, or destructive scope is ambiguous.
 
+<!-- BEGIN generated:constitution-core — written by sync-guidelines.ps1, do not edit inside -->
 ## Speed Mode (Declared in WORLD.md)
 
-- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales the read budget before the first edit (≤40K / ≤90K / ≤160K tokens), planning depth (vibe: 3-bullet intent, no plan gate) and the per-push gate. Never scaled: security, honest evidence, reverting broken output, the ship boundary (critical flows LTR+RTL, full pipeline green). Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales pre-edit read budget (≤40K / ≤90K / ≤160K tokens), planning depth (`vibe`: 3-bullet inline intent, no plan gate, straight to code) and per-push gate. Never scaled: security, honest evidence, reverting broken output, ship boundary (critical flows LTR+RTL, full pipeline green). Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
   → Source: `01-workflow-methodology/speed-tiered-workflow.md`

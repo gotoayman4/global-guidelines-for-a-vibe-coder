@@ -1,95 +1,110 @@
 # AGENTS.md — Project Constitution
 
-**Purpose:** The always-loaded rules for this project, self-contained. Deeper guidance lives in the `_guidelines/` mirror and is read only when a task needs it.
+**Purpose:** Always-loaded project rules, self-contained. Deeper guidance in `_guidelines/` loads on demand.
 
-**Guideline source:** `{{GUIDELINES_ROOT}}` (the sync script expands this token automatically)
-**Rule precedence:** Security rules override all others. When two rules conflict, the more restrictive wins. When a rule is ambiguous, ask the user — never guess.
+**Guideline source:** `{{GUIDELINES_ROOT}}` (expanded by sync)
+**Rule precedence:** Security overrides all. More restrictive rule wins on conflict. Inspect local codebase patterns first; ask the user only when product intent, security, or destructive scope is ambiguous.
 
+<!-- BEGIN generated:constitution-core — written by sync-guidelines.ps1, do not edit inside -->
 ## Speed Mode (Declared in WORLD.md)
 
-- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales the read budget before the first edit (≤40K / ≤90K / ≤160K tokens), planning depth (vibe: 3-bullet intent, no plan gate) and the per-push gate. Never scaled: security, honest evidence, reverting broken output, the ship boundary (critical flows LTR+RTL, full pipeline green). Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales pre-edit read budget (≤40K / ≤90K / ≤160K tokens), planning depth (`vibe`: 3-bullet inline intent, no plan gate, straight to code) and per-push gate. Never scaled: security, honest evidence, reverting broken output, ship boundary (critical flows LTR+RTL, full pipeline green). Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
   → Source: `01-workflow-methodology/speed-tiered-workflow.md`
 
 ## Security (Always Load — DO NOT REMOVE)
 
 - **SQL Injection Prevention.** ALL database queries MUST use parameterized statements. NEVER concatenate strings into SQL.
   → Source: `02-engineering-practices/security-engineering.md`
-- **Secrets Management.** NEVER hardcode secrets, tokens, API keys, or credentials in source files. Environment variables only. Pre-commit hooks MUST scan for secret patterns.
+- **Secrets Management.** NEVER hardcode secrets, tokens, API keys, or credentials. Environment variables only; pre-commit hooks scan for secret patterns.
   → Source: `03-git-and-ci/environment-management.md`
-- **Input Validation.** ALL user input MUST be validated at system boundaries (API controllers, DTOs). Trust no client-side validation.
+- **Input Validation.** Validate ALL user input at system boundaries (API controllers, DTOs). Trust no client validation.
   → Source: `02-engineering-practices/error-handling-philosophy.md`
-- **Authentication Code Review.** Auth code gets the highest scrutiny in EVERY mode: AI self-review, an automated auth-flow test at each milestone, and an independent fresh-session AI review before shipping any auth change. No human reviewer is required.
+- **Authorization & Tenant Isolation (IDOR/BOLA).** Enforce server-side ownership/role checks (or DB RLS) on EVERY read/write — never trust client IDs, roles, or hidden UI.
   → Source: `02-engineering-practices/security-engineering.md`
-- **Dependency Audit and Version Pinning.** Before installing any NEW dependency or major bump, verify the latest stable version via web/npm — AI-suggested names and versions are unverified. Pin older majors only with an ADR.
+- **Authentication Code Review.** Highest scrutiny in EVERY mode: AI self-review, automated auth-flow test at milestones, and independent fresh-session AI review before shipping auth changes. No human reviewer required.
+  → Source: `02-engineering-practices/security-engineering.md`
+- **Dependency Audit and Version Pinning.** Before installing any NEW dependency or major bump, verify latest stable version via web/npm — AI-suggested versions are unverified. Pin older majors only with an ADR.
   → Source: `00-ai-fundamentals/ai-security-governance.md`
-- **CORS.** NEVER use `origin: '*'`. Configure an explicit CORS whitelist from day one.
-- **Security Headers.** CSP, HSTS and X-Frame-Options MUST be configured — mandatory, not optional.
+- **CORS & Security Headers.** NEVER use `origin: '*'`; configure explicit CORS whitelist from day one. CSP, HSTS and X-Frame-Options are mandatory.
   → Source: `02-engineering-practices/security-engineering.md`
-- **File Upload MIME Validation (Magic-Byte).** ALL upload endpoints MUST detect MIME type from the file's magic bytes (`file-type`, pinned), never from the client `Content-Type`; reject types not on the allowlist.
+- **File Upload MIME Validation (Magic-Byte).** Upload endpoints MUST detect MIME from magic bytes (e.g., `file-type` pinned), never client `Content-Type`; reject non-allowlisted types.
   → Source: `02-engineering-practices/file-upload-security.md`
 
 ## Testing (Always Load — depth by mode)
 
-- **Mode Sets Test Depth.** vibe: smoke-run each iteration; a regression test when the same path breaks twice or at a milestone. standard: behavioral tests on critical/high-risk code, a regression test with every fix, integration at boundaries. guarded: full pyramid + critical-flow E2E before ship. Ship boundary in ALL modes: login, payments, permissions and persistence verified by automated E2E against the deployed target, LTR and RTL.
+- **Mode Sets Test Depth.** `vibe`: smoke-run each iteration; regression test when a path breaks twice or at milestone. `standard`: behavioral tests on critical/high-risk code, regression test every fix, integration at boundaries. `guarded`: full pyramid + critical-flow E2E before ship. Ship boundary in ALL modes: login, payments, permissions and persistence verified by automated E2E on deployed target (LTR+RTL when bilingual).
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Behavioral Tests Only.** Tests assert inputs → outputs — never internals, spies, or call counts. standard/guarded: tests first for critical features, same iteration otherwise. Review AI-written assertions; plausible tests can miss wrong logic.
+- **Behavioral Tests Only.** Assert inputs → outputs — never internals, spies, or call counts. `standard`/`guarded`: tests first for critical features, same iteration otherwise. Verify AI assertions catch real logic flaws.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Evidence Before "Done".** A change is unverified until exercised — "it compiled" is false. NEVER claim a check passed without running it. Report WHAT ran, the RESULT, and anything NOT verified. The project's `type-check` is the type verdict, not an editor diagnostic. Detail: `agent-verification-loop.md`.
+- **Evidence Before "Done".** Unverified until exercised — "it compiled" is false. NEVER claim a check passed without running it. Report WHAT ran, RESULT, and what was NOT verified. `type-check` is the type verdict, not editor diagnostics.
   → Source: `02-engineering-practices/agent-verification-loop.md`
-- **Pre-Commit + Pre-Push Gates.** Hooks (husky + lint-staged) lint, type-check and format on every commit. Every mode's pre-push gate also runs the `always` guard tier, the dependency-audit wrapper and the content-based clean-tree check. The mode sets the rest: `gate:fast` in vibe; lint + type-check + the full suite in standard, which defers the build to the ship boundary; that chain plus the build and path-aware extras in guarded — `[FILL: the project's script names]`. A required step whose script is missing FAILS the gate — never skipped as green. `--no-verify` is forbidden; hooks MUST NOT need real secrets. A release exit runs the full gate via the release override and writes one receipt to `docs/gate-receipts/<UTC-stamp>.md`. Detail: `local-ci-strategy.md`.
+- **Pre-Commit + Pre-Push Gates.** Commits (husky + lint-staged) lint, type-check and format. Pre-push runs `always` guards, `audit:gate`, clean-tree check, plus the mode gate (`vibe`: `gate:fast` — falling back to available `lint`/`type-check` during day-0 scaffolding; `standard`: lint + type-check + suite, deferring build to ship; `guarded`: adds build + path-aware extras). In `standard`/`guarded` and releases, missing required scripts FAIL the gate. `--no-verify` is forbidden; hooks need no real secrets. Release exits use the release override and write `docs/gate-receipts/<UTC-stamp>.md`.
   → Source: `03-git-and-ci/local-ci-strategy.md`
 
 ## Git (Load for All Code Changes)
 
-- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP for unfinished work; never end a session uncommitted (vibe MAY batch micro-edits). Conventional format with type+scope; if the commit cannot be summarised in one sentence, split it. Session scratch (probes, logs, patches) lives in the gitignored `scratch/`; stage by path, never `git add -A`. Checkpoint-commit before multi-file AI operations. Revert a wrong approach and regenerate with better constraints; stop after two failed fixes.
-- **No Branch Mandate; Protect Main.** Single-agent work stays on the current branch (parallel agents get their own; merge sequentially). Main MUST stay deployable: branch protection, no force-push, green local gate before merge. `.env` gitignored, `.env.example` committed.
+- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP unfinished work; never end uncommitted (`vibe` MAY batch micro-edits). Conventional `type(scope): summary` (split if >1 sentence). Scratch files live in gitignored `scratch/`; stage by path, never `git add -A`. Checkpoint before multi-file edits. Revert broken approaches after two failed fixes.
+- **Destructive Git Safety & Protect Main.** NEVER run `git reset --hard`, `git checkout --`, or `git clean -f` on dirty trees without stashing or explicit user permission. Single-agent work stays on current branch (parallel agents branch + merge sequentially). Main stays deployable: branch protection, no force-push, green local gate. `.env` gitignored, `.env.example` committed.
 
 ## Architecture (Load for New Features)
 
-- **File Size Limit.** Files SHOULD NOT exceed 400 lines — plan for ~300. At 400, record as debt and split before the NEXT feature touches the file; do not stall the current change.
+- **File Size Limit.** Files SHOULD NOT exceed 400 lines (target ~300). At 400, record debt and split before the NEXT feature touches it; do not stall current work.
   → Source: `02-engineering-practices/file-organization.md`
-- **Layer Separation.** NEVER put business logic in UI components — API calls, transforms, and state live in services/hooks layers.
+- **Layer Separation & Schema Safety.** NEVER put business logic in UI components — API calls, transforms, and state live in services/hooks. Schema changes MUST be additive via migrations; NEVER edit applied migrations or run destructive drops without user approval.
   → Source: `04-architecture/backend-architecture.md`
-- **Pagination for Lists.** Every list endpoint MUST support pagination — no exceptions past 50 items.
+- **Pagination & Error Responses.** List endpoints MUST paginate (no exceptions past 50 items). Error responses MUST include a machine-readable `code` field and NEVER expose stack traces.
   → Source: `04-architecture/api-design-standards.md`
-- **Comments Add Context, Not Narration.** Headers and JSDoc only where purpose, constraints, or a public contract are not inferable from the name or signature. NEVER restate what the code does.
+- **Comments Add Context, Not Narration.** Headers/JSDoc only where purpose, constraints, or contracts are not inferable from names/signatures. NEVER restate code.
   → Source: `02-engineering-practices/ai-code-documentation.md`
-- **One Source of Truth Per State Type.** Server state in the data-fetching library (React Query / SWR), form state in the form library — NEVER duplicated across stores. Query keys are raw tuples `['entity', params] as const`; centralize key constants. Cap concurrent page fetches at 4.
+- **One Source of Truth Per State Type.** When using React Query / SWR, keep server state there and form state in the form library — never duplicate in stores. Centralize tuple query keys `['entity', params] as const`; cap concurrent page fetches at 4.
   → Source: `04-architecture/state-management.md`
-- **Error Responses with Machine-Readable Codes.** Responses MUST include a machine-readable `code` field. NEVER expose stack traces in API responses.
-  → Source: `04-architecture/api-design-standards.md`
-- **Vertical Slice Development.** Build one complete feature UI → API → Database before starting the next; never by horizontal layers.
+- **Vertical Slice Development.** Build one complete feature UI → API → Database before starting the next; never horizontal layers.
   → Source: `01-workflow-methodology/development-workflow.md`
-- **Stack Conventions (React).** Data router API only — `createBrowserRouter`, never `<BrowserRouter>`; native `useBlocker`, no custom nav-blocking. Detail: `_guidelines/04-architecture/router-architecture.md`.
+- **Stack Conventions (When React).** Data router API only (`createBrowserRouter`, never `<BrowserRouter>`); native `useBlocker`, no custom nav-blocking. Detail: `_guidelines/04-architecture/router-architecture.md`.
   → Source: `04-architecture/router-architecture.md`
-- **Code Duplication Detection.** Same mapping/validation/transformation in 2+ files → extract to a shared utility in the same iteration.
+- **Search Before Creating (No Duplication).** Search existing utilities, hooks, types, and components before creating new ones. Extract logic repeated in 2+ files to a shared utility in the same iteration.
   → Source: `02-engineering-practices/code-duplication-prevention.md`
 
 ## Design & UX (Load for UI Work)
 
-- **Heuristics + Four States + Tokens.** Every UI follows Nielsen's 10 heuristics (visible feedback, error prevention, escape hatch, user's language — no jargon or error codes in UI). Every data-dependent component handles loading, error, empty, success. Design tokens only, lint-enforced. Shared components (StandardTable, PageHeader, StandardDialog) over raw primitives. Detail: `_guidelines/02-engineering-practices/ux-design-principles.md`.
+- **Heuristics + Four States + Tokens.** Follow Nielsen's 10 heuristics (visible feedback, error prevention, escape hatch, user language — no jargon/codes in UI). Handle loading, error, empty, success in every data component. Design tokens only (lint-enforced); prefer project shared components (e.g., StandardTable, PageHeader, StandardDialog when present) over raw primitives.
   → Source: `02-engineering-practices/ux-design-principles.md`
-- **Incremental Adoption.** Design-system adoption MUST NOT block feature work: new features use shared components exclusively; existing code migrates when touched (Strangler Fig).
+- **Incremental Adoption.** Design-system adoption MUST NOT block feature work: new features use shared components; existing code migrates when touched (Strangler Fig).
   → Source: `08-governance/design-system-governance.md`
 
 ## AI Collaboration (Load for Every Session)
 
-- **AI Output is Draft, Not Final.** Iterate when the first output misses the acceptance criteria.
+- **Read Before Edit & Surgical Scope.** Read target files and 1–2 sibling files to match local conventions before editing; NEVER guess imports, signatures, or schemas. Touch only task-required files — no drive-by refactors, unrequested formatting, or unrelated dependency bumps.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Acceptance Criteria + Pattern References.** Every prompt states "correct when [verifiable conditions]" (vibe MAY compress to 3 bullets). Point at existing files as patterns when the convention is not obvious from the tree.
+- **Self-Derived Acceptance Criteria.** State "correct when [verifiable conditions]" (`vibe`: 3 brief bullets inline) before editing. If the prompt is terse, derive criteria from codebase context and proceed — iterate if first output misses them.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Fresh Session Per Feature.** Long threads produce constraint-violating output. Transfer via a 3-sentence handoff, not chat history.
+- **Fresh Session Per Feature.** Long threads degrade constraint compliance. Transfer via a 3-sentence handoff, not chat history.
   → Source: `00-ai-fundamentals/context-management-strategy.md`
-- **AI Has No Concept of Correctness.** Verify every claim, especially APIs and versions. After 2 failed attempts, STOP and search the web.
+- **Verify APIs & Web Escalation.** Verify every API and version claim. After 2 failed fix attempts, STOP guessing and search the web.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **No Silent TODOs or Placeholders.** NEVER generate TODO/FIXME/HACK/placeholder comments without explicit permission — state gaps in the response.
+- **No Silent TODOs & Output Efficiency.** NEVER generate TODO/FIXME/HACK/placeholder comments without permission — state gaps in the response. Report WHAT changed (1–2 sentences) and WHERE (path + lines); no code blocks unless asked.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Output Efficiency.** Report WHAT changed (1–2 sentences) and WHERE (path + lines); no code blocks unless asked.
-  → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Docs Change on Triggers Only.** A trigger-table match (`documentation-strategy.md`) updates the fact's one home in the same iteration and reports `Docs: updated <file>`; a non-trigger writes nothing. Irreversible decisions (auth, schema, pins, scope reversals) get an ADR; the commit message records everything else.
+- **Docs Change on Triggers Only.** A trigger-table match (`documentation-strategy.md`) updates the fact's one home in the same iteration (`Docs: updated <file>`); non-triggers write nothing. Irreversible decisions (auth, schema, pins, scope reversals) get an ADR; commits record the rest.
   → Source: `07-documentation/documentation-strategy.md`
-- **One Home Per Fact.** The doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never an "AI context" copy; a new doc retires one. Each canonical list lives in one file; others link (`npm run docs:census` fails a restated fact). History lives in `docs/changelog/<YYYY>-Q<n>.md`, not in always-read files.
+- **One Home Per Fact.** Doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never an "AI context" copy; a new doc retires one. Canonical lists live in one file (`npm run docs:census` when wired checks this); history lives in `docs/changelog/<YYYY>-Q<n>.md`.
   → Source: `07-documentation/documentation-strategy.md`
+
+## RTL & Arabic (Always Active — Bilingual UI Default)
+
+- **Arabic-First Architecture.** Unless `WORLD.md` declares a single-language/LTR-only tool, design every UI component for bidirectional text from day one — direction handled at shell, document, paragraph and inline-span levels.
+  → Source: `05-stack-guides/rtl-tech-stack.md`
+- **Logical CSS in UI Chrome.** Use logical properties (`ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; `marginInlineStart`). Physical properties are forbidden except in explicit LTR contexts (code, math, URLs, emails). Lint-enforced.
+  → Source: `02-engineering-practices/bidirectional-design-principles.md`
+- **Direction, i18n Keys & Dual-Direction Test.** Portals inherit `direction` from `<html>`. Free-text `dir="auto"` fields start in UI direction while empty and follow typed text. User-facing strings use i18n keys. `vibe`: one direction per iteration, both at milestone; `standard`/`guarded`: dual-direction E2E before commit.
+  → Source: `05-stack-guides/rtl-tech-stack.md`
+
+## Performance (Load for Performance-Sensitive Features)
+
+- **Profile Before Optimizing.** NEVER optimize without measurement — only measured bottlenecks. Work → Clean → Fast; never premature.
+  → Source: `02-engineering-practices/performance-optimization.md`
+- **Budgets at Review Time.** Enforce at PR/milestone (not every edit): web LCP < 2.5s, bundle < 200KB gz, API p95 < 500ms; reject PRs growing bundle >10%.
+  → Source: `02-engineering-practices/performance-optimization.md`
+<!-- END generated:constitution-core -->
 
 ## Skills
 
@@ -99,22 +114,6 @@ set, refreshed by the sync. After the first sync this block holds the inventory:
 with the trigger that activates it. **Scan it when a task starts; open a skill only when its row matches.**
 Never keep a hand-maintained copy of a delivered skill in a native store — it shadows `_skills/`.
 <!-- END generated:skills-block -->
-
-## RTL & Arabic (Always Active — All Projects Are Bilingual)
-
-- **Arabic-First Architecture.** Design every component for bidirectional text from day one — direction handled at shell, document, paragraph and inline-span levels. Arabic support is architectural, not a localization afterthought.
-  → Source: `05-stack-guides/rtl-tech-stack.md`
-- **Logical CSS in UI Chrome.** Use logical properties (`ms-*`/`me-*`/`ps-*`/`pe-*`/`start-*`/`end-*`/`text-start`; `marginInlineStart`). Physical properties are forbidden except in explicit LTR contexts (code, math, URLs, emails). Lint-enforced.
-  → Source: `02-engineering-practices/bidirectional-design-principles.md`
-- **Direction: portals inherit `<html>`; a typed field starts on the UI side; i18n Keys; Dual-Direction Test.** Portals inherit `direction` from `<html>` — set explicit `dir` only where direction differs. A free-text `dir="auto"` field starts in the UI language's direction while empty and follows the value once typed (an empty `auto` field resolves LTR). All user-facing strings use i18n keys. vibe: one direction per iteration, both at milestone; standard/guarded: dual-direction E2E before commit.
-  → Source: `05-stack-guides/rtl-tech-stack.md`
-
-## Performance (Load for Performance-Sensitive Features)
-
-- **Profile Before Optimizing.** NEVER optimize without measurement — only measured bottlenecks. Work → Clean → Fast; never premature.
-  → Source: `02-engineering-practices/performance-optimization.md`
-- **Budgets at Review Time.** Enforce at PR/milestone (not every edit): LCP < 2.5s, bundle < 200KB gz, API p95 < 500ms; reject PRs growing bundle >10%.
-  → Source: `02-engineering-practices/performance-optimization.md`
 
 ## Reference & Project Setup
 
@@ -166,7 +165,7 @@ npm run gate:fast    # lint + type-check + changed tests — the edit loop; the 
 
 ### How to Use This File
 
-1. **Mirror** the guidelines into `_guidelines/` with `npm run sync:all` (`npm run sync:drift` fails when the mirror is behind the source); **create** this file as `AGENTS.md` in the project root; replace every `[FILL]`; set `mode` in WORLD.md.
-2. **Review** applicability and add project mandates; commit. AI may change project-specific rules; a MAJOR change (removing or editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
+1. **Mirror & Sync:** Run `npm run sync:all` (or `sync-guidelines.ps1`). The `generated:constitution-core` and `generated:skills-block` regions above refresh on sync; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]` and set `mode` in `WORLD.md`.
+2. **Customize:** Add project mandates above; commit. AI may change project-specific rules; a MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
 
 **Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`
