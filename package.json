@@ -30,6 +30,7 @@
     "sync:drift": "node guidelines/global-configs/scripts/check-sync-drift.js",
     "sync:stale": "node guidelines/global-configs/scripts/check-fleet-staleness.js",
     "skills:global": "node guidelines/global-configs/scripts/sync-global-skills.js",
+    "agents:migrate": "node guidelines/global-configs/scripts/migrate-agents-to-managed.js",
     "guardrails:install": "node guidelines/global-configs/scripts/install-guardrails.js",
     "rules:paths": "node guidelines/global-configs/scripts/generate-path-rules.js",
     "eval:score": "node guidelines/global-configs/scripts/score-compliance.js",

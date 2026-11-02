@@ -199,6 +199,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [guard-command.js](../global-configs/scripts/guard-command.js) | Script | Global | ~300 (run it; read it only to change it) | `#script` `#guardrail` `#hook` `#destructive-commands` `#pre-tool-use` |
 | [scan-secrets.js](../global-configs/scripts/scan-secrets.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#guardrail` `#secrets` `#pre-commit` |
 | [install-guardrails.js](../global-configs/scripts/install-guardrails.js) | Script | Global | ~250 | `#script` `#guardrail` `#hook` `#project-setup` `#idempotent` |
+| [migrate-agents-to-managed.js](../global-configs/scripts/migrate-agents-to-managed.js) | Script | Global | ~250 | `#script` `#migration` `#agents-md` `#backup` |
 | [generate-path-rules.js](../global-configs/scripts/generate-path-rules.js) | Script | Global | ~250 | `#script` `#path-scoped` `#rules` `#cursor` `#claude` `#copilot` `#capabilities` |
 | [score-compliance.js](../global-configs/scripts/score-compliance.js) | Script | Global | ~150 | `#script` `#eval` `#compliance` `#scenarios` `#measurement` |
 | [scenarios.json](../global-configs/evals/scenarios.json) | Data | Global | ~1,200 | `#eval` `#compliance` `#scenarios` |
