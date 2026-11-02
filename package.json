@@ -31,6 +31,8 @@
     "sync:stale": "node guidelines/global-configs/scripts/check-fleet-staleness.js",
     "skills:global": "node guidelines/global-configs/scripts/sync-global-skills.js",
     "guardrails:install": "node guidelines/global-configs/scripts/install-guardrails.js",
+    "rules:paths": "node guidelines/global-configs/scripts/generate-path-rules.js",
+    "eval:score": "node guidelines/global-configs/scripts/score-compliance.js",
     "scan:secrets": "node guidelines/global-configs/scripts/scan-secrets.js",
     "audit:friction": "node guidelines/global-configs/scripts/audit-friction.js",
     "benchmark:reform": "node guidelines/global-configs/scripts/benchmark-reform.js",

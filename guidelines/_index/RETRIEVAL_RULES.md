@@ -22,6 +22,7 @@ Define how AI coding assistants should discover, prioritize, and load guideline 
 4. **Load primary before secondary.** The index recommends candidates; select only those needed for the task.
 5. **Prefer compact extracts when context is tight.** Use the rule-extraction pattern to derive compact versions.
 6. **Follow dependencies only to resolve a task-relevant gap.** A cross-reference is not a mandatory reading list; do not recursively load the graph.
+7. **The always-loaded floor is capability-scoped.** A project's `AGENTS.md` carries only the rule modules its `WORLD.md` §Capabilities requires (undeclared = all). A module that is absent is not missing — it does not apply; modules can also be delivered path-scoped (`npm run rules:paths`).
 
 ## Loading Paths (Priority Order)
 

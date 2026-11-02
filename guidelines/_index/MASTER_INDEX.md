@@ -43,7 +43,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [development-workflow.md](../01-workflow-methodology/development-workflow.md) | Normative | Global | ~1172 | `#workflow` `#process` `#lifecycle` |
 | [planning-and-scoping.md](../01-workflow-methodology/planning-and-scoping.md) | Normative | Global | ~818 | `#planning` `#scoping` `#prd` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~566 | `#refactoring` `#maintenance` `#technical-debt` |
-| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~4173 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
+| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~4649 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
 | [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2623 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
 
 ### 02 — Engineering Practices
@@ -199,6 +199,9 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [guard-command.js](../global-configs/scripts/guard-command.js) | Script | Global | ~300 (run it; read it only to change it) | `#script` `#guardrail` `#hook` `#destructive-commands` `#pre-tool-use` |
 | [scan-secrets.js](../global-configs/scripts/scan-secrets.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#guardrail` `#secrets` `#pre-commit` |
 | [install-guardrails.js](../global-configs/scripts/install-guardrails.js) | Script | Global | ~250 | `#script` `#guardrail` `#hook` `#project-setup` `#idempotent` |
+| [generate-path-rules.js](../global-configs/scripts/generate-path-rules.js) | Script | Global | ~250 | `#script` `#path-scoped` `#rules` `#cursor` `#claude` `#copilot` `#capabilities` |
+| [score-compliance.js](../global-configs/scripts/score-compliance.js) | Script | Global | ~150 | `#script` `#eval` `#compliance` `#scenarios` `#measurement` |
+| [scenarios.json](../global-configs/evals/scenarios.json) | Data | Global | ~1,200 | `#eval` `#compliance` `#scenarios` |
 | [INDEX.md](../global-configs/skills/INDEX.md) | Generated | Global | ~1,500 | `#skills` `#index` `#triggers` `#generated` `#single-source` |
 
 <!-- GENERATED:index-skills — run `npm run render:index` -->

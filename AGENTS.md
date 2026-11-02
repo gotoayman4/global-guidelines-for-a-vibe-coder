@@ -111,6 +111,10 @@ npm run status:projects # Report which rules each synced project's AGENTS.md is 
 npm run sync:drift      # Fail if a project's _guidelines/ mirror or _skills/ copy is not the current source (content hash, not a date)
 npm run sync:stale      # Report-only: how much of the registered fleet the latest central change made stale (runs in validate)
 npm run skills:global   # Dry-run the machine-global skill pool — stack-agnostic skills into the user-level Agent Skills dirs (--apply to write)
+npm run guardrails:install -- <project>  # Install the PreToolUse command guard + pre-commit secret scan into a project (idempotent)
+npm run scan:secrets    # Scan the staged diff for credentials (what the installed pre-commit hook runs)
+npm run rules:paths -- <project>  # Render capability modules as path-scoped rules for Claude/Cursor/Copilot (--apply to write)
+npm run eval:score -- <results.json>  # Score recorded agent runs against evals/scenarios.json (rule compliance)
 npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness
 npm run benchmark:reform # Measure the lean model: boot cost, rule retention, reach (before ec55a54 → working tree); `benchmark:check` fails on a lost rule, unindexed file or unloadable skill
 npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + sync:stale + benchmark:check + test:scripts (sync:stale is report-only — the fleet-staleness announcement)
