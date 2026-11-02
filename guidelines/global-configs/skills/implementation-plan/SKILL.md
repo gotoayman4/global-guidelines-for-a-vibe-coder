@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, planning, execution, checklist
+  appliesTo: any
 ---
 
 # Skill: Implementation Plan

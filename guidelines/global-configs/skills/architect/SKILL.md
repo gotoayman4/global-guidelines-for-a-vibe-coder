@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, architecture, design, stress-test
+  appliesTo: any
 ---
 
 # Skill: Architect

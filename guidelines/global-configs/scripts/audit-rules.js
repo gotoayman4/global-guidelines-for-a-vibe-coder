@@ -31,7 +31,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseFrontMatter, missingKeys, meta, asList } = require('./lib/front-matter.js');
-const { isToken, TOKEN_NAMES } = require('./lib/tech-tokens.js');
+const { isResolvable, STACK_AGNOSTIC, TOKEN_NAMES } = require('./lib/tech-tokens.js');
 const { SKILL_FILE, SKILL_EXT, listSkills } = require('./lib/skill-files.js');
 // The scope rule — declared `appliesTo`, tags-inferred otherwise — is the selector's decision, and
 // the catalog report below reads it rather than re-deriving it: a second scope rule here would
@@ -210,7 +210,7 @@ function skillContract(fm) {
  * actually consumes it is the one place the mistake can be caught.
  */
 function unresolvedAppliesTo(fm) {
-  return asList(meta(fm, 'appliesTo')).filter((t) => !isToken(t));
+  return asList(meta(fm, 'appliesTo')).filter((t) => !isResolvable(t));
 }
 
 // ─── Guideline Parsing ───────────────────────────────────────────────────────
@@ -692,8 +692,8 @@ function audit() {
       console.log("   The skill selector intersects `appliesTo` against a project's stack tokens, so an");
       console.log('   unresolvable value is inert: the skill reads as unscoped and is copied to EVERY');
       console.log('   project, including the ones it was declared to avoid.');
-      console.log(`   Known tokens: ${TOKEN_NAMES.join(', ')}`);
-      console.log('   Action: use a known token, or drop the value and let `tags` infer the scope.\n');
+      console.log(`   Known tokens: ${TOKEN_NAMES.join(', ')} — or \`${STACK_AGNOSTIC}\` for a stack-agnostic skill`);
+      console.log('   Action: use a known token, declare `any`, or drop the value and let `tags` infer the scope.\n');
       driftCount += 1;
     }
   }

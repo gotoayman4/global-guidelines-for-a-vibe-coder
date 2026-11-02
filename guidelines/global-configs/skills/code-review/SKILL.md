@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, review, quality
+  appliesTo: any
 ---
 
 # Skill: Code Review

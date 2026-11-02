@@ -194,6 +194,28 @@ test('a skill whose tags name no technology is stack-agnostic, not unscoped', ()
   assert.match(verdict.reason, /stack-agnostic/);
 });
 
+test('appliesTo: any declares a stack-agnostic skill and overrides a technology in its tags', () => {
+  // The explicit agnostic declaration exists so the selector stops inferring: a task-type skill whose
+  // tags happen to name a technology must still be delivered everywhere, and its scope must be
+  // DECLARED rather than read out of a taxonomy field.
+  const scope = skillScope({ appliesTo: ['any'], tags: ['skill', 'tailwind'] });
+  assert.deepEqual(scope.tokens, []);
+  assert.equal(scope.declared, true);
+  assert.equal(scope.basis, 'appliesTo');
+  assert.deepEqual(scope.unknown, []);
+  const verdict = fitVerdict(scope, readStackProfile(project({ agents: STACK_TABLE })));
+  assert.equal(verdict.fit, true);
+  assert.match(verdict.reason, /stack-agnostic/);
+});
+
+test('any alongside a technology token keeps the narrower technology scope', () => {
+  // `any` adds nothing to a specific stack; the specific token is the decision and must not be
+  // widened back to universal by the sentinel.
+  const scope = skillScope({ appliesTo: ['any', 'mui'], tags: [] });
+  assert.deepEqual(scope.tokens, ['mui']);
+  assert.equal(scope.declared, true);
+});
+
 test('an appliesTo value the vocabulary cannot resolve is reported, never silently universal', () => {
   // A typo here would read as "no scope", making the skill universal — the one failure mode of a
   // declaration that is quietly ignored. It falls back to tags AND names the unresolvable value.

@@ -28,6 +28,19 @@ test('globalPoolSkills selects exactly the skills that name no technology', () =
   assert.ok(plan.skip[0].reason.includes('stack-scoped'));
 });
 
+test('appliesTo: any is a DECLARED stack-agnostic skill — it lands in the pool despite a technology tag', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'global-pool-src-'));
+  fs.mkdirSync(path.join(dir, 'declared-agnostic'));
+  fs.writeFileSync(
+    path.join(dir, 'declared-agnostic', SKILL_FILE),
+    '---\nname: declared-agnostic\ndescription: d\nmetadata:\n  appliesTo: any\n  tags: [tailwind]\n---\n'
+  );
+  const plan = globalPoolSkills(dir);
+  assert.deepEqual(plan.copy.map((r) => r.name), ['declared-agnostic']);
+  assert.equal(plan.copy[0].basis, 'appliesTo', 'the declaration wins over the tag inference');
+  assert.deepEqual(plan.copy[0].scope, []);
+});
+
 test('globalPoolSkills reports an unresolvable appliesTo rather than silently universalising it', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'global-pool-src-'));
   fs.mkdirSync(path.join(dir, 'typo'));

@@ -73,6 +73,23 @@ function isToken(name) {
 }
 
 /**
+ * The explicit stack-agnostic declaration.
+ *
+ * A task-type skill names no technology, so it resolves to no token — but ABSENT `appliesTo` also
+ * resolves to no token, and the difference matters: absence leaves the scope to tag inference.
+ * `appliesTo: any` says the decision was made. It marks the scope DECLARED while still yielding
+ * zero technology tokens, which is what keeps the skill in the machine-global pool and delivers it
+ * to every project. It is not a technology, so `tokenize*` never produces it from a project.
+ */
+const STACK_AGNOSTIC = 'any';
+
+/** Is `name` a usable declaration — a technology token, or the stack-agnostic sentinel? */
+function isResolvable(name) {
+  const token = String(name).trim().toLowerCase();
+  return token === STACK_AGNOSTIC || isToken(token);
+}
+
+/**
  * The tokens a set of dependency names proves.
  * @param {string[]} names
  * @returns {string[]} sorted, de-duplicated tokens
@@ -116,4 +133,13 @@ function tokenizeFiles(root, readdir) {
   return [...found].sort();
 }
 
-module.exports = { TOKENS, TOKEN_NAMES, isToken, tokenizePackages, tokenizeText, tokenizeFiles };
+module.exports = {
+  TOKENS,
+  TOKEN_NAMES,
+  STACK_AGNOSTIC,
+  isToken,
+  isResolvable,
+  tokenizePackages,
+  tokenizeText,
+  tokenizeFiles,
+};

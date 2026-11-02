@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, debugging, noncoder, visual
+  appliesTo: any
 ---
 
 # Skill: Debug Without Code — Visual and Behavioral Debugging for Vibe Coders

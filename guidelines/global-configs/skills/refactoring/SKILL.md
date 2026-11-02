@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, refactoring, maintenance
+  appliesTo: any
 ---
 
 # Skill: Refactor Code

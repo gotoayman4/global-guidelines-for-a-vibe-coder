@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, deploy, production, hosting
+  appliesTo: any
 ---
 
 # Skill: Deploy to Production

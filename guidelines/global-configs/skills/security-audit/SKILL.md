@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, security, owasp
+  appliesTo: any
 ---
 
 # Skill: Security Audit

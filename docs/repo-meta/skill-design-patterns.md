@@ -80,6 +80,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, review, quality
+  appliesTo: any
 ---
 ```
 
@@ -108,8 +109,14 @@ its Forbidden list. Two consequences follow, and both have bitten:
 **Absent `appliesTo` is allowed and counted, not guessed at.** Until it is declared, a skill's scope is
 inferred from its `tags` against the technology vocabulary — which is a fallback, not a second home.
 `npm run audit:friction` reports how many skills still rely on that inference; the count is the debt
-the tagging pass closes. Leaving it out entirely is also fine for a genuinely stack-agnostic skill
-like `code-review`: no technology in `tags` means it is copied everywhere, which is the correct answer.
+the tagging pass closes.
+
+**`appliesTo: any` is the explicit stack-agnostic declaration.** A task-type skill (`code-review`,
+`security-audit`, …) is written for every stack. Declaring `appliesTo: any` resolves to zero
+technology tokens but marks the scope DECLARED, so the selector stops inferring it from `tags` and
+the machine-global pool keeps it. Use it on every skill that is genuinely stack-agnostic; leaving
+`appliesTo` absent still works for one, but leaves the delivery rule to a fallback. Declare it alone:
+a technology token alongside it is the narrower scope and wins.
 
 **A skill with no stack signal in its project is copied anyway.** A fresh, empty folder has no stack
 to filter against, and withholding skills from it would be a guess dressed as a policy. That is the

@@ -19,17 +19,18 @@
  *   5. Otherwise it is copied, and the plan names the tokens that matched.
  *
  * WHERE A SKILL'S SCOPE COMES FROM — and the one judgement call in this file. `appliesTo` is the
- * declared home, and it is authoritative. But it is declared on a single skill in the pool, and a rule that only
- * fires for one skill is a rule that does not exist yet. So an UNDECLARED scope is inferred from the
- * skill's existing `tags`, intersected with the technology vocabulary. Measured on the corpus
- * 2026-10-12: that inference splits the 20 skills 8 stack-scoped / 12 stack-agnostic, and the split
- * is correct on inspection — `docx`, `firebase`, `firestore`, `inno-setup`, `mui`, `shadcn`,
- * `tailwind` and `tiptap` land on the right side, and every task-type skill lands on the other.
+ * declared home, and it is authoritative. `appliesTo: any` is the explicit stack-agnostic
+ * declaration: it resolves to no technology token but marks the scope DECLARED, so the selector
+ * stops inferring it. Every other skill's scope is inferred from its `tags`, intersected with the
+ * technology vocabulary. Measured on the corpus 2026-10-12: that inference splits the 20 skills
+ * 8 stack-scoped / 12 stack-agnostic, and the split is correct on inspection — `docx`, `firebase`,
+ * `firestore`, `inno-setup`, `mui`, `shadcn`, `tailwind` and `tiptap` land on the right side, and
+ * every task-type skill lands on the other.
  *
  * The inference is a FALLBACK, never a second home: `appliesTo` overrides it, every plan row reports
  * which basis it used, and `audit-friction.js` counts the skills still relying on inference. That is
- * the ratchet this repo already uses for an absent `control:` — allowed, counted, and closed by a
- * later pass rather than by a guess now.
+ * the ratchet this repo already uses for an absent `control:` — allowed, counted, and closed by
+ * declaring the scope rather than by a guess now.
  *
  * WHAT THIS DOES NOT DECIDE: whether the skill is any good, whether its content is current, and
  * whether an agent actually loads it. This file only answers "does it belong in this project", and
@@ -44,7 +45,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseFrontMatter, meta, asList } = require('./front-matter.js');
-const { isToken } = require('./tech-tokens.js');
+const { isToken, isResolvable, STACK_AGNOSTIC } = require('./tech-tokens.js');
 const { readStackProfile } = require('./stack-profile.js');
 const { SKILL_FILE, SKILL_EXT, listSkills, skillPayload, listFiles } = require('./skill-files.js');
 
@@ -59,16 +60,24 @@ const { SKILL_FILE, SKILL_EXT, listSkills, skillPayload, listFiles } = require('
  * Reads through `meta()`: the field lives under `metadata:` in a standard skill and at the top
  * level in a legacy one, and one accessor means neither shape leaks into this decision.
  *
+ * `appliesTo: any` is resolved before the tag fallback: it is a declaration with zero technology
+ * tokens, which is exactly what a stack-agnostic skill is. A technology declared alongside it is
+ * the narrower scope and wins.
+ *
  * @param {Record<string, unknown>|null} fm
  * @returns {{tokens: string[], declared: boolean, basis: string, unknown: string[]}}
  */
 function skillScope(fm) {
   const declaredRaw = asList(meta(fm, 'appliesTo'));
   if (declaredRaw.length) {
-    const tokens = declaredRaw.map((t) => t.toLowerCase()).filter(isToken);
-    const unknown = declaredRaw.filter((t) => !isToken(t));
+    const lowered = declaredRaw.map((t) => t.toLowerCase());
+    const tokens = [...new Set(lowered.filter(isToken))].sort();
+    const unknown = declaredRaw.filter((t) => !isResolvable(t));
     if (tokens.length) {
-      return { tokens: [...new Set(tokens)].sort(), declared: true, basis: 'appliesTo', unknown };
+      return { tokens, declared: true, basis: 'appliesTo', unknown };
+    }
+    if (lowered.includes(STACK_AGNOSTIC) && unknown.length === 0) {
+      return { tokens: [], declared: true, basis: 'appliesTo', unknown: [] };
     }
     // A declaration made entirely of tokens the vocabulary cannot resolve carries no decision, so it
     // falls through to inference and reports the unresolvable values rather than silently universal.

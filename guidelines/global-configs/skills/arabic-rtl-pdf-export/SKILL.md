@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: [skill, pdf, rtl, arabic, chromium, print, bidi, fonts, paged-media]
+  appliesTo: any
 ---
 
 # Skill: Arabic RTL PDF Export

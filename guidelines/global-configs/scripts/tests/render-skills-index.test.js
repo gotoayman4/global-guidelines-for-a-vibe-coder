@@ -93,6 +93,7 @@ test('cell escapes a pipe so a trigger cannot break the table', () => {
 
 test('appliesCell renders a declared stack, and — when none is declared', () => {
   assert.equal(appliesCell(['mui', 'react']), '`mui` `react`');
+  assert.equal(appliesCell(['any']), '`any`', 'the explicit stack-agnostic declaration is visible');
   assert.equal(appliesCell(null), '—');
   assert.equal(appliesCell([]), '—', 'an empty list is not a declaration');
 });

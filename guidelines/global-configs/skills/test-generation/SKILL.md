@@ -5,6 +5,7 @@ metadata:
   status: Advisory
   scope: Global (Task-Type Skill)
   tags: skill, testing, generation
+  appliesTo: any
 ---
 
 # Skill: Generate Tests
