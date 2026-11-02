@@ -27,7 +27,7 @@ A tight loop of 15–60 minutes per iteration (`vibe` mode targets the low end) 
 6. **Review (10%):** self-review prompt: "Review the produced code as a strict senior engineer — bugs, security, edge cases, performance, accessibility. Separate confirmed issues from concerns; propose fixes. Run the checks you cite." Checklist: solves requirement · simpler option? · matches conventions · future sessions can modify safely. An independent fresh-session AI review is mandatory for auth, payments, permissions, destructive data changes, and new dependencies; there is no human reviewer. Vibe mode may collapse the self-review into the run-it-once check for trivial changes (Tier 0).
 7. **Refactor (10%):** behavior-preserving only (tests prove it); commit working state BEFORE refactoring; never mix refactor with feature changes in one iteration.
 8. **Document (5%):** per `documentation-strategy.md` — a trigger-table match updates that fact's one home in the same iteration, in every mode; a non-trigger change writes nothing.
-9. **Commit (5%):** conventional format (`feat(auth): …`). If you can't summarize the commit in one sentence, split it. Vibe mode MAY batch related micro-edits into one conventional commit; never end a session uncommitted.
+9. **Commit (5%):** conventional format (`feat(auth): …`). If you can't summarize the commit in one sentence, split it. Vibe mode MAY batch related micro-edits into one conventional commit; never end a session with uncommitted green work — unless the user or tool forbids unrequested commits, then stage by path and report.
 
 ## Red Flags (stop)
 

@@ -56,7 +56,7 @@ Append one line when you lose time to a non-obvious project fact (`- <fact> — 
 
 ### How to Use This File
 
-1. **Mirror & Sync:** Run `npm run sync:all` (or `sync-guidelines.ps1`). The `generated:constitution-core` and `generated:skills-block` regions above refresh on sync; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]` and set `mode` and `capabilities` in `WORLD.md`.
-2. **Customize:** Add project mandates above; commit. AI may change project-specific rules; a MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
+1. **Sync:** `npm run sync:all` (or `sync-guidelines.ps1`) refreshes the `generated:` regions above; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]`; set `mode` and `capabilities` in `WORLD.md`.
+2. **Customize:** add project mandates here and commit. A MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
 
-**Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`
+**More (`_guidelines/`):** `08-governance/ai-governance-framework.md` · `_index/RETRIEVAL_RULES.md` · `01-workflow-methodology/speed-tiered-workflow.md` · `02-engineering-practices/ux-design-principles.md`

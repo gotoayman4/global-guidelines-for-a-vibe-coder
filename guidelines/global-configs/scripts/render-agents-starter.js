@@ -59,11 +59,16 @@ const rendered = render(manifest);
 
 const outputPath = path.resolve(FRAGMENTS_DIR, manifest.output);
 // The budget is what a downstream session loads: `→ Source:` citations are stripped by the sync, and
-// a project receives only the modules its WORLD.md capabilities call for. `all` = every module,
-// `core` = the universal floor (`capabilities: none`).
+// `all` = the whole delivered starter with every module; `core` = the managed constitution region
+// with `capabilities: none` (the universal rules every project pays for, excluding project-owned setup).
 const delivered = (caps) => stripSourceCitations(filterByCapabilities(rendered, caps));
+const managedRegion = (text) => {
+  const b = text.indexOf('<!-- BEGIN generated:constitution-core');
+  const e = text.lastIndexOf('<!-- END generated:constitution-core -->');
+  return b === -1 || e === -1 ? text : text.slice(b, e);
+};
 const tokens = Math.ceil(delivered(null).length / 4);
-const coreTokens = Math.ceil(delivered([]).length / 4);
+const coreTokens = Math.ceil(managedRegion(delivered([])).length / 4);
 
 if (checkOnly) {
   if (!fs.existsSync(outputPath)) {

@@ -8,7 +8,7 @@
 <!-- BEGIN generated:constitution-core — written by sync-guidelines.ps1, do not edit inside -->
 ## Speed Mode (Declared in WORLD.md)
 
-- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales pre-edit read budget (≤40K / ≤90K / ≤160K tokens), planning depth (`vibe`: 3-bullet inline intent, no plan gate, straight to code) and per-push gate. Never scaled: security, honest evidence, reverting broken output, ship boundary (critical flows LTR+RTL, full pipeline green). Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales read budget (≤40K / ≤90K / ≤160K tokens), planning (`vibe`: 3-bullet inline intent, no plan gate) and the per-push gate. Never scaled: security, honest evidence, reverting broken output, the ship boundary. Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
   → Source: `01-workflow-methodology/speed-tiered-workflow.md`
 
 ## Security (Always Load — DO NOT REMOVE)
@@ -40,19 +40,19 @@
 
 ## Testing (Always Load — depth by mode)
 
-- **Mode Sets Test Depth.** `vibe`: smoke-run each iteration; regression test when a path breaks twice or at milestone. `standard`: behavioral tests on critical/high-risk code, regression test every fix, integration at boundaries. `guarded`: full pyramid + critical-flow E2E before ship. Ship boundary in ALL modes: login, payments, permissions and persistence verified by automated E2E on deployed target (LTR+RTL when bilingual).
+- **Mode Sets Test Depth.** `vibe`: smoke-run each iteration; add a regression test when a path breaks twice or at milestone. `standard`: behavioral tests on critical code, a regression test per fix, integration at boundaries. `guarded`: full pyramid + critical-flow E2E before ship. Ship boundary, all modes: login, payments, permissions and persistence pass automated E2E on the deployed target.
   → Source: `02-engineering-practices/testing-philosophy.md`
-- **Behavioral Tests Only.** Assert inputs → outputs — never internals, spies, or call counts. `standard`/`guarded`: tests first for critical features, same iteration otherwise. Verify AI assertions catch real logic flaws.
+- **Behavioral Tests Only.** Assert inputs → outputs, never internals, spies, or call counts; check that AI-written assertions can actually fail. `standard`/`guarded`: tests first for critical features.
   → Source: `02-engineering-practices/testing-philosophy.md`
 - **Evidence Before "Done".** Unverified until exercised — "it compiled" is false. NEVER claim a check passed without running it. Report WHAT ran, RESULT, and what was NOT verified. `type-check` is the type verdict, not editor diagnostics.
   → Source: `02-engineering-practices/agent-verification-loop.md`
-- **Pre-Commit + Pre-Push Gates.** Commits (husky + lint-staged) lint, type-check and format. Pre-push runs `always` guards, `audit:gate`, clean-tree check, plus the mode gate (`vibe`: `gate:fast` — falling back to available `lint`/`type-check` during day-0 scaffolding; `standard`: lint + type-check + suite, deferring build to ship; `guarded`: adds build + path-aware extras). In `standard`/`guarded` and releases, missing required scripts FAIL the gate. A script this file names that the project lacks is reported, never invented — run the nearest available check and say which. `--no-verify` is forbidden; hooks need no real secrets. Release exits use the release override and write `docs/gate-receipts/<UTC-stamp>.md`.
+- **Gates.** Commits (husky + lint-staged) lint, type-check and format. Pre-push runs the mode gate: `vibe` `gate:fast` (or the available `lint`/`type-check`), `standard` lint + type-check + suite, `guarded` adds build + path extras. Releases use the release override and write `docs/gate-receipts/<UTC-stamp>.md`. In `standard`/`guarded` a missing required script FAILS the gate; a script named here that the project lacks is reported, never invented — run the nearest check and say which. `--no-verify` is forbidden.
   → Source: `03-git-and-ci/local-ci-strategy.md`
 
 ## Git (Load for All Code Changes)
 
-- **Commit Every Working Increment; Never Broken Code.** Granular commits = cheap rollbacks — stash/WIP unfinished work; never end uncommitted (`vibe` MAY batch micro-edits). Conventional `type(scope): summary` (split if >1 sentence). Scratch files live in gitignored `scratch/`; stage by path, never `git add -A`. Checkpoint before multi-file edits. Revert broken approaches after two failed fixes.
-- **Destructive Git Safety & Protect Main.** NEVER run `git reset --hard`, `git checkout --`, or `git clean -f` on dirty trees without stashing or explicit user permission. Single-agent work stays on current branch (parallel agents branch + merge sequentially). Main stays deployable: branch protection, no force-push, green local gate. `.env` gitignored, `.env.example` committed.
+- **Commit Every Working Increment; Never Broken Code.** Commit green increments for cheap rollbacks — unless the user or tool forbids unrequested commits, then stage by path and report. Stash/WIP unfinished work; never commit broken code (`vibe` MAY batch micro-edits). Conventional `type(scope): summary`. Scratch files live in gitignored `scratch/`; never `git add -A`. Checkpoint before multi-file edits; revert a broken approach after two failed fixes.
+- **Destructive Git Safety & Protect Main.** NEVER run `git reset --hard`, `git checkout --`, or `git clean -f` on a dirty tree without stashing or explicit permission. Single-agent work stays on the current branch (parallel agents branch + merge sequentially). Main stays deployable: no force-push, green local gate. `.env` gitignored, `.env.example` committed.
 
 ## Architecture (Load for New Features)
 
@@ -93,17 +93,11 @@
 
 - **Read Before Edit & Surgical Scope.** Read target files and 1–2 sibling files to match local conventions before editing; NEVER guess imports, signatures, or schemas. Touch only task-required files — no drive-by refactors, unrequested formatting, or unrelated dependency bumps.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Self-Derived Acceptance Criteria.** State "correct when [verifiable conditions]" (`vibe`: 3 brief bullets inline) before editing. If the prompt is terse, derive criteria from codebase context and proceed — iterate if first output misses them.
+- **Self-Derived Acceptance Criteria.** State "correct when [verifiable conditions]" (`vibe`: 3 brief bullets inline) before editing; if the prompt is terse, derive them from codebase context and proceed.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Fresh Session Per Feature.** Long threads degrade constraint compliance. Transfer via a 3-sentence handoff, not chat history.
-  → Source: `00-ai-fundamentals/context-management-strategy.md`
-- **Verify APIs & Web Escalation.** Verify every API and version claim. After 2 failed fix attempts, STOP guessing and search the web.
+- **Verify, Escalate & Report.** Verify every API and version claim. After 2 failed fix attempts, STOP guessing and search the web. NEVER leave TODO/FIXME/HACK/placeholder comments without permission — state gaps in the response. Report WHAT changed and WHERE (path + lines), no code blocks unless asked; offer a 3-sentence handoff when a thread grows long.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **No Silent TODOs & Output Efficiency.** NEVER generate TODO/FIXME/HACK/placeholder comments without permission — state gaps in the response. Report WHAT changed (1–2 sentences) and WHERE (path + lines); no code blocks unless asked.
-  → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Docs Change on Triggers Only.** A trigger-table match (`documentation-strategy.md`) updates the fact's one home in the same iteration (`Docs: updated <file>`); non-triggers write nothing. Irreversible decisions (auth, schema, pins, scope reversals) get an ADR; commits record the rest.
-  → Source: `07-documentation/documentation-strategy.md`
-- **One Home Per Fact.** Doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never an "AI context" copy; a new doc retires one. Canonical lists live in one file (`npm run docs:census` when wired checks this); history lives in `docs/changelog/<YYYY>-Q<n>.md`.
+- **Docs on Triggers; One Home Per Fact.** A trigger-table match (`documentation-strategy.md`) updates the fact's one home in the same iteration (`Docs: updated <file>`); non-triggers write nothing. Irreversible decisions (auth, schema, pins, scope reversals) get an ADR. Doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never an "AI context" copy; history lives in `docs/changelog/<YYYY>-Q<n>.md`.
   → Source: `07-documentation/documentation-strategy.md`
 
 ## RTL & Arabic (Bilingual UI — Requires `bilingual`)
@@ -192,7 +186,7 @@ Append one line when you lose time to a non-obvious project fact (`- <fact> — 
 
 ### How to Use This File
 
-1. **Mirror & Sync:** Run `npm run sync:all` (or `sync-guidelines.ps1`). The `generated:constitution-core` and `generated:skills-block` regions above refresh on sync; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]` and set `mode` and `capabilities` in `WORLD.md`.
-2. **Customize:** Add project mandates above; commit. AI may change project-specific rules; a MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
+1. **Sync:** `npm run sync:all` (or `sync-guidelines.ps1`) refreshes the `generated:` regions above; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]`; set `mode` and `capabilities` in `WORLD.md`.
+2. **Customize:** add project mandates here and commit. A MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
 
-**Cross-References (in `_guidelines/`):** Authority: `08-governance/ai-governance-framework.md` · Loading: `_index/RETRIEVAL_RULES.md` · Modes: `01-workflow-methodology/speed-tiered-workflow.md` · Design: `02-engineering-practices/ux-design-principles.md`
+**More (`_guidelines/`):** `08-governance/ai-governance-framework.md` · `_index/RETRIEVAL_RULES.md` · `01-workflow-methodology/speed-tiered-workflow.md` · `02-engineering-practices/ux-design-principles.md`

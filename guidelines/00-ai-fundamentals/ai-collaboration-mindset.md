@@ -17,7 +17,7 @@ tags: [mindset, philosophy, anti-patterns]
 5. **Tests are behavioral contracts,** not implementation verification. Depth follows mode (`speed-tiered-workflow.md`); the ship boundary verifies critical flows in every mode.
 6. **All AI output is a draft.** AI gets syntax right ~95%, business logic ~60%. The gap is your responsibility.
 7. **Control context aggressively** — see `context-management-strategy.md`.
-8. **Limit blast radius:** small isolated changes; commit frequently; split when the change cannot be summarised in one sentence, and self-review before continuing (vibe MAY batch micro-edits into one conventional commit — never end a session uncommitted).
+8. **Limit blast radius:** small isolated changes; commit frequently; split when the change cannot be summarised in one sentence, and self-review before continuing (vibe MAY batch micro-edits into one conventional commit — never end a session with uncommitted green work, unless the user or tool forbids unrequested commits: then stage by path and report).
 9. **Use AI to reason, not just generate:** edge-case discovery, trade-off analysis, design review.
 10. **Iterate prompts:** first attempts are drafts; refine constraints based on observed output.
 11. **Know when NOT to use AI:** manual is faster for simple well-known patterns; security-critical code gets maximum scrutiny regardless — AI self-review plus automated auth-flow tests.

@@ -28,7 +28,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [ai-agent-orchestration.md](../00-ai-fundamentals/ai-agent-orchestration.md) | Normative | Global | ~755 | `#agents` `#orchestration` `#parallel` |
-| [ai-collaboration-mindset.md](../00-ai-fundamentals/ai-collaboration-mindset.md) | Normative | Global | ~1094 | `#mindset` `#philosophy` `#anti-patterns` |
+| [ai-collaboration-mindset.md](../00-ai-fundamentals/ai-collaboration-mindset.md) | Normative | Global | ~1119 | `#mindset` `#philosophy` `#anti-patterns` |
 | [ai-security-governance.md](../00-ai-fundamentals/ai-security-governance.md) | Normative | Global | ~906 | `#security` `#governance` `#owasp` |
 | [context-management-strategy.md](../00-ai-fundamentals/context-management-strategy.md) | Normative | Global | ~1256 | `#context` `#tokens` `#efficiency` |
 | [multi-tool-workflows.md](../00-ai-fundamentals/multi-tool-workflows.md) | Normative | Global | ~638 | `#multi-tool` `#cursor` `#copilot` `#claude` |
@@ -40,7 +40,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 |---|---|---|---|---|
 | [code-review-workflow.md](../01-workflow-methodology/code-review-workflow.md) | Advisory | Global | ~1660 | `#review` `#quality` `#ai-only` `#verification` |
 | [debugging-with-ai.md](../01-workflow-methodology/debugging-with-ai.md) | Normative | Global | ~730 | `#debugging` `#troubleshooting` `#error` |
-| [development-workflow.md](../01-workflow-methodology/development-workflow.md) | Normative | Global | ~1146 | `#workflow` `#process` `#lifecycle` |
+| [development-workflow.md](../01-workflow-methodology/development-workflow.md) | Normative | Global | ~1172 | `#workflow` `#process` `#lifecycle` |
 | [planning-and-scoping.md](../01-workflow-methodology/planning-and-scoping.md) | Normative | Global | ~818 | `#planning` `#scoping` `#prd` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~566 | `#refactoring` `#maintenance` `#technical-debt` |
 | [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~4173 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
