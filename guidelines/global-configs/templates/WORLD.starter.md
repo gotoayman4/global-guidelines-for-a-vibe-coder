@@ -15,6 +15,13 @@
 
 ---
 
+## Capabilities
+
+- **capabilities:** `web-ui, api, database, uploads, bilingual` — keep only what this project IS. Vocabulary: `web-ui` (browser UI), `api` (serves endpoints), `database`, `uploads` (accepts files), `bilingual` (Arabic/RTL + LTR UI); `none` = universal core only.
+- The sync includes an optional constitution module (Design & UX, Frontend/API architecture, Web Security, RTL, Performance) only when a capability it requires is listed. Remove this section and every module loads. Source: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+
+---
+
 ## What This Project Is
 
 [FILL: 2-3 paragraphs describing the core purpose. What problem does it solve? Who are the users? What is the primary value proposition?]

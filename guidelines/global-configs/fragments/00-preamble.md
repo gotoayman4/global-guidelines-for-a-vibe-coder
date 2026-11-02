@@ -1,9 +1,9 @@
 # AGENTS.md — Project Constitution
 
-**Purpose:** Always-loaded project rules, self-contained. Deeper guidance in `_guidelines/` loads on demand.
+**Purpose:** Always-loaded project rules, self-contained. Deeper guidance in `_guidelines/` loads on demand. Read `## Reference & Project Setup` (stack, commands, mandates) first — it is project-specific and outranks the generic rules below it.
 
 **Guideline source:** `{{GUIDELINES_ROOT}}` (expanded by sync)
-**Rule precedence:** Security overrides all. More restrictive rule wins on conflict. Inspect local codebase patterns first; ask the user only when product intent, security, or destructive scope is ambiguous.
+**Rule precedence:** Security overrides all, then project mandates, then these rules; on conflict the stricter rule wins, except that `mode` scales process only (see Speed Mode). Inspect local codebase patterns first. Ask the user only when product intent, security, or destructive scope is ambiguous — otherwise proceed and state the assumption. Optional modules (web, API, RTL) are included per WORLD.md `## Capabilities`.
 
 <!-- BEGIN generated:constitution-core — written by sync-guidelines.ps1, do not edit inside -->
 ## Speed Mode (Declared in WORLD.md)

@@ -4,15 +4,9 @@
   → Source: `02-engineering-practices/file-organization.md`
 - **Layer Separation & Schema Safety.** NEVER put business logic in UI components — API calls, transforms, and state live in services/hooks. Schema changes MUST be additive via migrations; NEVER edit applied migrations or run destructive drops without user approval.
   → Source: `04-architecture/backend-architecture.md`
-- **Pagination & Error Responses.** List endpoints MUST paginate (no exceptions past 50 items). Error responses MUST include a machine-readable `code` field and NEVER expose stack traces.
-  → Source: `04-architecture/api-design-standards.md`
 - **Comments Add Context, Not Narration.** Headers/JSDoc only where purpose, constraints, or contracts are not inferable from names/signatures. NEVER restate code.
   → Source: `02-engineering-practices/ai-code-documentation.md`
-- **One Source of Truth Per State Type.** When using React Query / SWR, keep server state there and form state in the form library — never duplicate in stores. Centralize tuple query keys `['entity', params] as const`; cap concurrent page fetches at 4.
-  → Source: `04-architecture/state-management.md`
 - **Vertical Slice Development.** Build one complete feature UI → API → Database before starting the next; never horizontal layers.
   → Source: `01-workflow-methodology/development-workflow.md`
-- **Stack Conventions (When React).** Data router API only (`createBrowserRouter`, never `<BrowserRouter>`); native `useBlocker`, no custom nav-blocking. Detail: `_guidelines/04-architecture/router-architecture.md`.
-  → Source: `04-architecture/router-architecture.md`
 - **Search Before Creating (No Duplication).** Search existing utilities, hooks, types, and components before creating new ones. Extract logic repeated in 2+ files to a shared utility in the same iteration.
   → Source: `02-engineering-practices/code-duplication-prevention.md`

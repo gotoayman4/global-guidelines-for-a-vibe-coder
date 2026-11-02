@@ -23,7 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
-
+const { stripSourceCitations, filterByCapabilities } = require('./inject-constitution-block.js');
 const SCRIPT_DIR = __dirname;
 const FRAGMENTS_DIR = path.resolve(SCRIPT_DIR, '..', 'fragments');
 const checkOnly = process.argv.includes('--check');
@@ -58,7 +58,12 @@ const manifest = readManifest();
 const rendered = render(manifest);
 
 const outputPath = path.resolve(FRAGMENTS_DIR, manifest.output);
-const tokens = Math.ceil(rendered.length / 4);
+// The budget is what a downstream session loads: `→ Source:` citations are stripped by the sync, and
+// a project receives only the modules its WORLD.md capabilities call for. `all` = every module,
+// `core` = the universal floor (`capabilities: none`).
+const delivered = (caps) => stripSourceCitations(filterByCapabilities(rendered, caps));
+const tokens = Math.ceil(delivered(null).length / 4);
+const coreTokens = Math.ceil(delivered([]).length / 4);
 
 if (checkOnly) {
   if (!fs.existsSync(outputPath)) {
@@ -74,11 +79,15 @@ if (checkOnly) {
   if (tokens > manifest.maxTokens) {
     fail(`token budget exceeded: ~${tokens} tokens > budget ${manifest.maxTokens}. Retire or demote rules instead of adding.`);
   }
-  console.log(`✅ templates/AGENTS.starter.md in sync with fragments (~${tokens} / ${manifest.maxTokens} tokens, ${manifest.sections.length} sections)`);
+  if (manifest.maxCoreTokens && coreTokens > manifest.maxCoreTokens) {
+    fail(`universal-core budget exceeded: ~${coreTokens} tokens > budget ${manifest.maxCoreTokens}. Gate the new rule behind a capability or retire one.`);
+  }
+  console.log(`✅ templates/AGENTS.starter.md in sync with fragments (~${tokens} / ${manifest.maxTokens} tokens delivered with every module, ~${coreTokens} / ${manifest.maxCoreTokens || 'n/a'} universal core, ${manifest.sections.length} sections)`);
 } else {
   fs.writeFileSync(outputPath, rendered);
-  const budgetNote = tokens > manifest.maxTokens
-    ? ` — ⚠️ OVER BUDGET: ~${tokens} / ${manifest.maxTokens} tokens (npm run check-drift will fail)`
-    : ` (~${tokens} / ${manifest.maxTokens} tokens)`;
+  const over = tokens > manifest.maxTokens || (manifest.maxCoreTokens && coreTokens > manifest.maxCoreTokens);
+  const budgetNote = over
+    ? ` — ⚠️ OVER BUDGET: ~${tokens} / ${manifest.maxTokens} (all modules), ~${coreTokens} / ${manifest.maxCoreTokens || 'n/a'} (universal core) (npm run check-drift will fail)`
+    : ` (~${tokens} / ${manifest.maxTokens} all modules, ~${coreTokens} / ${manifest.maxCoreTokens || 'n/a'} universal core)`;
   console.log(`✅ rendered ${manifest.sections.length} sections → templates/AGENTS.starter.md${budgetNote}`);
 }

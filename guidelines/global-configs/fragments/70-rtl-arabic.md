@@ -1,4 +1,5 @@
-## RTL & Arabic (Always Active — Bilingual UI Default)
+## RTL & Arabic (Bilingual UI — Requires `bilingual`)
+<!-- requires: bilingual -->
 
 - **Arabic-First Architecture.** Unless `WORLD.md` declares a single-language/LTR-only tool, design every UI component for bidirectional text from day one — direction handled at shell, document, paragraph and inline-span levels.
   → Source: `05-stack-guides/rtl-tech-stack.md`

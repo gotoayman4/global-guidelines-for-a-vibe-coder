@@ -14,8 +14,18 @@ Each `.md` file here is one full markdown section of the generated template
 
 ## Adding a rule
 
-A new rule must retire, narrow, or demote an existing one — the token budget in
-`manifest.json` (`maxTokens` 4,000, estimated at chars/4) is enforced by `npm run check-drift`.
+A new rule must retire, narrow, or demote an existing one — the token budgets in
+`manifest.json` are enforced by `npm run check-drift`: `maxTokens` (4,000) over what a project
+receives with every module, and `maxCoreTokens` over the universal floor (`capabilities: none`),
+both estimated at chars/4 with `→ Source:` lines stripped, as the sync delivers them.
 Detail that is not needed in every session belongs in a guideline file under `guidelines/0X-*`,
 not in the always-loaded starter. Mode-scoped detail lives in
 `01-workflow-methodology/speed-tiered-workflow.md`.
+
+## Optional modules (capabilities)
+
+A fragment that only some projects need carries `<!-- requires: web-ui, api -->` on the line
+under its `## ` heading (any-of). The sync keeps that section only when the project's
+`WORLD.md` §Capabilities lists one of the words; no marker = universal. Vocabulary and semantics:
+`01-workflow-methodology/speed-tiered-workflow.md` §Capability Declaration. Prefer gating a
+section over deleting a rule that is right for some projects.

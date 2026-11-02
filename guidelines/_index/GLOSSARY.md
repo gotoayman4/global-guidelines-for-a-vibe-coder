@@ -27,6 +27,7 @@ If you are a beginner, memorize these ten key concepts to instantly understand a
 
 | Term | Definition | Non-Coder Analogy |
 |---|---|---|
+| **Capabilities** | One-word facts in `WORLD.md` §Capabilities (`web-ui`, `api`, `database`, `uploads`, `bilingual`) that decide which optional AGENTS.md rule modules the sync delivers. Undeclared = every module (never silently fewer rules); `none` = universal core only. Mode scales process; capabilities scale which rules load. See `01-workflow-methodology/speed-tiered-workflow.md`. | A job card that lists which tools the crew brings — a plumber does not carry the electrician's kit. |
 | **Vibe mode** | Fastest process tier: minimal context, plan, test, steering and gate ceremony. Not a lifecycle stage — a `vibe` project MAY ship pilots and production releases; only the boundary and the release class deepen. Security, honesty, and ship-boundary rules never relax. See `01-workflow-methodology/speed-tiered-workflow.md`. | Sketching on a napkin — quick and loose, but you still don't lie about measurements. |
 | **Standard mode** | Default process tier, and the assumed mode when a project declares none: feature plans for non-trivial work, tests with code, evidence-by-change-type verification, trigger-table docs. | A normal workday with a checklist — steady, not heavy. |
 | **Guarded mode** | Heaviest process tier for high-risk work: architecture review, full test pyramid, ADRs for irreversible decisions. | Surgery protocol — slow on purpose because mistakes cost a lot. |

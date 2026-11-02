@@ -21,7 +21,10 @@
  *      central repo. Downstream coding agents do not run `audit-rules.js` and pay for every line in
  *      their context window on every session — so `stripSourceCitations` removes `→ Source:` lines
  *      when writing the managed block into a downstream project (saving ~250 tokens per session).
- *   3. An unmarked `AGENTS.md` (hand-maintained or pre-marker) is left alone (`kept`) by default:
+ *   3. Optional modules are filtered per project: a fragment's `<!-- requires: … -->` line names the
+ *      capabilities it needs, and `WORLD.md` §Capabilities (`lib/capabilities.js`) names what the
+ *      project is. Undeclared = every module. The markers never reach a downstream file.
+ *   4. An unmarked `AGENTS.md` (hand-maintained or pre-marker) is left alone (`kept`) by default:
  *      the sync never overwrites a project constitution that has not opted into the managed markers.
  *      Passing `--adopt` migrates an unmarked `AGENTS.md` that carries standard section headings by
  *      wrapping its core sections in the managed markers while preserving `## Skills` and
@@ -42,6 +45,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { readCapabilities } = require('./lib/capabilities.js');
 
 const AGENTS = 'AGENTS.md';
 const STARTER = path.resolve(__dirname, '..', 'templates', 'AGENTS.starter.md');
@@ -67,8 +71,53 @@ function markedSpan(doc) {
   return { start, end: end + END.length };
 }
 
+/** Matches the `<!-- requires: a, b -->` line a fragment places under its `## ` heading. */
+const REQUIRES = /^[ \t]*<!--[ \t]*requires:[ \t]*([a-z, -]+?)[ \t]*-->[ \t]*\n?/m;
+
+/**
+ * Keep the optional sections the project's capabilities call for, and always remove the markers.
+ *
+ * `capabilities` is the array of declared capability words, or `null` when the project declared
+ * none — null keeps every module (today's behaviour). A section with no `requires` marker is
+ * universal. A section is kept when ANY of its required capabilities is declared.
+ *
+ * @param {string} region the marked core region, BEGIN and END included
+ * @param {string[]|null} capabilities
+ * @returns {string}
+ */
+function filterByCapabilities(region, capabilities) {
+  const lf = String(region || '').replace(/\r\n/g, '\n');
+  const begin = lf.indexOf(BEGIN);
+  const end = lf.lastIndexOf(END);
+  if (begin === -1 || end === -1 || end < begin) return lf.replace(new RegExp(REQUIRES.source, 'gm'), '');
+
+  const head = lf.slice(begin, begin + BEGIN.length);
+  const inner = lf.slice(begin + BEGIN.length, end);
+  const chunks = inner.split(/^(?=## )/m);
+  const kept = [];
+  const omitted = [];
+  for (const chunk of chunks) {
+    const match = chunk.match(REQUIRES);
+    if (!match) {
+      if (chunk.trim()) kept.push(chunk.trim());
+      continue;
+    }
+    const required = match[1].split(',').map((w) => w.trim()).filter(Boolean);
+    const body = chunk.replace(REQUIRES, '').trim();
+    if (capabilities === null || required.some((r) => capabilities.includes(r))) {
+      kept.push(body);
+    } else {
+      omitted.push(body.split('\n')[0].replace(/^##\s+/, '').replace(/\s*\(.*$/, ''));
+    }
+  }
+  const note = omitted.length
+    ? `\n\n_Modules not applicable here (WORLD.md capabilities): ${omitted.join('; ')}. Declare the capability in WORLD.md §Capabilities to enable one._`
+    : '';
+  return `${lf.slice(0, begin)}${head}\n${kept.join('\n\n')}${note}\n${lf.slice(end)}`;
+}
+
 /** Extract the canonical `generated:constitution-core` region (markers included) from `AGENTS.starter.md`. */
-function readCanonicalCore(starterPath = STARTER, { stripSources = true } = {}) {
+function readCanonicalCore(starterPath = STARTER, { stripSources = true, capabilities = null } = {}) {
   if (!fs.existsSync(starterPath)) {
     throw new Error(`starter template not found: ${starterPath}`);
   }
@@ -77,9 +126,10 @@ function readCanonicalCore(starterPath = STARTER, { stripSources = true } = {}) 
   if (!span) {
     throw new Error(`starter template carries no ${BEGIN} ... ${END} region: ${starterPath}`);
   }
-  const block = raw.slice(span.start, span.end);
+  const block = filterByCapabilities(raw.slice(span.start, span.end), capabilities);
   return stripSources ? stripSourceCitations(block) : block;
 }
+
 
 /** Normalize whitespace and blank lines so markdown formatters (Prettier) do not trigger false churn. */
 function normalizeRegion(text) {
@@ -162,7 +212,8 @@ function main() {
     process.exit(0);
   }
 
-  const coreRegion = readCanonicalCore(STARTER, { stripSources });
+  const caps = readCapabilities(projectRoot);
+  const coreRegion = readCanonicalCore(STARTER, { stripSources, capabilities: caps.declared ? caps.values : null });
   const before = fs.readFileSync(agentsPath, 'utf8');
   const { content, action } = applyConstitutionBlock(before, coreRegion, { adopt });
 
@@ -198,6 +249,7 @@ if (require.main === module) main();
 
 module.exports = {
   applyConstitutionBlock,
+  filterByCapabilities,
   markedSpan,
   normalizeRegion,
   readCanonicalCore,
