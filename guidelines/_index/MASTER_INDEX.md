@@ -93,7 +93,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [arabic-rtl-pdf-generation.md](../05-stack-guides/arabic-rtl-pdf-generation.md) | Normative | Global — Web and Electron Apps (Arabic PDF output) | ~4777 | `#rtl` `#arabic` `#pdf` `#chromium` `#electron` `#print` `#bidi` `#fonts` `#paged-media` `#accessibility` |
 | [electron-auto-update.md](../05-stack-guides/electron/electron-auto-update.md) | Normative | Stack (Electron) | ~11424 | `#electron` `#auto-update` `#release` `#github-releases` `#netlify` `#code-signing` `#changelog` |
 | [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~953 | `#mui` `#rtl` `#i18n` `#bidirectional` |
-| [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 7+ / 9+) | ~773 | `#mui` `#styling` `#theme` |
+| [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 9+ / 7 legacy) | ~1463 | `#mui` `#styling` `#theme` `#theming` |
 | [nestjs-architecture.md](../05-stack-guides/nestjs/nestjs-architecture.md) | Normative | Stack (NestJS) | ~703 | `#nestjs` `#backend` `#modules` |
 | [playwright-e2e.md](../05-stack-guides/playwright/playwright-e2e.md) | Normative | Stack (Playwright) | ~711 | `#playwright` `#e2e` `#testing` |
 | [react-architecture.md](../05-stack-guides/react/react-architecture.md) | Normative | Stack (React) | ~648 | `#react` `#hooks` `#components` |
@@ -231,7 +231,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~3293 | `#skill` `#setup` `#beginner` `#onboarding` |
 | [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2574 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1625 | `#skill` `#inno-setup` `#installer` `#windows` |
-| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~1697 | `#skill` `#mui` `#design-system` `#shared-components` |
+| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~2029 | `#skill` `#mui` `#design-system` `#shared-components` |
 | [performance-audit/SKILL.md](../global-configs/skills/performance-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1286 | `#skill` `#performance` `#optimization` |
 | [refactoring/SKILL.md](../global-configs/skills/refactoring/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~988 | `#skill` `#refactoring` `#maintenance` |
 | [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` `tailwind` | ~2192 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
@@ -381,7 +381,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 - `arabic-rtl-pdf-generation.md` → depends on: `rtl-tech-stack.md`, `bidirectional-design-principles.md` · see also: `accessibility-standards.md`, `security-engineering.md`, `testing-patterns.md`, `performance-optimization.md`
 - `electron-auto-update.md` → depends on: `security-engineering.md`, `ci-cd-philosophy.md` · applied by: `environment-management.md` · see also: `cost-optimization-strategy.md`, `bidirectional-design-principles.md`, `documentation-strategy.md`
 - `mui-rtl-bidirectional.md` → see also: `mui-styling.md`, `react-architecture.md`, `accessibility-standards.md`, `playwright-e2e.md`
-- `mui-styling.md` → see also: `mui-rtl-bidirectional.md`, `react-architecture.md`, `accessibility-standards.md`
+- `mui-styling.md` → see also: `mui-rtl-bidirectional.md`, `design-system-governance.md`, `react-architecture.md`, `accessibility-standards.md`
 - `nestjs-architecture.md` → see also: `typescript-conventions.md`, `backend-architecture.md`, `api-design-standards.md`, `supabase-database.md`
 - `playwright-e2e.md` → see also: `mui-rtl-bidirectional.md`, `testing-patterns.md`, `accessibility-standards.md`
 - `react-architecture.md` → extended by: `react-performance.md`, `react-testing.md` · depends on: `frontend-architecture.md`, `state-management.md`
