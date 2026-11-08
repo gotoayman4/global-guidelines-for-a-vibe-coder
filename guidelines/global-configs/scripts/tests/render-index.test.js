@@ -12,6 +12,14 @@ const {
 const readIndex = () => fs.readFileSync(INDEX_PATH, 'utf8');
 const region = (doc, id) => doc.split(BEGIN(id))[1].split(END)[0];
 
+// Expected skill count derives from the skills directory itself, so adding a
+// skill never invalidates these non-vacuity assertions (a hardcoded 23 broke
+// when the 24th skill landed).
+const SKILLS_DIR = path.join(GUIDELINES_ROOT, 'global-configs', 'skills');
+const skillDirCount = () => fs.readdirSync(SKILLS_DIR, { withFileTypes: true })
+  .filter((d) => d.isDirectory() && fs.existsSync(path.join(SKILLS_DIR, d.name, 'SKILL.md')))
+  .length;
+
 test('parseFrontMatter reads scalars and inline tag sequences', () => {
   const fm = parseFrontMatter('---\nstatus: "Advisory"\nscope: "Stack (React)"\ntags: [react, hooks]\n---\n\n# T\n');
   assert.deepEqual(fm, { status: 'Advisory', scope: 'Stack (React)', tags: ['react', 'hooks'] });
@@ -44,7 +52,7 @@ test('collect finds all nine categories with a non-empty corpus (non-vacuity)', 
   assert.equal(model.categories.length, 9, 'all nine domain directories must be present');
   const files = model.categories.reduce((n, c) => n + c.entries.length, 0);
   assert.ok(files >= 60, `expected >=60 category files, got ${files}`);
-  assert.equal(model.skills.length, 23, 'all twenty-three skills must be present');
+  assert.equal(model.skills.length, skillDirCount(), 'every skill directory must be collected');
   for (const c of model.categories) {
     assert.ok(c.entries.length > 0, `category ${c.dir} is empty`);
     for (const e of c.entries) {
@@ -66,7 +74,7 @@ test('rendered regions are non-empty and cover the corpus (non-vacuity)', () => 
   assert.ok((tables.match(/^\| \[/gm) || []).length >= 60, 'category tables must list every guideline file');
 
   const skills = region(rendered, 'GENERATED:index-skills');
-  assert.equal((skills.match(/\/SKILL\.md\)/g) || []).length, 23, 'every skill must be listed');
+  assert.equal((skills.match(/\/SKILL\.md\)/g) || []).length, skillDirCount(), 'every skill must be listed');
 
   const graph = region(rendered, 'GENERATED:index-graph');
   assert.match(graph, /### 08-governance/);
