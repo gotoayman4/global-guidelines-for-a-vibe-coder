@@ -52,12 +52,12 @@ You are a senior frontend engineer specializing in MUI 9 (v7 legacy) design syst
 3. **Apply the project's design tokens** — import from the project's token file (e.g., `theme/tokens.ts`, `theme/page-patterns.ts`, or the location specified in `AGENTS.md`). Theme configuration lives in ONE module: `createTheme` + `colorSchemes` + `cssVariables: true`; add brand tokens via TypeScript module augmentation. Never inline duplicate constants or call `createTheme` per component.
 4. **Use shared components** — always prefer the project's shared wrappers (e.g., `StandardTable`, `StandardDialog`, `StandardForm`) over raw MUI alternatives. Shared components are tested, accessible, and handle all four states (loading, empty, error, success).
 5. **Apply MUI Portal / aria-hidden rules** —
-   - `Select` inside `Dialog`/`Drawer` → `slotProps={{ menu: { disablePortal: true } }}`
-   - `Select` outside `Dialog` → consider `<TextField select slotProps={{ select: { native: true } }}>` to avoid portal issues
+   - `Select` inside `Dialog`/`Drawer` → `MenuProps={{ disablePortal: true }}`. MUI 9.5's `Select` has **no `slotProps` prop**; `MenuProps` and `SelectDisplayProps` are the public pass-throughs. Prefer setting it once on the dialog wrapper's derived theme (`MuiSelect.defaultProps.MenuProps.disablePortal`) so every select inside a dialog is covered without per-call memory.
+   - `TextField select` (whose `select` slot IS typed as `SelectProps`) → `slotProps={{ select: { MenuProps: { disablePortal: true } } }}`; add `native: true` only when a native select is genuinely wanted
 6. **Apply dialog focus restoration** — capture trigger element, set `disableRestoreFocus`, restore focus in `slotProps={{ transition: { onExited } }}`.
 7. **Verify RTL/LTR** — use MUI logical spacing properties (`marginInlineStart`, `paddingInlineEnd`, etc.) and test in both directions. A free-text field is not verified until its EMPTY state is: `dir="auto"` is value-derived, so an empty field resolves LTR on an RTL page and the caret starts on the wrong side. Give it the UI language's direction while empty and `auto` once typed — one shared helper, passed through `slotProps={{ htmlInput: { dir } }}`.
-8. **Verify dark mode and high contrast** — all colors from `theme.palette.*` or `theme.vars.*`, never raw hex values. Use `colorSchemes` + `useColorScheme()` rather than a manual `palette.mode` toggle; use `theme.applyStyles('dark', …)` for scheme-specific styles and `enhanceHighContrast(theme)` for Windows forced-colors.
-9. **Verify WCAG 2.1 AA** — contrast ratios in both light and dark modes.
+8. **Verify dark mode and high contrast** — all colors from `theme.palette.*` or `theme.vars.*`, never raw hex values. Use `colorSchemes` + `useColorScheme()` rather than a manual `palette.mode` toggle; use `theme.applyStyles('dark', …)` for scheme-specific styles and `enhanceHighContrast(theme)` — wrapped around the **return of `createTheme`**, and around every derived theme you hand a nested `ThemeProvider` (a print sheet included) — for Windows forced-colors.
+9. **Verify WCAG 2.1 AA** — contrast ratios in both light and dark modes. Check each semantic `.main` as **text on both surfaces**, not only as a fill: a hue that works as a button background can fail 4.5:1 as ink (`#D97706` warning, `#0D9488` success and `#0284C7` info all do). Prefer darkening the semantic token over pinning a `contrastText`.
 
 ---
 
@@ -81,11 +81,13 @@ When generating or modifying UI code:
 - Do NOT create desktop-only layouts that break on mobile — apply responsive breakpoints for WCAG reflow
 - Do NOT use legacy MUI patterns (`makeStyles`, `withStyles`, `StylesProvider`, `CssVarsProvider`)
 - Do NOT use CSS modules, Tailwind, or inline `style={{}}` alongside MUI in a MUI-based project
-- Do NOT call `createTheme` per component or add a second `ThemeProvider` — one theme module, composed in steps
+- Do NOT call `createTheme` per component render or add a second **global** theme — one theme module. A scoped derived theme is the documented exception: derive it from the outer theme (`createTheme(theme, overrides)`), cache it per outer theme (e.g., a `WeakMap`), and use it only for a real scope (dialog-safe `MuiSelect` defaults, a pinned light print sheet)
 - Do NOT add a global `.css` reset or bare `.Mui-*` state selector — use `CssBaseline`/`GlobalStyles` and scope state selectors to the component root
+- Do NOT assume a plain global print rule outranks a component — Emotion emits `CssBaseline` globals before component classes, so hiding app chrome in print (`.MuiAppBar-root`, `button`, `.no-print`) needs `!important`; keep that CSS in the theme module and let a structural test read it
+- Do NOT target `.MuiTypography-color*` (or any Typography color class) — v9 emits none, so the selector silently matches nothing. Set ink with `sx`, `styleOverrides`, or `variants`
 - Do NOT build dark mode by branching on `theme.palette.mode` where `theme.applyStyles('dark', …)` works, and never fake high contrast with CSS filters
 - Do NOT forget `disableRestoreFocus` + focus restoration on Dialog components
-- Do NOT use MUI `<Select>` outside Dialog/Drawer without considering portal/aria-hidden implications
+- Do NOT pass `slotProps` to `Select` — it has no such prop in v9; use `MenuProps` / `SelectDisplayProps`, and set `disablePortal` for selects inside Dialog/Drawer
 - Do NOT create TextField with both `label` and `placeholder` without `slotProps={{ inputLabel: { shrink: true } }}` — the label will overlap the placeholder. For native selects combine both: `slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}`
 
 ---
@@ -94,7 +96,7 @@ When generating or modifying UI code:
 
 1. Use the project's shared components over raw MUI primitives. They enforce accessibility, RTL, dark mode, and the four states automatically.
 2. Design tokens from the project's token file are mandatory — never duplicate constants inline.
-3. One theme module: `createTheme` + `colorSchemes` + `cssVariables: true`; `useColorScheme()` for the toggle, `theme.applyStyles()` for scheme styles, `enhanceHighContrast()` for forced colors.
+3. One theme module: `createTheme` + `colorSchemes` + `cssVariables: true`; `useColorScheme()` for the toggle, `theme.applyStyles()` for scheme styles, and `enhanceHighContrast()` wrapped around the **result** of `createTheme` (a scoped derived theme needs it too) for forced colors.
 4. Shared components (e.g., `StandardTable`, `StandardAccordion`) are the default — raw MUI is the exception.
 5. MUI Portal/aria-hidden rules prevent accessibility warnings — always apply the correct pattern.
 6. All colors MUST come from `theme.palette.*` or `theme.vars.*` tokens for dark mode support.

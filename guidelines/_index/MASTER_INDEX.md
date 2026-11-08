@@ -93,7 +93,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [arabic-rtl-pdf-generation.md](../05-stack-guides/arabic-rtl-pdf-generation.md) | Normative | Global — Web and Electron Apps (Arabic PDF output) | ~4777 | `#rtl` `#arabic` `#pdf` `#chromium` `#electron` `#print` `#bidi` `#fonts` `#paged-media` `#accessibility` |
 | [electron-auto-update.md](../05-stack-guides/electron/electron-auto-update.md) | Normative | Stack (Electron) | ~11424 | `#electron` `#auto-update` `#release` `#github-releases` `#netlify` `#code-signing` `#changelog` |
 | [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~953 | `#mui` `#rtl` `#i18n` `#bidirectional` |
-| [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 9+ / 7 legacy) | ~1463 | `#mui` `#styling` `#theme` `#theming` |
+| [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 9+ / 7 legacy) | ~2165 | `#mui` `#styling` `#theme` `#theming` |
 | [nestjs-architecture.md](../05-stack-guides/nestjs/nestjs-architecture.md) | Normative | Stack (NestJS) | ~703 | `#nestjs` `#backend` `#modules` |
 | [playwright-e2e.md](../05-stack-guides/playwright/playwright-e2e.md) | Normative | Stack (Playwright) | ~711 | `#playwright` `#e2e` `#testing` |
 | [react-architecture.md](../05-stack-guides/react/react-architecture.md) | Normative | Stack (React) | ~648 | `#react` `#hooks` `#components` |
@@ -220,6 +220,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [arabic-rtl-pdf-export/SKILL.md](../global-configs/skills/arabic-rtl-pdf-export/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1179 | `#skill` `#pdf` `#rtl` `#arabic` `#chromium` `#print` `#bidi` `#fonts` `#paged-media` |
 | [architect/SKILL.md](../global-configs/skills/architect/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1924 | `#skill` `#architecture` `#design` `#stress-test` |
 | [bidirectional-docx-rtl/SKILL.md](../global-configs/skills/bidirectional-docx-rtl/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3069 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
+| [bilingual-styled-excel-export/SKILL.md](../global-configs/skills/bilingual-styled-excel-export/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1837 | `#skill` `#excel` `#xlsx` `#export` `#rtl` `#arabic` `#bilingual` `#spreadsheet` `#styling` `#workbook` |
 | [code-review/SKILL.md](../global-configs/skills/code-review/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1382 | `#skill` `#review` `#quality` |
 | [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1398 | `#skill` `#debugging` `#noncoder` `#visual` |
 | [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1959 | `#skill` `#deploy` `#production` `#hosting` |
@@ -231,7 +232,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~3293 | `#skill` `#setup` `#beginner` `#onboarding` |
 | [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2574 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1625 | `#skill` `#inno-setup` `#installer` `#windows` |
-| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~2029 | `#skill` `#mui` `#design-system` `#shared-components` |
+| [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~2442 | `#skill` `#mui` `#design-system` `#shared-components` |
 | [performance-audit/SKILL.md](../global-configs/skills/performance-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1286 | `#skill` `#performance` `#optimization` |
 | [refactoring/SKILL.md](../global-configs/skills/refactoring/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~988 | `#skill` `#refactoring` `#maintenance` |
 | [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` `tailwind` | ~2192 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
