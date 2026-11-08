@@ -55,7 +55,7 @@ Why vendored: the styled fork is pinned to an older SheetJS base, so its inherit
 3. **Gate by capability, prompt for language.** A server-checked (or rules-checked) role capability decides the button — never CSS hiding. A small dialog asks the file language; the CONFIRMED value, not the ambient UI language, picks labels and content.
 4. **Write styled cells.** Row 1 a merged title (context name + scope + generation date + row count, Western digits); row 2 headers (dark fill, white bold, thin borders); status columns colored (e.g. verdict green/amber/red); column widths set. Colors are hex constants in the domain service with a comment noting the design-token exception — Excel cannot reference CSS tokens.
 5. **Apply the RTL view — and verify the fork keeps it.** `ws['!views'] = [{ RTL: true }]` sets sheet-level right-to-left, but styled forks are known to drop `!views` on write. Verify the BYTES; if the flag is gone, rebuild the stored zip: write the workbook, reopen it as a zip, patch the sheet XML (`<sheetView rightToLeft="1"/>`), repack — a reader round-trips the result.
-6. **Name the file for its content.** `<subject>-<scope>-<ar|en>-<YYYYMMDD>.xlsx` so downloads sort and self-describe.
+6. **Name the file for its content.** `<subject>-<scope>-<lang>-<DD-MM-YYYY>.xlsx` so downloads self-describe.
 
 ## Non-Negotiables
 
@@ -64,6 +64,7 @@ Why vendored: the styled fork is pinned to an older SheetJS base, so its inherit
 3. **Per-cell language fallback:** file-language content first, the other language as fallback — per CELL (a name in Arabic falls back to its English form inside an Arabic file), never per file.
 4. **Verify the artifact's bytes, not the writer's promises.** Unit tests parse the produced zip (central directory + `zlib.inflateRawSync` — zero new dependencies) and assert `rightToLeft="1"` present for Arabic / absent for English, header labels, and style references.
 5. **The main bundle does not pay.** The writer is a dynamic import asserted to be its own lazy chunk by the project's bundle verification.
+6. **A generated file's NAME is user-facing copy.** No internal identifiers — a Firestore auto-id in a file name is unreadable noise the office cannot act on (shipped once, owner rejected it the same day). Name the human-readable scope, the file language, and a dashed local `DD-MM-YYYY` date; whatever the name omits (e.g. which cycle), the workbook's title row says.
 
 ---
 

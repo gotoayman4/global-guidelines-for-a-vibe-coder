@@ -109,7 +109,21 @@ expect(en.some(t => t.includes('rightToLeft="1"'))).toBe(false);   // English fi
   semantics; the rule is symmetric and tested both directions.
 - Western digits in the title row's date and row count; the app's i18n keys supply every label —
   never inline strings in the exporter.
-- File name: `applications-<scope>-<ar|en>-<YYYYMMDD>.xlsx`.
+- File name: `applications-<scope>-<ar|en>-<DD-MM-YYYY>.xlsx` — scope (department/team slug or
+  `all`), file language, LOCAL wall-clock date. **Never a database auto-id** (a shipped first cut
+  produced `applications-kZ2kMxX9TpIi2NdQY1iB-…`, and the owner rejected the unreadable id the same
+  day): the row's subject (cycle/period name) belongs in the workbook's TITLE ROW, which the office
+  actually reads, and the name stays copy a human picked. Local date, not the UTC ISO stamp — an
+  export made late in the day must not file itself under tomorrow.
+
+```ts
+function applicationsFileName(input: { departmentId: string | null; lang: Lang }, now: Date): string {
+  const scope = (input.departmentId ?? 'all').replace(/[^A-Za-z0-9_-]+/g, '-'); // ids are admin-chosen
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  return `applications-${scope}-${input.lang}-${dd}-${mm}-${now.getFullYear()}.xlsx`;
+}
+```
 
 ## 6. Capability, not CSS
 
