@@ -234,6 +234,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2574 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1625 | `#skill` `#inno-setup` `#installer` `#windows` |
 | [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~2442 | `#skill` `#mui` `#design-system` `#shared-components` |
+| [outlook-integration/SKILL.md](../global-configs/skills/outlook-integration/SKILL.md) | Advisory | Global (Task-Type Skill) | `electron` | ~1838 | `#skill` `#electron` `#outlook` `#microsoft-graph` `#com-automation` `#powershell` `#email` `#calendar` |
 | [performance-audit/SKILL.md](../global-configs/skills/performance-audit/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1286 | `#skill` `#performance` `#optimization` |
 | [refactoring/SKILL.md](../global-configs/skills/refactoring/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~988 | `#skill` `#refactoring` `#maintenance` |
 | [rtl-shadcn-setup/SKILL.md](../global-configs/skills/rtl-shadcn-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `shadcn` `tailwind` | ~2192 | `#skill` `#rtl` `#shadcn` `#tailwind` `#setup` `#arabic` |
