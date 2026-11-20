@@ -92,6 +92,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 |---|---|---|---|---|
 | [arabic-rtl-pdf-generation.md](../05-stack-guides/arabic-rtl-pdf-generation.md) | Normative | Global — Web and Electron Apps (Arabic PDF output) | ~4777 | `#rtl` `#arabic` `#pdf` `#chromium` `#electron` `#print` `#bidi` `#fonts` `#paged-media` `#accessibility` |
 | [electron-auto-update.md](../05-stack-guides/electron/electron-auto-update.md) | Normative | Stack (Electron) | ~11424 | `#electron` `#auto-update` `#release` `#github-releases` `#netlify` `#code-signing` `#changelog` |
+| [outlook-integration.md](../05-stack-guides/electron/outlook-integration.md) | Normative | Stack (Electron — Windows Outlook) | ~12295 | `#electron` `#outlook` `#microsoft-graph` `#com-automation` `#powershell` `#email` `#calendar` `#ipc` |
 | [mui-rtl-bidirectional.md](../05-stack-guides/mui/mui-rtl-bidirectional.md) | Normative | Stack (MUI 7+ / 9+ RTL) | ~953 | `#mui` `#rtl` `#i18n` `#bidirectional` |
 | [mui-styling.md](../05-stack-guides/mui/mui-styling.md) | Normative | Stack (MUI 9+ / 7 legacy) | ~2165 | `#mui` `#styling` `#theme` `#theming` |
 | [nestjs-architecture.md](../05-stack-guides/nestjs/nestjs-architecture.md) | Normative | Stack (NestJS) | ~703 | `#nestjs` `#backend` `#modules` |
@@ -381,6 +382,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 ### 05-stack-guides
 - `arabic-rtl-pdf-generation.md` → depends on: `rtl-tech-stack.md`, `bidirectional-design-principles.md` · see also: `accessibility-standards.md`, `security-engineering.md`, `testing-patterns.md`, `performance-optimization.md`
 - `electron-auto-update.md` → depends on: `security-engineering.md`, `ci-cd-philosophy.md` · applied by: `environment-management.md` · see also: `cost-optimization-strategy.md`, `bidirectional-design-principles.md`, `documentation-strategy.md`
+- `outlook-integration.md` → depends on: `electron-auto-update.md`, `security-engineering.md`, `file-upload-security.md`, `rtl-tech-stack.md`, `bidirectional-design-principles.md` · applied by: `error-handling-philosophy.md` · see also: `testing-patterns.md`, `agent-verification-loop.md`, `typescript-conventions.md`, `adr-template.md`, `environment-management.md`
 - `mui-rtl-bidirectional.md` → see also: `mui-styling.md`, `react-architecture.md`, `accessibility-standards.md`, `playwright-e2e.md`
 - `mui-styling.md` → see also: `mui-rtl-bidirectional.md`, `design-system-governance.md`, `react-architecture.md`, `accessibility-standards.md`
 - `nestjs-architecture.md` → see also: `typescript-conventions.md`, `backend-architecture.md`, `api-design-standards.md`, `supabase-database.md`
