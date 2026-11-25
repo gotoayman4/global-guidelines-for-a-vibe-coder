@@ -163,4 +163,4 @@ When a document's history section grows past a quarter of its size, relocate it 
 - **Depends on:** `speed-tiered-workflow.md` — the declared mode (documentation triggers are not mode-scaled), `context-management-strategy.md` — why an always-read file has a reading budget
 - **Extended by:** `workflow-friction-audit.md` — the scheduled audit that finds the boot-chain bloat
 - **Applied by:** `local-ci-strategy.md` — the gate receipts this policy refuses to let anyone hand-copy
-- **Supersedes:** the per-slice decision record, derived D-numbers, the write-breadth guard and machine-written freshness headers — retired 2026-10-27 (owner decision `LEAN_OPERATING_MODEL_DECISION_2026-10-27.md`, central repo root)
+- **Supersedes:** the per-slice decision record, derived D-numbers, the write-breadth guard and machine-written freshness headers — retired 2026-10-27 (owner decision `docs/decisions/LEAN_OPERATING_MODEL_DECISION_2026-10-27.md`, central repo)
