@@ -2,7 +2,7 @@
 
 **Purpose:** This file defines the rules for AI agents working on the central guidelines repository. The guidelines repo is the source of truth for all development rules, templates, and skills consumed by downstream projects.
 
-**Guideline source (self):** `D:\WebApps\global-guidelines-for-a-vibe-coder`
+**Guideline source (self):** `.` (this repository root)
 **How AI should use this:** Rules in this file apply to changes made TO this repo. The rules this repo exports to other projects live in the `guidelines/` directory — those are served to other repos and ARE NOT defined here.
 
 ---
@@ -10,9 +10,9 @@
 ## Repo Identity
 
 This is **not** an application project. It is a centralized development guidelines repository that:
-- Houses 65 guideline files in the domain directories (`guidelines/00-*` through `guidelines/08-*`), ~70 including `guidelines/_index/`
+- Houses domain guideline files (`guidelines/00-*` through `guidelines/08-*`) plus `guidelines/_index/` (cataloged in `guidelines/_index/MASTER_INDEX.md`)
 - Provides templates for steering files (AGENTS.starter.md, WORLD.starter.md, etc.)
-- Ships 23 skills, each a `<name>/SKILL.md` directory, for specialized AI coding workflows
+- Ships task-activated skills (cataloged in `guidelines/global-configs/skills/INDEX.md`), each a `<name>/SKILL.md` directory, for specialized AI coding workflows
 - Includes sync tooling — `sync-manager.ps1` (GUI, repo root), `guidelines/global-configs/scripts/sync-guidelines.ps1` (CLI), `sync-all.js` (batch) and `setup-global-references.ps1` (machine-global tool configs) — to distribute guidelines to downstream projects
 - Is consumed by projects via a `_guidelines/` mirror and inline rule extraction
 
@@ -56,13 +56,13 @@ This is **not** an application project. It is a centralized development guidelin
 
 ## Skills (Always Load)
 
-The 23 skills in `guidelines/global-configs/skills/` are **task-activated**: they load only when their
+The skills in `guidelines/global-configs/skills/` (cataloged in `skills/INDEX.md`) are **task-activated**: they load only when their
 trigger matches, which is why the trigger has to be visible *before* the file is opened.
 
 - **The inventory is `skills/INDEX.md`** — a `Skill → Load when → Applies to` table generated from
   each skill's front-matter. Read it when a task starts, not the whole directory. When a row
   matches, open the skill and follow it. No announcement or activation log is required — the
-  work product is the evidence (owner decision `LEAN_OPERATING_MODEL_DECISION_2026-10-27.md`).
+  work product is the evidence (owner decision `docs/decisions/LEAN_OPERATING_MODEL_DECISION_2026-10-27.md`).
 - **A skill never outranks `AGENTS.md`.** Where the two disagree, this file wins.
 - **Check `Applies to` before the trigger.** A skill written for a stack this project forbids will
   contradict the constitution if followed; `—` means no stack was declared, so verify before use.
@@ -118,7 +118,7 @@ npm run rules:paths -- <project>  # Render capability modules as path-scoped rul
 npm run eval:score -- <results.json>  # Score recorded agent runs against evals/scenarios.json (rule compliance)
 npm run audit:friction  # Measure the process: boot chain, doc-vs-code churn, mirror drift, skill readiness
 npm run benchmark:reform # Measure the lean model: boot cost, rule retention, reach (before ec55a54 → working tree); `benchmark:check` fails on a lost rule, unindexed file or unloadable skill
-npm run validate        # Run audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + sync:stale + benchmark:check + test:scripts (sync:stale is report-only — the fleet-staleness announcement)
+npm run validate        # Full integrity gate (see package.json §scripts; sync:stale is report-only — the fleet-staleness announcement)
 ```
 
 Before pushing changes to this repo, run `npm run validate` to ensure integrity.
@@ -153,7 +153,7 @@ Always commit a checkpoint before running major AI operations that could modify 
 Adding new features or making changes does NOT require creating a new branch or worktree. Work on the current branch. Branches are a team-workflow choice, not an AI mandate.
 
 ### Protect Main Branch
-Main branch MUST always be validatable (`npm run validate` passes). Use branch protection rules. No force-push to main.
+Main branch MUST always be validatable (`npm run validate` passes). Enforce locally via `.githooks/pre-push` (`git config core.hooksPath .githooks`; cloud CI / GitHub branch protection is intentionally omitted per `guidelines/03-git-and-ci/local-ci-strategy.md`). No force-push to main.
 
 ---
 

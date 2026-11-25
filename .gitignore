@@ -24,3 +24,8 @@ Thumbs.db
 # AI session artifacts
 .zcode/
 .workbuddy-ai/
+.kilocode/
+.qoder/
+.qodo/
+.trae/
+.windsurf/

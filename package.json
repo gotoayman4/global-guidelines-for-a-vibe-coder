@@ -41,6 +41,6 @@
     "guard:paths": "node guidelines/global-configs/scripts/check-agents-paths.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }

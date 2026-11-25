@@ -24,7 +24,7 @@ guidelines/
                    inject-skills-block.js), scaffolders (new-*.js), and
                    setup-global-references.ps1 — run `npm run` with no argument for the full list
     skills/      — one <name>/SKILL.md directory per skill (code-review, refactoring, security-audit, …)
-docs/          — repo-meta standards and the human-readable guides
+docs/          — repo-meta standards, human-readable guides, and dated decisions/proposals (`docs/decisions/`)
 sync-manager.cmd / sync-manager.ps1  — WinForms GUI: one-click project sync
 .githooks/     — the local pre-push gate (`git config core.hooksPath .githooks`); no cloud CI
 ```
@@ -40,9 +40,9 @@ Sets up global AGENTS.md, VS Code AI settings, and symlinks for tools. Symlinks 
 
 **Per-project (every project):**
 ```
-powershell -File sync-manager.cmd
+.\sync-manager.cmd
 ```
-GUI tool — browse to project, click Sync. Mirrors `_guidelines/`, installs starter files, tool configs, and skills.
+GUI tool — browse to project, click Sync (or double-click `sync-manager.cmd`, or run `powershell -File sync-manager.ps1`). Mirrors `_guidelines/`, installs starter files, tool configs, and skills.
 
 **CLI (the same setup as the GUI, scriptable):**
 ```
@@ -76,7 +76,7 @@ Also available: `-DryRun` (preview, write nothing), `-Backup` (dated backup befo
 
 | Command | What it does |
 |---|---|
-| `npm run validate` | Full integrity gate: audit + check-links + check-index + check-drift + check-index-drift + check-skills-drift + guard:paths + docs:census + guard:tiers + guard:mode + benchmark:check + test:scripts. Runs on every push (local pre-push hook). The authoritative list is `package.json` §scripts; this row restates it. |
+| `npm run validate` | Full integrity gate (runs on every push via the local pre-push hook). See `package.json` §scripts for the authoritative step chain. |
 | `npm run audit` | Verifies extracted rules in starter templates still match their source guideline files. |
 | `npm run check-links` | Checks internal links across all `.md` files. |
 | `npm run check-index` | Verifies every file is registered in `guidelines/_index/MASTER_INDEX.md`. |

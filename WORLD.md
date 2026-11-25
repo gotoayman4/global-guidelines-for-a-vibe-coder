@@ -78,10 +78,10 @@ It is a **content distribution hub** — not an application. Its primary value i
 
 | Metric | Current | 12-Month Projection |
 |---|---|---|
-| Guideline files | ~70 (66 content + `_index`) | ~120 |
-| Starter templates | 16 | 25 |
-| Skill files | 23 | 30 |
-| Downstream projects using sync | 7 | 5-20 |
+| Guideline files | Indexed in `guidelines/_index/MASTER_INDEX.md` | ~120 |
+| Starter templates | Cataloged in `guidelines/global-configs/templates/` | 25 |
+| Skill files | Indexed in `guidelines/global-configs/skills/INDEX.md` | 30 |
+| Downstream projects using sync | Tracked locally in `sync-projects.json` | 5-20 |
 
 ---
 
