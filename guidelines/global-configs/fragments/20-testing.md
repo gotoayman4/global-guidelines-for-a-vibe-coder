@@ -1,6 +1,6 @@
 ## Testing (Always Load — depth by mode)
 
-- **Mode Sets Test Depth.** `vibe`: smoke-run each iteration; add a regression test when a path breaks twice or at milestone. `standard`: behavioral tests on critical code, a regression test per fix, integration at boundaries. `guarded`: full pyramid + critical-flow E2E before ship. Ship boundary, all modes: login, payments, permissions and persistence pass automated E2E on the deployed target.
+- **Mode Sets Test Depth.** `vibe`: smoke-run each iteration; add a regression test when a path breaks twice or at milestone. `standard`: behavioral tests on critical code, a regression test per fix, integration at boundaries. `guarded`: full pyramid + critical-flow E2E before ship. Ship boundary, all modes: pilot runs automated E2E for login & permissions; production adds payments & persistence.
   → Source: `02-engineering-practices/testing-philosophy.md`
 - **Behavioral Tests Only.** Assert inputs → outputs, never internals, spies, or call counts; check that AI-written assertions can actually fail. `standard`/`guarded`: tests first for critical features.
   → Source: `02-engineering-practices/testing-philosophy.md`

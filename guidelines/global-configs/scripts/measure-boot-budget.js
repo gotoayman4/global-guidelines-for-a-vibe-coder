@@ -46,7 +46,7 @@
  *
  * Usage:
  *   node measure-boot-budget.js [projectRoot] [--files a.md,b.md] [--json]
- *   node measure-boot-budget.js . --max-tokens 40000 --history-warn 25 --strict
+ *   node measure-boot-budget.js . --max-tokens 25000 --history-warn 25 --strict
  *
  * Source: global-configs/scripts/measure-boot-budget.js
  * Last Updated: 2026-09-22
@@ -126,7 +126,7 @@ class UsageError extends Error {
 function usage() {
   return [
     'Usage: node measure-boot-budget.js [projectRoot] [--files a.md,b.md] [--json] [--strict]',
-    '       node measure-boot-budget.js . --max-tokens 40000 --history-warn 25 --strict',
+    '       node measure-boot-budget.js . --max-tokens 25000 --history-warn 25 --strict',
     '       node measure-boot-budget.js . --cap-from-mode --strict',
   ].join('\n');
 }

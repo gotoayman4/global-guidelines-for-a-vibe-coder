@@ -8,5 +8,5 @@
 <!-- BEGIN generated:constitution-core — written by sync-guidelines.ps1, do not edit inside -->
 ## Speed Mode (Declared in WORLD.md)
 
-- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales read budget (≤40K / ≤90K / ≤160K tokens), planning (`vibe`: 3-bullet inline intent, no plan gate) and the per-push gate. Never scaled: security, honest evidence, reverting broken output, the ship boundary. Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales read budget (≤25K / ≤60K / ≤120K tokens), planning (`vibe`: 3-bullet inline intent, no plan gate) and the per-push gate. Never scaled: security, honest evidence, reverting broken output, the ship boundary. Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
   → Source: `01-workflow-methodology/speed-tiered-workflow.md`

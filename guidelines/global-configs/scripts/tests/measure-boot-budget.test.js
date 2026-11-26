@@ -362,7 +362,7 @@ test('--cap-from-mode resolves the cap from the declared mode', () => {
   const json = runBudget(root, ['--cap-from-mode', '--json']).json;
 
   assert.equal(json.mode, 'guarded');
-  assert.equal(json.maxTokens, 160000);
+  assert.equal(json.maxTokens, 120000);
 });
 
 test('--cap-from-mode defaults to standard, never vibe, when WORLD.md is silent', () => {
@@ -370,7 +370,7 @@ test('--cap-from-mode defaults to standard, never vibe, when WORLD.md is silent'
   const json = runBudget(root, ['--cap-from-mode', '--json']).json;
 
   assert.equal(json.mode, 'standard');
-  assert.equal(json.maxTokens, 90000);
+  assert.equal(json.maxTokens, 60000);
 });
 
 test('--cap-from-mode and --max-tokens are mutually exclusive', () => {
@@ -382,7 +382,7 @@ test('--cap-from-mode and --max-tokens are mutually exclusive', () => {
 });
 
 test('the resolved cap follows the mode (reversal proof)', () => {
-  // ~50K tokens in one file: over the vibe cap, comfortably inside the guarded one.
+  // ~50K tokens in one file: over the vibe cap (25K), comfortably inside the guarded one (120K).
   const heavy = `# Rules\n\n${'xxxx\n'.repeat(40000)}`;
   const root = makeFixture({
     'AGENTS.md': heavy,
@@ -391,7 +391,7 @@ test('the resolved cap follows the mode (reversal proof)', () => {
 
   const vibe = runBudget(root, ['--files', 'AGENTS.md,WORLD.md', '--cap-from-mode', '--strict', '--json']);
   assert.equal(vibe.status, 1);
-  assert.match(vibe.json.problems.join('\n'), /tokens > budget 40000/);
+  assert.match(vibe.json.problems.join('\n'), /tokens > budget 25000/);
 
   // The same corpus under `guarded` is within its cap: the number moved with the mode,
   // which is the whole point of deriving it instead of typing it into package.json.

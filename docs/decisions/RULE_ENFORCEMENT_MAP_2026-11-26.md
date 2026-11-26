@@ -19,6 +19,8 @@
 
 > **Critical boundary (no false-confidence lint):** Stylelint inspects CSS/SCSS only; JSX `style`/`sx` props require ESLint AST rules (`eslint.guardrails.mjs.template`); Tailwind `ml-*`/`pl-*` strings require `eslint-plugin-better-tailwindcss`. Installing only one leaves the others unchecked.
 
+> **Pruning rule (owner decision 2026-11-26):** Security, data-integrity, and safety rules are permanently exempt from pruning regardless of live eval pass rates; only process/style reminders may be demoted to on-demand docs after measured proof (`npm run eval:score`).
+
 ---
 
 ## Complete Constitution Rule Map

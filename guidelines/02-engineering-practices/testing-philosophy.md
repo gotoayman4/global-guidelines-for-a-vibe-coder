@@ -20,7 +20,7 @@ tags: [testing, philosophy, contracts]
 
 **Test timing (standard/guarded):** write tests first for critical features and in the same iteration for other changes; never defer required tests to a later sprint.
 
-**Ship boundary (all modes):** before any release or milestone exit, critical flows (login/auth · payments · permissions · data persistence) MUST be verified by automated E2E against the deployed target — in LTR, and RTL when `bilingual`. Vibe mode never ships unverified critical flows.
+**Ship boundary (all modes):** before any release or milestone exit, automated E2E must pass against the deployed target in LTR (and RTL when `bilingual`): `pilot` releases verify **login/auth and permissions** (plus flows exposed by the pilot); `production` launches verify the full critical-flow matrix (**login/auth, payments, permissions, and data persistence**). Vibe mode never ships unverified release-critical flows.
 
 ## Universal Directives (every test that exists)
 

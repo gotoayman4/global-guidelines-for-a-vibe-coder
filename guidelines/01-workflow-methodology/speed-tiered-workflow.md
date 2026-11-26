@@ -32,7 +32,7 @@ Mode scales *process*; **capabilities** scale *which rule modules a project load
 
 | Dimension | vibe | standard | guarded |
 |---|---|---|---|
-| **Context** — mandatory boot-chain cap | **≤40K** | **≤90K** | **≤160K** |
+| **Context** — mandatory boot-chain cap | **≤25K** | **≤60K** | **≤120K** |
 | **Plan** | 3-bullet intent; no plan gate | feature plan for non-trivial; AI reviews | standard plan + architecture review |
 | **Tests** | smoke run + regression test only when a bug bites twice or at milestone | behavioral tests with code; regression every fix | full pyramid + critical-flow E2E before ship |
 | **Verification** | run it once + one-line report at the cheapest sufficient tier | evidence table by change type | full evidence for the whole change (security depth is never mode-scaled — Absolute Rule 1) |
@@ -48,7 +48,7 @@ The reading a session does before its first edit is the largest single cost it p
 2. **Two quantities — the chain and the menu — and only the chain is budgeted.** The **chain** is what `07-documentation/documentation-strategy.md` §The Mandated Doc Set marks `every session`: the floor a session cannot skip, and the only thing a mode cap governs. The **menu** is everything else the project carries — the spec, the roadmap, the runbooks, the ADR index — read by choice; it is ratcheted (rule 4), never budgeted, because a budget that also covers what you read by choice measures a library rather than a session. `node _guidelines/global-configs/scripts/measure-boot-budget.js <projectRoot>` reports both and charges `--max-tokens` to the chain alone; `--files` declares a project's own floor.
 3. **Exceeding the cap is allowed, not free.** A session MAY read past its mode's budget; it MUST then record one line naming what it read and why the task needed it. An unrecorded overshoot is a violation; a recorded one is a decision.
 4. **A cap that only rises is not a cap.** Re-base a file's cap only against its live measurement, and freeze the menu total as a high-water mark that may not be raised without retiring something. A ratchet pointed at a monotonic document — a living PRD, a roadmap that only appends — is a growth curve with a number next to it.
-5. **The cap is enforced at the milestone, never mid-slice.** `node _guidelines/global-configs/scripts/measure-boot-budget.js . --max-tokens <the mode's cap> --strict` exits non-zero when the chain is over. Wire it as an npm script (`docs:boot:strict`) and make it a **milestone-exit criterion**: during a slice the instrument stays report-only, because a document overrun must not block a working increment — but a chain that has outgrown its cap is a decision the project owes, and at the exit it is paid. A measured overrun with no failing check is a number nobody acts on: a reference project read **14K tokens** at session start while its menu weighed **51K**, and the only figure anyone ever quoted was their **65K sum** — against the chain's 40K cap. The wrong quantity was measured, so neither was ever fixed and no guard was wired for either (measured 2026-10-12).
+5. **The cap is enforced at the milestone, never mid-slice.** `node _guidelines/global-configs/scripts/measure-boot-budget.js . --max-tokens <the mode's cap> --strict` exits non-zero when the chain is over. Wire it as an npm script (`docs:boot:strict`) and make it a **milestone-exit criterion**: during a slice the instrument stays report-only, because a document overrun must not block a working increment — but a chain that has outgrown its cap is a decision the project owes, and at the exit it is paid. A measured overrun with no failing check is a number nobody acts on: a reference project read **14K tokens** at session start while its menu weighed **51K**, and the only figure anyone ever quoted was their **65K sum** — against the then-40K vibe cap. The wrong quantity was measured, so neither was ever fixed and no guard was wired for either (measured 2026-10-12).
 
 ## The Gate Scales With the Mode
 
@@ -70,8 +70,8 @@ Most apps ship long before they are final: a first deploy to test in the live en
 
 | Class | What it is | The boundary it owes |
 |---|---|---|
-| **pilot** | live testing, a demo, an internal/beta release — real users, non-final stakes | the full pipeline (lint → type-check → full suite → build) + the critical-flow checks (LTR, and RTL when `bilingual`) on the flows the pilot exposes |
-| **production** | the final/public launch users depend on | the pilot chain + every `ship`-tier guard (the full critical-flow E2E matrix) + the path-aware extras + rollback readiness |
+| **pilot** | live testing, a demo, an internal/beta release — real users, non-final stakes | the full pipeline (lint → type-check → full suite → build) + automated E2E for **login/auth and permissions** (and pilot-exposed flows) on the deployed target, LTR (and RTL when `bilingual`) |
+| **production** | the final/public launch users depend on | the pilot chain + every `ship`-tier guard (the full critical-flow E2E matrix: **login/auth, payments, permissions, and persistence**) + the path-aware extras + rollback readiness |
 
 - **The declared mode does not change because you shipped.** A `vibe` or `standard` project ships a pilot from its declared mode; the class sets the boundary's depth, and the boundary runs in every mode.
 - **Record the class at the release, not in `WORLD.md`:** the release tag, the commit message, or the gate receipt says `pilot` or `production`. The class describes one release; `WORLD.md` describes the steady loop.
@@ -82,7 +82,7 @@ Most apps ship long before they are final: a first deploy to test in the live en
 
 1. **Security never relaxes.** SQLi prevention, secrets, input validation, auth review, CORS, security headers, and magic-byte upload checks apply identically in every mode.
 2. **No fake evidence.** NEVER claim tests pass without running them; NEVER present predictions as observations.
-3. **Ship boundary hardens quality — the release class sets the depth.** Before any release or milestone exit: critical-flow checks (login, payments, data persistence) verified in LTR (and RTL when `bilingual`), and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A `production` release adds the full critical-flow E2E matrix, the path-aware extras and rollback readiness. A vibe loop may be loose; a ship may not.
+3. **Ship boundary hardens quality — the release class sets the depth.** Before any release or milestone exit: `pilot` releases verify **login/auth and permissions** (plus exposed pilot flows) via automated E2E in LTR (and RTL when `bilingual`), and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A `production` release adds the full 4-flow critical-flow E2E matrix (login/auth, payments, permissions, persistence), the path-aware extras, and rollback readiness. A vibe loop may be loose; a ship may not.
 4. **Fix the change; revert the approach.** A failing check on a sound change is fixed and re-run. After two failed fixes, follow the canonical stop → revert or stash if the approach is wrong → search official docs/web when unclear → regenerate with clearer constraints sequence (`agent-verification-loop.md` §Loop Steps). Never make a third blind attempt.
 5. **Speed is measured, not felt.** If a mode feels slow, measure where the minutes went (reading, gate, rework) before adding or removing ceremony (`workflow-friction-audit.md`).
 

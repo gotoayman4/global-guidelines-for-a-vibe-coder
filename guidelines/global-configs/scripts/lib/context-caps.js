@@ -4,7 +4,7 @@
  * context-caps.js — the per-mode reading caps, read from the file that owns them.
  *
  * INTENT: `01-workflow-methodology/speed-tiered-workflow.md` §The Context Budget declares
- * `vibe ≤40K · standard ≤90K · guarded ≤160K`. Two instruments need those numbers —
+ * `vibe ≤25K · standard ≤60K · guarded ≤120K`. Two instruments need those numbers —
  * `measure-boot-budget.js` to fail a chain that has outgrown its cap, `audit-friction.js`
  * to name the cap it is comparing against. One reader, because a second copy drifts and
  * the drift is invisible: both copies keep looking right.

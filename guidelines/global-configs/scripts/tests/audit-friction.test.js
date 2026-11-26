@@ -15,7 +15,7 @@ function run(args, cwd = REPO_ROOT) {
 
 test('contextCaps reads the three caps from the file that owns them', () => {
   const caps = contextCaps();
-  assert.deepEqual(caps, { vibe: 40000, standard: 90000, guarded: 160000 });
+  assert.deepEqual(caps, { vibe: 25000, standard: 60000, guarded: 120000 });
 });
 
 test('churn measures docs vs code over the commit window', () => {
@@ -67,7 +67,7 @@ test('contextCaps resolves from the mirror, so it works in a consuming project',
   );
 
   const copied = require(path.join(scripts, 'lib', 'context-caps.js'));
-  assert.deepEqual(copied.contextCaps(), { vibe: 40000, standard: 90000, guarded: 160000 });
+  assert.deepEqual(copied.contextCaps(), { vibe: 25000, standard: 60000, guarded: 120000 });
 });
 
 test('proposals counts the ones that name no control', () => {
@@ -124,7 +124,7 @@ test('CLI --json emits the whole report as parseable JSON', () => {
   const result = run([REPO_ROOT, '--json']);
   assert.equal(result.status, 0);
   const parsed = JSON.parse(result.stdout);
-  assert.equal(parsed.caps.vibe, 40000);
+  assert.equal(parsed.caps.vibe, 25000);
   assert.ok(parsed.churn, 'the central repo has churn numbers');
 });
 

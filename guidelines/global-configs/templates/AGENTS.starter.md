@@ -8,7 +8,7 @@
 <!-- BEGIN generated:constitution-core — written by sync-guidelines.ps1, do not edit inside -->
 ## Speed Mode (Declared in WORLD.md)
 
-- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales read budget (≤40K / ≤90K / ≤160K tokens), planning (`vibe`: 3-bullet inline intent, no plan gate) and the per-push gate. Never scaled: security, honest evidence, reverting broken output, the ship boundary. Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
+- **Mode Scales Ceremony, Never Security.** `mode: vibe | standard | guarded` in WORLD.md (undeclared = `standard`) scales read budget (≤25K / ≤60K / ≤120K tokens), planning (`vibe`: 3-bullet inline intent, no plan gate) and the per-push gate. Never scaled: security, honest evidence, reverting broken output, the ship boundary. Auth, payments, schema and destructive data changes are planned in every mode. Detail: `_guidelines/01-workflow-methodology/speed-tiered-workflow.md`.
   → Source: `01-workflow-methodology/speed-tiered-workflow.md`
 
 ## Security (Always Load — DO NOT REMOVE)
@@ -40,7 +40,7 @@
 
 ## Testing (Always Load — depth by mode)
 
-- **Mode Sets Test Depth.** `vibe`: smoke-run each iteration; add a regression test when a path breaks twice or at milestone. `standard`: behavioral tests on critical code, a regression test per fix, integration at boundaries. `guarded`: full pyramid + critical-flow E2E before ship. Ship boundary, all modes: login, payments, permissions and persistence pass automated E2E on the deployed target.
+- **Mode Sets Test Depth.** `vibe`: smoke-run each iteration; add a regression test when a path breaks twice or at milestone. `standard`: behavioral tests on critical code, a regression test per fix, integration at boundaries. `guarded`: full pyramid + critical-flow E2E before ship. Ship boundary, all modes: pilot runs automated E2E for login & permissions; production adds payments & persistence.
   → Source: `02-engineering-practices/testing-philosophy.md`
 - **Behavioral Tests Only.** Assert inputs → outputs, never internals, spies, or call counts; check that AI-written assertions can actually fail. `standard`/`guarded`: tests first for critical features.
   → Source: `02-engineering-practices/testing-philosophy.md`
