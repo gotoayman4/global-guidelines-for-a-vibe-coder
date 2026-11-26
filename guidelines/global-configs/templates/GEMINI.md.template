@@ -1,4 +1,6 @@
 <!-- BEGIN generated:project-entrypoint — written by sync-guidelines.ps1, do not edit inside -->
+@AGENTS.md
+
 **Read `AGENTS.md` first.** It is this project's constitution: its rules, and the `## Skills`
 inventory that says when to open each skill. Load the shared guidelines from `_guidelines/` only
 when `AGENTS.md` points you at a specific file.

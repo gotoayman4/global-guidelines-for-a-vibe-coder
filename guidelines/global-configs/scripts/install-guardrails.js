@@ -10,7 +10,9 @@
  * Both call the scripts through the synced `_guidelines/` mirror and no-op if it is not there yet, so a
  * project that has not synced is never blocked by a missing file.
  *
- * Usage:  node install-guardrails.js <project-path> [--dry-run]
+ * Usage:  node install-guardrails.js <project-path> [--dry-run] [--full]
+ *   --full  Also merge PreToolUse Read/Edit/Write/MultiEdit credential guard and
+ *           PostToolUse fast JS/JSON syntax + secret check (`guard-file-access.js`).
  *
  * Source: global-configs/scripts/install-guardrails.js
  */
@@ -20,6 +22,9 @@ const path = require('path');
 
 const GUARD_CMD = 'node _guidelines/global-configs/scripts/guard-command.js';
 const HOOK_MARK = 'guard-command.js';
+const FILE_GUARD_CMD = 'node _guidelines/global-configs/scripts/guard-file-access.js';
+const POST_EDIT_CMD = 'node _guidelines/global-configs/scripts/guard-file-access.js --post-edit';
+const FILE_GUARD_MARK = 'guard-file-access.js';
 
 function preCommitHook() {
   return [
@@ -33,20 +38,47 @@ function preCommitHook() {
   ].join('\n');
 }
 
-/** Merge the PreToolUse guard into a parsed settings object; returns {settings, changed}. */
-function mergeClaudeSettings(settings) {
+function ensureHookEntry(list, matcher, command, isMatch) {
+  const present = list.some((e) => (e.hooks || []).some((h) => isMatch(String(h.command || ''))));
+  if (present) return false;
+  list.push({ matcher, hooks: [{ type: 'command', command }] });
+  return true;
+}
+
+/** Merge PreToolUse (and opt-in file/post-edit) hooks into parsed settings; returns {settings, changed}. */
+function mergeClaudeSettings(settings, { includeFileGuards = false, includePostEdit = false } = {}) {
   const next = settings && typeof settings === 'object' ? settings : {};
   next.hooks = next.hooks || {};
   const pre = Array.isArray(next.hooks.PreToolUse) ? next.hooks.PreToolUse : [];
-  const present = pre.some((e) => (e.hooks || []).some((h) => String(h.command || '').includes(HOOK_MARK)));
-  if (present) return { settings: next, changed: false };
-  pre.push({ matcher: 'Bash', hooks: [{ type: 'command', command: GUARD_CMD }] });
+  let changed = ensureHookEntry(pre, 'Bash', GUARD_CMD, (c) => c.includes(HOOK_MARK));
+  if (includeFileGuards) {
+    const addedFile = ensureHookEntry(
+      pre,
+      'Read|Edit|Write|MultiEdit|NotebookEdit',
+      FILE_GUARD_CMD,
+      (c) => c.includes(FILE_GUARD_MARK) && !c.includes('--post-edit')
+    );
+    changed = changed || addedFile;
+  }
   next.hooks.PreToolUse = pre;
-  return { settings: next, changed: true };
+
+  if (includePostEdit) {
+    const post = Array.isArray(next.hooks.PostToolUse) ? next.hooks.PostToolUse : [];
+    const addedPost = ensureHookEntry(
+      post,
+      'Edit|Write|MultiEdit|NotebookEdit',
+      POST_EDIT_CMD,
+      (c) => c.includes(FILE_GUARD_MARK) && c.includes('--post-edit')
+    );
+    next.hooks.PostToolUse = post;
+    changed = changed || addedPost;
+  }
+
+  return { settings: next, changed };
 }
 
 /** @returns {{file: string, status: string}[]} */
-function installGuardrails(projectPath, { dryRun = false } = {}) {
+function installGuardrails(projectPath, { dryRun = false, full = false } = {}) {
   const actions = [];
 
   const settingsPath = path.join(projectPath, '.claude', 'settings.json');
@@ -62,7 +94,10 @@ function installGuardrails(projectPath, { dryRun = false } = {}) {
   if (!parseable) {
     actions.push({ file: '.claude/settings.json', status: 'unparseable — skipped (fix the JSON, then re-run)' });
   } else {
-    const { settings, changed } = mergeClaudeSettings(current);
+    const { settings, changed } = mergeClaudeSettings(current, {
+      includeFileGuards: full,
+      includePostEdit: full,
+    });
     if (!changed) {
       actions.push({ file: '.claude/settings.json', status: 'guard hook already present — skipped' });
     } else {
@@ -92,10 +127,13 @@ function main() {
   const argv = process.argv.slice(2);
   const target = argv.find((a) => !a.startsWith('--'));
   if (!target || !fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
-    console.error('Usage: node install-guardrails.js <project-path> [--dry-run]');
+    console.error('Usage: node install-guardrails.js <project-path> [--dry-run] [--full]');
     process.exit(3);
   }
-  for (const a of installGuardrails(path.resolve(target), { dryRun: argv.includes('--dry-run') })) {
+  for (const a of installGuardrails(path.resolve(target), {
+    dryRun: argv.includes('--dry-run'),
+    full: argv.includes('--full'),
+  })) {
     console.log(`  ${a.file}: ${a.status}`);
   }
 }

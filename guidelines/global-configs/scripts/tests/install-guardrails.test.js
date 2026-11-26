@@ -53,3 +53,27 @@ test('mergeClaudeSettings keeps other PreToolUse hooks', () => {
   assert.equal(changed, true);
   assert.equal(settings.hooks.PreToolUse.length, 2);
 });
+
+test('--full installs PreToolUse file guard and PostToolUse edit guard idempotently', () => {
+  const dir = tmp();
+  installGuardrails(dir, { full: true });
+  const settingsPath = path.join(dir, '.claude', 'settings.json');
+  const s = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+  assert.equal(s.hooks.PreToolUse.length, 2);
+  assert.match(s.hooks.PreToolUse[1].matcher, /Read/);
+  assert.match(s.hooks.PreToolUse[1].hooks[0].command, /guard-file-access\.js$/);
+  assert.equal(s.hooks.PostToolUse.length, 1);
+  assert.match(s.hooks.PostToolUse[0].hooks[0].command, /guard-file-access\.js --post-edit/);
+
+  const second = installGuardrails(dir, { full: true });
+  assert.match(second[0].status, /already present/);
+});
+
+test('upgrading an existing default install with --full adds file and post-edit hooks without duplicating Bash', () => {
+  const dir = tmp();
+  installGuardrails(dir);
+  installGuardrails(dir, { full: true });
+  const s = JSON.parse(fs.readFileSync(path.join(dir, '.claude', 'settings.json'), 'utf8'));
+  assert.equal(s.hooks.PreToolUse.length, 2);
+  assert.equal(s.hooks.PostToolUse.length, 1);
+});

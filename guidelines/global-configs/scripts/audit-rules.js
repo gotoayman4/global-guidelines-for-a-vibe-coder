@@ -427,6 +427,34 @@ function parseTemplateRules(filePath) {
   return rules;
 }
 
+/** Detect `- **Title.**` rules inside `generated:constitution-core` that lack a `→ Source:` line. */
+function findUnsourcedCoreRules(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n');
+  const begin = content.indexOf('<!-- BEGIN generated:constitution-core');
+  const end = content.lastIndexOf('<!-- END generated:constitution-core -->');
+  if (begin === -1 || end === -1 || end <= begin) return [];
+  const core = content.slice(begin, end).split('\n');
+  const unsourced = [];
+  let activeRule = null;
+  let hasSource = false;
+  for (let i = 0; i < core.length; i++) {
+    const line = core[i];
+    if (/^- \*\*[^*]+\*\*/.test(line.trim())) {
+      if (activeRule && !hasSource) unsourced.push(activeRule);
+      activeRule = { line: i + 1, text: line.trim() };
+      hasSource = false;
+    } else if (/→\s*(?:Source|Guideline):\s*`[^`]+`/.test(line)) {
+      hasSource = true;
+    } else if (/^##/.test(line.trim())) {
+      if (activeRule && !hasSource) unsourced.push(activeRule);
+      activeRule = null;
+      hasSource = false;
+    }
+  }
+  if (activeRule && !hasSource) unsourced.push(activeRule);
+  return unsourced;
+}
+
 // ─── Audit Logic ─────────────────────────────────────────────────────────────
 
 function audit() {
@@ -465,6 +493,12 @@ function audit() {
     const rules = parseTemplateRules(templatePath);
     allRules.push(...rules);
     console.log(`   ${template}: ${rules.length} rules extracted`);
+    if (template.endsWith('AGENTS.starter.md')) {
+      for (const u of findUnsourcedCoreRules(templatePath)) {
+        console.log(`   ❌ UNSOURCED CORE RULE: ${template} core line ~${u.line}: "${u.text.slice(0, 80)}..." lacks → Source:`);
+        driftCount++;
+      }
+    }
   }
   console.log(`   Total: ${allRules.length} rules\n`);
 
@@ -803,4 +837,4 @@ if (require.main === module) {
   process.exit(exitCode);
 }
 
-module.exports = { audit, parseGuideline, parseTemplateRules, checkControl, readScripts, findSkillFiles, skillContract, skillConformance, unresolvedAppliesTo, SKILL_CONTRACT, SKILL_NAME_RE, SKILL_DESCRIPTION_MAX, SKILL_FILE, SKILL_EXT, SKILLS_DIR };
+module.exports = { audit, parseGuideline, parseTemplateRules, findUnsourcedCoreRules, checkControl, readScripts, findSkillFiles, skillContract, skillConformance, unresolvedAppliesTo, SKILL_CONTRACT, SKILL_NAME_RE, SKILL_DESCRIPTION_MAX, SKILL_FILE, SKILL_EXT, SKILLS_DIR };

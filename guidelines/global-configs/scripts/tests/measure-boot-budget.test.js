@@ -340,6 +340,20 @@ test('a long paragraph is an advisory, never a failure', () => {
   assert.match(strict.stdout, /readability note\(s\) — never fatal/);
 });
 
+test('AGENTS.md > 32 KiB and bloated legacy CLAUDE.md emit non-fatal advisories', () => {
+  const bigLine = `${'x'.repeat(120)}\n`.repeat(280);
+  const root = makeFixture({
+    'AGENTS.md': `# Rules\n\n${bigLine}`,
+    'CLAUDE.md': `<!-- BEGIN generated:project-entrypoint -->\n@AGENTS.md\n<!-- END generated:project-entrypoint -->\n\n## Legacy\n\n${'y'.repeat(1600)}\n`,
+    'WORLD.md': '# Product\n\n## Speed Mode\n\n- **mode:** `vibe`\n',
+    'README.md': '# Readme\n\nInstruction.\n',
+  });
+  const res = runBudget(root, ['--cap-from-mode', '--strict', '--json']);
+  assert.equal(res.status, 0, 'advisories remain non-fatal in strict mode');
+  assert.ok(res.json.advisories.some((a) => /32 KiB Codex CLI/.test(a)), JSON.stringify(res.json.advisories));
+  assert.ok(res.json.advisories.some((a) => /CLAUDE\.md:.*outside the pointer block/.test(a)), JSON.stringify(res.json.advisories));
+});
+
 test('--cap-from-mode resolves the cap from the declared mode', () => {
   const root = makeFixture({
     ...defaultCorpus(),

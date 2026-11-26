@@ -138,4 +138,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { scanText, scanDiff, parseAddedLines, PATTERNS };
+module.exports = { scanText, scanDiff, parseAddedLines, PATTERNS, SKIP_FILE };

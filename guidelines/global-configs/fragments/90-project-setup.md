@@ -4,7 +4,7 @@
 
 Read `AGENTS.md` and `WORLD.md` (intent + `mode` + `capabilities`) — always; `README.md` when the project is new to you. Then load only task-relevant files on demand. `_guidelines/_index/MASTER_INDEX.md` is a lookup for a file you cannot name, not a required read. UI work also loads `_guidelines/02-engineering-practices/bidirectional-design-principles.md` when `bilingual`.
 
-**Existing project (brownfield):** derive the Stack table and Build commands yourself from `package.json`, the lockfile, config files and CI — do not ask the user and do not web-search versions already pinned there. Fill each `[FILL]` you can prove, mark the rest `unknown`, and commit. **New project:** pick the stack with the user, then verify versions on the web.
+**Existing project (brownfield):** derive Stack and Build commands from `package.json`, lockfile, configs and CI — do not ask the user or web-search pinned versions; fill each `[FILL]` you can prove, mark the rest `unknown`, and commit. **New project:** pick stack with the user, then verify versions online.
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -56,7 +56,7 @@ Append one line when you lose time to a non-obvious project fact (`- <fact> — 
 
 ### How to Use This File
 
-1. **Sync:** `npm run sync:all` (or `sync-guidelines.ps1`) refreshes the `generated:` regions above; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]`; set `mode` and `capabilities` in `WORLD.md`.
+1. **Sync:** `npm run sync:all` / `sync-guidelines.ps1` refreshes the `generated:` regions above (never this `## Reference & Project Setup` section). Replace every `[FILL]`; set `mode` and `capabilities` in `WORLD.md`.
 2. **Customize:** add project mandates here and commit. A MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
 
 **More (`_guidelines/`):** `08-governance/ai-governance-framework.md` · `_index/RETRIEVAL_RULES.md` · `01-workflow-methodology/speed-tiered-workflow.md` · `02-engineering-practices/ux-design-principles.md`

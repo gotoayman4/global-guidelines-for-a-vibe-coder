@@ -15,7 +15,7 @@ Each `.md` file here is one full markdown section of the generated template
 ## Adding a rule
 
 A new rule must retire, narrow, or demote an existing one — the token budgets in
-`manifest.json` are enforced by `npm run check-drift`: `maxTokens` (4,000) over what a project
+`manifest.json` are enforced by `npm run check-drift`: `maxTokens` over what a project
 receives with every module, and `maxCoreTokens` over the universal floor (`capabilities: none`),
 both estimated at chars/4 with `→ Source:` lines stripped, as the sync delivers them.
 Detail that is not needed in every session belongs in a guideline file under `guidelines/0X-*`,

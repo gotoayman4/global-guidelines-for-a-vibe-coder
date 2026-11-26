@@ -1,6 +1,6 @@
 # AGENTS.md — Project Constitution
 
-**Purpose:** Always-loaded project rules, self-contained. Deeper guidance in `_guidelines/` loads on demand. Read `## Reference & Project Setup` (stack, commands, mandates) first — it is project-specific and outranks the generic rules below it.
+**Purpose:** Always-loaded project rules, self-contained. Deeper guidance in `_guidelines/` loads on demand. Read `## Reference & Project Setup` (stack, commands, mandates) first — it is project-specific and outranks the generic rules below it, **except Security**.
 
 **Guideline source:** `{{GUIDELINES_ROOT}}` (expanded by sync)
 **Rule precedence:** Security overrides all, then project mandates, then these rules; on conflict the stricter rule wins, except that `mode` scales process only (see Speed Mode). Inspect local codebase patterns first. Ask the user only when product intent, security, or destructive scope is ambiguous — otherwise proceed and state the assumption. Optional modules (web, API, RTL) are included per WORLD.md `## Capabilities`.
@@ -51,8 +51,10 @@
 
 ## Git (Load for All Code Changes)
 
-- **Commit Every Working Increment; Never Broken Code.** Commit green increments for cheap rollbacks — unless the user or tool forbids unrequested commits, then stage by path and report. Stash/WIP unfinished work; never commit broken code (`vibe` MAY batch micro-edits). Conventional `type(scope): summary`. Scratch files live in gitignored `scratch/`; never `git add -A`. Checkpoint before multi-file edits; revert a broken approach after two failed fixes.
-- **Destructive Git Safety & Protect Main.** NEVER run `git reset --hard`, `git checkout --`, or `git clean -f` on a dirty tree without stashing or explicit permission. Single-agent work stays on the current branch (parallel agents branch + merge sequentially). Main stays deployable: no force-push, green local gate. `.env` gitignored, `.env.example` committed. Hooks enforce these where installed (`npm run guardrails:install`); never bypass with `--no-verify`.
+- **Commit Every Working Increment; Never Broken Code.** Commit green increments for cheap rollbacks (if unrequested commits are forbidden, stage by path and report); stash/WIP unfinished work, never commit broken code (`vibe` MAY batch micro-edits). Conventional `type(scope): summary`; scratch files live in gitignored `scratch/`; never `git add -A`. Checkpoint before multi-file edits; after 2 failed fixes, stop (`agent-verification-loop.md`).
+  → Source: `03-git-and-ci/git-workflow-strategy.md`
+- **Destructive Git Safety & Protect Main.** NEVER run `git reset --hard`, `git checkout --`, or `git clean -f` on a dirty tree without stashing or explicit permission. Single-agent work stays on the current branch (parallel agents use isolated branches/worktrees + sequential merge). Main stays deployable: no force-push, green local gate. `.env` gitignored, `.env.example` committed. Hooks enforce these where installed (`npm run guardrails:install`); never bypass with `--no-verify`.
+  → Source: `03-git-and-ci/git-workflow-strategy.md`
 
 ## Architecture (Load for New Features)
 
@@ -95,7 +97,7 @@
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Self-Derived Acceptance Criteria.** State "correct when [verifiable conditions]" (`vibe`: 3 brief bullets inline) before editing; if the prompt is terse, derive them from codebase context and proceed.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
-- **Verify, Escalate & Report.** Verify every API and version claim. After 2 failed fix attempts, STOP guessing and search the web. NEVER leave TODO/FIXME/HACK/placeholder comments without permission — state gaps in the response. Report WHAT changed and WHERE (path + lines), no code blocks unless asked; offer a 3-sentence handoff when a thread grows long.
+- **Verify, Escalate & Report.** Verify every API and version claim. After 2 failed fixes: stop → revert/stash → search → regenerate (`agent-verification-loop.md`). NEVER leave TODO/FIXME/HACK/placeholder comments without permission — state gaps in the response. Report WHAT changed and WHERE (path + lines), no code blocks unless asked; offer a 3-sentence handoff on long threads.
   → Source: `00-ai-fundamentals/ai-collaboration-mindset.md`
 - **Docs on Triggers; One Home Per Fact.** A trigger-table match (`documentation-strategy.md`) updates the fact's one home in the same iteration (`Docs: updated <file>`); non-triggers write nothing. Irreversible decisions (auth, schema, pins, scope reversals) get an ADR. Doc set is `AGENTS.md` + `WORLD.md` + `README.md` (+ `docs/AI_ARCHITECTURE.md` on demand) — never an "AI context" copy; history lives in `docs/changelog/<YYYY>-Q<n>.md`.
   → Source: `07-documentation/documentation-strategy.md`
@@ -134,7 +136,7 @@ Never keep a hand-maintained copy of a delivered skill in a native store — it 
 
 Read `AGENTS.md` and `WORLD.md` (intent + `mode` + `capabilities`) — always; `README.md` when the project is new to you. Then load only task-relevant files on demand. `_guidelines/_index/MASTER_INDEX.md` is a lookup for a file you cannot name, not a required read. UI work also loads `_guidelines/02-engineering-practices/bidirectional-design-principles.md` when `bilingual`.
 
-**Existing project (brownfield):** derive the Stack table and Build commands yourself from `package.json`, the lockfile, config files and CI — do not ask the user and do not web-search versions already pinned there. Fill each `[FILL]` you can prove, mark the rest `unknown`, and commit. **New project:** pick the stack with the user, then verify versions on the web.
+**Existing project (brownfield):** derive Stack and Build commands from `package.json`, lockfile, configs and CI — do not ask the user or web-search pinned versions; fill each `[FILL]` you can prove, mark the rest `unknown`, and commit. **New project:** pick stack with the user, then verify versions online.
 
 ### Stack (Pin exact versions — do NOT use ranges)
 
@@ -186,7 +188,7 @@ Append one line when you lose time to a non-obvious project fact (`- <fact> — 
 
 ### How to Use This File
 
-1. **Sync:** `npm run sync:all` (or `sync-guidelines.ps1`) refreshes the `generated:` regions above; this `## Reference & Project Setup` section is project-owned and never overwritten. Replace every `[FILL]`; set `mode` and `capabilities` in `WORLD.md`.
+1. **Sync:** `npm run sync:all` / `sync-guidelines.ps1` refreshes the `generated:` regions above (never this `## Reference & Project Setup` section). Replace every `[FILL]`; set `mode` and `capabilities` in `WORLD.md`.
 2. **Customize:** add project mandates here and commit. A MAJOR change (removing/editing a global baseline rule, changing security, or altering authority) needs an explicit recorded owner decision.
 
 **More (`_guidelines/`):** `08-governance/ai-governance-framework.md` · `_index/RETRIEVAL_RULES.md` · `01-workflow-methodology/speed-tiered-workflow.md` · `02-engineering-practices/ux-design-principles.md`

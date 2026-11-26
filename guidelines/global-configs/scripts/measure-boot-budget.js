@@ -111,6 +111,10 @@ const PARA_WARN = 500;
 const ROW_WARN = 800;
 /** Rows past this length are counted for reference even when not flagged. */
 const ROW_NOTED = 400;
+/** Codex CLI default `project_doc_max_bytes` (32 KiB) across the root AGENTS.md chain. */
+const CODEX_BYTES_WARN = 32768;
+/** Non-pointer prose threshold in CLAUDE.md alongside AGENTS.md (causes double-load with @AGENTS.md). */
+const CLAUDE_EXTRA_BYTES_WARN = 1500;
 
 class UsageError extends Error {
   constructor(message) {
@@ -331,12 +335,14 @@ function measure(root, rel) {
   const historyChars = [...historyLineIndexes]
     .reduce((sum, i) => sum + lines[i].length + (i < lines.length - 1 ? 1 : 0), 0);
   const chars = text.length;
+  const bytes = Buffer.byteLength(text, 'utf8');
   const isRow = (l) => /^\|/.test(l);
   const prose = lines.filter((l) => !isRow(l));
   const tableRows = lines.filter(isRow);
   return {
     rel,
     chars,
+    bytes,
     tokens: Math.ceil(chars / 4),
     lines: lines.length,
     longestPara: prose.reduce((m, l) => Math.max(m, l.length), 0),
@@ -397,6 +403,27 @@ for (const r of present) {
   if (r.longestRow > ROW_WARN) {
     advisories.push(
       `${r.rel}: table row of ${r.longestRow} chars > ${ROW_WARN} — a row cannot be wrapped, so the prose does not belong in a table cell`,
+    );
+  }
+  if (r.rel === 'AGENTS.md' && r.bytes > CODEX_BYTES_WARN) {
+    advisories.push(
+      `AGENTS.md: ${r.bytes} UTF-8 bytes > ${CODEX_BYTES_WARN} (32 KiB Codex CLI project_doc_max_bytes default) — trim project detail to docs/AI_ARCHITECTURE.md or gate via WORLD.md capabilities`,
+    );
+  }
+}
+
+const agentsPresent = present.find((r) => r.rel === 'AGENTS.md');
+const claudePath = path.join(options.root, 'CLAUDE.md');
+if (agentsPresent && fs.existsSync(claudePath)) {
+  const claudeText = fs.readFileSync(claudePath, 'utf8');
+  const stripped = claudeText
+    .replace(/<!-- BEGIN generated:project-entrypoint[\s\S]*?<!-- END generated:project-entrypoint -->/g, '')
+    .replace(/^#\s+CLAUDE\.md[^\n]*\n?/i, '')
+    .trim();
+  const extraBytes = Buffer.byteLength(stripped, 'utf8');
+  if (extraBytes > CLAUDE_EXTRA_BYTES_WARN) {
+    advisories.push(
+      `CLAUDE.md: ${extraBytes} UTF-8 bytes of legacy/custom prose outside the pointer block alongside AGENTS.md — Claude Code loads both when CLAUDE.md imports @AGENTS.md; deduplicate into AGENTS.md`,
     );
   }
 }

@@ -101,8 +101,8 @@ function renderReceipt({ when, releaseClass, commit, branch, verdict, results })
     '',
     'cached: none',
     '',
-    'Not run by this wrapper — cite your own evidence: the critical-flow checks (LTR and RTL) on the',
-    'flows this release exposes, and rollback readiness for a `production` release.',
+    'Not run by this wrapper — cite your own evidence: the critical-flow checks (LTR, and RTL when',
+    'bilingual) on the flows this release exposes, and rollback readiness for a `production` release.',
     '',
   );
   return lines.join('\n');

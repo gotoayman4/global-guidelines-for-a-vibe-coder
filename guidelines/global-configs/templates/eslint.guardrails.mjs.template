@@ -1,0 +1,81 @@
+/**
+ * Zero-dependency ESLint v9+ flat-config guardrail presets mapped to AGENTS.starter.md.
+ * Opt-in template — copy or spread into a project's `eslint.config.mjs`.
+ *
+ * Boundary note:
+ *   - ESLint here checks JS/TS/JSX syntax and React `style` / MUI `sx` object literals.
+ *   - `.css` / `.scss` physical properties require Stylelint (e.g. `stylelint-use-logical`).
+ *   - Tailwind utility classes (`ml-4`, `pl-2`, `text-left`) require a class-aware plugin
+ *     such as `eslint-plugin-better-tailwindcss` in addition to this file.
+ *
+ * Source: global-configs/templates/eslint.guardrails.mjs.template
+ */
+
+/** Universal code hygiene rules applicable to any JS/TS project. */
+export const coreGuardrails = {
+  name: 'guidelines/core-guardrails',
+  rules: {
+    // File Size Limit: warn at 400 lines so current work isn't stalled mid-slice;
+    // record debt and split before the next feature touches the file.
+    'max-lines': ['warn', { max: 400, skipBlankLines: true, skipComments: true }],
+
+    // Verify, Escalate & Report (No Silent TODOs)
+    'no-warning-comments': [
+      'error',
+      { terms: ['todo', 'fixme', 'hack'], location: 'start' },
+    ],
+  },
+};
+
+/** React Router v6+/v7 data router convention (AGENTS.md §Frontend Architecture). */
+export const reactRouterGuardrails = {
+  name: 'guidelines/react-router-data-api',
+  files: ['**/*.{js,jsx,ts,tsx}'],
+  rules: {
+    'no-restricted-imports': [
+      'error',
+      {
+        paths: [
+          {
+            name: 'react-router-dom',
+            importNames: ['BrowserRouter', 'HashRouter'],
+            message:
+              'Use createBrowserRouter (data router API) per AGENTS.md §Frontend Architecture.',
+          },
+        ],
+      },
+    ],
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: "JSXOpeningElement[name.name='BrowserRouter']",
+        message:
+          'Use createBrowserRouter instead of <BrowserRouter> per AGENTS.md §Frontend Architecture.',
+      },
+    ],
+  },
+};
+
+/**
+ * Physical CSS directional properties inside JSX inline `style` / MUI `sx` objects.
+ * Targets unambiguous directional style keys inside JSX attribute expressions so math/tree
+ * objects with `{ left, right }` data fields are not falsely flagged.
+ */
+export const rtlJsxStyleGuardrails = {
+  name: 'guidelines/rtl-logical-jsx-styles',
+  files: ['**/*.{jsx,tsx}'],
+  rules: {
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector:
+          "JSXAttribute[name.name=/^(style|sx)$/] Property[key.name=/^(margin|padding|border)(Left|Right)$|^border(Top|Bottom)(Left|Right)Radius$/]",
+        message:
+          'Use logical CSS properties (marginInlineStart/End, paddingInlineStart/End, borderInlineStart/End, borderStartStartRadius) per AGENTS.md §RTL & Arabic.',
+      },
+    ],
+  },
+};
+
+/** Spread `[...guardrails]` into `eslint.config.mjs`, or pick only applicable presets. */
+export default [coreGuardrails, reactRouterGuardrails, rtlJsxStyleGuardrails];

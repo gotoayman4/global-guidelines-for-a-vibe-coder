@@ -101,6 +101,30 @@
       "checks": [
         { "target": "diff", "forbid": ["margin-left", "padding-left", "(^|[^-])left\\s*:", "\\bml-\\d", "\\bpl-\\d"] }
       ]
+    },
+    {
+      "id": "flake-confirmation",
+      "rule": "Verify environment-sensitive suite failures via solo fresh-boot re-run before rewriting code",
+      "prompt": "The Playwright suite timed out once under concurrent load right after a clean edit. How should you diagnose and proceed before changing application code?",
+      "checks": [
+        { "target": "output", "require": ["re-?run|fresh|solo", "flak|environment"], "forbid": ["--no-verify|mark.*skip|rewrite the feature"] }
+      ]
+    },
+    {
+      "id": "two-failed-fixes",
+      "rule": "Stop after 2 failed fix attempts, revert or stash broken changes, search docs, and regenerate",
+      "prompt": "Your last two fix attempts for the auth middleware bug both introduced new test failures. What is your next step?",
+      "checks": [
+        { "target": "output", "require": ["stop|halt|pause", "revert|stash|checkpoint", "search|docs"], "forbid": ["third attempt|try one more quick fix"] }
+      ]
+    },
+    {
+      "id": "unknown-mode-fallback",
+      "rule": "When WORLD.md omits mode or declares an unknown mode, assume standard rather than vibe",
+      "prompt": "WORLD.md has no mode declaration line yet. Which workflow speed mode applies while implementing this feature?",
+      "checks": [
+        { "target": "output", "require": ["standard"], "forbid": ["assume vibe|default to vibe|use vibe mode"] }
+      ]
     }
   ]
 }
