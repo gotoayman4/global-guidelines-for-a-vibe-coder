@@ -22,7 +22,7 @@ Mode scales *process*; **capabilities** scale *which rule modules a project load
 
 **Guardrail hooks.** Rules an agent can ignore become hooks it cannot: `npm run guardrails:install -- <project>` (`install-guardrails.js`) merges a Claude Code PreToolUse hook running `guard-command.js` (blocks `reset --hard`, `--no-verify`, force-push, `git add -A`, broad `rm -rf`; override one rule with `GUARD_ALLOW=<rule-id>`) and creates a `.husky/pre-commit` running `scan-secrets.js` on the staged diff (`secretscan:allow` marks a documented example). Both call the synced `_guidelines/` mirror and no-op until it exists. New projects get them from `new-project.js`.
 
-**Measuring compliance.** `global-configs/evals/scenarios.json` holds twelve rule-violation prompts (secret in code, destructive git, prompt injection, fake package, silent TODO, physical CSS direction…). Run them with the agent under test, record `{output, diff, commands}` per id, and score with `npm run eval:score -- results.json` (`score-compliance.js`). Score before and after a rule change; a drop in pass rate is a regression. It scores recorded runs — it does not drive a live model.
+**Measuring compliance.** `global-configs/evals/scenarios.json` holds rule-violation prompts (secret in code, destructive git, prompt injection, fake package, silent TODO, physical CSS direction…). Run them with the agent under test, record `{output, diff, commands}` per id, and score with `npm run eval:score -- results.json` (`score-compliance.js`). Score before and after a rule change; a drop in pass rate is a regression. It scores recorded runs — it does not drive a live model.
 
 **The `_guidelines/` mirror costs nothing at boot.** It is gitignored, so gitignore-respecting agent search skips it, and no boot chain reads it unless a rule's `→ Source:` link is followed on demand — a decision recorded in lieu of restructuring the sync.
 
@@ -70,7 +70,7 @@ Most apps ship long before they are final: a first deploy to test in the live en
 
 | Class | What it is | The boundary it owes |
 |---|---|---|
-| **pilot** | live testing, a demo, an internal/beta release — real users, non-final stakes | the full pipeline (lint → type-check → full suite → build) + the critical-flow checks (LTR and RTL) on the flows the pilot exposes |
+| **pilot** | live testing, a demo, an internal/beta release — real users, non-final stakes | the full pipeline (lint → type-check → full suite → build) + the critical-flow checks (LTR, and RTL when `bilingual`) on the flows the pilot exposes |
 | **production** | the final/public launch users depend on | the pilot chain + every `ship`-tier guard (the full critical-flow E2E matrix) + the path-aware extras + rollback readiness |
 
 - **The declared mode does not change because you shipped.** A `vibe` or `standard` project ships a pilot from its declared mode; the class sets the boundary's depth, and the boundary runs in every mode.
@@ -82,8 +82,8 @@ Most apps ship long before they are final: a first deploy to test in the live en
 
 1. **Security never relaxes.** SQLi prevention, secrets, input validation, auth review, CORS, security headers, and magic-byte upload checks apply identically in every mode.
 2. **No fake evidence.** NEVER claim tests pass without running them; NEVER present predictions as observations.
-3. **Ship boundary hardens quality — the release class sets the depth.** Before any release or milestone exit: critical-flow checks (login, payments, data persistence) verified in both LTR and RTL, and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A `production` release adds the full critical-flow E2E matrix, the path-aware extras and rollback readiness. A vibe loop may be loose; a ship may not.
-4. **Fix the change; revert the approach.** A failing check on a sound change is fixed and re-run (two attempts — `agent-verification-loop.md`). Wrong output — the approach itself is broken, or fixes keep landing on new breakage — is reverted or stashed and regenerated with better constraints. Never debug forward past the second failed fix.
+3. **Ship boundary hardens quality — the release class sets the depth.** Before any release or milestone exit: critical-flow checks (login, payments, data persistence) verified in LTR (and RTL when `bilingual`), and **the full pipeline is green** — whatever the mode, and whatever the inner loop ran. A `production` release adds the full critical-flow E2E matrix, the path-aware extras and rollback readiness. A vibe loop may be loose; a ship may not.
+4. **Fix the change; revert the approach.** A failing check on a sound change is fixed and re-run. After two failed fixes, follow the canonical stop → revert or stash if the approach is wrong → search official docs/web when unclear → regenerate with clearer constraints sequence (`agent-verification-loop.md` §Loop Steps). Never make a third blind attempt.
 5. **Speed is measured, not felt.** If a mode feels slow, measure where the minutes went (reading, gate, rework) before adding or removing ceremony (`workflow-friction-audit.md`).
 
 ## Mode Transitions
@@ -102,7 +102,7 @@ Escalation is **automatic and evidence-based**. The table distinguishes permanen
 
 ### A Release Escalation Is an Override, Not an Edit
 
-A release exit owes the full chain in two ways, and neither edits `WORLD.md`: the release process runs the boundary chain and writes the evidence (`npm run gate:receipt -- --class pilot|production` — the seeded `scripts/gate-receipt.js`, `local-ci-strategy.md` §Gate Receipts), and the push that carries the release runs through a **release override the gate reads** — `GS_RELEASE_GATE=pilot|production` or a gitignored `.release-override` marker holding the class — instead of editing the declared `mode` and editing it back a day later. A `pilot` override lifts `vibe` to the standard chain; a `production` override runs the guarded chain (the build per push, for that push); a deeper declared mode is untouched. On a release push the hook then runs the `ship`-tier `check-ship-receipt.js`, which passes only when the newest receipt says PASS, is at least as deep as the class being shipped, and describes this code (its commit is HEAD, or only `docs/gate-receipts/` changed since). The declared mode changes only when the project's **steady state** changes; a lift that lasts one release is an override. A project that flip-flops its declared mode every release pays two boot-file edits and a hook-behavior change per release, and its mode line stops meaning anything.
+A release exit owes the full chain in two ways, and neither edits `WORLD.md`: the release process runs the boundary chain and writes the evidence (`npm run gate:receipt -- --class pilot|production` — the seeded `scripts/gate-receipt.js`, `local-ci-strategy.md` §Gate Receipts), and the push that carries the release runs through a **release override the gate reads** — `GS_RELEASE_GATE=pilot|production` or a gitignored `.release-override` marker holding the class — instead of editing the declared `mode` and editing it back a day later. A `pilot` override lifts `vibe` to the standard chain; a `production` override runs the guarded chain (the build per push, for that push); a deeper declared mode is untouched. On a release push the hook then runs the `ship`-tier `check-ship-receipt.js`, which passes only when the newest receipt says PASS, is at least as deep as the class being shipped, and describes this code (`Commit` is `HEAD`, or only `docs/gate-receipts/` changed since that commit; project-owned wrappers adding a `git write-tree` provenance hash verify that hash too per `local-ci-strategy.md`). The declared mode changes only when the project's **steady state** changes; a lift that lasts one release is an override. A project that flip-flops its declared mode every release pays two boot-file edits and a hook-behavior change per release, and its mode line stops meaning anything.
 
 **The commit records a mode change; `WORLD.md` states the current mode and release override.** Git supplies the date and history. A separate transition log is not required (`documentation-strategy.md` §What Gets Recorded, and Where).
 
@@ -121,7 +121,7 @@ A release exit owes the full chain in two ways, and neither edits `WORLD.md`: th
 | Anti-Pattern | Fix |
 |---|---|
 | Flip-flopping the declared mode for every release — or escalating it to ship | ship through the ship boundary at the release class's depth, with the release override; the mode is a loop-speed choice, not a lifecycle stage |
-| Treating a pilot as a lower-quality release | a pilot owes the full pipeline + critical-flow checks in LTR and RTL; only the class's extra depth differs |
+| Treating a pilot as a lower-quality release | a pilot owes the full pipeline + critical-flow checks (LTR, and RTL when `bilingual`); only the class's extra depth differs |
 | guarded ceremony on a throwaway spike | demote to vibe — the ceremony protects nothing here |
 | Treating mode as an excuse to skip security or honesty rules | Absolute Rules apply in every mode |
 | Mode declared at bootstrap, never revisited | revisit at every milestone; record the change |

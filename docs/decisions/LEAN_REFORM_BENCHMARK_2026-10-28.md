@@ -10,8 +10,8 @@ release-class and gate-ladder work recorded in `SHIP_CLASS_AND_GATE_DECISION_202
 > release-class and receipt rules of 2026-10-29 grew `WORLD.starter.md` and `speed-tiered-workflow.md`
 > again). The current figures are whatever `npm run benchmark:reform` prints; `npm run benchmark:check`
 > is part of `npm run validate`, so a lost rule, an unindexed task file or an unloadable skill fails
-> the gate. The constitution is the one number worth watching: it sits within ~60 tokens of its
-> 4,000-token cap, so the next rule MUST retire or narrow an existing one.
+> the gate. The constitution budget (`fragments/manifest.json`) is the number worth watching; note
+> that on 2026-11-02 `manifest.json` lowered `maxTokens` from 4,000 to `3800` and added `maxCoreTokens: 1900`.
 
 This closes the benchmark still open in `LEAN_OPERATING_MODEL_DECISION_2026-10-27.md` §3: 18
 representative tasks, before/after on reading cost and on the two measurable preconditions of

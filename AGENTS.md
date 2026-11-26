@@ -9,12 +9,7 @@
 
 ## Repo Identity
 
-This is **not** an application project. It is a centralized development guidelines repository that:
-- Houses domain guideline files (`guidelines/00-*` through `guidelines/08-*`) plus `guidelines/_index/` (cataloged in `guidelines/_index/MASTER_INDEX.md`)
-- Provides templates for steering files (AGENTS.starter.md, WORLD.starter.md, etc.)
-- Ships task-activated skills (cataloged in `guidelines/global-configs/skills/INDEX.md`), each a `<name>/SKILL.md` directory, for specialized AI coding workflows
-- Includes sync tooling — `sync-manager.ps1` (GUI, repo root), `guidelines/global-configs/scripts/sync-guidelines.ps1` (CLI), `sync-all.js` (batch) and `setup-global-references.ps1` (machine-global tool configs) — to distribute guidelines to downstream projects
-- Is consumed by projects via a `_guidelines/` mirror and inline rule extraction
+Central guidelines repository (not an application): domain rules (`guidelines/00-*`–`08-*`), starter templates & task-activated skills (`guidelines/global-configs/`), and sync tooling (`sync-manager.ps1`, `sync-guidelines.ps1`, `sync-all.js`) consumed downstream via `_guidelines/`. See `README.md` for orientation and `guidelines/_index/MASTER_INDEX.md` only when looking up a file you cannot name.
 
 ---
 
@@ -38,7 +33,7 @@ This is **not** an application project. It is a centralized development guidelin
 - Rule text lives in `guidelines/global-configs/fragments/` — one `##` section per file, order and token budget in `fragments/manifest.json`
 - `guidelines/global-configs/templates/AGENTS.starter.md` is GENERATED output — NEVER hand-edit it (`npm run check-drift` fails validate if it diverges)
 - To change a rule: edit the fragment → `npm run render:starters` → `npm run validate` → commit fragment + template together
-- The constitution has a token budget (**4,000 tokens** — `fragments/manifest.json` `maxTokens`, enforced by `npm run check-drift`): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure; `npm run render:starters` prints the current measurement — read it there.
+- The constitution has token budgets (`fragments/manifest.json` `maxTokens` and `maxCoreTokens`, enforced by `npm run check-drift`): a new rule MUST retire, narrow, or demote an existing one — detail not needed every session belongs in a guideline file, not inlined. Quote the manifest, never a remembered figure; `npm run render:starters` prints the current measurement — read it there.
 - Other starter templates (WORLD, DEVTOOLS, tool configs) are hand-maintained; when a guideline changes, update the matching one
 - Starter templates use `[FILL]` placeholders for project-specific values
 - Never remove `[FILL]` placeholders from templates — downstream projects depend on them
@@ -193,8 +188,8 @@ Use a fresh AI session per guideline area. 100-message threads produce inconsist
 ### No Silent TODOs
 NEVER generate TODO, FIXME, HACK, or placeholder comments in production files without explicit permission. State gaps in the AI response instead.
 
-### Web Search Escalation
-If you fail to solve a problem after 2 attempts, STOP guessing. Search the web before making a 3rd attempt.
+### Failure Escalation
+After 2 failed fix attempts, follow the canonical sequence in `guidelines/02-engineering-practices/agent-verification-loop.md` §Loop Steps: stop → revert or stash if the approach is broken → search official docs / the web when the cause or API is unclear → regenerate with clearer constraints. Never make a third blind attempt.
 
 ---
 
@@ -214,8 +209,8 @@ If you fail to solve a problem after 2 attempts, STOP guessing. Search the web b
 
 ## Session Bootstrap
 
-1. Read this AGENTS.md and `WORLD.md` — always (rules + intent/`mode`)
-2. Understand the repo structure: `guidelines/_index/` → `guidelines/0*-` domain directories → `guidelines/global-configs/`
+1. Read this `AGENTS.md` and `WORLD.md` — always (rules + intent/`mode`)
+2. Open the domain directory or file the task needs (`guidelines/0*-`, `guidelines/global-configs/`); use `guidelines/_index/MASTER_INDEX.md` only as a lookup when you cannot name the file, not as a required startup read
 3. Before editing: identify which category the change falls under (guideline content, template, script, skill)
 4. After editing: run `npm run validate` to verify integrity
 5. Commit with conventional commit format

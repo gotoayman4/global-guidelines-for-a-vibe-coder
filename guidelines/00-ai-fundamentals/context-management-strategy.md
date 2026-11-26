@@ -29,6 +29,7 @@ Context windows exceed 1M tokens in 2026 — the constraint is no longer "will i
 8. **A budget is a number with a guard.** The knowledge base budgets its own always-loaded constitution (`global-configs/fragments/manifest.json` → `maxTokens`, enforced by `render-agents-starter.js --check`), so a rule added to the constitution must retire a rule somewhere. Give the project's constitution the same treatment.
    "It feels long" is not a measurement, and an unenforced budget is the same bloat with a number next to it. Keep the guard non-vacuous:
    `guidelines/global-configs/scripts/tests/measure-boot-budget.test.js` proves valid input, missing-file diagnostics, strict failure, and a deliberately broken threshold fixture.
+9. **Separate harness auto-memory from the repository constitution.** Local assistant auto-memory (e.g. per-machine `MEMORY.md` files written outside git) is ephemeral convenience for one developer's machine and never substitutes for repo steering. Graduate durable project constraints to git-tracked `AGENTS.md` §Known Gotchas (≤15 lines) or their single canonical doc/guideline (`documentation-strategy.md`), and delete obsolete notes rather than duplicating facts across tool memory and git.
 
 ## Anti-Patterns
 

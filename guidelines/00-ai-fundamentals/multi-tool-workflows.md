@@ -17,7 +17,7 @@ tags: [multi-tool, cursor, copilot, claude]
 5. **When tools disagree:** tests arbitrate (write the behavioral test that defines correct) · simpler solution wins (fewer files/deps/abstractions) · document choice in ADR. NEVER average conflicting outputs — Frankenstein code results.
 6. **Session isolation between tools:** never paste raw output from one tool into another. Use the structured handoff: what was completed, where, patterns used, test status, then the new task + files to read first.
 7. **Parallel tools partition by module** (`Cursor: features/dashboard/*` / `Claude Code: features/settings/*`) — never the same file simultaneously. Merge and commit before starting related work in another tool.
-8. **Cost-tier model selection:** local models (free) → boilerplate/formatting · fixed-monthly tools → daily inline work · pay-per-token premium models → architecture, security, debugging. Route routine work off expensive models.
+8. **Model & reasoning-tier selection:** align tool, model tier, and reasoning effort with `cost-optimization-strategy.md` rule 6 — local or lightweight/low-reasoning tiers for boilerplate/styling, fixed-monthly or mid-reasoning tiers for daily vertical slices, and frontier/high-reasoning models (fresh session) for architecture, auth/security review, and recovery after 2 failed fixes.
 
 ## Anti-Patterns
 

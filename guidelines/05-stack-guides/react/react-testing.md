@@ -21,6 +21,8 @@ React Testing Library (RTL) for component tests. AI generates implementation-mir
 5. **Component test coverage per component:** renders content → interaction calls handler with right args → loading state → success state → error state.
 6. **Hook testing** via `renderHook` + `waitFor` only for hooks shared across components; single-component hooks are tested through the component.
 7. **No snapshot tests** — they pass when UI breaks subtly.
+8. **Synchronous re-entry guards & separate affordance assertions:** `useState` is stale inside the render that set it (two rapid events before a commit read the same value), so synchronous re-entrant guards belong in a ref (`useRef`), not state. Assert the UI affordance (`disabled`, plus visible disabled-reason text beside the control instead of a tooltip/`title`) separately from the handler guard so each test can fail alone.
+9. **Teardown hygiene:** run the whole test file (not only `-t`-filtered tests) and isolate `jsdom` artifacts (such as focus-restore crashes) in `afterEach` rather than treating them as product coverage.
 
 ## Canonical Patterns
 

@@ -3,7 +3,7 @@
 **Date:** 2026-11-21
 **Decision class:** Doctrine additions to `guidelines/03-git-and-ci/local-ci-strategy.md`. No constitution line changes and no starter re-render: all three additions are written conditionally ("a project that ships receipts and a pre-push hook …"), so a project without emulators, receipts or a hook reads none of them as an obligation. This record justifies; the guideline file is the one normative home of the text.
 **Scope:** `guidelines/03-git-and-ci/local-ci-strategy.md`; fleet delivery via `sync:all` to the seven registered projects. **Implementation is per project's own gate and is opt-in** — the reference implementation lands in `gs-coordinator-helper` (its ADR 079 records the receipt-as-gate mechanism; its plan document `docs/plans/release-gate-speed-plan.md` rev 2 records the slices).
-**Status:** applied in the working tree; `npm run validate` exits 0.
+**Status:** applied in commits `8f8da8b` and `9f3c8a3` (2026-11-21); `npm run validate` exits 0.
 
 ---
 
@@ -44,7 +44,7 @@ The dominant cost is not the green gate — it is the all-or-nothing restart pol
 | Rejected | Why |
 |---|---|
 | Parallelising the emulator matrix | the suites share one emulator lifecycle and seeded fixtures; concurrency collides (measured in `gs-coordinator-helper` ADR 073) |
-| Conditionalising the callable probes | the probes are the only exercise of the one callable backend; a security pin is not a scope victim (D330) |
+| Conditionalising the callable probes | the probes are the only exercise of the one callable backend; a security pin is not a scope victim (`gs-coordinator-helper` D330) |
 | Removing e2e from rules-sensitive pushes | a security step is never mode-scaled; the path trigger stays |
 | Retrying deterministic lanes (lint, type-check, audit, unit) | a deterministic check that fails once has failed |
 | `--no-verify` / skipping the gate | forbidden in every mode, unchanged |

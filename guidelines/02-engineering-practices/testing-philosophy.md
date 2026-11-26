@@ -14,13 +14,13 @@ tags: [testing, philosophy, contracts]
 
 | Mode | Requirement |
 |---|---|
-| **vibe** | Smoke run per behavior-changing iteration (app starts, happy path works); Tier 0 changes need only lint/type-check (`agent-verification-loop.md`). Regression test only when a bug bites the same path twice, or when stabilizing at a milestone. No suite requirement while iterating; the per-push gate runs only the changed tests (`gate:fast`). |
+| **vibe** | Smoke run per behavior-changing iteration (app starts, happy path works); trivial changes need only lint/type-check (`agent-verification-loop.md`). Regression test only when a bug bites the same path twice, or when stabilizing at a milestone. No suite requirement while iterating; the per-push gate runs only the changed tests (`gate:fast`). |
 | **standard** | Behavioral tests with code for critical/high-risk changes; regression test with every fix; integration at boundaries; E2E on critical flows. |
 | **guarded** | Full pyramid (below) + critical-flow E2E before ship; security depth is never mode-scaled (`security-engineering.md`). |
 
 **Test timing (standard/guarded):** write tests first for critical features and in the same iteration for other changes; never defer required tests to a later sprint.
 
-**Ship boundary (all modes):** before any release or milestone exit, critical flows (login/auth · payments · permissions · data persistence) MUST be verified by automated E2E against the deployed target — in both LTR and RTL. Vibe mode never ships unverified critical flows.
+**Ship boundary (all modes):** before any release or milestone exit, critical flows (login/auth · payments · permissions · data persistence) MUST be verified by automated E2E against the deployed target — in LTR, and RTL when `bilingual`. Vibe mode never ships unverified critical flows.
 
 ## Universal Directives (every test that exists)
 

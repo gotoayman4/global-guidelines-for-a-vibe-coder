@@ -18,9 +18,9 @@ Define the self-verification loop an AI agent MUST run before reporting any impl
 
 The agent MUST NOT report a task complete until it has executed the verification appropriate to the change type at the cheapest sufficient tier. "It compiles" / "the code looks right" / "I wrote it correctly" are NOT evidence — in any mode.
 
-## Tier 0 — Trivial Changes (all modes)
+## Trivial Changes (all modes)
 
-Typo, comment, formatting, docs-only, or config nudge with no behavior impact: run lint/type-check on the touched file (or `gate:fast`), report one line (`Verified: lint clean on <file>`). No Docs line, no RTL table row, no full evidence block. If the change can alter behavior, it is not Tier 0.
+Typo, comment, formatting, docs-only, or config nudge with no behavior impact: run lint/type-check on the touched file (or `gate:fast`), report one line (`Verified: lint clean on <file>`). No Docs line, no RTL table row, no full evidence block. If the change can alter behavior, it is not a trivial change.
 
 ## Verification Loop by Change Type
 
@@ -28,7 +28,7 @@ Depth below is the standard/guarded floor; vibe mode runs the cheapest sufficien
 
 | Change Type | Minimum Required Verification |
 |---|---|
-| UI component/page | Dev server running + page loads + DOM-state check in both LTR and RTL (vibe: run once, one direction unless shipping; both directions at milestone) |
+| UI component/page | Dev server running + page loads + DOM-state check in LTR (and RTL when `bilingual`; vibe: run once, one direction unless shipping; both directions at milestone when `bilingual`) |
 | Form | Submit valid input (success path) AND invalid input (error messages appear) |
 | API endpoint | Request exercised against dev server; response status + shape checked |
 | Business logic / utility | Unit tests written AND passing (`npm test` or project equivalent) — vibe MAY rely on the smoke run until second bite |
@@ -57,20 +57,22 @@ Never as routine per-change verification. Never loop captures — one capture, o
 
 **Exit-code rule (never pipe a gate through a formatter):** when pass/fail is judged by exit code, run the command unpiped (redirect to a temp log, then inspect: `npm run type-check > tc.log 2>&1; echo EXIT:$LASTEXITCODE`). PowerShell `$LASTEXITCODE` after a pipeline is the exit of the LAST element (`Select-Object` → always 0); truncating formatters also drop the error text. Truncated output is never evidence.
 
-**Two instrument facts, same failure shape.** (a) An editor or language-server diagnostic is not the compiler's verdict: the language service caches, its configuration can differ from the project's, and it reports a file when it opens it rather than when the tree changes. The project's own `type-check` is the authority — never *fix* a diagnostic the compiler run does not report, and never claim a type error is real from the IDE alone. (b) In a PowerShell host, an inline `node -e "…"` whose quoted body contains a newline leaves the shell in a here-string continuation, and every command typed afterwards is swallowed into that string. The terminal looks idle, nothing ran, and "no output" gets read as a clean result — one-line the program, or write it to a scratch file and run the file.
+**Two instrument facts, same failure shape.** (a) An editor or language-server diagnostic is not the compiler's verdict: the language service caches, its configuration can differ from the project's, and it reports a file when it opens it rather than when the tree changes. The project's own `type-check` is the authority — never *fix* a diagnostic the compiler run does not report, and never claim a type error is real from the IDE alone. (b) In a PowerShell host, an inline `node -e "…"` containing newlines leaves the shell in a multi-line continuation and swallows subsequent commands into silence — one-line the script or run a file.
 
-**Two halves of a protection are two tests:** a UI affordance (e.g. `disabled`) and a handler guard (`if (busy) return` / a synchronously-written ref) assert separately, and each must be proved able to fail alone — a click-on-disabled test stays green when the handler guard is deleted. State is stale inside the render that set it: two events before a commit both observe the pre-update value, so a re-entrant guard that must hold synchronously belongs in a ref, not a state read. Run the whole file, not just `-t`-filtered single tests: an unhandled error in a later test's teardown is a run failure no filtered invocation can see. Record harness artefacts (focus-restore crashes, jsdom quirks) as harness artefacts in `afterEach`, never as product coverage. A disabled control owes its reason in rendered text beside it (a tooltip/`title` on a disabled control reaches nobody) — see the acceptance line and any ADR the change cites, not only the defect report.
+**Two halves of a protection are two tests:** a UI affordance (e.g. `disabled`) and a handler guard (e.g. a synchronous ref guard) MUST be asserted separately, and each proved able to fail alone. Run the whole test file, not only `-t`-filtered single tests (an unhandled teardown error only appears in the full file run). Stack-specific React/jsdom patterns (stale closures in render, focus-restore teardown artifacts) live in `05-stack-guides/react/react-testing.md`.
 
-**A declared control is not an enforced one:** any control whose failure mode is "the platform ignores it" (headers, retention, cache TTL, rewrites) is asserted on the response, not the config — or the unit test states in its name which of the two it checks, and the list under test is extracted from the artifact, not hand-copied beside it. Every check distinguishes "clean" from "not read"; "not read" is a failure, never a pass (absent artifact, failed request, empty status). A probe that cannot fail is not evidence; a probe that measures its own cache is not a probe — disable the cache or prove fresh bytes, keep the red run, and record the cache TTL as an operational fact. Local-emulator green is not capability: a backend the emulator creates (buckets, index enforcement, auth) is exactly where "works locally, dead in production" hides — one CLI read-only query or one live GET belongs in the same instrument.
+**A declared control is not an enforced one:** any control whose failure mode is "the platform ignores it" (headers, retention, cache TTL, rewrites) is asserted on the response, not only the config. Every check distinguishes "clean" from "not read" (absent artifact, failed request, or empty output is a failure, never a pass); disable caches or prove fresh bytes when probing cached endpoints. A local-emulator pass is not live cloud parity (index enforcement, buckets, auth) — see `firebase-firestore-practices` skill for live verification rules.
 
 ## Loop Steps
 
 1. **Implement** the requested change.
-2. **Execute** the minimum verification from the table above at the CHEAPEST sufficient tier (see Cost Tiering) and the depth required by the project's mode. Tier 0 changes stop after lint/type-check. Run the commands yourself — do not assume they pass.
-3. **On failure:** fix and re-run — a failing check on a sound approach is repaired, not reverted. Stop after **2 attempts**: if the same failure persists, or fixes keep landing on new breakage, revert or stash and regenerate from a clearer constraint set (`speed-tiered-workflow.md` Absolute Rule 4), then report what the red run showed. Never a third blind attempt.
-3a. **Docs-Decision (triggers only):** if the change matches a row in the Trigger table in `documentation-strategy.md`, update that fact's one home NOW, same iteration, and report `Docs: updated <files>`. Non-trigger changes require no Docs line and no `N/A` justification — silence is the correct non-trigger response.
-4. **Report with evidence:** state WHAT was verified, HOW (exact command or check), and the RESULT. Example: "Ran `npm test` — 14 passed, 0 failed. Loaded `/login` via headless e2e — form submits, error message shows on empty submit." Tier 0: one line suffices. Vibe mode: one line + anything NOT verified. standard/guarded: full block + Docs line when triggered.
-5. **State what was NOT verified** if any part of the table could not be run (e.g., no dev server available). Never silently omit it.
+2. **Execute** the minimum verification from the table above at the CHEAPEST sufficient tier (see Cost Tiering) and the depth required by the project's mode. Trivial changes stop after lint/type-check. Run the commands yourself — do not assume they pass.
+3. **On failure (canonical escalation sequence):**
+   - A failing check on a sound approach is fixed and re-run. For an environment-sensitive suite that fails once and passes on a fresh-boot solo re-run of the same tree, classify it per `local-ci-strategy.md` §Flake Confirmation instead of blindly rewriting code.
+   - Stop after **2 failed attempts**: if the same failure persists or fixes keep introducing new breakage → **revert or stash** broken changes if the approach itself is wrong → **search official docs / the web** when the error or API behavior is unclear → **regenerate from clearer constraints** (`speed-tiered-workflow.md` Absolute Rule 4). Never make a third blind attempt.
+4. **Docs-Decision (triggers only):** if the change matches a row in the Trigger table in `documentation-strategy.md`, update that fact's one home NOW, same iteration, and report `Docs: updated <files>`. Non-trigger changes require no Docs line and no `N/A` justification — silence is the correct non-trigger response.
+5. **Report with evidence:** state WHAT was verified, HOW (exact command or check), and the RESULT. Example: "Ran `npm test` — 14 passed, 0 failed. Loaded `/login` via headless e2e — form submits, error message shows on empty submit." Trivial changes: one line suffices. Vibe mode: one line + anything NOT verified. standard/guarded: full block + Docs line when triggered.
+6. **State what was NOT verified** if any part of the table could not be run (e.g., no dev server available). Never silently omit it.
 
 ## Honesty Rules
 
@@ -88,7 +90,7 @@ Never as routine per-change verification. Never loop captures — one capture, o
 | Trigger change with no Docs line | Next session inherits stale context |
 | "Tests should pass" / "This will work" | Prediction presented as evidence |
 | Running only the happy path | Most bugs live in error/empty states |
-| Skipping RTL check on UI work | RTL regressions are invisible in LTR and are the #1 bilingual-app defect |
+| Skipping RTL check on bilingual UI work | RTL regressions are invisible in LTR and are the #1 bilingual-app defect |
 | Debugging forward past the second failed fix | The approach is the problem; a revert plus better constraints beats a third blind attempt |
 | Screenshot/vision checks as routine per-change verification | Most expensive, slowest instrument; deterministic tests are stronger evidence (see Cost Tiering) |
 | Verifying data/logic state through the screen when a DB query or test can assert it directly | Wastes tokens and time; indirect observation is also less reliable |
@@ -103,12 +105,12 @@ Never as routine per-change verification. Never loop captures — one capture, o
 ## Key Takeaways
 
 1. Evidence or it didn't happen. Run the checks yourself — honesty never scales down with mode.
-2. Match verification depth to change type AND declared mode — the table is the standard floor, Tier 0 the trivial floor.
+2. Match verification depth to change type AND declared mode — the table is the standard floor, Trivial changes the minimal floor.
 3. Match verification COST to need: automated tests first, programmatic e2e second, visual/interactive last (Cost Tiering).
 4. Report format: what was verified, how, result — plus anything not verified. Docs line only on triggers.
 5. Two failed fixes = stop and escalate, never a third blind attempt.
 
 ## Cross-References
 
-- **Depends on:** `speed-tiered-workflow.md`, `testing-patterns.md`
+- **Depends on:** `speed-tiered-workflow.md`, `testing-patterns.md`, `../03-git-and-ci/local-ci-strategy.md`
 - **Applied by:** `debugging-with-ai.md`, `AGENTS.starter.md`

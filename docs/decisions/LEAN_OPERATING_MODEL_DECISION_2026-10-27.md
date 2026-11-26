@@ -46,6 +46,8 @@ Security fragment; behavioural-testing and verification-evidence rules; mode-sca
 
 **Superseded in part (2026-10-28):** the mode-scaled-gate entry above is replaced by `SHIP_CLASS_AND_GATE_DECISION_2026-10-28.md` §2 — `standard` defers the build to the ship boundary, and a release no longer escalates the declared mode.
 
+**Superseded in part (2026-11-02):** the `4,000` constitution token budget above was later narrowed in `guidelines/global-configs/fragments/manifest.json` to `maxTokens: 3800` (delivered with all modules) and `maxCoreTokens: 1900` (universal core).
+
 ## 3. What is not in this decision
 
 - Downstream project hooks (`GAMS`, `property-management-app`) remain as they are; conforming them is each project's own slice.

@@ -127,8 +127,8 @@ fails if the template and the fragments diverge.
 edit the fragment  →  npm run render:starters  →  npm run validate  →  commit fragment + template together
 ```
 
-**4. Adding a rule costs budget.** The always-loaded constitution is capped (**4,000 tokens**,
-estimated at chars/4 — `maxTokens` in `fragments/manifest.json`, enforced by `npm run check-drift`).
+**4. Adding a rule costs budget.** The always-loaded constitution is capped (see `maxTokens` and `maxCoreTokens`
+in `fragments/manifest.json`, estimated at chars/4 and enforced by `npm run check-drift`).
 A new rule must retire, narrow, or demote an existing one; detail that isn't needed every session
 belongs in a guideline file under `guidelines/0X-*`, reached via the `_guidelines/` mirror, not
 inlined.

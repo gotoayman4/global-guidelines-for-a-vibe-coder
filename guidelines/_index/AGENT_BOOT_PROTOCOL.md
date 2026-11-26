@@ -20,7 +20,7 @@ From the project root:
 2. `WORLD.md` — product intent and the declared speed mode (`vibe | standard | guarded`); undeclared means `standard`.
 3. `README.md` — orientation when the project is new to you: what it is, its structure, the quick start. It holds no rules.
 
-`AGENTS.md` is authoritative. `CLAUDE.md`, if present, is a tool-specific companion that points at it and never restates rules. Subsystem and API detail lives in `docs/AI_ARCHITECTURE.md`, loaded on demand — never at boot.
+`AGENTS.md` is authoritative. `CLAUDE.md` and `GEMINI.md`, if present, are tool-specific pointers that import `@AGENTS.md` and never restate rules (in Gemini CLI, `~/.gemini/settings.json` `context.fileName` can also include `"AGENTS.md"` directly — avoid double-loading both if `@AGENTS.md` is already imported). Subsystem and API detail lives in `docs/AI_ARCHITECTURE.md`, loaded on demand — never at boot.
 
 ### Step 2: Name the Files This Task Needs
 
