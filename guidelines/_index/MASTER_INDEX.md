@@ -30,8 +30,8 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [ai-agent-orchestration.md](../00-ai-fundamentals/ai-agent-orchestration.md) | Normative | Global | ~755 | `#agents` `#orchestration` `#parallel` |
 | [ai-collaboration-mindset.md](../00-ai-fundamentals/ai-collaboration-mindset.md) | Normative | Global | ~1119 | `#mindset` `#philosophy` `#anti-patterns` |
 | [ai-security-governance.md](../00-ai-fundamentals/ai-security-governance.md) | Normative | Global | ~906 | `#security` `#governance` `#owasp` |
-| [context-management-strategy.md](../00-ai-fundamentals/context-management-strategy.md) | Normative | Global | ~1256 | `#context` `#tokens` `#efficiency` |
-| [multi-tool-workflows.md](../00-ai-fundamentals/multi-tool-workflows.md) | Normative | Global | ~638 | `#multi-tool` `#cursor` `#copilot` `#claude` |
+| [context-management-strategy.md](../00-ai-fundamentals/context-management-strategy.md) | Normative | Global | ~1380 | `#context` `#tokens` `#efficiency` |
+| [multi-tool-workflows.md](../00-ai-fundamentals/multi-tool-workflows.md) | Normative | Global | ~677 | `#multi-tool` `#cursor` `#copilot` `#claude` |
 | [prompt-engineering-patterns.md](../00-ai-fundamentals/prompt-engineering-patterns.md) | Normative | Global | ~628 | `#prompting` `#templates` `#context` |
 
 ### 01 — Workflow Methodology
@@ -43,7 +43,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [development-workflow.md](../01-workflow-methodology/development-workflow.md) | Normative | Global | ~1172 | `#workflow` `#process` `#lifecycle` |
 | [planning-and-scoping.md](../01-workflow-methodology/planning-and-scoping.md) | Normative | Global | ~818 | `#planning` `#scoping` `#prd` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~566 | `#refactoring` `#maintenance` `#technical-debt` |
-| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~4649 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
+| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~4694 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
 | [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2623 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
 
 ### 02 — Engineering Practices
@@ -51,18 +51,18 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
 | [accessibility-standards.md](../02-engineering-practices/accessibility-standards.md) | Normative | Global | ~563 | `#a11y` `#wcag` `#aria` |
-| [agent-verification-loop.md](../02-engineering-practices/agent-verification-loop.md) | Normative | Global | ~2912 | `#verification` `#agent` `#testing` `#evidence` `#done-criteria` `#cost-control` |
+| [agent-verification-loop.md](../02-engineering-practices/agent-verification-loop.md) | Normative | Global | ~2763 | `#verification` `#agent` `#testing` `#evidence` `#done-criteria` `#cost-control` |
 | [ai-code-documentation.md](../02-engineering-practices/ai-code-documentation.md) | Normative | Global | ~851 | `#documentation` `#comments` `#ai-context` `#icdc` |
 | [bidirectional-design-principles.md](../02-engineering-practices/bidirectional-design-principles.md) | Normative | Global — All Projects (Bilingual by Default) | ~1435 | `#rtl` `#bidirectional` `#arabic` `#design` |
 | [code-duplication-prevention.md](../02-engineering-practices/code-duplication-prevention.md) | Normative | Global | ~991 | `#deduplication` `#dry` `#code-smells` `#ai` |
-| [cost-optimization-strategy.md](../02-engineering-practices/cost-optimization-strategy.md) | Normative | Global | ~900 | `#cost` `#hosting` `#tokens` `#free-tier` |
+| [cost-optimization-strategy.md](../02-engineering-practices/cost-optimization-strategy.md) | Normative | Global | ~974 | `#cost` `#hosting` `#tokens` `#free-tier` |
 | [error-handling-philosophy.md](../02-engineering-practices/error-handling-philosophy.md) | Normative | Global | ~711 | `#error` `#contracts` `#recovery` |
 | [file-organization.md](../02-engineering-practices/file-organization.md) | Normative | Global | ~565 | `#files` `#organization` `#modularity` `#limits` |
 | [file-upload-security.md](../02-engineering-practices/file-upload-security.md) | Normative | Global | ~888 | `#security` `#file-upload` `#mime` `#magic-byte` |
 | [performance-optimization.md](../02-engineering-practices/performance-optimization.md) | Normative | Global | ~499 | `#performance` `#profiling` `#caching` |
 | [security-engineering.md](../02-engineering-practices/security-engineering.md) | Normative | Global | ~1350 | `#security` `#auth` `#xss` `#csp` |
 | [testing-patterns.md](../02-engineering-practices/testing-patterns.md) | Normative | Global | ~1181 | `#testing` `#patterns` `#unit` `#integration` `#e2e` |
-| [testing-philosophy.md](../02-engineering-practices/testing-philosophy.md) | Normative | Global | ~1713 | `#testing` `#philosophy` `#contracts` |
+| [testing-philosophy.md](../02-engineering-practices/testing-philosophy.md) | Normative | Global | ~1717 | `#testing` `#philosophy` `#contracts` |
 | [ux-design-principles.md](../02-engineering-practices/ux-design-principles.md) | Normative | Global | ~932 | `#ux` `#heuristics` `#cognition` `#nielsen` |
 
 ### 03 — Git & CI/CD
@@ -71,7 +71,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 |---|---|---|---|---|
 | [ci-cd-philosophy.md](../03-git-and-ci/ci-cd-philosophy.md) | Normative | Global | ~892 | `#ci-cd` `#pipelines` `#automation` |
 | [environment-management.md](../03-git-and-ci/environment-management.md) | Normative | Global | ~934 | `#environments` `#secrets` `#config` |
-| [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~771 | `#git` `#branching` `#commits` |
+| [git-workflow-strategy.md](../03-git-and-ci/git-workflow-strategy.md) | Normative | Global | ~809 | `#git` `#branching` `#commits` |
 | [local-ci-strategy.md](../03-git-and-ci/local-ci-strategy.md) | Normative | Global | ~6324 | `#ci-cd` `#local-ci` `#pre-push` `#cost` `#husky` `#gate-receipt` `#path-aware` |
 
 ### 04 — Architecture
@@ -99,7 +99,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [playwright-e2e.md](../05-stack-guides/playwright/playwright-e2e.md) | Normative | Stack (Playwright) | ~711 | `#playwright` `#e2e` `#testing` |
 | [react-architecture.md](../05-stack-guides/react/react-architecture.md) | Normative | Stack (React) | ~648 | `#react` `#hooks` `#components` |
 | [react-performance.md](../05-stack-guides/react/react-performance.md) | Normative | Stack (React) | ~587 | `#react` `#performance` `#memo` |
-| [react-testing.md](../05-stack-guides/react/react-testing.md) | Normative | Stack (React) | ~675 | `#react` `#testing` `#rtl` |
+| [react-testing.md](../05-stack-guides/react/react-testing.md) | Normative | Stack (React) | ~834 | `#react` `#testing` `#rtl` |
 | [rtl-tech-stack.md](../05-stack-guides/rtl-tech-stack.md) | Normative | Global — All Projects (Bilingual by Default) | ~1535 | `#rtl` `#arabic` `#bidirectional` `#numerals` |
 | [shadcn-rtl-bidirectional.md](../05-stack-guides/shadcn/shadcn-rtl-bidirectional.md) | Normative | Stack (shadcn/ui + Tailwind CSS v4) | ~1631 | `#shadcn` `#tailwind` `#rtl` `#i18n` `#bidirectional` `#radix` `#base-ui` `#logical-properties` |
 | [supabase-auth.md](../05-stack-guides/supabase/supabase-auth.md) | Normative | Stack (Supabase Auth) | ~633 | `#supabase` `#auth` `#jwt` `#grants` |
@@ -158,6 +158,8 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [README.starter.md](../global-configs/templates/README.starter.md) | Starter | Global | ~500 | `#template` `#readme` `#overview` `#single-source` |
 | [AI_ARCHITECTURE.starter.md](../global-configs/templates/AI_ARCHITECTURE.starter.md) | Starter | Global | ~800 | `#template` `#architecture` `#reference` |
 | [firebase-hosting-headers.json.template](../global-configs/templates/firebase-hosting-headers.json.template) | Template | Global | ~410 | `#template` `#firebase` `#hosting` `#cache-control` `#fonts` |
+| [tsconfig.strict.base.json.template](../global-configs/templates/tsconfig.strict.base.json.template) | Template | Global | ~100 | `#template` `#typescript` `#strict` `#lint` |
+| [eslint.guardrails.mjs.template](../global-configs/templates/eslint.guardrails.mjs.template) | Template | Global | ~350 | `#template` `#eslint` `#guardrail` `#rtl` `#react-router` |
 | [audit-rules.js](../global-configs/scripts/audit-rules.js) | Script | Global | ~300 | `#script` `#automation` `#drift-detection` |
 | [sync-guidelines.ps1](../global-configs/scripts/sync-guidelines.ps1) | Script | Global | ~1,800 | `#script` `#sync` `#project-setup` |
 | [sync-all.js](../global-configs/scripts/sync-all.js) | Script | Global | ~150 | `#script` `#sync` `#batch` `#fleet` `#project-setup` |
@@ -198,6 +200,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [sync-global-skills.js](../global-configs/scripts/sync-global-skills.js) | Script | Global | ~350 | `#script` `#skills` `#global-pool` `#stack-agnostic` `#marker-scoped` `#delivery` |
 | [sync-project-adapters.js](../global-configs/scripts/sync-project-adapters.js) | Script | Global | ~350 | `#script` `#skills` `#adapter` `#stack-scoped` `#marker-scoped` `#delivery` |
 | [guard-command.js](../global-configs/scripts/guard-command.js) | Script | Global | ~300 (run it; read it only to change it) | `#script` `#guardrail` `#hook` `#destructive-commands` `#pre-tool-use` |
+| [guard-file-access.js](../global-configs/scripts/guard-file-access.js) | Script | Global | ~350 (run it; read it only to change it) | `#script` `#guardrail` `#hook` `#secrets` `#pre-tool-use` `#post-tool-use` |
 | [scan-secrets.js](../global-configs/scripts/scan-secrets.js) | Script | Global | ~250 (run it; read it only to change it) | `#script` `#guardrail` `#secrets` `#pre-commit` |
 | [install-guardrails.js](../global-configs/scripts/install-guardrails.js) | Script | Global | ~250 | `#script` `#guardrail` `#hook` `#project-setup` `#idempotent` |
 | [migrate-agents-to-managed.js](../global-configs/scripts/migrate-agents-to-managed.js) | Script | Global | ~250 | `#script` `#migration` `#agents-md` `#backup` |
@@ -220,18 +223,19 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 |---|---|---|---|---|---|
 | [arabic-rtl-pdf-export/SKILL.md](../global-configs/skills/arabic-rtl-pdf-export/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1179 | `#skill` `#pdf` `#rtl` `#arabic` `#chromium` `#print` `#bidi` `#fonts` `#paged-media` |
 | [architect/SKILL.md](../global-configs/skills/architect/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1924 | `#skill` `#architecture` `#design` `#stress-test` |
-| [bidirectional-docx-rtl/SKILL.md](../global-configs/skills/bidirectional-docx-rtl/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3069 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
+| [bidirectional-docx-rtl/SKILL.md](../global-configs/skills/bidirectional-docx-rtl/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~1021 | `#skill` `#docx` `#rtl` `#bidirectional` `#arabic` |
 | [bilingual-styled-excel-export/SKILL.md](../global-configs/skills/bilingual-styled-excel-export/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1837 | `#skill` `#excel` `#xlsx` `#export` `#rtl` `#arabic` `#bilingual` `#spreadsheet` `#styling` `#workbook` |
 | [code-review/SKILL.md](../global-configs/skills/code-review/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1382 | `#skill` `#review` `#quality` |
+| [codebase-cleanup/SKILL.md](../global-configs/skills/codebase-cleanup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~866 | `#skill` `#cleanup` `#dead-code` `#duplication` `#maintenance` |
 | [debug-without-code/SKILL.md](../global-configs/skills/debug-without-code/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1398 | `#skill` `#debugging` `#noncoder` `#visual` |
 | [deploy-production/SKILL.md](../global-configs/skills/deploy-production/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1959 | `#skill` `#deploy` `#production` `#hosting` |
-| [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~3549 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
+| [docx-per-paragraph-language/SKILL.md](../global-configs/skills/docx-per-paragraph-language/SKILL.md) | Advisory | Global (Task-Type Skill) | `docx` | ~1107 | `#skill` `#docx` `#language` `#paragraph` `#spell-check` |
 | [electron-auto-update/SKILL.md](../global-configs/skills/electron-auto-update/SKILL.md) | Advisory | Global (Task-Type Skill) | `electron` | ~1518 | `#skill` `#electron` `#auto-update` `#release` `#github-releases` `#code-signing` |
-| [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` | ~2728 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` `#node` `#console` |
-| [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1648 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
-| [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~3831 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
-| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~3293 | `#skill` `#setup` `#beginner` `#onboarding` |
-| [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~2574 | `#skill` `#planning` `#execution` `#checklist` |
+| [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` | ~927 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` `#node` `#console` |
+| [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1709 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
+| [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1685 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
+| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1485 | `#skill` `#setup` `#beginner` `#onboarding` |
+| [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1160 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1625 | `#skill` `#inno-setup` `#installer` `#windows` |
 | [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~2442 | `#skill` `#mui` `#design-system` `#shared-components` |
 | [outlook-integration/SKILL.md](../global-configs/skills/outlook-integration/SKILL.md) | Advisory | Global (Task-Type Skill) | `electron` | ~1838 | `#skill` `#electron` `#outlook` `#microsoft-graph` `#com-automation` `#powershell` `#email` `#calendar` |
@@ -351,7 +355,7 @@ Derived from each file's `## Cross-References` footer. A file with no footer ren
 
 ### 02-engineering-practices
 - `accessibility-standards.md` → see also: `icon-usage.md`, `form-patterns.md`, `playwright-e2e.md`
-- `agent-verification-loop.md` → depends on: `speed-tiered-workflow.md`, `testing-patterns.md` · applied by: `debugging-with-ai.md`, `AGENTS.starter.md`
+- `agent-verification-loop.md` → depends on: `speed-tiered-workflow.md`, `testing-patterns.md`, `local-ci-strategy.md` · applied by: `debugging-with-ai.md`, `AGENTS.starter.md`
 - `ai-code-documentation.md` → see also: `documentation-strategy.md`, `ai-collaboration-mindset.md`, `typescript-conventions.md`, `context-management-strategy.md`
 - `bidirectional-design-principles.md` → depends on: `rtl-tech-stack.md`, `accessibility-standards.md` · extended by: `mui-rtl-bidirectional.md`, `shadcn-rtl-bidirectional.md`
 - `code-duplication-prevention.md` → governed by: `file-organization.md` · applied by: `ai-collaboration-mindset.md`

@@ -17,27 +17,23 @@ metadata:
 Activate when:
 - User asks to "create a plan", "implementation plan", "project plan", "feature plan", "task plan"
 - User says "plan this feature", "scope this work", "break this down into tasks"
-- User provides a PRD, specification, or requirements document and asks for an execution plan
-- User requests "steps to implement", "implementation checklist", "execution plan"
+- User provides a PRD, spec, or requirements and asks for an execution plan
 
 Do NOT activate when:
-- User asks for a product roadmap, vision document, or strategic planning
-- User is asking a purely conceptual or architectural question with no implementation intent
-- User asks for a timeline estimate in hours/days
+- User asks for a product roadmap, vision doc, pure conceptual/architectural Q&A, or hour/day timeline estimates
 
 ---
 
 ## Load Guidelines
 
 Load compact extracts (Key Takeaways + Anti-Patterns) from:
-
 1. `01-workflow-methodology/planning-and-scoping.md` — Planning methodology, vertical slice principle
 2. `01-workflow-methodology/development-workflow.md` — Iteration workflow, validation
 3. `08-governance/ai-governance-framework.md` — Authority hierarchy, rule precedence
-4. `docs/repo-meta/classification-system.md` (optional central-repository reference; not delivered with this skill) — Normative vs Advisory classification
+4. `docs/repo-meta/classification-system.md` (central repo only; not delivered with this skill)
 5. `02-engineering-practices/testing-philosophy.md` — Behavioral contracts, validation
 
-If the project has an `AGENTS.md`, `CLAUDE.md`, `WORLD.md`, or similar steering file, load it and reference its rules in the plan.
+Load the repository's `AGENTS.md` and `WORLD.md` (`mode` + `capabilities`) and reflect their binding rules in the plan.
 
 **Guideline base path:** Use `_guidelines/` if the project mirror exists; otherwise use the central repo path from your machine's global agent config.
 
@@ -45,116 +41,38 @@ If the project has an `AGENTS.md`, `CLAUDE.md`, `WORLD.md`, or similar steering 
 
 ## Role
 
-You are a senior technical planner specializing in execution-optimized implementation plans for AI agents. You think in vertical slices, not horizontal layers. You prioritize actionable task definitions over explanatory prose. You structure every plan so an AI agent can execute it autonomously with minimal ambiguity. You never assume — you identify what needs clarification and flag it explicitly.
+You are a senior technical planner specializing in execution-optimized implementation plans for AI agents. You think in vertical slices, prioritize actionable tasks over prose, and flag ambiguities instead of guessing.
 
 ---
 
 ## Workflow
 
-1. **Discover steering documents** — Check the repository root for `AGENTS.md`, `CLAUDE.md`, `WORLD.md`, `.cursorrules`, `opencode.json`, or similar steering files. Extract mandatory rules that affect implementation decisions.
-
-2. **Analyze requirements** — Read the specification, PRD, issue, or user request. Identify scope, acceptance criteria, constraints, and dependencies. If requirements are ambiguous, conflicting, or incomplete, stop and request clarification before proceeding.
-
-3. **Identify the vertical slice** — Determine the thinnest complete end-to-end feature that can be implemented and verified independently. This becomes the first implementation phase.
-
-4. **Decompose into phases and tasks** — Break the implementation into ordered phases. Each phase is one vertical slice. Each task within a phase has a clear objective, expected outcome, explicit dependencies, and testable validation criteria.
-
-5. **Order tasks by dependency** — Tasks within a phase must follow a logical implementation order. No task may require output from a later task.
-
-6. **Generate the plan document** — Produce the implementation plan using the Output Format below.
-
-7. **Execute tasks one at a time** — Read the entire plan first. Execute tasks in order. After completing each task, validate it against its criteria, check that no file exceeds 400 lines (refactor any that do), update its status in the checklist, and commit the changes to Git before starting the next task.
-
-8. **Track progress and re-evaluate** — After each milestone (phase), pause to re-evaluate remaining tasks. Adjust ordering if new information emerged. Preserve completed tasks. Add discovered tasks when necessary.
-
-9. **Clarify when blocked** — If implementation reveals missing requirements, inconsistencies, or blockers, stop and request clarification. Never silently make significant assumptions. Ambiguity, unclear acceptance criteria, conflicting rules, uncertain architectural direction, missing context, or multiple valid approaches without a preferred option are all valid reasons to pause for clarification.
-
-10. **Final verification** — After all tasks complete, run the completion checklist to confirm everything is satisfied.
-
----
-
-## Output Format
-
-Generate an implementation plan in the following structure:
-
-```markdown
-# Implementation Plan: [Feature/Project Name]
-
-## Agent Usage Instructions
-
-Read this entire plan before starting implementation. Execute tasks in the defined order unless dependencies indicate otherwise. Complete one task at a time — implement, validate, then commit the changes to Git before starting the next task. Mark tasks as completed immediately after successful validation and commit. Re-evaluate remaining tasks after each completed milestone. Do not skip validation steps. If any requirement is ambiguous, conflicting, or incomplete, stop and request clarification before proceeding. Treat this plan as the authoritative execution checklist unless overridden by repository steering documents.
-
-## Repository Rules Summary
-
-[Concise summary of mandatory rules automatically discovered from AGENTS.md, CLAUDE.md, WORLD.md, and other steering files. Include only rules that materially affect implementation — architecture constraints, testing requirements, naming conventions, security policies. Consolidate overlapping instructions. Eliminate duplicates. Preserve rule precedence where applicable.]
-
-## Implementation Plan
-
-### Phase 1: [First vertical slice]
-
-**Dependencies:** None
-
-- [ ] **Task 1.1:** [Task name]
-  - **Objective:** [What this task accomplishes]
-  - **Outcome:** [Expected deliverable]
-  - **Files:** [File paths with estimated line counts, e.g., `src/features/checkout/CheckoutForm.tsx (~150 lines)`, `src/hooks/useCheckout.ts (~80 lines)`]
-  - **Dependencies:** None
-  - **Validation:** [How to verify completion]
-
-- [ ] **Task 1.2:** [Task name]
-  - **Objective:** [What this task accomplishes]
-  - **Outcome:** [Expected deliverable]
-  - **Files:** [File paths with estimated line counts]
-  - **Dependencies:** Task 1.1
-  - **Validation:** [How to verify completion]
-
-### Phase 2: [Next vertical slice]
-
-**Dependencies:** Phase 1
-
-- [ ] **Task 2.1:** ...
-  - *(same structure)*
-
-## Completion Checklist
-
-- [ ] All functional requirements implemented
-- [ ] Repository rules followed
-- [ ] Verification per the declared mode (smoke run in `vibe`; all tests passing in standard/guarded)
-- [ ] Documentation updated
-- [ ] No unresolved blockers remain
-- [ ] Acceptance criteria satisfied
-```
+1. **Discover steering documents:** Read `AGENTS.md`, `WORLD.md` (and any local path-scoped rules under `.claude/rules/`, `.cursor/rules/`, `.github/instructions/`). Extract mandatory constraints.
+2. **Analyze requirements:** Read the spec/PRD/request. Identify scope, acceptance criteria, constraints, and dependencies. Stop and ask if requirements conflict or are ambiguous.
+3. **Identify vertical slices:** Pick the thinnest end-to-end feature (UI → API → DB) as Phase 1.
+4. **Decompose & order tasks:** Every task specifies objective, outcome, file paths with estimated line counts (target ≤300 lines, hard cap 400 lines), explicit dependencies (no forward dependencies), and concrete validation criteria.
+5. **Render the plan** using [`references/plan-template.md`](references/plan-template.md).
+6. **Execute & verify one increment at a time:** Read the whole plan, implement in order, validate per task and per declared mode, verify file sizes (`≤400` lines), commit green increments before moving on, and finish with the Completion Checklist.
 
 ---
 
 ## Anti-Patterns
 
-- Do NOT write plans designed for human project managers — avoid Gantt charts, resource allocation, timeline estimates, and status-report language
-- Do NOT use planning jargon like "leverage," "synergize," "stakeholder," "align," or similar corporate vocabulary
-- Do NOT produce horizontal-layer plans (e.g., "Phase 1: all models, Phase 2: all services, Phase 3: all UI") — always plan in vertical slices
-- Do NOT include educational content, tutorials, or explanations of basic concepts — assume the AI agent is technically competent
-- Do NOT skip dependency analysis — every task must explicitly state what it depends on
-- Do NOT generate placeholder tasks like "TBD" — if something is unknown, flag it for clarification
-- Do NOT assume the agent can silently resolve ambiguities — always flag unclear requirements
-- Do NOT reorder tasks during execution without updating the plan — changes must be documented
-- Do NOT skip validation steps — every task must have verifiable completion criteria
-- Do NOT plan tasks that would create files exceeding 300 lines per file. If estimated output exceeds 300 lines across a single file, split into smaller tasks or decompose across more files before implementing. File size enforcement: `02-engineering-practices/file-organization.md`
-- Do NOT skip refactoring files that exceed 400 lines after implementation. After completing any task, check if the modified files exceed 400 lines. Refactor any such file into smaller modules and re-verify before committing.
-- Do NOT mark tasks complete without running their validation criteria
-- Do NOT skip committing a completed and validated task before starting the next one
+- Do NOT write human PM prose (Gantt charts, resource allocation, time estimates, corporate buzzwords)
+- Do NOT produce horizontal-layer plans ("Phase 1: all models, Phase 2: all services, Phase 3: all UI")
+- Do NOT write placeholder tasks ("TBD"), hide ambiguities, or skip dependency/validation fields
+- Do NOT plan tasks creating files >300 lines or leave modified files >400 lines unrefactored (`02-engineering-practices/file-organization.md`)
+- Do NOT mark tasks done without running their validation criteria, or stack uncommitted broken changes
 
 ---
 
 ## Key Takeaways
 
-1. Plans are for AI agent execution, not human reading — minimize prose, maximize actionable checklists.
-2. Always organize around vertical slices (one feature end-to-end) rather than horizontal layers.
-3. Every task must specify: objective, outcome, dependencies, and validation criteria.
-4. Steering files (AGENTS.md, CLAUDE.md, WORLD.md) contain mandatory rules — discover and summarize them.
-5. Ambiguity is a blocker — stop and clarify rather than assume.
-6. Every task must list the files it will create or modify with estimated line counts per file. Plan for ≤300 lines per file. The hard limit is 400 (ESLint `max-lines`) — any file exceeding 400 lines MUST be refactored after implementation. See `02-engineering-practices/file-organization.md`.
-7. Each task must be committed to Git after validation and before starting the next task — no stacking uncommitted changes.
-8. The completion checklist is the final gate — run it before declaring done.
+1. Plans are agent execution checklists — minimize prose, maximize verifiable criteria.
+2. Vertical slices only; tasks strictly ordered by dependency.
+3. Always ground the plan in `AGENTS.md` + `WORLD.md` rules and declared `mode`.
+4. Plan files ≤300 lines (hard cap 400 lines via ESLint `max-lines`).
+5. Validate and commit every completed increment before starting the next.
 
 ---
 
@@ -163,7 +81,7 @@ Read this entire plan before starting implementation. Execute tasks in the defin
 - Planning methodology: `01-workflow-methodology/planning-and-scoping.md`
 - Development workflow: `01-workflow-methodology/development-workflow.md`
 - AI governance framework: `08-governance/ai-governance-framework.md`
-- Classification system: `docs/repo-meta/classification-system.md` (optional central-repository reference; not delivered with this skill)
+- Classification system: `docs/repo-meta/classification-system.md` (central repo only; not delivered with this skill)
 - Testing philosophy: `02-engineering-practices/testing-philosophy.md`
 - File organization rules: `02-engineering-practices/file-organization.md`
-- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repository only; not delivered with this skill)
+- Skill design patterns: `docs/repo-meta/skill-design-patterns.md` (central repo only; not delivered with this skill)

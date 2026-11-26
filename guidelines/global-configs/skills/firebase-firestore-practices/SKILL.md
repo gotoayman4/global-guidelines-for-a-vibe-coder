@@ -52,7 +52,7 @@ You are a Firebase engineer. You follow Firebase's official best practices, alwa
 5. **Writes:** use `WriteBatch`/transactions; `FieldValue.increment` for counters; `serverTimestamp()` for times; idempotent writes where triggers may retry.
 6. **Security rules (canonical file):** validate every write with `request.resource.data`, check `request.auth`, reject wildcard `allow write: if true`. If a project mirrors rules across directories (e.g. `firebase/firestore.rules` and `alsael-web/firestore.rules`), keep them in 100% parity.
 7. **Cloud Functions:** event triggers must be idempotent (retries are normal); scheduled cleanup functions delete expired data in batches (≤500); keep triggers lean — each trigger run bills reads/writes.
-8. **Emulator testing:** run Firestore emulator for behavioral tests; never hit production for tests.
+8. **Emulator testing + live parity:** run Firestore emulator for behavioral tests; never hit production for tests. Remember an emulator pass is not live cloud capability — buckets, composite index enforcement, and auth policies that an emulator auto-creates must be verified once via a read-only CLI check or live GET against the target project.
 
 ---
 
