@@ -55,7 +55,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { globalPoolSkills } = require('./lib/plan-skills.js');
-const { materialiseStore } = require('./lib/skill-stores.js');
+const { materialiseStore, pruneRetiredStore } = require('./lib/skill-stores.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const MANIFEST = process.env.SYNC_DRIFT_MANIFEST
@@ -101,6 +101,17 @@ function globalTargets() {
     usage(`sync-manifest.json §skills.globalPool.filter must be "stack-agnostic" (found "${pool.filter}")`);
   }
   return pool.targets;
+}
+
+function globalRetiredTargets() {
+  if (process.env.GLOBAL_SKILLS_TARGETS) return [];
+  try {
+    const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
+    const retired = manifest?.skills?.globalPool?.retiredTargets;
+    return Array.isArray(retired) ? retired : [];
+  } catch {
+    return [];
+  }
 }
 
 /** The manifest's `adoptForeignStores` default for the pool — the recorded owner decision that a
@@ -187,6 +198,14 @@ function main() {
     for (const file of result.copied.slice(0, 6)) console.log(`     wrote  ${file}`);
     if (result.copied.length > 6) console.log(`     … and ${result.copied.length - 6} more`);
     for (const file of result.removed) console.log(`     pruned ${file}`);
+  }
+
+  for (const target of globalRetiredTargets()) {
+    const retired = pruneRetiredStore(expandTarget(target), { dryRun: !apply });
+    if (retired.removed.length > 0) {
+      changeDue = true;
+      if (!quiet) console.log(`  • ${target}: ${apply ? 'pruned' : 'would prune'} ${retired.removed.length} retired skill(s)`);
+    }
   }
 
   if (check && changeDue) {

@@ -69,11 +69,11 @@ trigger matches, which is why the trigger has to be visible *before* the file is
   reports whether the project's inventory names every skill it was delivered.
 - **Delivery is three-channel, by scope** (fleet review 2026-10-31): the stack-agnostic skills
   (scope names no technology) are delivered ONCE per machine into the user-level Agent Skills
-  directories (`~/.agents/skills`, `~/.claude/skills`, `~/.zcode/skills` — `npm run skills:global`,
+  directories (`~/.agents/skills`, `~/.zcode/skills` — `npm run skills:global`,
   opt-in step of the sync), because they cannot contradict any project's constitution and every
   conformant tool scans those dirs natively. The stack-scoped subset is generated per project into
-  its own `.agents/skills` and `.claude/skills` as MARKER-STAMPED adapters of `_skills/` —
-  generated stores that follow upstream, never hand-maintained copies that shadow it. Every store
+  its own `.agents/skills` as a MARKER-STAMPED adapter of `_skills/` —
+  generated stores that follow upstream, never hand-maintained copies that shadow it (per owner decision 2026-11-26 retiring unused tool adapters; `.claude/skills` is safely pruned only when marker-owned). Every store
   is marker-scoped (`lib/skill-stores.js`): only names this repo delivers are written or pruned.
   **This repo is the source of truth** (owner decision 2026-10-31): a foreign skill with the SAME
   name is replaced with the source bytes and reported; a foreign skill with a DIFFERENT name — a
@@ -219,7 +219,7 @@ After 2 failed fix attempts, follow the canonical sequence in `guidelines/02-eng
 
 ## Maintenance
 
-- **Quarterly:** Audit skills and templates against source guidelines
+- **Quarterly:** Audit skills and templates against source guidelines. **Pruning policy (2026-11-26):** Security, data-integrity, and safety rules are NEVER pruned even if eval pass rates exceed 90%; only style or process reminders may be demoted to on-demand docs after measured proof via `npm run eval:score`
 - **When adding a file:** Add front-matter + a `## Cross-References` footer, run `npm run render:index`, check RETRIEVAL_RULES.md
 - **When adding a guideline:** Ship it with its matching skill in `global-configs/skills/` (`<name>/SKILL.md` + a `references/` file for anything long enough to cost activation time), regenerate `skills/INDEX.md` with `npm run render:skills`, then deliver the fleet with `npm run sync:all` and confirm it with `npm run sync:drift`. A guideline that exists only in this repo reaches no project — the sync IS the delivery.
 - **When updating a guideline:** Also update the matching fragment in `global-configs/fragments/`, then `npm run render:starters`

@@ -196,13 +196,9 @@ test('the manifest declares every entry the sync writes, including the backup di
   assert.ok(entries.includes('_guidelines/'), JSON.stringify(entries));
   assert.ok(entries.includes('_skills/'), JSON.stringify(entries));
   assert.ok(entries.includes('.guidelines-backups/'), JSON.stringify(entries));
-  // The native adapter dirs, declared one level deep inside §skills.nativeAdapters (2026-10-31):
-  // the sync writes them, native loaders scan them, and untracked they fail `clean-tree`.
+  // The native adapter dir, declared inside §skills.nativeAdapters (retired Claude Code adapter 2026-11-26):
+  // the sync writes it, native loaders scan it, and untracked it fails `clean-tree`.
   assert.ok(entries.includes('.agents/skills/'), JSON.stringify(entries));
-  assert.ok(entries.includes('.claude/skills/'), JSON.stringify(entries));
-  // The CLAUDE.md pointer, declared inside a toolConfigs[] element (owner decision 2026-10-31,
-  // midad first): sync-maintained like `_skills/`, so untracked is the honest state.
-  assert.ok(entries.includes('CLAUDE.md'), JSON.stringify(entries));
 });
 
 test('every nested section with project-relative targets ignores them all', () => {
@@ -213,10 +209,10 @@ test('every nested section with project-relative targets ignores them all', () =
   );
 });
 
-test('REVERSAL PROOF: dropping the adapter gitignoreEntry names both targets', () => {
+test('REVERSAL PROOF: dropping the adapter gitignoreEntry names active targets', () => {
   const manifest = JSON.parse(read(MANIFEST));
   delete manifest.skills.nativeAdapters.gitignoreEntry;
-  assert.deepEqual(nestedTargetsNotIgnored(manifest), ['.agents/skills', '.claude/skills']);
+  assert.deepEqual(nestedTargetsNotIgnored(manifest), ['.agents/skills']);
 });
 
 test('REVERSAL PROOF: a machine-global target is exempt, a project-relative one is not', () => {
@@ -225,8 +221,8 @@ test('REVERSAL PROOF: a machine-global target is exempt, a project-relative one 
   manifest.skills.nativeAdapters.targets.push('~/.cursor/skills');
   assert.deepEqual(
     nestedTargetsNotIgnored(manifest),
-    ['.agents/skills', '.claude/skills'],
-    'the ~ target is not a project path, so it is not demanded; the project-relative two are'
+    ['.agents/skills'],
+    'the ~ target is not a project path, so it is not demanded; the project-relative one is'
   );
 });
 

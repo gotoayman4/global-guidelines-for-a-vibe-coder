@@ -57,13 +57,6 @@ if ($RestoreBackup -ne "") {
 # Configuration — change these paths for your machine
 # ---------------------------------------------------------------------------
 $guidelinesRepo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$settingsDir = "$env:USERPROFILE\.config\opencode"
-$opencodeSkillsDir = "$settingsDir\skills"
-$opencodeGlobalAgents = "$settingsDir\AGENTS.md"
-$windsurfMemoriesDir = "$env:USERPROFILE\.codeium\windsurf\memories"
-$windsurfGlobalRules = "$windsurfMemoriesDir\global_rules.md"
-$cursorUserRulesDir = "$env:USERPROFILE\.cursor\rules"
-$cursorGlobalGuidelines = "$cursorUserRulesDir\global-guidelines-from-central.mdc"
 $qoderSkillsDir = "$env:USERPROFILE\.qoder\skills"
 
 # ---------------------------------------------------------------------------
@@ -212,16 +205,11 @@ if (-not $SourceOnly) {
     # tool-config directories and rewrote AGENTS.md files under the user profile. Those writes are
     # outside the project and invisible in `git status`, so the violation was easy to miss. The
     # branch below is the whole step: in a preview it names every target and writes none.
-    $skillCount = 0
-    $skillSkips = 0
     $qoderSkillCount = 0
     $qoderSkillSkips = 0
     $globalSkips = @()
     $vscodeNote = 'not run'
     if ($DryRun) {
-        Write-Host "  [DRY-RUN] opencode: link all skills into $opencodeSkillsDir and rewrite $opencodeGlobalAgents" -ForegroundColor Yellow
-        Write-Host "  [DRY-RUN] Windsurf: rewrite $windsurfGlobalRules" -ForegroundColor Yellow
-        Write-Host "  [DRY-RUN] Cursor: rewrite $cursorGlobalGuidelines" -ForegroundColor Yellow
         if (-not $GlobalOnly -and $projectRoot -ne $null) {
             Write-Host "  [DRY-RUN] VS Code: merge AI settings into $(Join-Path $projectRoot '.vscode\settings.json')" -ForegroundColor Yellow
         }
@@ -229,102 +217,8 @@ if (-not $SourceOnly) {
     } else {
     # Machine-global configs live under the user profile, which some hosts deny (sandboxes, CI,
     # locked-down machines). They are best-effort BY DESIGN: the deliverable of a sync is the project
-    # mirror, starters and skills — step 1 — and `check-sync-drift.js` verifies exactly that. Before
-    # this guard existed, one denied `Remove-Item` under `$ErrorActionPreference = "Stop"` aborted
-    # the whole run, so a fully-synced project was reported failed (measured 2026-10-13: every
-    # `npm run sync:all` died in this step on `architect\SKILL.md`). A skip is counted and named,
-    # never silent — a green run that quietly delivered nothing would be the original defect again.
-
-    # --- opencode: symlink skills + global AGENTS.md ---
-    Write-Host "  opencode ..." -ForegroundColor Gray
-    try {
-    if (-not (Test-Path -LiteralPath $opencodeSkillsDir)) {
-        $null = New-Item -ItemType Directory -Path $opencodeSkillsDir -Force
-    }
-    # The corpus is the Agent Skills standard layout: one directory per skill, each holding a
-    # SKILL.md plus any references/ and scripts/ the body loads on demand. `Sync-SkillPool` mirrors
-    # the whole directory, so a pool skill is the same skill the source describes — linking only
-    # SKILL.md left every on-demand file behind and made the body point at nothing.
-    if (-not (Get-Command Sync-SkillPool -ErrorAction SilentlyContinue)) {
-        throw "GuidelineSync.psm1 (Sync-SkillPool) is not loaded; skills were not linked."
-    }
-    $pool = Sync-SkillPool -SourceSkillsDir "$guidelinesRepo\global-configs\skills" -PoolDir $opencodeSkillsDir
-    $skillCount = $pool.Skills
-    $skillSkips = $pool.Skipped
-    foreach ($message in $pool.Errors) {
-        Write-Host "    SKIP $message" -ForegroundColor Yellow
-    }
-    # Global AGENTS.md for opencode
-    $agentsLines = @(
-        "# Global Development Guidelines",
-        "",
-        "This machine has a shared guidelines repository at:",
-        "``$guidelinesRepo``",
-        "",
-        "## Before Every Session",
-        "",
-        "1. In a project, read its ``AGENTS.md`` (binding rules) and ``WORLD.md`` (intent + declared mode) first - they override these global defaults",
-        "2. Open a guideline from ``$guidelinesRepo`` by name when the task needs one",
-        "3. Use ``_index/MASTER_INDEX.md`` only as a lookup when you cannot name the file the task needs",
-        "4. Load only files needed for the current task - never the whole repo",
-        "5. Skills live at ``global-configs/skills/<name>/SKILL.md`` - load when the recorded trigger matches",
-        "",
-        "## How to Load Guidelines",
-        "",
-        "- Use absolute base path: ``$guidelinesRepo/``[relative-path]",
-        "- Compact extracts (Key Takeaways + Anti-Patterns) when context is small",
-        "- Project AGENTS.md rules override these global defaults"
-    )
-    Write-Utf8NoBom -Path $opencodeGlobalAgents -Content ($agentsLines -join "`r`n")
-    Write-Host "    Skills: $skillCount linked ($($pool.Files) files), $skillSkips skipped | AGENTS.md updated" -ForegroundColor Green
-    } catch {
-        Write-Host "    SKIPPED opencode: $($_.Exception.Message)" -ForegroundColor Yellow
-        $globalSkips += "opencode"
-    }
-
-    # --- Windsurf: global_rules.md ---
-    Write-Host "  Windsurf ..." -ForegroundColor Gray
-    try {
-    if (-not (Test-Path -LiteralPath $windsurfMemoriesDir)) {
-        $null = New-Item -ItemType Directory -Path $windsurfMemoriesDir -Force
-    }
-    $windsurfContent = @"
-This machine has a shared guidelines repository at:
-$guidelinesRepo
-
-In a project, read its AGENTS.md (binding rules) and WORLD.md (intent + declared mode) first; they override these defaults.
-Open a guideline by name when the task needs one; use `_index/MASTER_INDEX.md` only as a lookup when you cannot name it.
-Load only the files needed for the current task.
-Use absolute base path `$guidelinesRepo/` when loading files.
-"@
-    Write-Utf8NoBom -Path $windsurfGlobalRules -Content ($windsurfContent + "`r`n")
-    Write-Host "    global_rules.md created" -ForegroundColor Green
-    } catch {
-        Write-Host "    SKIPPED Windsurf: $($_.Exception.Message)" -ForegroundColor Yellow
-        $globalSkips += "Windsurf"
-    }
-
-    # --- Cursor: user-level .mdc rule ---
-    Write-Host "  Cursor ..." -ForegroundColor Gray
-    try {
-    if (-not (Test-Path -LiteralPath $cursorUserRulesDir)) {
-        $null = New-Item -ItemType Directory -Path $cursorUserRulesDir -Force
-    }
-    if (Test-Path -LiteralPath $cursorGlobalGuidelines) {
-        Remove-Item -LiteralPath $cursorGlobalGuidelines -Force
-    }
-    # Cursor user rule: template copy with {{GUIDELINES_ROOT}} resolved (not a symlink —
-    # the raw template carries an unresolved token)
-    $cursorTemplate = "$guidelinesRepo\global-configs\templates\cursor-global-guidelines.mdc.template"
-    if (Test-Path -LiteralPath $cursorTemplate) {
-        $cursorContent = (Get-Content $cursorTemplate -Raw -Encoding UTF8) -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
-        Write-Utf8NoBom -Path $cursorGlobalGuidelines -Content $cursorContent
-    }
-    Write-Host "    User rule created" -ForegroundColor Green
-    } catch {
-        Write-Host "    SKIPPED Cursor: $($_.Exception.Message)" -ForegroundColor Yellow
-        $globalSkips += "Cursor"
-    }
+    # mirror, starters and skills — step 1 — and `check-sync-drift.js` verifies exactly that. A skip
+    # is counted and named, never silent.
 
     # --- VS Code: per-project .vscode/settings.json ---
     if (-not $GlobalOnly -and $projectRoot -ne $null) {
@@ -515,21 +409,6 @@ if (-not $SourceOnly) {
     if ($DryRun) {
         Write-Host "  Tool configs: PREVIEW ONLY — nothing was written under the user profile or .vscode/"
     } else {
-    if ($globalSkips -contains "opencode") {
-        Write-Host "  opencode:  SKIPPED (see the warning above)"
-    } else {
-        Write-Host "  opencode:  $skillCount skills + global AGENTS.md ($skillSkips skill links skipped)"
-    }
-    if ($globalSkips -contains "Windsurf") {
-        Write-Host "  Windsurf:  SKIPPED (see the warning above)"
-    } else {
-        Write-Host "  Windsurf:  global_rules.md installed"
-    }
-    if ($globalSkips -contains "Cursor") {
-        Write-Host "  Cursor:    SKIPPED (see the warning above)"
-    } else {
-        Write-Host "  Cursor:    user rule installed"
-    }
     if ($globalSkips -contains "Qoder") {
         Write-Host "  Qoder:     SKIPPED (see the warning above)"
     } else {

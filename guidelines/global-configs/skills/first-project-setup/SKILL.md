@@ -46,9 +46,9 @@ You are a project setup specialist guiding users with zero coding experience fro
 2. **Choose stack & scaffold:** Pick the simplest free-tier stack (Vite + React + TypeScript by default), confirm with user, scaffold (`npm create vite@latest`), and install dependencies.
 3. **Initialize Git:** `git init`, stage files by path (or initial commit on clean scaffold), commit `"feat: initial project setup"`.
 4. **Sync guidelines & bootstrap constitution:**
-   - Run `npm run new:project -- <projectPath> [--mode vibe]` from the central repo (or run `<central-repo>/guidelines/global-configs/scripts/sync-guidelines.ps1 -ProjectPath .`) to mirror `_guidelines/`, `_skills/`, `.agents/skills/`, `.claude/skills/`, and install `AGENTS.md`, `WORLD.md`, `README.md`, `CLAUDE.md` (`@AGENTS.md`), `.husky/pre-push`, `scripts/audit-gate.js`, `scripts/gate-receipt.js`, and guardrail hooks.
+   - Run `npm run new:project -- <projectPath> [--mode vibe]` from the central repo (or run `<central-repo>/guidelines/global-configs/scripts/sync-guidelines.ps1 -ProjectPath .`) to mirror `_guidelines/`, `_skills/`, `.agents/skills/`, and install `AGENTS.md`, `WORLD.md`, `README.md`, `.github/copilot-instructions.md`, `qoder-global-guidelines.md`, `.husky/pre-push`, `scripts/audit-gate.js`, and `scripts/gate-receipt.js` (plus optional `npm run guardrails:install -- <projectPath> --full`).
    - Replace every `[FILL]` in `AGENTS.md`, `WORLD.md` (set `mode` and `capabilities`), and `README.md`.
-   - For tool pointer details (Claude Code, Gemini CLI `context.fileName`, Antigravity, Copilot, Cursor, opencode), read [`references/setup-checklist-and-tool-configs.md`](references/setup-checklist-and-tool-configs.md).
+   - For active tool notes (Antigravity, GitHub Copilot, Qoder, ZCode), read [`references/setup-checklist-and-tool-configs.md`](references/setup-checklist-and-tool-configs.md).
 5. **Configure lint, strict types & local CI hooks:**
    - Ensure TypeScript `strict: true` and ESLint `max-lines` (`400`, skipping blank lines & comments; plan files for ~300 lines). Opt-in preset templates exist under `global-configs/templates/` (`tsconfig.strict.base.json.template`, `eslint.guardrails.mjs.template`).
    - Run `npx husky init`; ensure `.husky/pre-commit` runs `lint-staged` + secret scan (`scan-secrets.js`), and `.husky/pre-push` uses `read-mode.js` to branch by `mode` (`vibe`: `gate:fast` + `always` tier; `standard`: `lint` + `type-check` + full suite; `guarded`: adds `build` + path extras), followed by `audit:gate`, `guard:ship` on release overrides (`GS_RELEASE_GATE=pilot|production` or `.release-override`), and the content-based clean-tree check (`local-ci-strategy.md` §Tier B).
@@ -62,7 +62,7 @@ You are a project setup specialist guiding users with zero coding experience fro
 
 - Do NOT scaffold 15 folders and 50 files before the first working screen — start minimal
 - Do NOT skip Git initialization, `AGENTS.md`, or `WORLD.md`
-- Do NOT leave `[FILL]` placeholders or copy-paste rules into pointer files (`CLAUDE.md`, `copilot-instructions.md`)
+- Do NOT leave `[FILL]` placeholders or copy-paste rules into tool pointer files (`copilot-instructions.md`, `qoder-global-guidelines.md`)
 - Do NOT write a pre-push hook that runs the full pipeline unconditionally in `vibe` mode, or uses `grep` instead of `read-mode.js`
 - Do NOT suggest paid tools when free-tier equivalents serve
 - Do NOT start building features during setup — finish setup, verify, commit, then plan the first vertical slice

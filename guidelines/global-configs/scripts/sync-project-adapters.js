@@ -58,7 +58,7 @@
 const fs = require('fs');
 const path = require('path');
 const { planSkills } = require('./lib/plan-skills.js');
-const { materialiseStore } = require('./lib/skill-stores.js');
+const { materialiseStore, pruneRetiredStore } = require('./lib/skill-stores.js');
 const { SKILL_FILE } = require('./lib/skill-files.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -86,8 +86,10 @@ function adapterConfig() {
   }
   const skills = manifest?.skills || {};
   const targets = Array.isArray(skills.nativeAdapters?.targets) ? skills.nativeAdapters.targets : [];
+  const retiredTargets = Array.isArray(skills.nativeAdapters?.retiredTargets) ? skills.nativeAdapters.retiredTargets : [];
   return {
     targets,
+    retiredTargets,
     sourceDecl: skills.source || 'global-configs/skills/*/SKILL.md',
     adoptDefault: skills.nativeAdapters?.adoptForeignStores === true,
   };
@@ -118,7 +120,7 @@ function main() {
   const apply = argv.includes('--apply');
   const check = argv.includes('--check');
   const quiet = argv.includes('--quiet');
-  const { targets, sourceDecl, adoptDefault } = adapterConfig();
+  const { targets, retiredTargets, sourceDecl, adoptDefault } = adapterConfig();
   const adopt = argv.includes('--adopt') || adoptDefault;
   const mirrorDir = path.join(projectRoot, MIRROR);
 
@@ -173,6 +175,15 @@ function main() {
     for (const file of result.copied.slice(0, 6)) console.log(`     wrote  ${file}`);
     if (result.copied.length > 6) console.log(`     … and ${result.copied.length - 6} more`);
     for (const file of result.removed) console.log(`     pruned ${file}`);
+  }
+
+  for (const target of retiredTargets) {
+    const storeDir = path.join(projectRoot, target);
+    const retired = pruneRetiredStore(storeDir, { dryRun: !apply });
+    if (retired.removed.length > 0) {
+      changeDue = true;
+      if (!quiet) console.log(`  • ${target}: ${apply ? 'pruned' : 'would prune'} ${retired.removed.length} retired adapter skill(s)`);
+    }
   }
 
   if (check && changeDue) {

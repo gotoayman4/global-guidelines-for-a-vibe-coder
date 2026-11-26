@@ -28,116 +28,24 @@ if (-not $isAdmin) {
     Write-Host ""
 }
 
-# --- opencode ---
-$opencodeSkillsDir = "$env:USERPROFILE\.config\opencode\skills"
-$opencodeAgentsFile = "$env:USERPROFILE\.config\opencode\AGENTS.md"
-
-# --- Windsurf ---
-$windsurfMemoriesDir = "$env:USERPROFILE\.codeium\windsurf\memories"
-$windsurfGlobalRules = "$windsurfMemoriesDir\global_rules.md"
-
-# --- Cursor ---
-$cursorRulesDir = "$env:USERPROFILE\.cursor\rules"
-$cursorRuleFile = "$cursorRulesDir\global-guidelines-from-central.mdc"
-$cursorTemplate = "$guidelinesRepo\global-configs\templates\cursor-global-guidelines.mdc.template"
-
 # --- Qoder ---
 $qoderSkillsDir = "$env:USERPROFILE\.qoder\skills"
 
-# --- VS Code ---
+# --- VS Code (Copilot) ---
 $vscodeGlobalSettings = "$env:APPDATA\Code\User\settings.json"
 
 Write-Host "=== Global Guidelines - Machine Setup ===" -ForegroundColor Cyan
 Write-Host ""
 
 # --------------------------------------------------
-# 1. opencode: symlink skills + global AGENTS.md
+# 1. Qoder: global skills symlink
 # --------------------------------------------------
-Write-Host "[1] opencode" -ForegroundColor Yellow
-
-# A skill is its whole directory: the body loads `references/` and `scripts/` on demand, so the
-# pool must carry them. One shared writer serves this script and sync-guidelines.
-$pool = Sync-SkillPool -SourceSkillsDir "$guidelinesRepo\global-configs\skills" -PoolDir $opencodeSkillsDir
-foreach ($message in $pool.Errors) {
-    Write-Host "  SKIP $message" -ForegroundColor Yellow
-}
-$skillCount = $pool.Skills
-
-# Use double-quoted here-string so $guidelinesRepo expands to the actual path
-$agentsContent = @"
-# Global Development Guidelines
-
-This machine has a shared guidelines repository at:
-``$guidelinesRepo``
-
-## Before Every Session
-
-1. In a project, read its ``AGENTS.md`` (binding rules) and ``WORLD.md`` (intent + declared mode) first - they override these global defaults
-2. Open a guideline from ``$guidelinesRepo`` by name when the task needs one
-3. Use ``$guidelinesRepo\_index\MASTER_INDEX.md`` only as a lookup when you cannot name the file the task needs
-4. Load only files needed for the current task - never the whole repo
-5. Skills live at ``$guidelinesRepo\global-configs\skills\<name>\SKILL.md`` - load when the recorded trigger matches
-
-## How to Load Guidelines
-
-- Use absolute base path: ``$guidelinesRepo\``[relative-path]
-- Compact extracts (Key Takeaways + Anti-Patterns) when context is small
-- Project AGENTS.md rules override these global defaults
-"@
-Write-Utf8NoBom -Path $opencodeAgentsFile -Content $agentsContent
-Write-Host "  Skills: $skillCount linked | AGENTS.md: $opencodeAgentsFile" -ForegroundColor Green
-
-# --------------------------------------------------
-# 2. Windsurf: global_rules.md
-# --------------------------------------------------
-Write-Host "[2] Windsurf" -ForegroundColor Yellow
-
-if (-not (Test-Path -LiteralPath $windsurfMemoriesDir)) {
-    $null = New-Item -ItemType Directory -Path $windsurfMemoriesDir -Force
-}
-$windsurfContent = @"
-This machine has a shared guidelines repository at:
-$guidelinesRepo
-
-In a project, read its AGENTS.md (binding rules) and WORLD.md (intent + declared mode) first; they override these defaults.
-Open a guideline by name when the task needs one; use _index/MASTER_INDEX.md only as a lookup when you cannot name it.
-Load only the files needed for the current task.
-Use absolute base path $guidelinesRepo/ when loading files.
-"@
-Write-Utf8NoBom -Path $windsurfGlobalRules -Content $windsurfContent
-Write-Host "  global_rules.md: $windsurfGlobalRules" -ForegroundColor Green
-
-# --------------------------------------------------
-# 3. Cursor: user-level .mdc rule
-# --------------------------------------------------
-Write-Host "[3] Cursor" -ForegroundColor Yellow
-
-if (-not (Test-Path -LiteralPath $cursorRulesDir)) {
-    $null = New-Item -ItemType Directory -Path $cursorRulesDir -Force
-}
-# A plain file write — nothing here needs elevation. It used to sit behind the admin check, so a
-# non-elevated run installed no Cursor rule at all while reporting the tools as configured.
-if (Test-Path -LiteralPath $cursorRuleFile) {
-    Remove-Item -LiteralPath $cursorRuleFile -Force
-}
-if (Test-Path -LiteralPath $cursorTemplate) {
-    # Resolved copy (not a symlink — the raw template carries an unresolved {{GUIDELINES_ROOT}} token)
-    $cursorContent = (Get-Content $cursorTemplate -Raw -Encoding UTF8) -replace '\{\{GUIDELINES_ROOT\}\}', $guidelinesRepo
-    Write-Utf8NoBom -Path $cursorRuleFile -Content $cursorContent
-    Write-Host "  User rule created: $cursorRuleFile" -ForegroundColor Green
-} else {
-    Write-Host "  WARNING: template not found at $cursorTemplate" -ForegroundColor Yellow
-}
-
-# --------------------------------------------------
-# 4. Qoder: global skills symlink
-# --------------------------------------------------
-Write-Host "[4] Qoder" -ForegroundColor Yellow
+Write-Host "[1] Qoder" -ForegroundColor Yellow
 
 if (-not (Test-Path -LiteralPath $qoderSkillsDir)) {
     $null = New-Item -ItemType Directory -Path $qoderSkillsDir -Force
 }
-# The same shared writer as the opencode pool — whole skill directories, symlink-or-copy.
+# The shared writer links whole skill directories (references/ and scripts/ included).
 $pool = Sync-SkillPool -SourceSkillsDir "$guidelinesRepo\global-configs\skills" -PoolDir $qoderSkillsDir
 foreach ($message in $pool.Errors) {
     Write-Host "  SKIP $message" -ForegroundColor Yellow
@@ -145,9 +53,18 @@ foreach ($message in $pool.Errors) {
 Write-Host "  Skills: $($pool.Skills) linked ($($pool.Files) files) to $qoderSkillsDir" -ForegroundColor Green
 
 # --------------------------------------------------
-# 5. VS Code: global settings.json (AI agent settings)
+# 2. Machine-global skill pool (Antigravity & ZCode)
 # --------------------------------------------------
-Write-Host "[5] VS Code" -ForegroundColor Yellow
+Write-Host "[2] Antigravity & ZCode global pool" -ForegroundColor Yellow
+$globalPoolScript = Join-Path $PSScriptRoot "sync-global-skills.js"
+if (Test-Path -LiteralPath $globalPoolScript) {
+    & node $globalPoolScript --apply
+}
+
+# --------------------------------------------------
+# 3. VS Code: global settings.json (AI agent settings)
+# --------------------------------------------------
+Write-Host "[3] VS Code" -ForegroundColor Yellow
 
 $vscodeSettingsDir = Split-Path $vscodeGlobalSettings -Parent
 if (-not (Test-Path -LiteralPath $vscodeSettingsDir)) {
@@ -208,7 +125,7 @@ try {
 # --------------------------------------------------
 Write-Host ""
 Write-Host "=== Setup Complete ===" -ForegroundColor Cyan
-Write-Host "Tools configured: opencode, Windsurf, Cursor, Qoder, VS Code"
+Write-Host "Tools configured: Qoder, Antigravity, ZCode, VS Code Copilot"
 Write-Host ""
 Write-Host "For per-project setup, run: .\sync-guidelines.ps1"
 Write-Host "  (mirrors guidelines + configs into each project)"

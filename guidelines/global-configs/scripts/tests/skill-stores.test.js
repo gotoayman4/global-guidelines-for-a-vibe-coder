@@ -173,3 +173,25 @@ test('verifyStore: a stale same-named copy is drift, a current one is in sync ev
   assert.equal(stale.state, 'drift', 'differing bytes are a stale downstream copy');
   assert.ok(stale.stale.some((f) => f.startsWith('alpha/')));
 });
+
+test('pruneRetiredStore removes marker-owned skills and leaves foreign skills and occupied parent dirs untouched', () => {
+  const { pruneRetiredStore } = require('../lib/skill-stores.js');
+  const src = sourceSkills({ agnostic: ['alpha'] });
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-stores-retire-'));
+  const parentTool = path.join(root, '.claude');
+  const store = path.join(parentTool, 'skills');
+  materialiseStore(store, planAll(src), { sourceRoot: src });
+  fs.writeFileSync(path.join(parentTool, 'settings.json'), '{}\n');
+  fs.mkdirSync(path.join(store, 'custom-user'), { recursive: true });
+  fs.writeFileSync(path.join(store, 'custom-user', SKILL_FILE), 'custom\n');
+
+  const dry = pruneRetiredStore(store, { dryRun: true });
+  assert.deepEqual(dry.removed, ['alpha/SKILL.md']);
+  assert.equal(fs.existsSync(path.join(store, 'alpha', SKILL_FILE)), true);
+
+  const applied = pruneRetiredStore(store, { dryRun: false });
+  assert.deepEqual(applied.removed, ['alpha/SKILL.md']);
+  assert.equal(fs.existsSync(path.join(store, 'alpha')), false);
+  assert.equal(fs.existsSync(path.join(store, 'custom-user', SKILL_FILE)), true, 'foreign skill preserved');
+  assert.equal(fs.existsSync(path.join(parentTool, 'settings.json')), true, 'settings.json preserved');
+});

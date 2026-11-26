@@ -115,14 +115,7 @@ if ($manifest -and $manifest.toolConfigs) {
     }
 } else {
     $TOOL_CONFIGS = @(
-        @{ template = "global-configs\templates\opencode.json.template";                       target = "opencode.json";                          detect = $null }
-        @{ template = "global-configs\templates\kilo.jsonc.template";                         target = "kilo.jsonc";                             detect = ".vscode" }
-        @{ template = "global-configs\templates\GEMINI.md.template";                          target = "GEMINI.md";                              detect = ".gemini" }
-        @{ template = "global-configs\templates\cursor-global-guidelines.mdc.template";       target = ".cursor\rules\global-guidelines.mdc";   detect = ".cursor" }
-        @{ template = "global-configs\templates\trae-global-guidelines.md.template";          target = ".trae\rules\global-guidelines.md";      detect = ".trae" }
-        @{ template = "global-configs\templates\windsurf-global-guidelines.md.template";      target = ".windsurf\rules\global-guidelines.md"; detect = ".windsurf" }
         @{ template = "global-configs\templates\qoder-global-guidelines.md.template";         target = "qoder-global-guidelines.md";            detect = $null }
-        @{ template = "global-configs\templates\CLAUDE.starter.md";                           target = "CLAUDE.md";                             detect = $null }
     )
 }
 
@@ -1018,7 +1011,7 @@ $btnMachineSetup.Add_Click({
         return
     }
     $result = [System.Windows.Forms.MessageBox]::Show(
-        "This will configure global AI tool settings for opencode, Windsurf, Cursor, Qoder, and VS Code on this machine.`n`nContinue?",
+        "This will configure global AI tool settings for Qoder, ZCode, Antigravity, and VS Code Copilot on this machine.`n`nContinue?",
         "Machine Setup",
         [System.Windows.Forms.MessageBoxButtons]::YesNo,
         [System.Windows.Forms.MessageBoxIcon]::Question

@@ -6,15 +6,14 @@ Companion reference for `first-project-setup`.
 
 ## Per-Tool Configuration Notes
 
-Modern late-2026 coding tools (Antigravity, Codex CLI, Cursor, Windsurf, GitHub Copilot, OpenCode, Kilo Code, and Claude Code v2.1.277+ fallback) natively recognize root `AGENTS.md` and `.agents/skills/`. Use tool-specific files only as pointers or when an installed tool requires them:
+Active tools for this workflow (**Antigravity**, **GitHub Copilot**, **Qoder**, and **ZCode**) read root `AGENTS.md` and standard Agent Skills folders directly (`sync-manifest.json` retires unused `opencode`, `kilo`, `Gemini CLI`, `Cursor`, `Trae`, `Windsurf`, and `Claude Code` adapters per owner decision 2026-11-26):
 
 | Tool | Config / Target | Template / Notes |
 |---|---|---|
-| **Claude Code** | `CLAUDE.md` | `global-configs/templates/CLAUDE.starter.md` (imports `@AGENTS.md` inside managed markers so Claude Code never skips `AGENTS.md`) |
-| **Gemini CLI / Antigravity** | `GEMINI.md` (or `~/.gemini/settings.json`) | `global-configs/templates/GEMINI.md.template` (imports `@AGENTS.md`), or set `"context": { "fileName": ["AGENTS.md", "GEMINI.md"] }` in `~/.gemini/settings.json` (avoid double-loading both if `@AGENTS.md` is present) |
+| **Antigravity** | `AGENTS.md` + `.agents/skills/` + `~/.agents/skills/` | Direct root `AGENTS.md` + `## Skills` inventory + marker-scoped native skill stores |
 | **GitHub Copilot / VS Code** | `.vscode/settings.json` + `.github/copilot-instructions.md` | `chat.useAgentsMdFile: true` + `copilot-instructions.starter.md` |
-| **opencode** | `opencode.json` | `global-configs/templates/opencode.json.template` (prepends `AGENTS.md`) |
-| **Kilo / Cursor / Trae / Windsurf / Qoder** | Only if the tool directory exists (`.cursor/`, `.trae/`, `.windsurf/`, etc.) | `sync-manifest.json` `detect` gates optional legacy templates |
+| **Qoder** | `qoder-global-guidelines.md` + `~/.qoder/skills/` | `global-configs/templates/qoder-global-guidelines.md.template` (points to `AGENTS.md`) |
+| **ZCode** | `~/.zcode/skills/` | Stack-agnostic global pool synced via `sync-global-skills.js` |
 
 ---
 

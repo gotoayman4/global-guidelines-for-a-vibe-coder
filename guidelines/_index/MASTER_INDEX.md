@@ -43,7 +43,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [development-workflow.md](../01-workflow-methodology/development-workflow.md) | Normative | Global | ~1172 | `#workflow` `#process` `#lifecycle` |
 | [planning-and-scoping.md](../01-workflow-methodology/planning-and-scoping.md) | Normative | Global | ~818 | `#planning` `#scoping` `#prd` |
 | [refactoring-strategy.md](../01-workflow-methodology/refactoring-strategy.md) | Normative | Global | ~566 | `#refactoring` `#maintenance` `#technical-debt` |
-| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~4694 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
+| [speed-tiered-workflow.md](../01-workflow-methodology/speed-tiered-workflow.md) | Normative | Global | ~4742 | `#speed` `#modes` `#vibe` `#standard` `#guarded` `#ceremony` `#ship-boundary` `#release-class` `#context-budget` `#escalation` |
 | [workflow-friction-audit.md](../01-workflow-methodology/workflow-friction-audit.md) | Normative | Global | ~2623 | `#workflow` `#friction` `#measurement` `#token-budget` `#gate` `#audit` |
 
 ### 02 — Engineering Practices
@@ -62,7 +62,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [performance-optimization.md](../02-engineering-practices/performance-optimization.md) | Normative | Global | ~499 | `#performance` `#profiling` `#caching` |
 | [security-engineering.md](../02-engineering-practices/security-engineering.md) | Normative | Global | ~1350 | `#security` `#auth` `#xss` `#csp` |
 | [testing-patterns.md](../02-engineering-practices/testing-patterns.md) | Normative | Global | ~1181 | `#testing` `#patterns` `#unit` `#integration` `#e2e` |
-| [testing-philosophy.md](../02-engineering-practices/testing-philosophy.md) | Normative | Global | ~1717 | `#testing` `#philosophy` `#contracts` |
+| [testing-philosophy.md](../02-engineering-practices/testing-philosophy.md) | Normative | Global | ~1751 | `#testing` `#philosophy` `#contracts` |
 | [ux-design-principles.md](../02-engineering-practices/ux-design-principles.md) | Normative | Global | ~932 | `#ux` `#heuristics` `#cognition` `#nielsen` |
 
 ### 03 — Git & CI/CD
@@ -151,7 +151,6 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 |---|---|---|---|---|
 | [AGENTS.starter.md](../global-configs/templates/AGENTS.starter.md) | Starter | Global | ~5,000 | `#template` `#rules` `#agents` |
 | [copilot-instructions.starter.md](../global-configs/templates/copilot-instructions.starter.md) | Starter | Global | ~50 | `#template` `#rules` `#copilot` |
-| [CLAUDE.starter.md](../global-configs/templates/CLAUDE.starter.md) | Starter | Global | ~70 | `#template` `#rules` `#claude` `#pointer` `#entry-point` |
 | [WORLD.starter.md](../global-configs/templates/WORLD.starter.md) | Starter | Global | ~1,300 | `#template` `#product-intent` `#guardrail` |
 | [WORLD.example.md](../global-configs/templates/WORLD.example.md) | Reference | Global | ~1,200 | `#template` `#product-intent` `#example` |
 | [DEVTOOLS.starter.md](../global-configs/templates/DEVTOOLS.starter.md) | Starter | Global | ~600 | `#template` `#devtools` `#gitignore` |
@@ -234,7 +233,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 | [firebase-emulator-windows-console/SKILL.md](../global-configs/skills/firebase-emulator-windows-console/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` | ~927 | `#skill` `#firebase` `#emulator` `#windows` `#testing` `#java` `#node` `#console` |
 | [firebase-firestore-practices/SKILL.md](../global-configs/skills/firebase-firestore-practices/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1709 | `#skill` `#firebase` `#firestore` `#rules` `#practices` |
 | [firestore-cost-optimization/SKILL.md](../global-configs/skills/firestore-cost-optimization/SKILL.md) | Advisory | Global (Task-Type Skill) | `firebase` `firestore` | ~1685 | `#skill` `#firestore` `#firebase` `#cost` `#quota` |
-| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1485 | `#skill` `#setup` `#beginner` `#onboarding` |
+| [first-project-setup/SKILL.md](../global-configs/skills/first-project-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1497 | `#skill` `#setup` `#beginner` `#onboarding` |
 | [implementation-plan/SKILL.md](../global-configs/skills/implementation-plan/SKILL.md) | Advisory | Global (Task-Type Skill) | — *stack-agnostic* | ~1160 | `#skill` `#planning` `#execution` `#checklist` |
 | [inno-setup/SKILL.md](../global-configs/skills/inno-setup/SKILL.md) | Advisory | Global (Task-Type Skill) | `inno-setup` | ~1625 | `#skill` `#inno-setup` `#installer` `#windows` |
 | [mui-design-system/SKILL.md](../global-configs/skills/mui-design-system/SKILL.md) | Advisory | Global (Task-Type Skill) | `mui` | ~2442 | `#skill` `#mui` `#design-system` `#shared-components` |
@@ -261,13 +260,7 @@ JSON, `_index` pages) that carry no front-matter, and stay hand-written.
 
 | File | Status | Scope | Tokens | Tags |
 |---|---|---|---|---|
-| [opencode.json.template](../global-configs/templates/opencode.json.template) | Template | Global | ~50 | `#template` `#opencode` `#tool-config` |
-| [kilo.jsonc.template](../global-configs/templates/kilo.jsonc.template) | Template | Global | ~30 | `#template` `#kilo` `#tool-config` |
-| [GEMINI.md.template](../global-configs/templates/GEMINI.md.template) | Template | Global | ~50 | `#template` `#gemini` `#tool-config` |
 | [vscode-settings.json.template](../global-configs/templates/vscode-settings.json.template) | Template | Global | ~150 | `#template` `#vscode` `#tool-config` |
-| [cursor-global-guidelines.mdc.template](../global-configs/templates/cursor-global-guidelines.mdc.template) | Template | Global | ~80 | `#template` `#cursor` `#tool-config` |
-| [windsurf-global-guidelines.md.template](../global-configs/templates/windsurf-global-guidelines.md.template) | Template | Global | ~80 | `#template` `#windsurf` `#tool-config` |
-| [trae-global-guidelines.md.template](../global-configs/templates/trae-global-guidelines.md.template) | Template | Global | ~80 | `#template` `#trae` `#tool-config` |
 | [qoder-global-guidelines.md.template](../global-configs/templates/qoder-global-guidelines.md.template) | Template | Global | ~80 | `#template` `#qoder` `#tool-config` |
 
 ---
@@ -431,6 +424,6 @@ Hand-written: these artifacts carry no `## Cross-References` footer.
 - `audit-rules.js` → implements the extraction methodology (see docs/repo-meta/)
 - `sync-guidelines.ps1` → depends on: `GuidelineSync.psm1`
 - `sync-all.js` → depends on: `sync-guidelines.ps1`, `sync-projects.json`
-- `setup-global-references.ps1` → depends on: `opencode.json.template`
+- `setup-global-references.ps1` → depends on: `GuidelineSync.psm1`, `sync-global-skills.js`
 - `GuidelineSync.psm1` → depends on: `sync-manifest.json`
 - All tool config templates → copied into project or tool config directories by `sync-guidelines.ps1` and `sync-manager.ps1`

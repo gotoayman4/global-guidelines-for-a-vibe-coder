@@ -1,7 +1,0 @@
-{
-  "$schema": "https://app.kilo.ai/config.json",
-  "instructions": [
-    "AGENTS.md",
-    "_guidelines/_index/RETRIEVAL_RULES.md"
-  ]
-}

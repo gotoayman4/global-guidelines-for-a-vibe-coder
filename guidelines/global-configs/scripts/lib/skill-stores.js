@@ -263,4 +263,43 @@ function verifyStore(storeDir, planned) {
   };
 }
 
-module.exports = { MARKER_RE, markerNameFor, readMarker, materialiseStore, verifyStore, storeSkillNames };
+/**
+ * Remove only the skills owned by this sync inside a retired store target (`retiredTargets`).
+ * Unmanaged directories or non-owned foreign skills inside the store are left untouched; empty
+ * store/parent tool directories are removed only when nothing else remains inside them.
+ * @param {string} storeDir
+ * @param {{dryRun?: boolean}} [opts]
+ * @returns {{removed: string[]}}
+ */
+function pruneRetiredStore(storeDir, { dryRun = false } = {}) {
+  if (!fs.existsSync(storeDir)) return { removed: [] };
+  const marker = readMarker(storeDir);
+  if (!marker) return { removed: [] };
+
+  const removed = [];
+  for (const name of marker.names) {
+    const dirAbs = path.join(storeDir, name);
+    if (fs.existsSync(path.join(dirAbs, SKILL_FILE))) {
+      if (!dryRun) fs.rmSync(dirAbs, { recursive: true });
+      removed.push(`${name}/${SKILL_FILE}`);
+    }
+  }
+  const markerFile = path.join(storeDir, markerNameFor(storeDir));
+  if (fs.existsSync(markerFile)) {
+    if (!dryRun) fs.rmSync(markerFile);
+  }
+  if (!dryRun) {
+    try {
+      if (fs.readdirSync(storeDir).length === 0) {
+        fs.rmdirSync(storeDir);
+        const parent = path.dirname(storeDir);
+        if (fs.existsSync(parent) && fs.readdirSync(parent).length === 0) fs.rmdirSync(parent);
+      }
+    } catch {
+      // Leave non-empty or busy directories intact.
+    }
+  }
+  return { removed };
+}
+
+module.exports = { MARKER_RE, markerNameFor, readMarker, materialiseStore, verifyStore, storeSkillNames, pruneRetiredStore };

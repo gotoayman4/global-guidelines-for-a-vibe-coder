@@ -20,7 +20,7 @@ From the project root:
 2. `WORLD.md` — product intent and the declared speed mode (`vibe | standard | guarded`); undeclared means `standard`.
 3. `README.md` — orientation when the project is new to you: what it is, its structure, the quick start. It holds no rules.
 
-`AGENTS.md` is authoritative. `CLAUDE.md` and `GEMINI.md`, if present, are tool-specific pointers that import `@AGENTS.md` and never restate rules (in Gemini CLI, `~/.gemini/settings.json` `context.fileName` can also include `"AGENTS.md"` directly — avoid double-loading both if `@AGENTS.md` is already imported). Subsystem and API detail lives in `docs/AI_ARCHITECTURE.md`, loaded on demand — never at boot.
+`AGENTS.md` is authoritative. Tool pointers (`.github/copilot-instructions.md` for Copilot, `qoder-global-guidelines.md` for Qoder), if present, redirect to `AGENTS.md` and never restate rules. Subsystem and API detail lives in `docs/AI_ARCHITECTURE.md`, loaded on demand — never at boot.
 
 ### Step 2: Name the Files This Task Needs
 
@@ -35,7 +35,7 @@ Pick the 2–4 files the task actually requires, inside the mode's read budget (
 
 With no project steering file and no `_guidelines/` mirror:
 
-1. Read the global tool config (opencode `~/.config/opencode/AGENTS.md`; Windsurf `~/.codeium/windsurf/memories/global_rules.md`; Cursor `~/.cursor/rules/*.mdc`).
+1. Read the machine's global skill pool or Qoder skill directory (`~/.agents/skills/`, `~/.zcode/skills/`, `~/.qoder/skills/`) or the central repo's `_index/MASTER_INDEX.md`.
 2. Use the central repo path named there to find guidelines by absolute path — last resort, because agents may not read outside the project.
 
 ---

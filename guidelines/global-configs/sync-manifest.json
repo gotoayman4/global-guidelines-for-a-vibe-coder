@@ -70,69 +70,13 @@
 
   "toolConfigs": [
     {
-      "template": "global-configs/templates/opencode.json.template",
-      "target": "opencode.json",
-      "detect": null,
-      "mode": "create-if-missing",
-      "pathSubstitution": true,
-      "description": "opencode project config"
-    },
-    {
-      "template": "global-configs/templates/kilo.jsonc.template",
-      "target": "kilo.jsonc",
-      "detect": ".vscode",
-      "mode": "create-if-missing",
-      "pathSubstitution": true,
-      "description": "Kilo (VS Code AI extension) config"
-    },
-    {
-      "template": "global-configs/templates/GEMINI.md.template",
-      "target": "GEMINI.md",
-      "detect": ".gemini",
-      "mode": "create-if-missing",
-      "pathSubstitution": true,
-      "description": "Gemini CLI project rules"
-    },
-    {
-      "template": "global-configs/templates/cursor-global-guidelines.mdc.template",
-      "target": ".cursor/rules/global-guidelines.mdc",
-      "detect": ".cursor",
-      "mode": "create-if-missing",
-      "pathSubstitution": true,
-      "description": "Cursor project rules"
-    },
-    {
-      "template": "global-configs/templates/trae-global-guidelines.md.template",
-      "target": ".trae/rules/global-guidelines.md",
-      "detect": ".trae",
-      "mode": "create-if-missing",
-      "pathSubstitution": true,
-      "description": "Trae project rules"
-    },
-    {
-      "template": "global-configs/templates/windsurf-global-guidelines.md.template",
-      "target": ".windsurf/rules/global-guidelines.md",
-      "detect": ".windsurf",
-      "mode": "create-if-missing",
-      "pathSubstitution": true,
-      "description": "Windsurf project rules"
-    },
-    {
+      "_comment": "Active tool set per owner decision 2026-11-26: Qoder, ZCode, GitHub Copilot, and Antigravity. Copilot uses .github/copilot-instructions.md (starters) and .vscode/settings.json (vscodeCopilotInstructions); Antigravity/Copilot use AGENTS.md + .agents/skills; ZCode uses ~/.zcode/skills; retired adapters (opencode, kilo, Gemini CLI, Cursor, Trae, Windsurf, Claude Code) were removed to eliminate cross-tool drift.",
       "template": "global-configs/templates/qoder-global-guidelines.md.template",
       "target": "qoder-global-guidelines.md",
       "detect": null,
       "mode": "create-if-missing",
       "pathSubstitution": true,
       "description": "Qoder project rules"
-    },
-    {
-      "template": "global-configs/templates/CLAUDE.starter.md",
-      "target": "CLAUDE.md",
-      "detect": null,
-      "mode": "create-if-missing",
-      "pathSubstitution": false,
-      "gitignoreEntry": "CLAUDE.md",
-      "description": "Claude Code pointer file — redirects to AGENTS.md, the file the ## Skills inventory lives in. Claude Code reads CLAUDE.md natively and never reaches a constitution it is not pointed at; measured 2026-10-31 a hand-maintained CLAUDE.md named neither AGENTS.md nor any skill. An existing file keeps every byte of its own text and receives only the managed pointer region (patch-tool-configs.js); a missing one is created as the pointer. Gitignored by owner decision (2026-10-31, midad first): the file is sync-maintained like `_skills/`, present after a sync and absent in a fresh clone until one runs — the patcher creates it when missing, so untracking does not orphan a fresh clone. A project whose CLAUDE.md is hand-maintained AND tracked keeps tracking it (the ignore line is a no-op for tracked files); untracking it is that project's own decision."
     }
   ],
 
@@ -150,20 +94,23 @@
       "adoptForeignStores": true,
       "targets": [
         "~/.agents/skills",
-        "~/.claude/skills",
         "~/.zcode/skills"
+      ],
+      "retiredTargets": [
+        "~/.claude/skills"
       ]
     },
     "nativeAdapters": {
-      "_comment": "Per-project GENERATED stores built from `_skills/`, added 2026-10-31: the stack-scoped subset only, because the stack-agnostic half arrives through §skills.globalPool and delivering it twice wastes catalog budget (Zed caps the catalog; Codex caps its context) and, in Claude Code, the personal copy would shadow the project one. The paths are PROJECT-RELATIVE and hold the two directories native loaders scan that `_skills/` is not. The adapter is marker-scoped like the global pool; its marker's `source` must resolve to the project's `_skills/` — that is what makes check-sync-drift.js's competingStores pass recognise it as a generated adapter that follows upstream rather than a hand-maintained copy that shadows it. A native directory that already holds unmarked skills (alsael1's `.agents/skills` is the recorded case) is refused and reported until the run carries the owner's recorded decision (`adoptForeignStores` true, or `--adopt` per run). Once adopted, the source-of-truth doctrine applies (owner decision 2026-10-31): a same-named skill is replaced with the `_skills/` bytes and reported; differently named project-authored skills keep their bytes. THIS FLEET RUNS WITH `adoptForeignStores: false`: alsael1's store holds project-authored skills whose adoption is undecided.",
+      "_comment": "Per-project GENERATED stores built from `_skills/`, added 2026-10-31: the stack-scoped subset only, because the stack-agnostic half arrives through §skills.globalPool and delivering it twice wastes catalog budget. Active tool set (2026-11-26) targets `.agents/skills` (Antigravity/Copilot); retired `.claude/skills` is pruned safely when marker-owned via `retiredTargets`. A native directory holding unmarked custom skills (alsael1's non-colliding `.agents/skills`) stays untouched under `adoptForeignStores: false`.",
       "adoptForeignStores": false,
       "targets": [
-        ".agents/skills",
+        ".agents/skills"
+      ],
+      "retiredTargets": [
         ".claude/skills"
       ],
       "gitignoreEntry": [
-        ".agents/skills/",
-        ".claude/skills/"
+        ".agents/skills/"
       ]
     }
   },
